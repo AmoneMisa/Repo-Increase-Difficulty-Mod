@@ -1,0 +1,38 @@
+using HarmonyLib;
+using IncreaseHardMod.Modifiers;
+
+namespace IncreaseHardMod.Patches;
+
+/// <summary>
+/// Triggers the surprise-modifier roll each time the run advances to a new level.
+///
+/// RunManager.ChangeLevel is the game's own "go to the next level/shop/lobby"
+/// method. It already returns early for non-host clients (see its first lines),
+/// so a [HarmonyPostfix] here effectively runs HOST-ONLY — exactly what we want,
+/// since only the host should roll. By the time this postfix runs, levelCurrent
+/// has been set, so SemiFunc.RunIsLevel() tells us whether we're heading into an
+/// actual run level (we skip shops, lobby, menus).
+///
+/// The host rolls, stores the result locally, and broadcasts it to clients.
+/// </summary>
+[HarmonyPatch(typeof(RunManager), "ChangeLevel")]
+internal static class ChangeLevelPatch
+{
+    [HarmonyPostfix]
+    private static void Postfix()
+    {
+        // Only roll for real run levels; shops/lobby/menus get no modifiers.
+        if (!SemiFunc.RunIsLevel())
+        {
+            // Clear any leftover modifiers so shops/lobby are clean.
+            ModifierManager.ApplyReceived(LevelModifiers.Empty);
+            return;
+        }
+
+        // ChangeLevel already short-circuits for non-host clients, but be explicit.
+        if (!SemiFunc.IsMasterClientOrSingleplayer())
+            return;
+
+        ModifierManager.RollForNextLevel(RunManager.instance.levelsCompleted);
+    }
+}

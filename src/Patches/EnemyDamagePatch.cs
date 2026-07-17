@@ -1,0 +1,39 @@
+using HarmonyLib;
+using UnityEngine;
+
+namespace IncreaseHardMod.Patches;
+
+/// <summary>
+/// Scales damage the local player takes FROM ENEMIES.
+///
+/// PlayerHealth.Hurt(int damage, bool savingGrace, int enemyIndex, bool hurtByHeal)
+/// is where a player actually loses health. It only runs on the machine that
+/// owns that player (see the photonView.IsMine check inside), so scaling here is
+/// automatically per-player-authoritative.
+///
+/// "enemyIndex" is -1 when the damage is NOT from an enemy (falls, thrown
+/// objects, etc.). We only boost when enemyIndex >= 0 so we don't accidentally
+/// buff environmental damage. "ref int damage" lets us rewrite the argument that
+/// the original method will then use.
+/// </summary>
+[HarmonyPatch(typeof(PlayerHealth), "Hurt")]
+internal static class EnemyDamagePatch
+{
+    [HarmonyPrefix]
+    private static void Prefix(ref int damage, int enemyIndex, bool hurtByHeal)
+    {
+        // Not enemy damage, or it's actually a heal routed through Hurt.
+        if (enemyIndex < 0 || hurtByHeal || damage <= 0)
+            return;
+
+        float mult = Difficulty.Multiplier(
+            ModConfig.EnemyDamagePerLevel.Value,
+            ModConfig.EnemyDamageMax.Value);
+
+        if (mult <= 1f)
+            return;
+
+        // Round up so a boost always adds at least 1 damage.
+        damage = Mathf.CeilToInt(damage * mult);
+    }
+}

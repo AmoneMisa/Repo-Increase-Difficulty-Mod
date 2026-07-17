@@ -1,0 +1,15 @@
+# Build output
+bin/
+obj/
+
+# Decompiled game code (proprietary; regenerate locally with ilspycmd)
+_decompiled/
+
+# IDE
+.idea/
+.vs/
+*.user
+
+# OS
+Thumbs.db
+.DS_Store
