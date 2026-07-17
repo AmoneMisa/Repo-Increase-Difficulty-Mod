@@ -161,6 +161,33 @@ public static class ModConfig
         float def, float min, float max, string desc) =>
         cfg.Bind(section, key, def, new ConfigDescription(desc, new AcceptableValueRange<float>(min, max)));
 
+    // Short, player-facing explanation of what each surprise modifier actually does.
+    private static string ModifierDescription(Modifiers.ModifierType m) => m switch
+    {
+        Modifiers.ModifierType.FragileLoot        => "Loot breaks and loses value more easily.",
+        Modifiers.ModifierType.HeavyLoot          => "Loot weighs more, making it harder to haul.",
+        Modifiers.ModifierType.LightLoot          => "Loot weighs less, making it easier to haul.",
+        Modifiers.ModifierType.ProtectedLoot      => "Loot takes less damage before breaking.",
+        Modifiers.ModifierType.DangerousLoot      => "Hazardous valuables deal more damage to players.",
+        Modifiers.ModifierType.ExtraSmallCart     => "An extra small cart spawns on the level.",
+        Modifiers.ModifierType.ExtraBigCart       => "An extra big cart spawns on the level.",
+        Modifiers.ModifierType.ExtraSouls         => "Monsters drop more souls.",
+        Modifiers.ModifierType.SpreadUpgrades     => "Upgrade pickups are scattered around; usable only back in the truck.",
+        Modifiers.ModifierType.NoMap              => "No map until you find a map upgrade pickup.",
+        Modifiers.ModifierType.ReducedPlayerHp    => "Everyone's max HP is cut for the level.",
+        Modifiers.ModifierType.AutoRevive         => "Each player gets one automatic revive this level.",
+        Modifiers.ModifierType.MoneyLossOnDeath   => "Dying loses a percentage of your collected money.",
+        Modifiers.ModifierType.LevelTimer         => "Timed level: kills add time, deaths remove it, quota adds it; at 0 the layout rerolls.",
+        Modifiers.ModifierType.ChangeVoices       => "Player voices get swapped or randomized.",
+        Modifiers.ModifierType.MoreGachaCubes     => "More gacha/cube valuables spawn.",
+        Modifiers.ModifierType.SoulsExplodeHarder => "Exploding souls deal more damage to players.",
+        Modifiers.ModifierType.BiggerSoulDrops    => "Each soul drop is worth more money (value per drop, not count).",
+        Modifiers.ModifierType.MonstersPitTanky   => "Monsters take less damage from death pits.",
+        Modifiers.ModifierType.LightMonsters      => "All monsters weigh less, so they're easy to shove around.",
+        Modifiers.ModifierType.HeavyMonsters      => "All monsters weigh more, so they're hard to shove around.",
+        _                                         => $"The '{m}' surprise modifier.",
+    };
+
     public static void Init(ConfigFile cfg)
     {
         DiagnosticDisablePatches = cfg.Bind(
@@ -387,7 +414,7 @@ public static class ModConfig
                 continue;
             ModifierEnabled[m] = cfg.Bind(
                 "Surprise Modifiers", m.ToString(), true,
-                $"Allow the '{m}' modifier to be rolled on special levels.");
+                $"{ModifierDescription(m)} Toggle whether it can be rolled on special levels.");
         }
 
         RebuildPerEnemyCaps();
