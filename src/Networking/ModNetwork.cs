@@ -29,8 +29,11 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     public const byte ModifierEventCode = 178;
     public const byte LevelTimerEventCode = 179;
     public const byte CartUpgradeEventCode = 180;
+    public const byte PingEventCode = 181;
 
     public static ModNetwork Instance { get; private set; }
+
+    private bool _registered;
 
     private void Awake()
     {
@@ -38,14 +41,36 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         DontDestroyOnLoad(gameObject);
     }
 
-    private void OnEnable() => PhotonNetwork.AddCallbackTarget(this);
-    private void OnDisable() => PhotonNetwork.RemoveCallbackTarget(this);
+    private void OnDisable()
+    {
+        if (_registered)
+        {
+            PhotonNetwork.RemoveCallbackTarget(this);
+            _registered = false;
+        }
+    }
 
     // Drives the LevelTimer modifier: the host counts down and periodically
     // broadcasts the authoritative remaining time; clients smooth locally between
     // broadcasts. Persistent (DontDestroyOnLoad), so it survives level loads.
     private void Update()
     {
+        // Only be a Photon callback target WHILE ACTUALLY IN A ROOM. Registering on the
+        // main menu (the old OnEnable behaviour) interferes with PUN's "pick best region"
+        // pinging — the regions list spins forever and online sits on the loading screen.
+        // We only need OnEvent while in a room, so register lazily here and drop it otherwise.
+        bool inRoom = PhotonNetwork.InRoom;
+        if (inRoom && !_registered)
+        {
+            PhotonNetwork.AddCallbackTarget(this);
+            _registered = true;
+        }
+        else if (!inRoom && _registered)
+        {
+            PhotonNetwork.RemoveCallbackTarget(this);
+            _registered = false;
+        }
+
         LevelTimerController.Tick(Time.deltaTime);
         LateJoinController.Tick();
     }
@@ -78,6 +103,20 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         PhotonNetwork.RaiseEvent(
             ModifierEventCode,
             modifiers.Serialize(),
+            options,
+            SendOptions.SendReliable);
+    }
+
+    /// <summary>Any player broadcasts a ping to all other clients (not echoed to self).</summary>
+    public void BroadcastPing(byte type, Vector3 pos, string label, string sender)
+    {
+        if (!PhotonNetwork.InRoom)
+            return;
+
+        var options = new RaiseEventOptions { Receivers = ReceiverGroup.All };
+        PhotonNetwork.RaiseEvent(
+            PingEventCode,
+            new object[] { type, pos.x, pos.y, pos.z, label, sender },
             options,
             SendOptions.SendReliable);
     }
@@ -118,6 +157,14 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         {
             var data = (object[])photonEvent.CustomData;
             CartUpgradeState.ApplyNetworkState((int)data[0], (int)data[1], (bool)data[2]);
+            return;
+        }
+
+        if (photonEvent.Code == PingEventCode)
+        {
+            var data = (object[])photonEvent.CustomData;
+            var pos = new Vector3((float)data[1], (float)data[2], (float)data[3]);
+            PingController.AddNetworkPing((byte)data[0], pos, (string)data[4], (string)data[5]);
         }
     }
 }

@@ -1,6 +1,7 @@
 using IncreaseHardMod.Modifiers;
 using IncreaseHardMod.Networking;
 using Photon.Pun;
+using UnityEngine;
 
 namespace IncreaseHardMod.Patches.Effects;
 
@@ -11,63 +12,101 @@ namespace IncreaseHardMod.Patches.Effects;
 /// only re-opened back in the lobby menu. That's why vanilla players can only join at
 /// the lobby, never during a run/shop/truck.
 ///
-/// We can't intercept every place REPO might close the room, so instead of patching
-/// those call sites we simply RE-ASSERT the open state every frame on the host: if the
-/// room is closed while we're in a session, reopen it using the game's own recipe
-/// (LobbyMenuOpen.Update): IsOpen = true, and either make it public+visible (random
-/// matchmaking) or friends-only-joinable (SteamManager.UnlockLobby(false)).
+/// Design: we re-open the room ONCE right after the game closes it
+/// (<see cref="LateJoinButtonStartPatch"/> postfixes <c>MenuPageLobby.ButtonStart</c>),
+/// then a cheap THROTTLED safety check (this class, driven from ModNetwork.Update) makes
+/// sure it stays open in case some other game code re-closes it. The old version forced
+/// room state EVERY frame including during scene loads / before the room existed, which
+/// is almost certainly why hosting hung on the loading screen. Now every access is:
+///   * throttled (~2s between checks),
+///   * gated to a settled in-game state (GameDirector Main + actually in a run/shop/truck),
+///   * host-only, and
+///   * wrapped in try/catch so a transient null during a load can never break hosting.
 ///
 /// Joining only gets a player into the Photon room; they still need the current mod
 /// state. We detect a rise in PhotonNetwork.PlayerList and re-broadcast modifiers, the
 /// level timer, and cart-upgrade levels so late joiners converge on the same state.
-///
-/// Host-only: clients have no authority over room state and never roll/own it. Driven
-/// from ModNetwork.Update (persistent, survives level loads).
 /// </summary>
 internal static class LateJoinController
 {
     private static int _lastPlayerCount = -1;
+    private static float _nextCheck;
+    private const float CheckInterval = 2f;
+
+    /// <summary>Re-open the room the same way returning to the lobby would.</summary>
+    public static void OpenRoom(string reason)
+    {
+        if (!ModConfig.LateJoinEnabled.Value)
+            return;
+        try
+        {
+            if (!PhotonNetwork.InRoom || !SemiFunc.IsMasterClient())
+                return;
+            var room = PhotonNetwork.CurrentRoom;
+            if (room == null || room.IsOpen)
+                return;
+
+            room.IsOpen = true;
+            if (GameManager.instance != null && GameManager.instance.connectRandom)
+                room.IsVisible = true;
+            else if (SteamManager.instance != null)
+                SteamManager.instance.UnlockLobby(false);
+            Plugin.Log.LogInfo($"[LateJoin] Re-opened the session ({reason}) so players can join mid-game.");
+        }
+        catch (System.Exception e)
+        {
+            Plugin.Log.LogWarning($"[LateJoin] OpenRoom failed harmlessly: {e.Message}");
+        }
+    }
 
     public static void Tick()
     {
         if (!ModConfig.LateJoinEnabled.Value)
             return;
+
+        // Only ever touch room state when hosting a real Photon session that has settled
+        // into an actual run/shop/truck. Bail cheaply (and reset) otherwise — this is what
+        // keeps us off the code path during loading screens / offline singleplayer.
         if (!PhotonNetwork.InRoom || !SemiFunc.IsMasterClient())
         {
             _lastPlayerCount = -1;
             return;
         }
 
-        var room = PhotonNetwork.CurrentRoom;
-        if (room == null)
+        if (Time.realtimeSinceStartup < _nextCheck)
             return;
+        _nextCheck = Time.realtimeSinceStartup + CheckInterval;
 
-        // Re-open the session the same way returning to the lobby would.
-        if (!room.IsOpen)
+        try
         {
-            room.IsOpen = true;
-            if (GameManager.instance != null && GameManager.instance.connectRandom)
-                room.IsVisible = true;
-            else if (SteamManager.instance != null)
-                SteamManager.instance.UnlockLobby(false);
-            Plugin.Log.LogInfo("[LateJoin] Re-opened the session so players can join mid-game.");
-        }
+            if (GameDirector.instance == null ||
+                GameDirector.instance.currentState != GameDirector.gameState.Main)
+                return;
+            if (!SemiFunc.RunIsLevel() && !SemiFunc.RunIsShop() && !SemiFunc.RunIsLobby())
+                return;
 
-        // Re-sync mod state whenever someone new connects.
-        int count = PhotonNetwork.PlayerList.Length;
-        if (_lastPlayerCount < 0)
-        {
+            OpenRoom("safety check");
+
+            // Re-sync mod state whenever someone new connects.
+            int count = PhotonNetwork.PlayerList.Length;
+            if (_lastPlayerCount < 0)
+            {
+                _lastPlayerCount = count;
+                return;
+            }
+
+            if (count > _lastPlayerCount)
+            {
+                Plugin.Log.LogInfo($"[LateJoin] Player count {_lastPlayerCount} -> {count}; re-broadcasting mod state to joiners.");
+                ModNetwork.Instance?.BroadcastModifiers(ModifierManager.Current);
+                ModNetwork.Instance?.BroadcastLevelTimer(LevelTimerController.Remaining, LevelTimerController.Running);
+                CartUpgradeState.Broadcast();
+            }
             _lastPlayerCount = count;
-            return;
         }
-
-        if (count > _lastPlayerCount)
+        catch (System.Exception e)
         {
-            Plugin.Log.LogInfo($"[LateJoin] Player count {_lastPlayerCount} -> {count}; re-broadcasting mod state to joiners.");
-            ModNetwork.Instance?.BroadcastModifiers(ModifierManager.Current);
-            ModNetwork.Instance?.BroadcastLevelTimer(LevelTimerController.Remaining, LevelTimerController.Running);
-            CartUpgradeState.Broadcast();
+            Plugin.Log.LogWarning($"[LateJoin] Tick failed harmlessly: {e.Message}");
         }
-        _lastPlayerCount = count;
     }
 }

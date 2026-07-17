@@ -90,6 +90,28 @@ public static class ModConfig
     // mod state (modifiers, timer, cart upgrades) whenever a new player connects.
     public static ConfigEntry<bool> LateJoinEnabled;
 
+    // --- Ping ---
+    // Press PingKey to mark whatever you're looking at (valuable/enemy/item/location).
+    // The marker is broadcast to all players and shown as a world-anchored label.
+    public static ConfigEntry<bool> PingEnabled;
+    public static ConfigEntry<UnityEngine.KeyCode> PingKey;
+    public static ConfigEntry<float> PingMaxDistance;
+    public static ConfigEntry<float> PingDurationSeconds;
+
+    // --- Photon reachability HUD ---
+    // Small main-menu overlay pinging Photon region name servers so you can see which
+    // regions are reachable / their latency before hosting or joining.
+    public static ConfigEntry<bool> PhotonHudEnabled;
+    public static ConfigEntry<string> PhotonHudRegions;
+
+    // --- Auto Backup Saves ---
+    // REPO deletes the run save when you wipe / fail a level (DataDirector.SaveDeleteCheck).
+    // When enabled, we copy the save folder to a timestamped backup first, and can
+    // optionally skip the deletion entirely so the save stays directly loadable.
+    public static ConfigEntry<bool> AutoBackupEnabled;
+    public static ConfigEntry<bool> AutoBackupKeepSave;
+    public static ConfigEntry<int> AutoBackupMaxPerSave;
+
     // --- Cart / truck upgrades ---
     // A small host-driven upgrade shop (open with CartUpgradeMenuKey while in the
     // truck/shop). Levels persist for the whole run and are synced to clients.
@@ -109,110 +131,203 @@ public static class ModConfig
     public static ConfigEntry<int> CartSellCost;
     public static ConfigEntry<float> CartSellFraction;
 
+    // --- Level Info panel ---
+    // Right-side overlay logging each level change (number + name + rolled surprises),
+    // with a hotkey to hide/show it.
+    public static ConfigEntry<bool> LevelInfoEnabled;
+    public static ConfigEntry<UnityEngine.KeyCode> LevelInfoToggleKey;
+    public static ConfigEntry<int> LevelInfoMaxEntries;
+
+    // --- Server Info panel ---
+    // Passive lobby/menu overlay showing current Photon region, ping, room code and
+    // player count. Reads PhotonNetwork state only — never opens sockets or callbacks.
+    public static ConfigEntry<bool> ServerInfoEnabled;
+
+    // --- Diagnostics ---
+    // Temporary kill-switches to isolate whether the mod interferes with the game's
+    // own Photon connection (regions spinner / stuck loading). Both default off.
+    public static ConfigEntry<bool> DiagnosticDisablePatches;
+    public static ConfigEntry<bool> DiagnosticDisableRuntimeObjects;
+
+    // REPOConfig (nickklmao) reads this exact string tag on a ConfigEntry to exclude it
+    // from the in-game menu. Used for free-form strings it can't render as a slider/list.
+    private const string HideFromRepoConfig = "HideFromREPOConfig";
+
+    private static ConfigEntry<int> BindInt(ConfigFile cfg, string section, string key,
+        int def, int min, int max, string desc) =>
+        cfg.Bind(section, key, def, new ConfigDescription(desc, new AcceptableValueRange<int>(min, max)));
+
+    private static ConfigEntry<float> BindFloat(ConfigFile cfg, string section, string key,
+        float def, float min, float max, string desc) =>
+        cfg.Bind(section, key, def, new ConfigDescription(desc, new AcceptableValueRange<float>(min, max)));
+
     public static void Init(ConfigFile cfg)
     {
-        RampStartLevel = cfg.Bind(
-            "General", "RampStartLevel", 4,
+        DiagnosticDisablePatches = cfg.Bind(
+            "Diagnostics", "DisablePatches", false,
+            "DIAGNOSTIC (default off). If true, skip ALL Harmony gameplay patches. Used only to isolate whether the mod's patches interfere with Photon connecting. Leave off for normal play.");
+        DiagnosticDisableRuntimeObjects = cfg.Bind(
+            "Diagnostics", "DisableRuntimeObjects", false,
+            "DIAGNOSTIC (default off). If true, skip creating the mod's runtime menu/HUD objects (networking, timer, cart menu, ping, Photon HUD). Used only to isolate whether they interfere with Photon connecting. Leave off for normal play.");
+
+        RampStartLevel = BindInt(cfg,
+            "General", "RampStartLevel", 4, 0, 30,
             "Levels completed before difficulty scaling starts. 4 = first 4 levels are vanilla, scaling begins on the 5th.");
 
-        EnemyHealthPerLevel = cfg.Bind(
-            "Enemies", "HealthPerLevel", 0.15f,
+        EnemyHealthPerLevel = BindFloat(cfg,
+            "Enemies", "HealthPerLevel", 0.15f, 0f, 2f,
             "Extra enemy max HP per level past the ramp start. 0.15 = +15% per level (cumulative, additive).");
-        EnemyHealthMax = cfg.Bind(
-            "Enemies", "HealthMaxMultiplier", 3.0f,
+        EnemyHealthMax = BindFloat(cfg,
+            "Enemies", "HealthMaxMultiplier", 3.0f, 1f, 20f,
             "Global upper cap on the enemy HP multiplier. 3.0 = at most 3x vanilla HP.");
+        // Free-form string (name:mult list) — REPOConfig can't render this sensibly, so hide it.
         EnemyHealthMaxPerEnemy = cfg.Bind(
             "Enemies", "HealthMaxPerEnemy", "Elsa:2, Loom:1.5, Cleanup Crew:1.5, Tick:1.5",
-            "Per-enemy HP cap overrides. Format: 'Name:multiplier, Name:multiplier'. Names match EnemyParent.enemyName (case-insensitive). Unlisted enemies use HealthMaxMultiplier. Enable LogEnemyNames to see exact names.");
+            new ConfigDescription(
+                "Per-enemy HP cap overrides. Format: 'Name:multiplier, Name:multiplier'. Names match EnemyParent.enemyName (case-insensitive). Unlisted enemies use HealthMaxMultiplier. Enable LogEnemyNames to see exact names.",
+                null, HideFromRepoConfig));
         LogEnemyNames = cfg.Bind(
             "Enemies", "LogEnemyNames", true,
             "Log each enemy's internal name the first time it spawns, so you can tune HealthMaxPerEnemy.");
 
-        EnemyDamagePerLevel = cfg.Bind(
-            "Enemies", "DamagePerLevel", 0.10f,
+        EnemyDamagePerLevel = BindFloat(cfg,
+            "Enemies", "DamagePerLevel", 0.10f, 0f, 2f,
             "Extra enemy attack damage per level past the ramp start. 0.10 = +10% per level.");
-        EnemyDamageMax = cfg.Bind(
-            "Enemies", "DamageMaxMultiplier", 3.0f,
+        EnemyDamageMax = BindFloat(cfg,
+            "Enemies", "DamageMaxMultiplier", 3.0f, 1f, 20f,
             "Upper cap on the enemy damage multiplier.");
 
-        EnemySpeedPerLevel = cfg.Bind(
-            "Enemies", "SpeedPerLevel", 0.06f,
+        EnemySpeedPerLevel = BindFloat(cfg,
+            "Enemies", "SpeedPerLevel", 0.06f, 0f, 1f,
             "Extra enemy movement speed per level past the ramp start. 0.06 = +6% per level.");
-        EnemySpeedMax = cfg.Bind(
-            "Enemies", "SpeedMaxMultiplier", 1.75f,
+        EnemySpeedMax = BindFloat(cfg,
+            "Enemies", "SpeedMaxMultiplier", 1.75f, 1f, 4f,
             "Upper cap on the enemy speed multiplier. Keep modest; too high makes enemies uncatchable/janky.");
 
-        EnemyRespawnFasterPerLevel = cfg.Bind(
-            "Enemies", "RespawnFasterPerLevel", 0.08f,
+        EnemyRespawnFasterPerLevel = BindFloat(cfg,
+            "Enemies", "RespawnFasterPerLevel", 0.08f, 0f, 1f,
             "How much shorter the enemy respawn wait gets per level. 0.08 = -8% wait per level.");
-        EnemyRespawnMinFactor = cfg.Bind(
-            "Enemies", "RespawnMinFactor", 0.3f,
+        EnemyRespawnMinFactor = BindFloat(cfg,
+            "Enemies", "RespawnMinFactor", 0.3f, 0.05f, 1f,
             "Floor for the respawn-wait multiplier. 0.3 = respawn wait never drops below 30% of vanilla.");
 
-        QuotaPerLevel = cfg.Bind(
-            "Quota", "QuotaPerLevel", 0.10f,
+        QuotaPerLevel = BindFloat(cfg,
+            "Quota", "QuotaPerLevel", 0.10f, 0f, 2f,
             "Extra extraction quota per level past the ramp start. 0.10 = +10% per level.");
-        QuotaMax = cfg.Bind(
-            "Quota", "QuotaMaxMultiplier", 5.0f,
+        QuotaMax = BindFloat(cfg,
+            "Quota", "QuotaMaxMultiplier", 5.0f, 1f, 20f,
             "Upper cap on the quota multiplier.");
-        QuotaMaxLootFraction = cfg.Bind(
-            "Quota", "QuotaMaxLootFraction", 0.9f,
+        QuotaMaxLootFraction = BindFloat(cfg,
+            "Quota", "QuotaMaxLootFraction", 0.9f, 0.1f, 1f,
             "Quota can never exceed this fraction of the total loot value on the level (keeps levels beatable). 0.9 = at most 90%.");
 
         // --- Surprise modifier effect strengths ---
-        FragileLootFactor = cfg.Bind(
-            "Modifier Tuning", "FragileLootFactor", 2.0f,
+        FragileLootFactor = BindFloat(cfg,
+            "Modifier Tuning", "FragileLootFactor", 2.0f, 0.1f, 10f,
             "FragileLoot: multiplies loot fragility. >1 = breaks more easily. 2.0 = twice as fragile.");
-        ProtectedLootFactor = cfg.Bind(
-            "Modifier Tuning", "ProtectedLootFactor", 0.4f,
+        ProtectedLootFactor = BindFloat(cfg,
+            "Modifier Tuning", "ProtectedLootFactor", 0.4f, 0.1f, 10f,
             "ProtectedLoot: multiplies loot fragility. <1 = harder to break. 0.4 = 60% less fragile.");
-        HeavyLootFactor = cfg.Bind(
-            "Modifier Tuning", "HeavyLootFactor", 1.75f,
+        HeavyLootFactor = BindFloat(cfg,
+            "Modifier Tuning", "HeavyLootFactor", 1.75f, 0.1f, 10f,
             "HeavyLoot: multiplies loot mass. >1 = heavier.");
-        LightLootFactor = cfg.Bind(
-            "Modifier Tuning", "LightLootFactor", 0.5f,
+        LightLootFactor = BindFloat(cfg,
+            "Modifier Tuning", "LightLootFactor", 0.5f, 0.1f, 10f,
             "LightLoot: multiplies loot mass. <1 = lighter.");
-        LightMonsterMaxMass = cfg.Bind(
-            "Modifier Tuning", "LightMonsterMaxMass", 3.0f,
+        LightMonsterMaxMass = BindFloat(cfg,
+            "Modifier Tuning", "LightMonsterMaxMass", 3.0f, 0.1f, 50f,
             "LightMonsters: cap every monster's mass at this value (lighter = easier to shove around).");
-        HeavyMonsterMinMass = cfg.Bind(
-            "Modifier Tuning", "HeavyMonsterMinMass", 7.0f,
+        HeavyMonsterMinMass = BindFloat(cfg,
+            "Modifier Tuning", "HeavyMonsterMinMass", 7.0f, 0.1f, 50f,
             "HeavyMonsters: raise every monster's mass to at least this value (heavier = harder to move).");
-        BiggerSoulDropsFactor = cfg.Bind(
-            "Modifier Tuning", "BiggerSoulDropsFactor", 2.0f,
+        BiggerSoulDropsFactor = BindFloat(cfg,
+            "Modifier Tuning", "BiggerSoulDropsFactor", 2.0f, 0.1f, 10f,
             "BiggerSoulDrops: multiplies the money value of each enemy soul drop. 2.0 = each drop worth twice as much. Does not change drop count.");
-        MonsterPitDamageFactor = cfg.Bind(
-            "Modifier Tuning", "MonsterPitDamageFactor", 0.5f,
+        MonsterPitDamageFactor = BindFloat(cfg,
+            "Modifier Tuning", "MonsterPitDamageFactor", 0.5f, 0f, 5f,
             "MonstersPitTanky: multiplies death-pit chip damage dealt to monsters (moon 2+). 0.5 = monsters take half pit damage. Instant-kill pits on early moons are unaffected.");
-        ExtraGachaCubesPerSpawn = cfg.Bind(
-            "Modifier Tuning", "ExtraGachaCubesPerSpawn", 1,
+        ExtraGachaCubesPerSpawn = BindInt(cfg,
+            "Modifier Tuning", "ExtraGachaCubesPerSpawn", 1, 0, 10,
             "MoreGachaCubes: how many additional cosmetic 'gacha' cubes to spawn per cube the game would normally place. Capped by the level's available spawn spots. 1 = roughly double.");
-        DangerousLootDamageFactor = cfg.Bind(
-            "Modifier Tuning", "DangerousLootDamageFactor", 2.0f,
+        DangerousLootDamageFactor = BindFloat(cfg,
+            "Modifier Tuning", "DangerousLootDamageFactor", 2.0f, 0.1f, 10f,
             "DangerousLoot: multiplies the damage hazardous valuables (cursed dolls, radioactive cups, barrels, saws, etc.) deal to players. 2.0 = double damage.");
-        SoulsExplodeHarderFactor = cfg.Bind(
-            "Modifier Tuning", "SoulsExplodeHarderFactor", 2.0f,
+        SoulsExplodeHarderFactor = BindFloat(cfg,
+            "Modifier Tuning", "SoulsExplodeHarderFactor", 2.0f, 0.1f, 10f,
             "SoulsExplodeHarder: multiplies the player damage of enemy-soul explosions (moon 4+). 2.0 = double explosion damage.");
-        SpreadUpgradesCount = cfg.Bind(
-            "Modifier Tuning", "SpreadUpgradesCount", 3,
+        SpreadUpgradesCount = BindInt(cfg,
+            "Modifier Tuning", "SpreadUpgradesCount", 3, 0, 10,
             "SpreadUpgrades: how many upgrade item pickups to scatter across the special level. They can't be used on that level, only once back in the truck.");
-        LevelTimerSeconds = cfg.Bind(
-            "Modifier Tuning", "LevelTimerSeconds", 300f,
+        LevelTimerSeconds = BindFloat(cfg,
+            "Modifier Tuning", "LevelTimerSeconds", 300f, 30f, 1200f,
             "LevelTimer: starting countdown in seconds. When it hits 0 the level restarts and rerolls to a fresh layout (progress is not lost, the level is just regenerated).");
-        LevelTimerKillBonus = cfg.Bind(
-            "Modifier Tuning", "LevelTimerKillBonus", 10f,
+        LevelTimerKillBonus = BindFloat(cfg,
+            "Modifier Tuning", "LevelTimerKillBonus", 10f, 0f, 120f,
             "LevelTimer: seconds added to the clock for each enemy killed.");
-        LevelTimerDeathPenalty = cfg.Bind(
-            "Modifier Tuning", "LevelTimerDeathPenalty", 30f,
+        LevelTimerDeathPenalty = BindFloat(cfg,
+            "Modifier Tuning", "LevelTimerDeathPenalty", 30f, 0f, 300f,
             "LevelTimer: seconds removed from the clock each time a player dies.");
-        LevelTimerQuotaBonus = cfg.Bind(
-            "Modifier Tuning", "LevelTimerQuotaBonus", 60f,
+        LevelTimerQuotaBonus = BindFloat(cfg,
+            "Modifier Tuning", "LevelTimerQuotaBonus", 60f, 0f, 300f,
             "LevelTimer: seconds added when an extraction point's quota is completed.");
 
         // --- Late Join ---
         LateJoinEnabled = cfg.Bind(
             "Late Join", "Enabled", true,
             "Host keeps the room/lobby joinable during a run/shop/truck (REPO normally seals it at run start) and re-syncs mod state to anyone who connects mid-game.");
+
+        // --- Ping ---
+        PingEnabled = cfg.Bind(
+            "Ping", "Enabled", true,
+            "Enable the ping system: press the ping key to mark what you're looking at for the whole team.");
+        PingKey = cfg.Bind(
+            "Ping", "PingKey", UnityEngine.KeyCode.Mouse2,
+            "Key/button to place a ping on whatever you're aiming at (default: middle mouse).");
+        PingMaxDistance = BindFloat(cfg,
+            "Ping", "MaxDistance", 60f, 5f, 200f,
+            "Maximum distance the ping raycast reaches. Beyond this a ping is placed in mid-air along your aim.");
+        PingDurationSeconds = BindFloat(cfg,
+            "Ping", "DurationSeconds", 6f, 1f, 30f,
+            "How long a ping marker stays visible.");
+
+        // --- Photon reachability HUD ---
+        PhotonHudEnabled = cfg.Bind(
+            "Photon HUD", "Enabled", false,
+            "OPT-IN DIAGNOSTIC (default off). Show a small overlay on the main menu with reachability/latency to Photon region name servers. " +
+            "Leave this OFF for normal play: it TCP-probes the same Photon name servers the game uses, and that connection churn can stall REPO's own 'pick best region' step (regions spin forever / stuck loading online). Only enable it briefly when you're actively diagnosing a connection problem.");
+        PhotonHudRegions = cfg.Bind(
+            "Photon HUD", "Regions", "ns=ns.photonengine.io, exitgames=ns.exitgames.com",
+            new ConfigDescription(
+                "Comma-separated 'label=host' (or 'label=host:port') pairs to TCP-probe for the HUD. " +
+                "Default probes the Photon name servers (port 443) — the endpoint the game contacts when connecting with an empty/best region, which is where 'stuck loading online' usually hangs.",
+                null, HideFromRepoConfig));
+
+        // --- Level Info panel ---
+        LevelInfoEnabled = cfg.Bind(
+            "Level Info", "Enabled", true,
+            "Show a panel on the right side of the screen that logs each level change (run number + name, plus any rolled surprise modifiers).");
+        LevelInfoToggleKey = cfg.Bind(
+            "Level Info", "ToggleKey", UnityEngine.KeyCode.F8,
+            "Key to hide/show the level info panel.");
+        LevelInfoMaxEntries = BindInt(cfg,
+            "Level Info", "MaxEntries", 6, 1, 20,
+            "How many recent level changes to keep listed on screen.");
+
+        // --- Server Info panel ---
+        ServerInfoEnabled = cfg.Bind(
+            "Server Info", "Enabled", true,
+            "Show a passive overlay in the lobby/menu with the current Photon region, ping, room code and player count. Reads connection state only — never opens sockets, so it's safe on the main menu.");
+
+        // --- Auto Backup Saves ---
+        AutoBackupEnabled = cfg.Bind(
+            "Auto Backup Saves", "Enabled", true,
+            "Back up the run save before REPO deletes it on a level fail/wipe. Backups go to a 'saves_IncreaseHardMod_backups' folder next to your saves.");
+        AutoBackupKeepSave = cfg.Bind(
+            "Auto Backup Saves", "KeepSaveLoadable", true,
+            "Also skip the deletion entirely so the failed save stays in your normal save list and can be reloaded from its last checkpoint (the shop before the failed level).");
+        AutoBackupMaxPerSave = BindInt(cfg,
+            "Auto Backup Saves", "MaxBackupsPerSave", 5, 0, 100,
+            "How many timestamped backups to keep per save file. Oldest are pruned. 0 = keep all.");
 
         // --- Cart / truck upgrades ---
         CartUpgradesEnabled = cfg.Bind(
@@ -221,49 +336,49 @@ public static class ModConfig
         CartUpgradeMenuKey = cfg.Bind(
             "Cart Upgrades", "MenuKey", UnityEngine.KeyCode.U,
             "Key the HOST presses (while in the truck/shop) to open/close the cart upgrade menu.");
-        CartUpgradeCostGrowth = cfg.Bind(
-            "Cart Upgrades", "CostGrowth", 1.6f,
+        CartUpgradeCostGrowth = BindFloat(cfg,
+            "Cart Upgrades", "CostGrowth", 1.6f, 1f, 5f,
             "Cost multiplier per already-owned level of a given upgrade. 1.6 = each level costs 60% more than the last.");
-        CartHealPercentPerLevel = cfg.Bind(
-            "Cart Upgrades", "HealPercentPerLevel", 0.25f,
+        CartHealPercentPerLevel = BindFloat(cfg,
+            "Cart Upgrades", "HealPercentPerLevel", 0.25f, 0f, 2f,
             "Heal Power: extra healing effectiveness per level. 0.25 = +25% healing per level (truck final-heal, medkits, drones).");
-        CartHealMaxLevel = cfg.Bind(
-            "Cart Upgrades", "HealMaxLevel", 3,
+        CartHealMaxLevel = BindInt(cfg,
+            "Cart Upgrades", "HealMaxLevel", 3, 0, 20,
             "Heal Power: maximum purchasable level.");
-        CartHealBaseCost = cfg.Bind(
-            "Cart Upgrades", "HealBaseCost", 10000,
+        CartHealBaseCost = BindInt(cfg,
+            "Cart Upgrades", "HealBaseCost", 10000, 0, 1000000,
             "Heal Power: cost of the first level (grows by CostGrowth each level).");
-        CartChargePercentPerLevel = cfg.Bind(
-            "Cart Upgrades", "ChargePercentPerLevel", 0.20f,
+        CartChargePercentPerLevel = BindFloat(cfg,
+            "Cart Upgrades", "ChargePercentPerLevel", 0.20f, 0f, 1f,
             "Charge Efficiency: reduction of the truck charging station's energy-pool drain per level. 0.20 = -20% drain per level.");
-        CartChargeMaxLevel = cfg.Bind(
-            "Cart Upgrades", "ChargeMaxLevel", 3,
+        CartChargeMaxLevel = BindInt(cfg,
+            "Cart Upgrades", "ChargeMaxLevel", 3, 0, 20,
             "Charge Efficiency: maximum purchasable level.");
-        CartChargeBaseCost = cfg.Bind(
-            "Cart Upgrades", "ChargeBaseCost", 10000,
+        CartChargeBaseCost = BindInt(cfg,
+            "Cart Upgrades", "ChargeBaseCost", 10000, 0, 1000000,
             "Charge Efficiency: cost of the first level (grows by CostGrowth each level).");
-        CartSellCost = cfg.Bind(
-            "Cart Upgrades", "SellUnlockCost", 50000,
+        CartSellCost = BindInt(cfg,
+            "Cart Upgrades", "SellUnlockCost", 50000, 0, 1000000,
             "Loot Cash-In: one-time cost to unlock selling leftover valuables after all quotas are closed.");
-        CartSellFraction = cfg.Bind(
-            "Cart Upgrades", "SellFraction", 0.75f,
+        CartSellFraction = BindFloat(cfg,
+            "Cart Upgrades", "SellFraction", 0.75f, 0f, 1f,
             "Loot Cash-In: fraction of a leftover valuable's value returned as currency when sold. 0.75 = 75%.");
 
         // --- Surprise / special-level system ---
         SurprisesEnabled = cfg.Bind(
             "Surprises", "Enabled", true,
             "Master switch for the surprise/special-level system.");
-        SpecialLevelChancePercent = cfg.Bind(
-            "Surprises", "SpecialLevelChancePercent", 40,
+        SpecialLevelChancePercent = BindInt(cfg,
+            "Surprises", "SpecialLevelChancePercent", 40, 0, 100,
             "Percent chance (0-100) that any eligible level becomes a special level with modifiers.");
-        ModifiersPerLevelMin = cfg.Bind(
-            "Surprises", "ModifiersPerLevelMin", 1,
+        ModifiersPerLevelMin = BindInt(cfg,
+            "Surprises", "ModifiersPerLevelMin", 1, 0, 10,
             "Minimum number of modifiers a special level rolls.");
-        ModifiersPerLevelMax = cfg.Bind(
-            "Surprises", "ModifiersPerLevelMax", 2,
+        ModifiersPerLevelMax = BindInt(cfg,
+            "Surprises", "ModifiersPerLevelMax", 2, 0, 10,
             "Maximum number of modifiers a special level rolls.");
-        SurprisesStartLevel = cfg.Bind(
-            "Surprises", "StartLevel", 1,
+        SurprisesStartLevel = BindInt(cfg,
+            "Surprises", "StartLevel", 1, 0, 30,
             "Levels completed before special levels can appear. 1 = from the 2nd level onward.");
 
         foreach (Modifiers.ModifierType m in System.Enum.GetValues(typeof(Modifiers.ModifierType)))

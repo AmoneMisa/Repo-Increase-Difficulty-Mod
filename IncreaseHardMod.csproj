@@ -11,10 +11,15 @@
     <RestoreAdditionalProjectSources>https://api.nuget.org/v3/index.json;https://nuget.bepinex.dev/v3/index.json</RestoreAdditionalProjectSources>
     <NoWarn>$(NoWarn);CS0436;CS0618;Publicizer001</NoWarn>
 
-    <!-- Path to the REPO game install. Override with -p:GameDir=... if it ever moves. -->
+    <!-- Path to the REPO game install (for referencing/publicizing the game assemblies).
+         Override with -p:GameDir=... if it ever moves. -->
     <GameDir Condition="'$(GameDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\REPO</GameDir>
     <ManagedDir>$(GameDir)\REPO_Data\Managed</ManagedDir>
-    <PluginsDir>$(GameDir)\BepInEx\plugins\IncreaseHardMod</PluginsDir>
+
+    <!-- The game is launched via Thunderstore Mod Manager, which loads plugins from the
+         active profile folder (NOT the Steam install). Deploy there so builds actually
+         take effect in-game. Override with -p:PluginsDir=... to target a different profile. -->
+    <PluginsDir Condition="'$(PluginsDir)' == ''">$(AppData)\Thunderstore Mod Manager\DataFolder\REPO\profiles\Default\BepInEx\plugins\IncreaseHardMod</PluginsDir>
   </PropertyGroup>
 
   <!-- _decompiled/ is a read-only reference dump of the game code; never compile it. -->
