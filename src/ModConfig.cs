@@ -79,6 +79,9 @@ public static class ModConfig
     public static ConfigEntry<float> DangerousLootDamageFactor;
     public static ConfigEntry<float> SoulsExplodeHarderFactor;
     public static ConfigEntry<int> SpreadUpgradesCount;
+    public static ConfigEntry<string> SpreadUpgradesAllowed;
+    public static ConfigEntry<bool> LogSpreadUpgradeNames;
+    public static ConfigEntry<bool> AutoReviveAtCar;
     public static ConfigEntry<float> LevelTimerSeconds;
     public static ConfigEntry<float> LevelTimerKillBonus;
     public static ConfigEntry<float> LevelTimerDeathPenalty;
@@ -97,6 +100,35 @@ public static class ModConfig
     public static ConfigEntry<UnityEngine.KeyCode> PingKey;
     public static ConfigEntry<float> PingMaxDistance;
     public static ConfigEntry<float> PingDurationSeconds;
+    // Max live Location pings per player (gated behind the "Ping Anywhere" upgrade).
+    public static ConfigEntry<int> MaxLocationPings;
+    // Shop prices for the two ping-gate upgrades.
+    public static ConfigEntry<int> PingAnywhereBasePrice;
+    public static ConfigEntry<int> PingInfoBasePrice;
+    // "Pin": a one-time permanent unlock (like Ping Anywhere) letting you place Location pins.
+    public static ConfigEntry<int> PinBasePrice;
+
+    // --- Item Unstuck (valuable safety net) ---
+    // Host-authoritative safeguards for valuables: relocate ones trapped in geometry,
+    // keep them invulnerable until first grabbed, and show a valuable's undamaged value.
+    public static ConfigEntry<bool> ItemUnstuckEnabled;
+    public static ConfigEntry<bool> ValuableRelocateStuck;
+    public static ConfigEntry<float> ValuableStuckSeconds;
+    public static ConfigEntry<bool> ValuableInvulnerableUntilGrab;
+    public static ConfigEntry<bool> ValuableShowUndamagedValue;
+
+    // --- Dead Map Access ---
+    // Let a dead/spectating player still open their map tool (the map view is re-anchored to
+    // the spectate camera so it stays visible). Client-side; each player controls their own.
+    public static ConfigEntry<bool> DeadMapAccessEnabled;
+
+    // --- Map Vote ---
+    // While in the truck lobby, players vote on which map to run next (a small set of random
+    // candidates). Whatever is leading when the truck departs is used instead of the game's
+    // random pick. HOST-SIDE application (the host overrides the pick and syncs it normally).
+    public static ConfigEntry<bool> MapVoteEnabled;
+    public static ConfigEntry<int> MapVoteChoices;
+    public static ConfigEntry<float> MapVoteSeconds;
 
     // --- Photon reachability HUD ---
     // Small main-menu overlay pinging Photon region name servers so you can see which
@@ -113,11 +145,9 @@ public static class ModConfig
     public static ConfigEntry<int> AutoBackupMaxPerSave;
 
     // --- Cart / truck upgrades ---
-    // A small host-driven upgrade shop (open with CartUpgradeMenuKey while in the
-    // truck/shop). Levels persist for the whole run and are synced to clients.
+    // Team-wide truck upgrades sold in the normal shop (once anyone owns a level, the whole
+    // squad gets the effect). Effects apply themselves; there is no separate menu.
     public static ConfigEntry<bool> CartUpgradesEnabled;
-    public static ConfigEntry<UnityEngine.KeyCode> CartUpgradeMenuKey;
-    public static ConfigEntry<float> CartUpgradeCostGrowth;
     // Heal power: scales all incoming healing (truck final-heal, medkits, drones).
     public static ConfigEntry<float> CartHealPercentPerLevel;
     public static ConfigEntry<int> CartHealMaxLevel;
@@ -126,22 +156,77 @@ public static class ModConfig
     public static ConfigEntry<float> CartChargePercentPerLevel;
     public static ConfigEntry<int> CartChargeMaxLevel;
     public static ConfigEntry<int> CartChargeBaseCost;
-    // Post-quota selling: once bought, leftover valuables can be cashed in AFTER
+    // Post-quota selling: once bought, leftover valuables are auto-cashed AFTER
     // every extraction quota is closed, for CartSellFraction of their value.
     public static ConfigEntry<int> CartSellCost;
     public static ConfigEntry<float> CartSellFraction;
+
+    // --- Player Upgrades (custom per-player upgrades sold in the DEFAULT shop) ---
+    // Registered via REPOLib as runtime clones of vanilla upgrade items, so they roll
+    // in the normal shop upgrade booth and are tracked/saved/synced per player.
+    public static ConfigEntry<bool> PlayerUpgradesEnabled;
+    // Stamina: each level reduces sprint energy drain by this fraction.
+    public static ConfigEntry<float> StaminaPercentPerLevel;
+    public static ConfigEntry<int> StaminaMaxLevel;
+    public static ConfigEntry<int> StaminaBasePrice;
+    // HP Regen: very slow passive heal, only up to a fraction of max HP, then stops.
+    public static ConfigEntry<float> RegenPercentPerLevel;
+    public static ConfigEntry<float> RegenMaxHpFraction;
+    public static ConfigEntry<int> RegenMaxLevel;
+    public static ConfigEntry<int> RegenBasePrice;
+    // Death Protection: consumable charge; survive a lethal hit at 1 HP, re-bought each use.
+    public static ConfigEntry<int> DeathProtectMaxCharges;
+    public static ConfigEntry<int> DeathProtectBasePrice;
+    // Battery Life: separate upgrades per gun type (Bullet/Laser/Tranq) and for drones.
+    // Each level adds effective battery life (refunds a fraction of drain), so the item
+    // lasts longer. "+100%" = twice the usage.
+    public static ConfigEntry<float> GunBatteryPercentPerLevel;
+    public static ConfigEntry<int> GunBatteryMaxLevel;
+    public static ConfigEntry<int> GunBatteryBasePrice;
+    public static ConfigEntry<float> DroneBatteryPercentPerLevel;
+    public static ConfigEntry<int> DroneBatteryMaxLevel;
+    public static ConfigEntry<int> DroneBatteryBasePrice;
+    // Autoscan: passively discovers nearby valuables; each level widens the scan radius.
+    public static ConfigEntry<float> AutoscanRangePerLevel;
+    public static ConfigEntry<int> AutoscanMaxLevel;
+    public static ConfigEntry<float> AutoscanInterval;
+    public static ConfigEntry<int> AutoscanBasePrice;
+    // Map Suite: single 10-level upgrade, each level unlocking a map feature (counts,
+    // quota path, zoom, cosmetic-box tracker, monster dots). Level->feature ladder is fixed.
+    public static ConfigEntry<int> MapBasePrice;
+    public static ConfigEntry<float> MapZoomFovLevel7;
+    public static ConfigEntry<float> MapZoomFovLevel8;
+    // Live zoom hotkeys while the map is open at L7+ (adjust the FOV on top of the level default).
+    public static ConfigEntry<UnityEngine.KeyCode> MapZoomInKey;
+    public static ConfigEntry<UnityEngine.KeyCode> MapZoomOutKey;
+    public static ConfigEntry<float> MapZoomStep;
+    // When true, the vanilla "Map Player Count" upgrade is removed from the shop (Map Suite replaces it).
+    public static ConfigEntry<bool> MapSuiteReplacesVanilla;
 
     // --- Level Info panel ---
     // Right-side overlay logging each level change (number + name + rolled surprises),
     // with a hotkey to hide/show it.
     public static ConfigEntry<bool> LevelInfoEnabled;
     public static ConfigEntry<UnityEngine.KeyCode> LevelInfoToggleKey;
-    public static ConfigEntry<int> LevelInfoMaxEntries;
 
     // --- Server Info panel ---
     // Passive lobby/menu overlay showing current Photon region, ping, room code and
     // player count. Reads PhotonNetwork state only — never opens sockets or callbacks.
     public static ConfigEntry<bool> ServerInfoEnabled;
+
+    // --- More Players ---
+    // Raise the room's player cap above REPO's default of 6 (host-side; the host's
+    // value defines the room). The game already supports up to 20 internally.
+    public static ConfigEntry<bool> MorePlayersEnabled;
+    public static ConfigEntry<int> MorePlayersMax;
+
+    // --- Shop ---
+    // Scale shop item prices up with player count (big lobbies earn more, so keep it
+    // hard) and optionally let the same item show up multiple times in one shop.
+    public static ConfigEntry<bool> ShopPriceScaleEnabled;
+    public static ConfigEntry<int> ShopPriceBaselinePlayers;
+    public static ConfigEntry<float> ShopPricePerExtraPlayer;
+    public static ConfigEntry<int> ShopDuplicatesExtra;
 
     // --- Diagnostics ---
     // Temporary kill-switches to isolate whether the mod interferes with the game's
@@ -174,7 +259,7 @@ public static class ModConfig
         Modifiers.ModifierType.ExtraSouls         => "Monsters drop more souls.",
         Modifiers.ModifierType.SpreadUpgrades     => "Upgrade pickups are scattered around; usable only back in the truck.",
         Modifiers.ModifierType.NoMap              => "No map until you find a map upgrade pickup.",
-        Modifiers.ModifierType.ReducedPlayerHp    => "Everyone's max HP is cut for the level.",
+        Modifiers.ModifierType.ReducedPlayerHp    => "Everyone starts the level wounded — current HP is cut to a rolled percentage (max HP is untouched, so you can heal back up).",
         Modifiers.ModifierType.AutoRevive         => "Each player gets one automatic revive this level.",
         Modifiers.ModifierType.MoneyLossOnDeath   => "Dying loses a percentage of your collected money.",
         Modifiers.ModifierType.LevelTimer         => "Timed level: kills add time, deaths remove it, quota adds it; at 0 the layout rerolls.",
@@ -285,6 +370,17 @@ public static class ModConfig
         SpreadUpgradesCount = BindInt(cfg,
             "Modifier Tuning", "SpreadUpgradesCount", 3, 0, 10,
             "SpreadUpgrades: how many upgrade item pickups to scatter across the special level. They can't be used on that level, only once back in the truck.");
+        SpreadUpgradesAllowed = cfg.Bind(
+            "Modifier Tuning", "SpreadUpgradesAllowed", "",
+            new ConfigDescription(
+                "SpreadUpgrades: comma-separated list of upgrade item names allowed to be scattered (case-insensitive, substring match against the item's internal name). Empty = any upgrade. Enable LogSpreadUpgradeNames to print the exact names to the log.",
+                null, HideFromRepoConfig));
+        LogSpreadUpgradeNames = cfg.Bind(
+            "Modifier Tuning", "LogSpreadUpgradeNames", false,
+            "Log the internal names of all upgrade items the first time a SpreadUpgrades level generates, so you can fill in SpreadUpgradesAllowed.");
+        AutoReviveAtCar = cfg.Bind(
+            "Modifier Tuning", "AutoReviveAtCar", true,
+            "AutoRevive: bring the auto-revived player back at the level's spawn point (the truck/car drop-off) and fully heal them, instead of reviving them on the spot where they died. Still only one auto-revive per player per level.");
         LevelTimerSeconds = BindFloat(cfg,
             "Modifier Tuning", "LevelTimerSeconds", 300f, 30f, 1200f,
             "LevelTimer: starting countdown in seconds. When it hits 0 the level restarts and rerolls to a fresh layout (progress is not lost, the level is just regenerated).");
@@ -314,8 +410,53 @@ public static class ModConfig
             "Ping", "MaxDistance", 60f, 5f, 200f,
             "Maximum distance the ping raycast reaches. Beyond this a ping is placed in mid-air along your aim.");
         PingDurationSeconds = BindFloat(cfg,
-            "Ping", "DurationSeconds", 6f, 1f, 30f,
-            "How long a ping marker stays visible.");
+            "Ping", "DurationSeconds", 4f, 1f, 30f,
+            "How long a ping marker stays visible (seconds).");
+        MaxLocationPings = BindInt(cfg,
+            "Ping", "MaxLocationPings", 3, 1, 20,
+            "Maximum live Location pings a single player can have at once (needs the 'Ping Anywhere' upgrade). Placing more drops your oldest.");
+        PingAnywhereBasePrice = BindInt(cfg,
+            "Ping", "PingAnywhereBasePrice", 6000, 0, 1000000,
+            "Ping Anywhere upgrade: approximate shop price (unlocks Location pings on any surface / through walls).");
+        PingInfoBasePrice = BindInt(cfg,
+            "Ping", "PingInfoBasePrice", 6000, 0, 1000000,
+            "Ping Info upgrade: approximate shop price (your pings reveal value / rarity / exact names).");
+        PinBasePrice = BindInt(cfg,
+            "Ping", "PinBasePrice", 30000, 0, 1000000,
+            "Pin: approximate shop price for the one-time permanent unlock (buy once, place Location pins forever — like 'Ping Anywhere').");
+
+        // --- Item Unstuck ---
+        ItemUnstuckEnabled = cfg.Bind(
+            "Item Unstuck", "Enabled", true,
+            "Master switch for the valuable safety-net features (relocate stuck loot, invulnerable-until-grab, undamaged-value HUD). The relocate/invuln parts are HOST-SIDE (computed by the host).");
+        ValuableRelocateStuck = cfg.Bind(
+            "Item Unstuck", "RelocateStuck", true,
+            "Detect valuables that have settled embedded inside world geometry and teleport them back to their last safe resting spot (or lift them out). Anti-softlock; host-side.");
+        ValuableStuckSeconds = BindFloat(cfg,
+            "Item Unstuck", "StuckSeconds", 6f, 2f, 60f,
+            "How many seconds a valuable must sit embedded in geometry (and at rest, ungrabbed) before it's relocated.");
+        ValuableInvulnerableUntilGrab = cfg.Bind(
+            "Item Unstuck", "InvulnerableUntilGrab", true,
+            "Valuables take no damage / lose no value until a player grabs them for the first time (uses the game's own indestructible flag). Host-side.");
+        ValuableShowUndamagedValue = cfg.Bind(
+            "Item Unstuck", "ShowUndamagedValue", true,
+            "While you hold a valuable, show its ORIGINAL (undamaged) value on-screen alongside its current value. Client-side, cosmetic.");
+
+        // --- Dead Map Access ---
+        DeadMapAccessEnabled = cfg.Bind(
+            "Dead Map Access", "Enabled", true,
+            "Allow dead/spectating players to open their map tool. The map view is re-anchored to the spectate camera so it stays visible. Client-side — each player controls their own map.");
+
+        // --- Map Vote ---
+        MapVoteEnabled = cfg.Bind(
+            "Map Vote", "Enabled", true,
+            "While in the truck lobby, let players vote on the next map from a few random candidates. Whatever is leading when the truck departs is used instead of the game's random pick. Vote with the number keys (or the on-screen buttons). If nobody votes, the game's normal random selection is used, so this is harmless when ignored. HOST-SIDE: the host applies the winning map and syncs it to everyone normally.");
+        MapVoteChoices = BindInt(cfg,
+            "Map Vote", "Choices", 3, 2, 6,
+            "How many random candidate maps to offer for the vote each lobby.");
+        MapVoteSeconds = BindFloat(cfg,
+            "Map Vote", "Seconds", 60f, 10f, 300f,
+            "How long the vote stays open (host-authoritative). It closes early the moment everyone in the lobby has voted. When it closes, the leading map is locked in and used when the truck departs. If nobody votes, the game's normal random selection is used.");
 
         // --- Photon reachability HUD ---
         PhotonHudEnabled = cfg.Bind(
@@ -335,15 +476,34 @@ public static class ModConfig
             "Show a panel on the right side of the screen that logs each level change (run number + name, plus any rolled surprise modifiers).");
         LevelInfoToggleKey = cfg.Bind(
             "Level Info", "ToggleKey", UnityEngine.KeyCode.F8,
-            "Key to hide/show the level info panel.");
-        LevelInfoMaxEntries = BindInt(cfg,
-            "Level Info", "MaxEntries", 6, 1, 20,
-            "How many recent level changes to keep listed on screen.");
+            "Key to hide/show the level info announcement.");
 
         // --- Server Info panel ---
         ServerInfoEnabled = cfg.Bind(
             "Server Info", "Enabled", true,
             "Show a passive overlay in the lobby/menu with the current Photon region, ping, room code and player count. Reads connection state only — never opens sockets, so it's safe on the main menu.");
+
+        // --- More Players ---
+        MorePlayersEnabled = cfg.Bind(
+            "More Players", "Enabled", false,
+            "Raise the room's max player count above REPO's default of 6. HOST-SIDE: the host's value defines the room cap; joiners don't need this on. Everyone in the lobby should still run the mod to avoid desync.");
+        MorePlayersMax = BindInt(cfg,
+            "More Players", "MaxPlayers", 6, 2, 20,
+            "Maximum players allowed in the room when More Players is enabled. REPO supports up to 20 internally. Large lobbies are unofficial and may be unstable.");
+
+        // --- Shop ---
+        ShopPriceScaleEnabled = cfg.Bind(
+            "Shop", "PriceScaleEnabled", false,
+            "Scale shop item prices up with the number of players, so bigger lobbies (which earn more) still feel expensive. HOST-SIDE: prices are computed by the host and synced.");
+        ShopPriceBaselinePlayers = BindInt(cfg,
+            "Shop", "PriceBaselinePlayers", 4, 1, 20,
+            "Player count at which prices are unchanged. Each player above this raises prices by PricePerExtraPlayer; at or below it, prices are vanilla.");
+        ShopPricePerExtraPlayer = BindFloat(cfg,
+            "Shop", "PricePerExtraPlayer", 0.15f, 0f, 2f,
+            "Extra shop price per player above the baseline. 0.15 = +15% per extra player (e.g. 8 players with baseline 4 = +60%).");
+        ShopDuplicatesExtra = BindInt(cfg,
+            "Shop", "DuplicatesExtra", 0, 0, 10,
+            "Allow the same item (e.g. a gun) to appear more than once in a single shop by adding this many extra copies of each item to the shop pool. 0 = vanilla (usually one of each).");
 
         // --- Auto Backup Saves ---
         AutoBackupEnabled = cfg.Bind(
@@ -359,13 +519,7 @@ public static class ModConfig
         // --- Cart / truck upgrades ---
         CartUpgradesEnabled = cfg.Bind(
             "Cart Upgrades", "Enabled", true,
-            "Enable the host-driven cart/truck upgrade shop. Levels persist for the whole run and are synced to clients.");
-        CartUpgradeMenuKey = cfg.Bind(
-            "Cart Upgrades", "MenuKey", UnityEngine.KeyCode.U,
-            "Key the HOST presses (while in the truck/shop) to open/close the cart upgrade menu.");
-        CartUpgradeCostGrowth = BindFloat(cfg,
-            "Cart Upgrades", "CostGrowth", 1.6f, 1f, 5f,
-            "Cost multiplier per already-owned level of a given upgrade. 1.6 = each level costs 60% more than the last.");
+            "Enable the team-wide truck upgrades (Heal Power, Charge Efficiency, Loot Cash-In). Bought in the normal shop; effects apply for the whole team.");
         CartHealPercentPerLevel = BindFloat(cfg,
             "Cart Upgrades", "HealPercentPerLevel", 0.25f, 0f, 2f,
             "Heal Power: extra healing effectiveness per level. 0.25 = +25% healing per level (truck final-heal, medkits, drones).");
@@ -390,6 +544,89 @@ public static class ModConfig
         CartSellFraction = BindFloat(cfg,
             "Cart Upgrades", "SellFraction", 0.75f, 0f, 1f,
             "Loot Cash-In: fraction of a leftover valuable's value returned as currency when sold. 0.75 = 75%.");
+
+        // --- Player Upgrades (custom, sold in the default shop via REPOLib) ---
+        PlayerUpgradesEnabled = cfg.Bind(
+            "Player Upgrades", "Enabled", true,
+            "Master switch for the mod's custom per-player upgrades that appear in the normal shop. Requires REPOLib. Takes effect on restart.");
+        StaminaPercentPerLevel = BindFloat(cfg,
+            "Player Upgrades", "StaminaPercentPerLevel", 0.10f, 0.01f, 0.5f,
+            "Slower Stamina Use: sprint energy drain reduction per level. 0.10 = -10% drain per level (per player).");
+        StaminaMaxLevel = BindInt(cfg,
+            "Player Upgrades", "StaminaMaxLevel", 5, 1, 20,
+            "Slower Stamina Use: maximum purchasable level.");
+        StaminaBasePrice = BindInt(cfg,
+            "Player Upgrades", "StaminaBasePrice", 4000, 0, 1000000,
+            "Slower Stamina Use: approximate shop price (at one player, before the game's own scaling).");
+        RegenPercentPerLevel = BindFloat(cfg,
+            "Player Upgrades", "RegenPercentPerLevel", 0.002f, 0.0005f, 0.05f,
+            "HP Regen: fraction of MAX HP healed per SECOND, per level. 0.002 = 0.2%/s per level (very slow — ~1 HP every 5s at level 1 for a 100 HP player).");
+        RegenMaxHpFraction = BindFloat(cfg,
+            "Player Upgrades", "RegenMaxHpFraction", 0.30f, 0.05f, 1f,
+            "HP Regen: stops once current HP reaches this fraction of max HP. 0.30 = regen only fills up to 30% of max HP.");
+        RegenMaxLevel = BindInt(cfg,
+            "Player Upgrades", "RegenMaxLevel", 3, 1, 20,
+            "HP Regen: maximum purchasable level.");
+        RegenBasePrice = BindInt(cfg,
+            "Player Upgrades", "RegenBasePrice", 20000, 0, 1000000,
+            "HP Regen: approximate shop price of the first level (very expensive).");
+        DeathProtectMaxCharges = BindInt(cfg,
+            "Player Upgrades", "DeathProtectMaxCharges", 1, 1, 9,
+            "Death Protection: max charges you can stockpile at once. Each charge saves you from one lethal hit (survive at 1 HP) and is consumed on use; re-buy to restore.");
+        DeathProtectBasePrice = BindInt(cfg,
+            "Player Upgrades", "DeathProtectBasePrice", 50000, 0, 1000000,
+            "Death Protection: approximate shop price per charge (very-very expensive).");
+        GunBatteryPercentPerLevel = BindFloat(cfg,
+            "Player Upgrades", "GunBatteryPercentPerLevel", 0.05f, 0.01f, 0.5f,
+            "Gun Battery Life: extra effective battery life per level (shared by the Bullet/Laser/Tranq gun upgrades). 0.05 = +5%/level; capped at +100% total.");
+        GunBatteryMaxLevel = BindInt(cfg,
+            "Player Upgrades", "GunBatteryMaxLevel", 20, 1, 100,
+            "Gun Battery Life: maximum purchasable level (20 x 5% = +100%).");
+        GunBatteryBasePrice = BindInt(cfg,
+            "Player Upgrades", "GunBatteryBasePrice", 6000, 0, 1000000,
+            "Gun Battery Life: approximate shop price of the first level (each gun type is a separate upgrade).");
+        DroneBatteryPercentPerLevel = BindFloat(cfg,
+            "Player Upgrades", "DroneBatteryPercentPerLevel", 0.05f, 0.01f, 0.5f,
+            "Drone Battery Life: extra effective battery life per level. 0.05 = +5%/level; capped at +100% total.");
+        DroneBatteryMaxLevel = BindInt(cfg,
+            "Player Upgrades", "DroneBatteryMaxLevel", 20, 1, 100,
+            "Drone Battery Life: maximum purchasable level (20 x 5% = +100%).");
+        DroneBatteryBasePrice = BindInt(cfg,
+            "Player Upgrades", "DroneBatteryBasePrice", 6000, 0, 1000000,
+            "Drone Battery Life: approximate shop price of the first level.");
+        AutoscanRangePerLevel = BindFloat(cfg,
+            "Player Upgrades", "AutoscanRangePerLevel", 5f, 1f, 30f,
+            "Autoscan: scan radius added per level, in metres. 5 = level 1 discovers valuables within 5m, level 2 within 10m, etc.");
+        AutoscanMaxLevel = BindInt(cfg,
+            "Player Upgrades", "AutoscanMaxLevel", 5, 1, 20,
+            "Autoscan: maximum purchasable level.");
+        AutoscanInterval = BindFloat(cfg,
+            "Player Upgrades", "AutoscanInterval", 1f, 0.1f, 10f,
+            "Autoscan: seconds between scans. Lower = discovers valuables faster but costs more CPU.");
+        AutoscanBasePrice = BindInt(cfg,
+            "Player Upgrades", "AutoscanBasePrice", 8000, 0, 1000000,
+            "Autoscan: approximate shop price of the first level.");
+        MapBasePrice = BindInt(cfg,
+            "Player Upgrades", "MapBasePrice", 15000, 0, 1000000,
+            "Map Suite: approximate shop price of the FIRST level (very expensive). A single upgrade with 10 levels, each unlocking a map feature: L1-5 live counts + quota path, L6 team pings on the map, L7-8 zoom out, L9 cosmetic-box tracker, L10 monster dots.");
+        MapZoomFovLevel7 = BindFloat(cfg,
+            "Player Upgrades", "MapZoomFovLevel7", 62f, 50f, 120f,
+            "Map Suite L7: camera field-of-view used while the map is open (higher = more zoomed out, see more of the level at once). Vanilla map view is 50.");
+        MapZoomFovLevel8 = BindFloat(cfg,
+            "Player Upgrades", "MapZoomFovLevel8", 74f, 50f, 120f,
+            "Map Suite L8: camera field-of-view while the map is open once level 8 is reached (higher = even more zoomed out).");
+        MapZoomInKey = cfg.Bind(
+            "Player Upgrades", "MapZoomInKey", UnityEngine.KeyCode.Minus,
+            "Map Suite L7+: key to zoom the map view IN (lower FOV) while the map is open. Also accepts Keypad Minus and '['.");
+        MapZoomOutKey = cfg.Bind(
+            "Player Upgrades", "MapZoomOutKey", UnityEngine.KeyCode.Equals,
+            "Map Suite L7+: key to zoom the map view OUT (higher FOV) while the map is open. Also accepts Keypad Plus and ']'.");
+        MapZoomStep = BindFloat(cfg,
+            "Player Upgrades", "MapZoomStep", 6f, 1f, 30f,
+            "Map Suite L7+: how much field-of-view each zoom-hotkey press adds/removes on top of the level's default FOV.");
+        MapSuiteReplacesVanilla = cfg.Bind(
+            "Player Upgrades", "MapSuiteReplacesVanilla", true,
+            "Remove the vanilla 'Map Player Count' upgrade from the shop so Map Suite replaces it (Map Suite already includes live player counts).");
 
         // --- Surprise / special-level system ---
         SurprisesEnabled = cfg.Bind(

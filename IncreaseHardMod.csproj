@@ -28,6 +28,11 @@
     <None Include="_decompiled\**\*.cs" />
   </ItemGroup>
 
+  <!-- Upgrade icons: embedded into the DLL so they ship as a single file (no extra deploy). -->
+  <ItemGroup>
+    <EmbeddedResource Include="src\Textures\*.png" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="BepInEx.Core" Version="5.4.21" />
     <PackageReference Include="Krafs.Publicizer" Version="2.2.1" />
@@ -50,6 +55,13 @@
     </Reference>
     <Reference Include="Photon3Unity3D">
       <HintPath>$(ManagedDir)\Photon3Unity3D.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- REPOLib (Zehs) — required dependency for registering custom shop upgrades.
+         Vendored under libs/ so the mod compiles without a local game install; players
+         must also install REPOLib via the mod manager for it to work at runtime. -->
+    <Reference Include="REPOLib">
+      <HintPath>libs\REPOLib.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

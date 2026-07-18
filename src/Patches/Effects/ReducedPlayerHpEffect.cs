@@ -5,27 +5,24 @@ using UnityEngine;
 namespace IncreaseHardMod.Patches.Effects;
 
 /// <summary>
-/// ReducedPlayerHp modifier — every player's maximum HP is cut to a rolled
-/// percentage (PlayerHpPercent, 10-90) for the special level.
+/// ReducedPlayerHp modifier — every player STARTS the special level with their current
+/// HP cut to a rolled percentage (PlayerHpPercent, 10-90). Max HP is left untouched, so
+/// players can heal back up to full; they just begin the level wounded.
 ///
-/// A player's max HP is computed exactly once per level, inside the PlayerHealth.
-/// Fetch() coroutine: maxHealth = 100 + StatsManager.GetPlayerMaxHealth(steamID),
-/// where GetPlayerMaxHealth returns the health-upgrade bonus (upgrades * 20). That
-/// getter is called from NOWHERE else in the game, so it is a clean, single choke
-/// point — patching it has no shop/UI side effects. We can't postfix the Fetch
-/// coroutine itself (its body lives in a compiler-generated state machine), but by
-/// reshaping the getter's return value we control the final maxHealth.
+/// A player's starting health for a level is read exactly once, inside the
+/// PlayerHealth.Fetch() coroutine: health = StatsManager.GetPlayerHealth(steamID). That
+/// getter is called from NOWHERE else in the game, so it is a clean, single choke point —
+/// patching it has no shop/UI side effects. We can't postfix the Fetch coroutine itself
+/// (its body lives in a compiler-generated state machine), but by reshaping this getter's
+/// return value we control the health the level starts with.
 ///
-/// The getter only returns the bonus, so to scale the WHOLE max (base 100 + bonus)
-/// we return newBonus = round((100 + bonus) * pct) - 100. That may be negative
-/// (e.g. a no-upgrade player at 10% -> 10 - 100 = -90), which is fine: Fetch adds
-/// the base 100 back, yielding maxHealth = round(origMax * pct), and then clamps
-/// current health into the new range. GetPlayerMaxHealth is deterministic from
-/// synced stats and the modifier set is synced, so every client computes the same
-/// reduction; the owner also broadcasts the result via UpdateHealthRPC. Between
-/// levels the modifier set is Empty, so max HP returns to normal automatically.
+/// Fetch clamps the result into [0, maxHealth] and then both writes it back with
+/// SetPlayerHealth and broadcasts it via UpdateHealthRPC, so every client stays in sync.
+/// GetPlayerHealth is deterministic from synced stats and the modifier set is synced, so
+/// each owner computes the same reduction for their own avatar. Between levels the modifier
+/// set is Empty, so no reduction is applied and carried-over HP is used as normal.
 /// </summary>
-[HarmonyPatch(typeof(StatsManager), "GetPlayerMaxHealth")]
+[HarmonyPatch(typeof(StatsManager), "GetPlayerHealth")]
 internal static class ReducedPlayerHpEffect
 {
     [HarmonyPostfix]
@@ -39,8 +36,10 @@ internal static class ReducedPlayerHpEffect
         if (pct >= 100)
             return;
 
-        int originalMax = 100 + __result;
-        int reducedMax = Mathf.Max(1, Mathf.RoundToInt(originalMax * (pct / 100f)));
-        __result = reducedMax - 100;
+        // Leave the dead/near-dead alone; only scale a meaningful current value.
+        if (__result <= 1)
+            return;
+
+        __result = Mathf.Max(1, Mathf.RoundToInt(__result * (pct / 100f)));
     }
 }

@@ -6,20 +6,22 @@ namespace IncreaseHardMod.Patches.Effects;
 /// <summary>
 /// HeavyLoot / LightLoot modifiers — change how much valuables weigh.
 ///
-/// PhysGrabObject.Awake() captures the object's rigidbody mass into massOriginal.
-/// We postfix it to scale both the live rigidbody mass and massOriginal (the game
-/// restores mass from massOriginal after temporary overrides, so we must scale
-/// both or the change would be reverted).
+/// We must scale mass AFTER the game sets it, not before. ValuableObject.Start()
+/// assigns rb.mass and physGrabObject.massOriginal from its PhysAttributePreset, and
+/// that runs after PhysGrabObject.Awake(). Patching Awake would therefore be clobbered
+/// (which is exactly why HeavyLoot did nothing). Postfixing ValuableObject.Start()
+/// runs once the preset mass is already applied, so our multiplier sticks.
 ///
-/// We only touch valuables — not carts, players, or enemies — by checking for a
-/// ValuableObject component. Mass affects physics identically on every client
-/// that simulates the object, and the modifier set is synced, so it's consistent.
+/// We scale both the live rigidbody mass and massOriginal, because the game restores
+/// mass from massOriginal after temporary physics overrides — scaling only one would
+/// get reverted. This targets valuables only (it's a ValuableObject patch), and mass
+/// simulates identically on every client, so the effect stays consistent in co-op.
 /// </summary>
-[HarmonyPatch(typeof(PhysGrabObject), "Awake")]
+[HarmonyPatch(typeof(ValuableObject), "Start")]
 internal static class LootMassEffect
 {
     [HarmonyPostfix]
-    private static void Postfix(PhysGrabObject __instance)
+    private static void Postfix(ValuableObject __instance)
     {
         var mods = ModifierManager.Current;
 
@@ -31,12 +33,12 @@ internal static class LootMassEffect
         else
             return;
 
-        // Restrict to actual loot.
-        if (__instance.GetComponent<ValuableObject>() == null)
+        var pgo = __instance.physGrabObject;
+        if (pgo == null)
             return;
 
-        if (__instance.rb != null)
-            __instance.rb.mass *= factor;
-        __instance.massOriginal *= factor;
+        if (pgo.rb != null)
+            pgo.rb.mass *= factor;
+        pgo.massOriginal *= factor;
     }
 }

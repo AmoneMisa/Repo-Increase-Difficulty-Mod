@@ -19,7 +19,10 @@ namespace IncreaseHardMod.Patches;
 [HarmonyPatch(typeof(PlayerHealth), "Hurt")]
 internal static class EnemyDamagePatch
 {
+    // Run FIRST among our Hurt prefixes so the damage is fully scaled before
+    // DeathProtection decides whether the (final) blow is lethal and clamps it.
     [HarmonyPrefix]
+    [HarmonyPriority(Priority.First)]
     private static void Prefix(ref int damage, int enemyIndex, bool hurtByHeal)
     {
         // Not enemy damage, or it's actually a heal routed through Hurt.

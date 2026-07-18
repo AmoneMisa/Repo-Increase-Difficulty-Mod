@@ -1,9 +1,10 @@
 using HarmonyLib;
+using IncreaseHardMod.Upgrades;
 
 namespace IncreaseHardMod.Patches.Effects;
 
 /// <summary>
-/// Charge Efficiency cart upgrade — slows the truck charging station's energy drain.
+/// Charge Efficiency truck upgrade — slows the truck charging station's energy drain.
 ///
 /// ChargingStation keeps an internal energy pool (chargeFloat) that ticks down by a
 /// private <c>chargeRate</c> each charge step while items charge during a run. The
@@ -11,10 +12,10 @@ namespace IncreaseHardMod.Patches.Effects;
 /// chargeTotal). We postfix Start to cache that freshly-computed BASE rate and then
 /// scale the live field by the upgrade's drain multiplier (&lt;1 = slower drain).
 ///
-/// Caching the base — rather than repeatedly multiplying the current value — is what
-/// lets <see cref="Reapply"/> re-scale from a stable baseline when the upgrade level
-/// changes mid-run (e.g. the host buys a level, or a client receives new state)
-/// without compounding.
+/// The multiplier comes from the team's highest Charge Efficiency level
+/// (<see cref="TruckUpgrades.ChargeDrainMultiplier"/>). Because the station recomputes
+/// its rate once in Start, applying there covers each fresh level; the multiplier reads
+/// the current team level so it reflects whatever anyone has bought by then.
 /// </summary>
 [HarmonyPatch(typeof(ChargingStation), "Start")]
 internal static class ChargeEfficiencyEffect
@@ -43,6 +44,6 @@ internal static class ChargeEfficiencyEffect
             station.chargeRate = _baseRate;
             return;
         }
-        station.chargeRate = _baseRate * CartUpgradeState.ChargeDrainMultiplier;
+        station.chargeRate = _baseRate * TruckUpgrades.ChargeDrainMultiplier;
     }
 }

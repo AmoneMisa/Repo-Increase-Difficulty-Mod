@@ -20,6 +20,11 @@ namespace IncreaseHardMod.Patches.Effects;
 /// (hosted on the always-alive ModNetwork object) that waits for that head, then
 /// calls Revive().
 ///
+/// Where they come back: ReviveRPC positions the player at their death head. When
+/// AutoReviveAtCar is on, we first teleport the death head to a level SpawnPoint (the
+/// truck/car drop-off) so the player revives back at the car instead of on the spot,
+/// and revive "by truck" so they're fully healed. Otherwise they revive in place.
+///
 /// Host authority: Revive() issues an RPC to everyone, so exactly one client — the
 /// host — must trigger it; we gate on IsMasterClientOrSingleplayer. The one-use-per
 /// -level budget is tracked in a set keyed by PlayerAvatar and cleared every time
@@ -79,7 +84,52 @@ internal static class AutoReviveEffect
             yield break;
 
         // Still the host and still dead? Then bring them back.
-        if (SemiFunc.IsMasterClientOrSingleplayer() && player.deadSet)
+        if (!SemiFunc.IsMasterClientOrSingleplayer() || !player.deadSet)
+            yield break;
+
+        if (ModConfig.AutoReviveAtCar.Value && TryMoveHeadToCar(player))
+        {
+            // Revive "by truck" so TruckHealer fully heals them at the car.
+            player.Revive(TruckHealer.instance != null);
+        }
+        else
+        {
             player.Revive();
+        }
+    }
+
+    /// <summary>
+    /// Teleport the player's death head to a level spawn point (the truck/car drop-off).
+    /// ReviveRPC reads the head's position for the respawn, so moving it here makes the
+    /// player come back at the car. Returns false if no spawn point was found.
+    /// </summary>
+    private static bool TryMoveHeadToCar(PlayerAvatar player)
+    {
+        var head = player.playerDeathHead;
+        if (head == null || head.physGrabObject == null)
+            return false;
+
+        var spawn = FindCarSpawnPoint();
+        if (spawn == null)
+            return false;
+
+        head.physGrabObject.Teleport(spawn.transform.position + Vector3.up, spawn.transform.rotation);
+        return true;
+    }
+
+    private static SpawnPoint FindCarSpawnPoint()
+    {
+        var points = Object.FindObjectsOfType<SpawnPoint>();
+        if (points == null || points.Length == 0)
+            return null;
+
+        // Prefer a debug/authored spawn (that's what the game uses for the real start
+        // position when present), otherwise any spawn point.
+        foreach (var p in points)
+        {
+            if (p != null && p.debug)
+                return p;
+        }
+        return points[0];
     }
 }

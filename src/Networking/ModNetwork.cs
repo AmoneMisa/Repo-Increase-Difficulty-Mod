@@ -28,8 +28,10 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     // reserved range (200+). 178/179 are free.
     public const byte ModifierEventCode = 178;
     public const byte LevelTimerEventCode = 179;
-    public const byte CartUpgradeEventCode = 180;
+    // 180 previously carried cart-upgrade state; truck upgrades now sync via REPOLib per-player.
     public const byte PingEventCode = 181;
+    public const byte MapVoteCandidatesEventCode = 182;
+    public const byte MapVoteBallotEventCode = 183;
 
     public static ModNetwork Instance { get; private set; }
 
@@ -121,16 +123,35 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             SendOptions.SendReliable);
     }
 
-    /// <summary>Host broadcasts the current cart-upgrade levels to other clients.</summary>
-    public void BroadcastCartUpgrades(int healLevel, int chargeLevel, bool sellUnlocked)
+    /// <summary>
+    /// Host broadcasts the current map-vote candidate set (by level name) plus the authoritative
+    /// countdown state (remaining seconds, whether the vote has closed, and the locked winner index
+    /// once closed). Rebroadcast periodically so late lobby joiners get the candidates and everyone
+    /// stays in sync on the countdown.
+    /// </summary>
+    public void BroadcastMapVoteCandidates(int sessionId, string[] levelNames, float remainingSeconds, bool closed, int lockedWinner)
     {
         if (!PhotonNetwork.InRoom)
             return;
 
         var options = new RaiseEventOptions { Receivers = ReceiverGroup.All };
         PhotonNetwork.RaiseEvent(
-            CartUpgradeEventCode,
-            new object[] { healLevel, chargeLevel, sellUnlocked },
+            MapVoteCandidatesEventCode,
+            new object[] { sessionId, levelNames, remainingSeconds, closed, lockedWinner },
+            options,
+            SendOptions.SendReliable);
+    }
+
+    /// <summary>Any player broadcasts their map-vote ballot (not echoed to self).</summary>
+    public void BroadcastMapVoteBallot(int sessionId, int actorNumber, int choiceIndex, string voterName)
+    {
+        if (!PhotonNetwork.InRoom)
+            return;
+
+        var options = new RaiseEventOptions { Receivers = ReceiverGroup.All };
+        PhotonNetwork.RaiseEvent(
+            MapVoteBallotEventCode,
+            new object[] { sessionId, actorNumber, choiceIndex, voterName },
             options,
             SendOptions.SendReliable);
     }
@@ -153,18 +174,26 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             return;
         }
 
-        if (photonEvent.Code == CartUpgradeEventCode)
-        {
-            var data = (object[])photonEvent.CustomData;
-            CartUpgradeState.ApplyNetworkState((int)data[0], (int)data[1], (bool)data[2]);
-            return;
-        }
 
         if (photonEvent.Code == PingEventCode)
         {
             var data = (object[])photonEvent.CustomData;
             var pos = new Vector3((float)data[1], (float)data[2], (float)data[3]);
             PingController.AddNetworkPing((byte)data[0], pos, (string)data[4], (string)data[5]);
+            return;
+        }
+
+        if (photonEvent.Code == MapVoteCandidatesEventCode)
+        {
+            var data = (object[])photonEvent.CustomData;
+            MapVoteState.ReceiveCandidates((int)data[0], (string[])data[1], (float)data[2], (bool)data[3], (int)data[4]);
+            return;
+        }
+
+        if (photonEvent.Code == MapVoteBallotEventCode)
+        {
+            var data = (object[])photonEvent.CustomData;
+            MapVoteState.ReceiveBallot((int)data[0], (int)data[1], (int)data[2], (string)data[3]);
         }
     }
 }

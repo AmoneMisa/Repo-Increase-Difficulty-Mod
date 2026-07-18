@@ -15,7 +15,7 @@ public sealed class LevelModifiers
 
     // Rolled numeric parameters. Only meaningful when the matching flag is set.
     public int ExtraSouls;              // ExtraSouls: how many souls monsters drop (e.g. 4-10)
-    public int PlayerHpPercent = 100;   // ReducedPlayerHp: max HP as a percent of normal (10-90)
+    public int PlayerHpPercent = 100;   // ReducedPlayerHp: starting current HP as a percent of carried-over HP (10-90)
     public int MoneyLossPercent;        // MoneyLossOnDeath: percent of money lost per death
 
     /// <summary>True if the given modifier is active this level.</summary>

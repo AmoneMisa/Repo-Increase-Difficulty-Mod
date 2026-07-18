@@ -1,22 +1,27 @@
-using System.Collections.Generic;
 using IncreaseHardMod.Modifiers;
 using UnityEngine;
 
 namespace IncreaseHardMod.Patches.Effects;
 
 /// <summary>
-/// Right-side overlay that logs each level change (run number + level name, plus any
-/// rolled surprise modifiers). It polls RunManager.instance.levelCurrent every frame,
-/// so it works identically for the host and joined clients without relying on any
-/// host-only patch. Press LevelInfoToggleKey to hide/show it. Asset-free IMGUI.
+/// Announces each level change using REPO's own styled HUD (the big centred message,
+/// <see cref="BigMessageUI"/> via <c>SemiFunc.UIBigMessage</c>) instead of raw IMGUI,
+/// so the text is crisp and matches the game. It polls RunManager.instance.levelCurrent
+/// every frame, so it works identically for host and joined clients without any host-only
+/// patch. Press LevelInfoToggleKey to suppress the announcement.
+///
+/// BigMessageUI hides itself ~0.2s after the last call, so we re-issue the message every
+/// frame for <see cref="DisplaySeconds"/> to keep it readable.
 /// </summary>
 internal sealed class LevelInfoHud : MonoBehaviour
 {
-    private readonly List<string> _entries = new();
+    private const float DisplaySeconds = 4f;
+    private static readonly Color Gold = new(1f, 0.8f, 0.3f);
+
     private Level _lastLevel;
-    private bool _hidden;
-    private GUIStyle _title;
-    private GUIStyle _row;
+    private string _message;
+    private float _timer;
+    private bool _suppressed;
 
     private void Update()
     {
@@ -24,8 +29,20 @@ internal sealed class LevelInfoHud : MonoBehaviour
             return;
 
         if (Input.GetKeyDown(ModConfig.LevelInfoToggleKey.Value))
-            _hidden = !_hidden;
+            _suppressed = !_suppressed;
 
+        DetectLevelChange();
+
+        // Keep re-issuing so the game's HUD keeps it on screen for the full duration.
+        if (_timer > 0f && !_suppressed)
+        {
+            _timer -= Time.deltaTime;
+            ShowBigMessage(_message);
+        }
+    }
+
+    private void DetectLevelChange()
+    {
         var run = RunManager.instance;
         if (run == null)
             return;
@@ -33,30 +50,41 @@ internal sealed class LevelInfoHud : MonoBehaviour
         var current = run.levelCurrent;
         if (current == _lastLevel)
             return;
-        _lastLevel = current; // track even for menus, so menu -> level still records
+        _lastLevel = current; // track even for menus, so menu -> level still triggers
 
         if (current == null || SafeMenuLevel())
-            return; // don't log the main/lobby menus themselves
+            return; // don't announce the main/lobby menus themselves
 
-        _entries.Add(BuildLine(run, current));
-        int max = Mathf.Max(1, ModConfig.LevelInfoMaxEntries.Value);
-        while (_entries.Count > max)
-            _entries.RemoveAt(0);
+        _message = BuildMessage(run, current);
+        _timer = DisplaySeconds;
     }
 
-    private static string BuildLine(RunManager run, Level level)
+    private static string BuildMessage(RunManager run, Level level)
     {
         string name = !string.IsNullOrEmpty(level.NarrativeName) ? level.NarrativeName : Clean(level.name);
 
-        string line = SemiFunc.RunIsLevel()
-            ? $"Lv {run.levelsCompleted + 1}  {name}"
+        string msg = SemiFunc.RunIsLevel()
+            ? $"Lv {run.levelsCompleted + 1}  -  {name}"
             : name;
 
         var mods = ModifierManager.Current;
         if (SemiFunc.RunIsLevel() && mods != null && mods.IsSpecial)
-            line += $"\n  \u2726 {mods.Active}";
+            msg += $"\n<size=60%>\u2726 {mods.Active}</size>";
 
-        return line;
+        return msg;
+    }
+
+    private static void ShowBigMessage(string message)
+    {
+        try
+        {
+            if (BigMessageUI.instance != null)
+                SemiFunc.UIBigMessage(message, "", 40f, Gold, Color.white);
+        }
+        catch
+        {
+            // HUD not ready yet (e.g. mid-transition); ignore this frame.
+        }
     }
 
     private static string Clean(string raw)
@@ -64,59 +92,6 @@ internal sealed class LevelInfoHud : MonoBehaviour
         if (string.IsNullOrEmpty(raw))
             return "Unknown";
         return raw.Replace("Level - ", "").Replace("Level ", "").Trim();
-    }
-
-    private void OnGUI()
-    {
-        if (!ModConfig.LevelInfoEnabled.Value || _hidden || _entries.Count == 0 || SafeMenuLevel())
-            return;
-
-        if (_title == null)
-        {
-            _title = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 14, fontStyle = FontStyle.Bold, alignment = TextAnchor.UpperRight,
-            };
-            _title.normal.textColor = new Color(1f, 0.8f, 0.3f);
-            _row = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 13, fontStyle = FontStyle.Bold, alignment = TextAnchor.UpperRight, wordWrap = false,
-            };
-            _row.normal.textColor = Color.white;
-        }
-
-        const float w = 320f;
-        float x = Screen.width - w - 12f;
-        float y = 70f;
-
-        DrawShadowed(new Rect(x, y, w, 20f), "LEVELS", _title);
-        y += 24f;
-
-        foreach (string line in _entries)
-        {
-            int rows = 1 + CountNewlines(line);
-            var rect = new Rect(x, y, w, 18f * rows);
-            DrawShadowed(rect, line, _row);
-            y += 18f * rows + 2f;
-        }
-    }
-
-    private static void DrawShadowed(Rect rect, string text, GUIStyle style)
-    {
-        Color prev = style.normal.textColor;
-        style.normal.textColor = new Color(0f, 0f, 0f, 0.7f);
-        GUI.Label(new Rect(rect.x + 1.5f, rect.y + 1.5f, rect.width, rect.height), text, style);
-        style.normal.textColor = prev;
-        GUI.Label(rect, text, style);
-    }
-
-    private static int CountNewlines(string s)
-    {
-        int n = 0;
-        foreach (char c in s)
-            if (c == '\n')
-                n++;
-        return n;
     }
 
     private static bool SafeMenuLevel()

@@ -100,7 +100,6 @@ internal static class LateJoinController
                 Plugin.Log.LogInfo($"[LateJoin] Player count {_lastPlayerCount} -> {count}; re-broadcasting mod state to joiners.");
                 ModNetwork.Instance?.BroadcastModifiers(ModifierManager.Current);
                 ModNetwork.Instance?.BroadcastLevelTimer(LevelTimerController.Remaining, LevelTimerController.Running);
-                CartUpgradeState.Broadcast();
             }
             _lastPlayerCount = count;
         }

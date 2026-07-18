@@ -3,6 +3,7 @@ using BepInEx.Logging;
 using HarmonyLib;
 using IncreaseHardMod.Networking;
 using IncreaseHardMod.Patches.Effects;
+using IncreaseHardMod.Upgrades;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -42,6 +43,18 @@ public class Plugin : BaseUnityPlugin
         else
             _harmony.PatchAll();
 
+        // Declare custom shop upgrades before the registration patch fires (on RunStartStats).
+        // Effects are applied per-player via REPOLib start/upgrade actions (or a ticking
+        // controller / Harmony patch for continuous / event-driven ones).
+        StaminaUpgrade.Register();
+        HpRegenUpgrade.Register();
+        DeathProtectionUpgrade.Register();
+        BatteryLifeUpgrade.Register();
+        AutoscanUpgrade.Register();
+        MapUpgrade.Register();
+        PingUpgrades.Register();
+        TruckUpgrades.Register();
+
         if (ModConfig.DiagnosticDisableRuntimeObjects.Value)
         {
             Log.LogWarning("[Diagnostics] DisableRuntimeObjects=true — skipping runtime menu/HUD objects.");
@@ -71,16 +84,29 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<ModNetwork>();
         // On-screen countdown for the LevelTimer modifier (IMGUI, no assets needed).
         netObject.AddComponent<LevelTimerHud>();
-        // Host-only cart/truck upgrade shop (IMGUI, opened with CartUpgradeMenuKey).
-        netObject.AddComponent<CartUpgradeMenu>();
+        // Host-side auto Loot Cash-In for the "Loot Cash-In" truck upgrade (sells leftovers on quota close).
+        netObject.AddComponent<Upgrades.TruckUpgrades.SellController>();
         // Main-menu Photon name-server reachability overlay (IMGUI, background TCP probes).
         netObject.AddComponent<PhotonHud>();
         // Team ping system (input + world-anchored IMGUI markers, synced over Photon).
         netObject.AddComponent<PingHud>();
         // Right-side level-change log (IMGUI, toggle with LevelInfoToggleKey).
         netObject.AddComponent<LevelInfoHud>();
+        // Item Unstuck: host-side valuable safety net (relocate stuck loot, invuln-until-grab)
+        // plus a client-side undamaged-value HUD.
+        netObject.AddComponent<ItemUnstuckController>();
         // Passive left-side lobby/menu server info (region/ping/room), reads Photon state only.
         netObject.AddComponent<ServerInfoHud>();
+        // Map Vote: lobby-phase vote on the next map (host rolls candidates + applies the winner).
+        netObject.AddComponent<Patches.Effects.MapVoteController>();
+        // Drives the per-player HP Regeneration upgrade (continuous local heal-up-to-cap).
+        netObject.AddComponent<Upgrades.HpRegenUpgrade.RegenController>();
+        // Drives the per-player Autoscan upgrade (periodic local valuable discovery).
+        netObject.AddComponent<Upgrades.AutoscanUpgrade.ScanController>();
+        // Drives the per-player Map Suite upgrade (map-open info overlay + zoom-out).
+        netObject.AddComponent<Upgrades.MapUpgrade.MapController>();
+        // Drives the Map Suite 3D markers (L9 cosmetic boxes, L10 monster dots).
+        netObject.AddComponent<Upgrades.MapUpgrade.MarkerController>();
         Object.DontDestroyOnLoad(netObject);
         _runtimeObject = netObject;
 

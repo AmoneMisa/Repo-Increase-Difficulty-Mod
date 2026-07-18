@@ -87,15 +87,50 @@ internal static class SpreadUpgradesEffect
             if (stats == null)
                 return result;
 
+            var allowed = ParseAllowed();
+
             foreach (var item in stats.itemDictionary.Values)
             {
                 if (item == null)
                     continue;
-                if (item.itemType == SemiFunc.itemType.item_upgrade ||
-                    item.itemType == SemiFunc.itemType.player_upgrade)
+                if (item.itemType != SemiFunc.itemType.item_upgrade &&
+                    item.itemType != SemiFunc.itemType.player_upgrade)
+                    continue;
+
+                if (ModConfig.LogSpreadUpgradeNames.Value)
+                    Plugin.Log.LogInfo($"[SpreadUpgrades] Upgrade item available: '{item.name}'.");
+
+                if (allowed.Count == 0 || IsAllowed(item.name, allowed))
                     result.Add(item);
             }
             return result;
+        }
+
+        private static List<string> ParseAllowed()
+        {
+            var list = new List<string>();
+            string raw = ModConfig.SpreadUpgradesAllowed.Value;
+            if (string.IsNullOrWhiteSpace(raw))
+                return list;
+            foreach (var part in raw.Split(','))
+            {
+                string trimmed = part.Trim();
+                if (trimmed.Length > 0)
+                    list.Add(trimmed);
+            }
+            return list;
+        }
+
+        private static bool IsAllowed(string itemName, List<string> allowed)
+        {
+            if (string.IsNullOrEmpty(itemName))
+                return false;
+            foreach (var a in allowed)
+            {
+                if (itemName.IndexOf(a, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    return true;
+            }
+            return false;
         }
     }
 

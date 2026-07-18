@@ -1,0 +1,467 @@
+using System.Collections.Generic;
+using System.Text;
+using IncreaseHardMod.Patches.Effects;
+using UnityEngine;
+using RepoUpgrades = REPOLib.Modules.Upgrades;
+
+namespace IncreaseHardMod.Upgrades;
+
+/// <summary>
+/// "Map Suite" — a single per-player upgrade with a FIXED 10-level ladder, where each level
+/// unlocks one map feature. Registered via REPOLib (shop presence + per-player level tracking);
+/// the effects are read from a ticking controller, so this needs no start/upgrade actions.
+///
+/// Feature ladder (each level ADDS to the previous):
+///   L1  alive players count            L6  team pings shown on the map (3D markers)
+///   L2  dead players count             L7  zoom the map view out one step
+///   L3  active monsters count          L8  zoom the map view out further
+///   L4  respawning monsters count      L9  cosmetic-box tracker (3D markers, Phase 3d)
+///   L5  path/heading to closest quota  L10 monsters shown as dots (3D markers, Phase 3d)
+///
+/// L1-L5 render as an on-screen info panel while the map tool is open. L7-L8 hijack the map
+/// view's camera zoom. L6/L9/L10 need the map's 3D marker system and are added separately.
+/// Everything here is read-only/local — no networking, so it stays per-player and desync-free.
+/// </summary>
+internal static class MapUpgrade
+{
+    public const string Id = "IHM_Map";
+
+    // Fixed feature ladder — do not expose as config; each level maps to a specific feature.
+    public const int Levels = 10;
+
+    public static void Register()
+    {
+        if (!ModConfig.PlayerUpgradesEnabled.Value)
+            return;
+
+        PlayerUpgradeRegistry.Define(new PlayerUpgradeRegistry.Definition
+        {
+            Id = Id,
+            DisplayName = "Map Suite",
+            Description = "Unlocks map features as it levels: live player/monster counts, quota heading, team pings on the map, zoom-out, and trackers.",
+            MaxLevel = Levels,
+            BaseShopPrice = ModConfig.MapBasePrice.Value,
+        });
+    }
+
+    /// <summary>The LOCAL player's current Map Suite level (0 if unowned).</summary>
+    internal static int LocalLevel()
+    {
+        var avatar = SemiFunc.PlayerAvatarLocal();
+        if (avatar == null)
+            return 0;
+        var up = RepoUpgrades.GetUpgrade(Id);
+        return up != null ? up.GetLevel(avatar.steamID) : 0;
+    }
+
+    /// <summary>
+    /// Reads the local Map Suite level and, while the map tool is open, shows the unlocked
+    /// info lines (L1-5) and applies the zoom-out (L7-8). Added to the mod's runtime object.
+    /// </summary>
+    internal sealed class MapController : MonoBehaviour
+    {
+        private const float RefreshInterval = 0.25f;
+        private static readonly Color PanelBg = new(0f, 0f, 0f, 0.55f);
+        private static readonly Color Gold = new(1f, 0.85f, 0.35f);
+
+        private static readonly string[] Arrows =
+            { "\u2191", "\u2197", "\u2192", "\u2198", "\u2193", "\u2199", "\u2190", "\u2196" };
+
+        private float _timer;
+        private bool _show;
+        private string _text = "";
+        private GUIStyle _style;
+        private Texture2D _bgTex;
+
+        // Runtime zoom offset (in FOV units) added on top of the level's default, driven by the
+        // zoom hotkeys. Persists while the game runs so re-opening the map keeps your chosen zoom.
+        private static float _zoomOffset;
+        private const float ZoomOffsetMin = -12f;
+        private const float ZoomOffsetMax = 46f;
+
+        private void Update()
+        {
+            if (!ModConfig.PlayerUpgradesEnabled.Value)
+            {
+                _show = false;
+                return;
+            }
+
+            bool mapOpen = Map.Instance != null && Map.Instance.Active && SemiFunc.RunIsLevel();
+            int level = mapOpen ? LocalLevel() : 0;
+
+            _show = mapOpen && level > 0;
+            if (!_show)
+                return;
+
+            HandleZoomKeys(level);
+            ApplyZoom(level);
+
+            _timer -= Time.deltaTime;
+            if (_timer <= 0f)
+            {
+                _timer = RefreshInterval;
+                _text = BuildInfo(level);
+            }
+        }
+
+        // L7+: while the map is open, the zoom hotkeys nudge the FOV offset in/out. We accept the
+        // configured keys plus the natural alternates ([ / ] and the keypad +/-) so any layout works.
+        private static void HandleZoomKeys(int level)
+        {
+            if (level < 7)
+                return;
+
+            bool zoomIn = Input.GetKeyDown(ModConfig.MapZoomInKey.Value)
+                          || Input.GetKeyDown(KeyCode.KeypadMinus)
+                          || Input.GetKeyDown(KeyCode.LeftBracket);
+            bool zoomOut = Input.GetKeyDown(ModConfig.MapZoomOutKey.Value)
+                           || Input.GetKeyDown(KeyCode.KeypadPlus)
+                           || Input.GetKeyDown(KeyCode.RightBracket);
+
+            if (zoomIn == zoomOut)
+                return; // neither, or both at once — do nothing
+
+            float step = ModConfig.MapZoomStep.Value;
+            _zoomOffset = Mathf.Clamp(_zoomOffset + (zoomOut ? step : -step), ZoomOffsetMin, ZoomOffsetMax);
+        }
+
+        // L7/L8: override the map view's camera FOV so more of the level is visible. The map
+        // tool sets FOV 50 at priority 100 every frame; we claim priority 99 (lower number =
+        // higher precedence) so ours wins for as long as the map is open at L7+. The runtime
+        // zoom-hotkey offset is layered on top and clamped to a sane FOV range.
+        private static void ApplyZoom(int level)
+        {
+            if (level < 7 || CameraZoom.Instance == null)
+                return;
+
+            float fov = level >= 8 ? ModConfig.MapZoomFovLevel8.Value : ModConfig.MapZoomFovLevel7.Value;
+            fov = Mathf.Clamp(fov + _zoomOffset, 30f, 140f);
+            CameraZoom.Instance.OverrideZoomSet(fov, 0.1f, 2f, 2f, CameraZoom.Instance.gameObject, 99);
+        }
+
+        private static string BuildInfo(int level)
+        {
+            var sb = new StringBuilder();
+
+            var director = GameDirector.instance;
+            if (director != null && director.PlayerList != null)
+            {
+                int alive = 0, dead = 0;
+                foreach (var p in director.PlayerList)
+                {
+                    if (p == null)
+                        continue;
+                    if (p.isDisabled)
+                        dead++;
+                    else
+                        alive++;
+                }
+                if (level >= 1)
+                    sb.Append("Players alive: ").Append(alive).Append('\n');
+                if (level >= 2)
+                    sb.Append("Players dead: ").Append(dead).Append('\n');
+            }
+
+            var enemyDir = EnemyDirector.instance;
+            if (enemyDir != null && enemyDir.enemiesSpawned != null && (level >= 3 || level >= 4))
+            {
+                int active = 0, respawning = 0;
+                foreach (var ep in enemyDir.enemiesSpawned)
+                {
+                    if (ep == null)
+                        continue;
+                    if (ep.Spawned)
+                        active++;
+                    else
+                        respawning++;
+                }
+                if (level >= 3)
+                    sb.Append("Monsters active: ").Append(active).Append('\n');
+                if (level >= 4)
+                    sb.Append("Monsters respawning: ").Append(respawning).Append('\n');
+            }
+
+            if (level >= 5)
+                sb.Append(BuildQuotaLine());
+
+            return sb.ToString().TrimEnd('\n');
+        }
+
+        // L5: distance + compass heading (relative to where you're looking) to the closest
+        // extraction point that still needs a haul. Falls back to the nearest point overall.
+        private static string BuildQuotaLine()
+        {
+            var avatar = SemiFunc.PlayerAvatarLocal();
+            if (avatar == null || RoundDirector.instance == null)
+                return "";
+
+            Vector3 from = avatar.transform.position;
+            var target = SemiFunc.ExtractionPointGetNearestNotActivated(from)
+                         ?? SemiFunc.ExtractionPointGetNearest(from);
+            if (target == null)
+                return "Quota: (none)";
+
+            Vector3 to = target.transform.position;
+            int dist = Mathf.RoundToInt(Vector3.Distance(from, to));
+
+            var cam = PhysGrabber.instance != null ? PhysGrabber.instance.playerCamera : Camera.main;
+            string arrow = cam != null ? HeadingArrow(cam.transform.forward, to - from) : "";
+
+            return $"Quota: {dist}m {arrow}";
+        }
+
+        private static string HeadingArrow(Vector3 facing, Vector3 toTarget)
+        {
+            facing.y = 0f;
+            toTarget.y = 0f;
+            if (toTarget.sqrMagnitude < 0.001f || facing.sqrMagnitude < 0.001f)
+                return "";
+
+            float ang = Vector3.SignedAngle(facing, toTarget, Vector3.up); // + = target to the right
+            float a = (ang + 360f) % 360f;
+            int idx = Mathf.RoundToInt(a / 45f) % 8;
+            return Arrows[idx];
+        }
+
+        private void OnGUI()
+        {
+            if (!_show || string.IsNullOrEmpty(_text))
+                return;
+
+            EnsureStyle();
+
+            const float w = 220f;
+            float h = _style.CalcHeight(new GUIContent(_text), w - 20f) + 16f;
+            var rect = new Rect(12f, Screen.height * 0.5f - h * 0.5f, w, h);
+
+            GUI.DrawTexture(rect, _bgTex);
+            GUI.Label(new Rect(rect.x + 10f, rect.y + 8f, w - 20f, h - 16f), _text, _style);
+        }
+
+        private void EnsureStyle()
+        {
+            if (_style != null)
+                return;
+
+            _bgTex = new Texture2D(1, 1);
+            _bgTex.SetPixel(0, 0, PanelBg);
+            _bgTex.Apply();
+
+            _style = new GUIStyle
+            {
+                fontSize = 14,
+                richText = true,
+                alignment = TextAnchor.UpperLeft,
+                wordWrap = false,
+            };
+            _style.normal.textColor = Gold;
+        }
+    }
+
+    /// <summary>Marks a world object we've already given a map marker, so we don't double-add.</summary>
+    internal sealed class IhmMapMarked : MonoBehaviour { }
+
+    /// <summary>
+    /// Drives the 3D map markers: L6 mirrors live team pings, L9 tags cosmetic boxes, L10 tags
+    /// active monsters. We reuse the game's own <see cref="MapCustom"/> component (attach +
+    /// <c>Add()</c>) so each marker inherits the vanilla follow/layer-alpha/cleanup logic — no
+    /// custom positioning. When an enemy despawns the game destroys its marker entity
+    /// (<c>MapCustom.mapCustomEntity</c> goes null), which we detect to re-add on respawn.
+    ///
+    /// L6 pings are transient (4s) and some sit at fixed points with no world object to follow,
+    /// so each active ping gets a throwaway proxy GameObject that the MapCustom tracks; the proxy
+    /// is moved to the ping's current position every frame and destroyed when the ping expires or
+    /// the map closes (which lets the vanilla entity coroutine self-clean).
+    ///
+    /// All local/read-only: attaching a component client-side isn't networked, so markers stay
+    /// per-player. Only runs while the map is open on a level, and only when the level is owned.
+    /// </summary>
+    internal sealed class MarkerController : MonoBehaviour
+    {
+        private const float SweepInterval = 1.5f;
+        private static readonly Color MonsterPurple = new(0.6f, 0.2f, 0.9f);
+        private static readonly Color CosmeticPink = new(1f, 0.4f, 0.8f);
+
+        private float _timer;
+
+        // L6: one proxy GameObject per live ping, so the vanilla MapCustom has a transform to follow.
+        private readonly Dictionary<PingController.ActivePing, GameObject> _pingProxies = new();
+        private readonly List<PingController.ActivePing> _expiredScratch = new();
+
+        private void Update()
+        {
+            if (!ModConfig.PlayerUpgradesEnabled.Value)
+            {
+                ClearPingMarkers();
+                return;
+            }
+
+            // Markers only matter (and only position correctly) while the map is open on a level.
+            if (Map.Instance == null || !Map.Instance.Active || !SemiFunc.RunIsLevel())
+            {
+                ClearPingMarkers();
+                return;
+            }
+
+            int level = LocalLevel();
+
+            // L6: mirror active pings onto the map. Runs every frame (unthrottled) so the proxies
+            // track moving pings smoothly and expired pings are cleared promptly.
+            if (level >= 6)
+                UpdatePingMarkers();
+            else
+                ClearPingMarkers();
+
+            // L9/L10 world-object trackers: throttled sweep is plenty (boxes/monsters move slowly).
+            _timer -= Time.deltaTime;
+            if (_timer > 0f)
+                return;
+            _timer = SweepInterval;
+
+            if (level < 9)
+                return;
+
+            if (MarkerSprite() == null)
+                return;
+
+            if (level >= 9)
+                SweepCosmetics();
+            if (level >= 10)
+                SweepMonsters();
+        }
+
+        // Keep the proxy set in sync with the live ping list: drop proxies for expired pings,
+        // create proxies for new pings, and move each surviving proxy to its ping's position.
+        private void UpdatePingMarkers()
+        {
+            var sprite = MarkerSprite();
+            if (sprite == null)
+            {
+                ClearPingMarkers();
+                return;
+            }
+
+            var active = PingController.Active;
+
+            // Remove proxies whose ping is gone (expired / cleared on level change).
+            _expiredScratch.Clear();
+            foreach (var kv in _pingProxies)
+            {
+                bool stillActive = false;
+                for (int i = 0; i < active.Count; i++)
+                {
+                    if (ReferenceEquals(active[i], kv.Key))
+                    {
+                        stillActive = true;
+                        break;
+                    }
+                }
+                if (!stillActive)
+                    _expiredScratch.Add(kv.Key);
+            }
+            foreach (var gone in _expiredScratch)
+            {
+                if (_pingProxies.TryGetValue(gone, out var go) && go != null)
+                    Object.Destroy(go); // Parent nulls -> vanilla entity coroutine self-destructs
+                _pingProxies.Remove(gone);
+            }
+
+            // Ensure + position a proxy for each active ping.
+            for (int i = 0; i < active.Count; i++)
+            {
+                var ping = active[i];
+                if (!_pingProxies.TryGetValue(ping, out var proxy) || proxy == null)
+                {
+                    proxy = new GameObject("IHM_PingMapProxy");
+                    proxy.transform.position = ping.Pos;
+                    var mc = proxy.AddComponent<MapCustom>();
+                    mc.autoAdd = false;
+                    mc.sprite = sprite;
+                    mc.color = PingController.ColorFor(ping.Type);
+                    try { mc.Add(); } catch { /* not addable this frame; retry below */ }
+                    _pingProxies[ping] = proxy;
+                    continue;
+                }
+
+                proxy.transform.position = ping.Pos;
+                var existing = proxy.GetComponent<MapCustom>();
+                if (existing != null && existing.mapCustomEntity == null)
+                {
+                    try { existing.Add(); } catch { /* retry next frame */ }
+                }
+            }
+        }
+
+        private void ClearPingMarkers()
+        {
+            if (_pingProxies.Count == 0)
+                return;
+            foreach (var go in _pingProxies.Values)
+            {
+                if (go != null)
+                    Object.Destroy(go);
+            }
+            _pingProxies.Clear();
+        }
+
+        private static void SweepCosmetics()
+        {
+            foreach (var box in Object.FindObjectsOfType<CosmeticWorldObject>())
+            {
+                if (box == null)
+                    continue;
+                EnsureMarker(box.gameObject, box.transform, CosmeticPink);
+            }
+        }
+
+        private static void SweepMonsters()
+        {
+            var dir = EnemyDirector.instance;
+            if (dir == null || dir.enemiesSpawned == null)
+                return;
+
+            foreach (var ep in dir.enemiesSpawned)
+            {
+                if (ep == null || !ep.Spawned)
+                    continue;
+                var t = ep.Enemy != null ? ep.Enemy.transform : ep.transform;
+                EnsureMarker(t.gameObject, t, MonsterPurple);
+            }
+        }
+
+        // Attach a MapCustom once, then (re)create its map entity whenever it's missing.
+        private static void EnsureMarker(GameObject host, Transform follow, Color color)
+        {
+            if (host == null)
+                return;
+
+            var mc = host.GetComponent<MapCustom>();
+            if (mc == null)
+            {
+                mc = host.AddComponent<MapCustom>();
+                mc.autoAdd = false;              // we control when it's added
+                mc.sprite = MarkerSprite();
+                mc.color = color;
+                host.AddComponent<IhmMapMarked>();
+            }
+
+            // mapCustomEntity is nulled by the game when the entity self-destroys (e.g. the
+            // enemy despawned); re-add so the marker comes back when it's active again.
+            if (mc.mapCustomEntity == null)
+            {
+                try { mc.Add(); }
+                catch { /* not addable this frame (mid level transition); retry next sweep */ }
+            }
+        }
+
+        // Reuse the sprite the game already uses for valuable map dots — no assets to author.
+        private static Sprite MarkerSprite()
+        {
+            if (Map.Instance == null || Map.Instance.ValuableObject == null)
+                return null;
+            var mv = Map.Instance.ValuableObject.GetComponent<MapValuable>();
+            return mv != null ? mv.spriteSmall : null;
+        }
+    }
+}
