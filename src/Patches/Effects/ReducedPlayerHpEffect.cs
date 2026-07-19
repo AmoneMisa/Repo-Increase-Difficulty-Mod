@@ -28,6 +28,14 @@ internal static class ReducedPlayerHpEffect
     [HarmonyPostfix]
     private static void Postfix(ref int __result)
     {
+        // Only wound players at the START of an actual run level. GetPlayerHealth is also read by
+        // Fetch() on shop/lobby loads; a client can still be holding the previous level's modifier
+        // set at that moment (the host clears its own set on a shop transition but the broadcast of
+        // that clear may not have arrived yet), so without this gate the reduction would re-apply on
+        // shop entry and eat HP that should instead have healed. RunIsLevel is false in the shop.
+        if (!SafeRunIsLevel())
+            return;
+
         var mods = ModifierManager.Current;
         if (!mods.Has(ModifierType.ReducedPlayerHp))
             return;
@@ -41,5 +49,11 @@ internal static class ReducedPlayerHpEffect
             return;
 
         __result = Mathf.Max(1, Mathf.RoundToInt(__result * (pct / 100f)));
+    }
+
+    private static bool SafeRunIsLevel()
+    {
+        try { return SemiFunc.RunIsLevel(); }
+        catch { return false; }
     }
 }

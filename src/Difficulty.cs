@@ -18,14 +18,21 @@ public static class Difficulty
 
     /// <summary>
     /// How many "ramp steps" of difficulty currently apply.
-    /// 0 during the vanilla levels, then 1, 2, 3... each level after the start.
+    /// 0 during the vanilla levels, then 1, 2, 3... after the start. When
+    /// RampLevelsPerStep &gt; 1 the depth is divided so a step only lands every
+    /// N levels (e.g. 2 = a new step every 2nd level past the start).
     /// </summary>
     public static int Steps
     {
         get
         {
             int depth = LevelsCompleted - ModConfig.RampStartLevel.Value;
-            return depth > 0 ? depth : 0;
+            if (depth <= 0)
+                return 0;
+            int perStep = ModConfig.RampLevelsPerStep.Value;
+            if (perStep < 1)
+                perStep = 1;
+            return depth / perStep;
         }
     }
 

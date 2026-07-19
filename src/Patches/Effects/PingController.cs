@@ -55,7 +55,15 @@ internal static class PingController
         if (!ModConfig.PingEnabled.Value)
             return;
 
-        var cam = (PhysGrabber.instance != null ? PhysGrabber.instance.playerCamera : null) ?? Camera.main;
+        // The whole ping system is a purchase: without ANY ping upgrade you can't ping at all.
+        // (Location pings additionally require Ping Anywhere / Pin, checked below.)
+        if (!OwnsAnyPing())
+        {
+            Announce("Requires a ping upgrade (Ping Info / Ping Anywhere / Pin)", Color.gray, "");
+            return;
+        }
+
+        var cam = ActiveCamera();
         if (cam == null)
             return;
 
@@ -276,8 +284,29 @@ internal static class PingController
         _ => "\u2316",
     };
 
+    /// <summary>
+    /// The camera the local player is actually looking through, in EVERY state.
+    /// While alive this is the player's view; while DEAD/spectating the game re-points the
+    /// SINGLE shared GameDirector.MainCamera to the spectate view, so aiming from it lets a
+    /// dead player still ping what they're spectating. The old code aimed from PhysGrabber's
+    /// cached camera, which is stale/misaimed during spectate, so dead players couldn't ping.
+    /// </summary>
+    internal static Camera ActiveCamera()
+    {
+        try
+        {
+            if (GameDirector.instance != null && GameDirector.instance.MainCamera != null)
+                return GameDirector.instance.MainCamera;
+        }
+        catch { /* GameDirector not ready on menus */ }
+        return (PhysGrabber.instance != null ? PhysGrabber.instance.playerCamera : null) ?? Camera.main;
+    }
+
     private static bool OwnsPingAnywhere() => PingUpgrades.OwnsPingAnywhere();
     private static bool OwnsPingInfo() => PingUpgrades.OwnsPingInfo();
+    // True when the local player owns at least one ping upgrade (the gate for pinging at all).
+    private static bool OwnsAnyPing() =>
+        PingUpgrades.OwnsPingInfo() || PingUpgrades.OwnsPingAnywhere() || PingUpgrades.OwnsPin();
 
     private static string LocalName()
     {

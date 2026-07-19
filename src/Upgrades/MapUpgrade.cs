@@ -16,7 +16,8 @@ namespace IncreaseHardMod.Upgrades;
 ///   L2  dead players count             L7  zoom the map view out one step
 ///   L3  active monsters count          L8  zoom the map view out further
 ///   L4  respawning monsters count      L9  cosmetic-box tracker (3D markers, Phase 3d)
-///   L5  path/heading to closest quota  L10 monsters shown as dots (3D markers, Phase 3d)
+///   L5  quota heading + valuable       L10 monsters shown as dots (3D markers, Phase 3d)
+///       tracker (found/total + haul)
 ///
 /// L1-L5 render as an on-screen info panel while the map tool is open. L7-L8 hijack the map
 /// view's camera zoom. L6/L9/L10 need the map's 3D marker system and are added separately.
@@ -38,9 +39,10 @@ internal static class MapUpgrade
         {
             Id = Id,
             DisplayName = "Map Suite",
-            Description = "Unlocks map features as it levels: live player/monster counts, quota heading, team pings on the map, zoom-out, and trackers.",
+            Description = "Unlocks map features as it levels: live player/monster counts, quota heading + valuable tracker, team pings on the map, zoom-out, and trackers.",
             MaxLevel = Levels,
             BaseShopPrice = ModConfig.MapBasePrice.Value,
+            UseVanillaMapIcon = true, // reuse the vanilla "Map Player Count" art (Map Suite replaces it)
         });
     }
 
@@ -94,8 +96,14 @@ internal static class MapUpgrade
             if (!_show)
                 return;
 
-            HandleZoomKeys(level);
-            ApplyZoom(level);
+            // Only hijack the camera FOV while the local player is ALIVE. When dead/spectating the
+            // map + camera are driven by the spectate system, and forcing our zoom onto that view
+            // makes the map open wrong. The info panel below is a harmless overlay, so it stays.
+            if (LocalAlive())
+            {
+                HandleZoomKeys(level);
+                ApplyZoom(level);
+            }
 
             _timer -= Time.deltaTime;
             if (_timer <= 0f)
@@ -103,6 +111,14 @@ internal static class MapUpgrade
                 _timer = RefreshInterval;
                 _text = BuildInfo(level);
             }
+        }
+
+        // True only while the local avatar exists and is not disabled (dead/spectating). Used to
+        // keep our camera-FOV override off the spectate view.
+        private static bool LocalAlive()
+        {
+            var avatar = SemiFunc.PlayerAvatarLocal();
+            return avatar != null && !avatar.isDisabled;
         }
 
         // L7+: while the map is open, the zoom hotkeys nudge the FOV offset in/out. We accept the
@@ -183,9 +199,53 @@ internal static class MapUpgrade
             }
 
             if (level >= 5)
-                sb.Append(BuildQuotaLine());
+            {
+                sb.Append(BuildQuotaLine()).Append('\n');
+                sb.Append(BuildValuableLines());
+            }
 
             return sb.ToString().TrimEnd('\n');
+        }
+
+        // L5: valuable tracker. Counts every ValuableObject in the level (ValuableDirector's
+        // valuableList, which only ever grows), reporting how many have been discovered vs the
+        // total and, from RoundDirector, the current secured haul against the quota goal plus how
+        // many valuables are sitting in an extraction point right now. All read-only, so it's
+        // identical for host and clients.
+        private static string BuildValuableLines()
+        {
+            var vd = ValuableDirector.instance;
+            if (vd == null || vd.valuableList == null)
+                return "";
+
+            int total = 0, discovered = 0, secured = 0;
+            foreach (var v in vd.valuableList)
+            {
+                if (v == null)
+                    continue;
+                total++;
+                if (v.discovered)
+                    discovered++;
+                if (v.roomVolumeCheck != null && v.roomVolumeCheck.inExtractionPoint)
+                    secured++;
+            }
+
+            var sb = new StringBuilder();
+            sb.Append("Valuables: ").Append(discovered).Append('/').Append(total).Append(" found");
+
+            var round = RoundDirector.instance;
+            if (round != null && round.haulGoal > 0)
+            {
+                sb.Append('\n')
+                  .Append("Haul: ")
+                  .Append(SemiFunc.DollarGetString(Mathf.Max(0, round.currentHaul)))
+                  .Append(" / ")
+                  .Append(SemiFunc.DollarGetString(round.haulGoal));
+                if (secured > 0)
+                    sb.Append("  (").Append(secured).Append(" secured)");
+            }
+
+            return sb.ToString();
         }
 
         // L5: distance + compass heading (relative to where you're looking) to the closest

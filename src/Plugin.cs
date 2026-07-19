@@ -97,6 +97,8 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<ItemUnstuckController>();
         // Passive left-side lobby/menu server info (region/ping/room), reads Photon state only.
         netObject.AddComponent<ServerInfoHud>();
+        // In-shop cart overlay: aggregates ShopManager.shoppingList into a colour-coded panel.
+        netObject.AddComponent<ShoppingListHud>();
         // Map Vote: lobby-phase vote on the next map (host rolls candidates + applies the winner).
         netObject.AddComponent<Patches.Effects.MapVoteController>();
         // Drives the per-player HP Regeneration upgrade (continuous local heal-up-to-cap).

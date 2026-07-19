@@ -54,11 +54,21 @@ internal static class PlayerUpgradeRegistry
         // When set, it's assigned to the item's ItemAttributes.icon so the shop shows our art
         // instead of an auto-generated render. Null = keep the game's default generated icon.
         public string IconFile;
+        // When true, source the shop icon + physical card art from the vanilla "Map Player Count"
+        // upgrade instead of an embedded PNG. Used by Map Suite, which replaces that vanilla upgrade
+        // and reuses its map-themed art. Takes precedence over IconFile.
+        public bool UseVanillaMapIcon;
     }
 
-    // Shop price ≈ value.valueMax / 1000 * itemValueMultiplier(4) = valueMax * 0.004 at
-    // one player (see ShopManager.UpgradeValueGet). So valueMax = price * 250.
-    private const float PriceToValue = 250f;
+    // REPO shop costs are in THOUSANDS-of-dollars units: ShopCostUI shows the total as
+    // "-$" + totalCost + "K", currency (StatGetRunCurrency) is likewise in K-units, and the
+    // per-item cost the game compares against currency is  valueMax / 1000 * itemValueMultiplier(4)
+    // = valueMax * 0.004  (ShopManager.PopulateItemVolumes / UpgradeValueGet). We want a
+    // BaseShopPrice expressed in whole DOLLARS to map to  BaseShopPrice / 1000  K-units, so:
+    //   valueMax * 0.004 = BaseShopPrice / 1000  ->  valueMax = BaseShopPrice * 0.25.
+    // (The old value of 250 was 1000x too high — it treated the K-unit cost as raw dollars,
+    // making every upgrade cost e.g. "$27,000K" = $27,000,000.)
+    private const float PriceToValue = 0.25f;
 
     private static readonly List<Definition> _definitions = new();
     private static bool _registered;
@@ -200,12 +210,22 @@ internal static class PlayerUpgradeRegistry
         var attributes = clone.GetComponent<ItemAttributes>();
         attributes.item = item;
 
-        // Custom shop icon: pre-assign our sprite so the game skips its auto-generated icon.
-        if (!string.IsNullOrEmpty(def.IconFile))
+        // Custom shop icon: pre-assign our sprite so the game skips its auto-generated icon
+        // (this drives the small 2D inventory slot), AND retexture the physical upgrade CARD
+        // mesh so the item you see in the world/shop shows our art too.
+        if (def.UseVanillaMapIcon)
+        {
+            ApplyVanillaMapIcon(clone, def.Id, attributes);
+        }
+        else if (!string.IsNullOrEmpty(def.IconFile))
         {
             var sprite = UpgradeIcons.Load(def.IconFile);
             if (sprite != null)
                 attributes.icon = sprite;
+
+            var tex = UpgradeIcons.LoadTexture(def.IconFile);
+            if (tex != null)
+                ApplyCardArt(clone, def.Id, tex);
         }
 
         // 5. Register with REPOLib (sets item.prefab, adds to StatsManager, enables shop roll).
@@ -219,6 +239,138 @@ internal static class PlayerUpgradeRegistry
         RepoUpgrades.RegisterUpgrade(def.Id, item, def.StartAction, def.UpgradeAction);
         Plugin.Log.LogInfo($"[Upgrades] Built '{def.Id}' ({def.DisplayName}) maxLvl={def.MaxLevel} price~{def.BaseShopPrice}.");
         return true;
+    }
+
+    // Set once we've logged the renderer layout of a card, so we don't spam the log for all 15.
+    private static bool _dumpedCardLayout;
+
+    /// <summary>
+    /// Retexture the physical upgrade-card mesh with our art. Every clone comes from the vanilla
+    /// health-upgrade card, so without this all upgrades look identical in the world. We can't know
+    /// the exact material slot for the card face ahead of time, so we pick the child renderer whose
+    /// current main texture is the largest (the card art is the big face texture; small maps like
+    /// the frame/normal are ignored) and swap its main texture on a private material instance so the
+    /// shared vanilla asset is never mutated. The first card's full renderer layout is logged so the
+    /// choice can be verified/tuned from the BepInEx log.
+    /// </summary>
+    private static void ApplyCardArt(GameObject clone, string id, Texture tex)
+    {
+        var renderers = clone.GetComponentsInChildren<Renderer>(true);
+        Renderer best = null;
+        long bestArea = -1;
+
+        foreach (var r in renderers)
+        {
+            var mat = r.sharedMaterial;
+            var main = mat != null ? mat.mainTexture : null;
+            long area = main != null ? (long)main.width * main.height : 0;
+
+            if (!_dumpedCardLayout)
+            {
+                Plugin.Log.LogInfo(
+                    $"[Icons] Card layout '{id}': renderer='{Path(r.transform, clone.transform)}' " +
+                    $"mat='{(mat != null ? mat.name : "<none>")}' shader='{(mat != null && mat.shader != null ? mat.shader.name : "?")}' " +
+                    $"mainTex='{(main != null ? main.name : "<none>")}' size={(main != null ? $"{main.width}x{main.height}" : "-")}");
+            }
+
+            if (main != null && area > bestArea)
+            {
+                bestArea = area;
+                best = r;
+            }
+        }
+
+        _dumpedCardLayout = true;
+
+        if (best == null)
+        {
+            Plugin.Log.LogWarning($"[Icons] No textured renderer found on card '{id}'; card art unchanged.");
+            return;
+        }
+
+        // Clone the material so we only affect our upgrade, never the shared vanilla card material.
+        var newMat = new Material(best.sharedMaterial) { name = "IHM Card " + id };
+        newMat.mainTexture = tex;
+        if (newMat.HasProperty("_MainTex"))
+            newMat.SetTexture("_MainTex", tex);
+        if (newMat.HasProperty("_BaseMap"))
+            newMat.SetTexture("_BaseMap", tex);
+        best.sharedMaterial = newMat;
+        Plugin.Log.LogInfo($"[Icons] Retextured card '{id}' on renderer '{Path(best.transform, clone.transform)}'.");
+    }
+
+    /// <summary>
+    /// Give an upgrade the vanilla "Map Player Count" upgrade's art: copy that upgrade's shop icon
+    /// sprite onto our ItemAttributes, and retexture our physical card with its card-face texture.
+    /// Map Suite removes the vanilla map upgrade from the shop, so reusing its map-themed art makes
+    /// Map Suite read as its clear replacement without authoring a new PNG. Best-effort: if the
+    /// vanilla prefab can't be found the card just keeps the default clone art.
+    /// </summary>
+    private static void ApplyVanillaMapIcon(GameObject clone, string id, ItemAttributes attributes)
+    {
+        var vanilla = FindVanillaMapUpgradePrefab();
+        if (vanilla == null)
+        {
+            Plugin.Log.LogWarning($"[Icons] Vanilla 'Map Player Count' upgrade not found; '{id}' keeps default art.");
+            return;
+        }
+
+        var vanillaAttr = vanilla.GetComponentInChildren<ItemAttributes>(true);
+        if (vanillaAttr != null && vanillaAttr.icon != null)
+            attributes.icon = vanillaAttr.icon;
+
+        var tex = LargestMainTexture(vanilla);
+        if (tex != null)
+            ApplyCardArt(clone, id, tex);
+        else
+            Plugin.Log.LogWarning($"[Icons] No card texture on vanilla map upgrade; '{id}' card art unchanged.");
+    }
+
+    /// <summary>Locate the vanilla map-player-count upgrade prefab via its marker component.</summary>
+    private static GameObject FindVanillaMapUpgradePrefab()
+    {
+        var statsManager = StatsManager.instance;
+        if (statsManager == null || statsManager.itemDictionary == null)
+            return null;
+
+        foreach (var item in statsManager.itemDictionary.Values)
+        {
+            var prefab = item != null && item.prefab != null ? item.prefab.Prefab : null;
+            if (prefab != null && prefab.GetComponentInChildren<ItemUpgradeMapPlayerCount>(true) != null)
+                return prefab;
+        }
+        return null;
+    }
+
+    /// <summary>The largest main texture across a prefab's renderers (its card-face art).</summary>
+    private static Texture LargestMainTexture(GameObject root)
+    {
+        Texture best = null;
+        long bestArea = -1;
+        foreach (var r in root.GetComponentsInChildren<Renderer>(true))
+        {
+            var main = r.sharedMaterial != null ? r.sharedMaterial.mainTexture : null;
+            if (main == null)
+                continue;
+            long area = (long)main.width * main.height;
+            if (area > bestArea)
+            {
+                bestArea = area;
+                best = main;
+            }
+        }
+        return best;
+    }
+
+    private static string Path(Transform t, Transform root)
+    {
+        var stack = new System.Collections.Generic.Stack<string>();
+        while (t != null && t != root)
+        {
+            stack.Push(t.name);
+            t = t.parent;
+        }
+        return string.Join("/", stack);
     }
 
     /// <summary>Runs after itemDictionary is populated, before REPOLib flushes its content.</summary>

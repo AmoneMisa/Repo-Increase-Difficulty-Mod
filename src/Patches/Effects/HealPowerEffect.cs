@@ -20,7 +20,7 @@ internal static class HealPowerEffect
     [HarmonyPrefix]
     private static void Prefix(ref int healAmount)
     {
-        if (!ModConfig.CartUpgradesEnabled.Value)
+        if (!ModConfig.TruckUpgradesEnabled.Value)
             return;
 
         float m = TruckUpgrades.HealMultiplier;

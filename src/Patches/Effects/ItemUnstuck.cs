@@ -22,7 +22,6 @@ internal sealed class ItemUnstuckController : MonoBehaviour
     private const float EnsureInterval = 1f;
     private float _ensureTimer;
 
-    private GUIStyle _valueStyle;
     private GUIStyle _flashStyle;
 
     // Brief on-screen note when the host relocates a stuck valuable.
@@ -71,45 +70,8 @@ internal sealed class ItemUnstuckController : MonoBehaviour
         if (!ModConfig.ItemUnstuckEnabled.Value)
             return;
 
-        if (ModConfig.ValuableShowUndamagedValue.Value && SafeRunIsLevel())
-            DrawGrabValue();
-
         if (_relocText != null && Time.time < _relocUntil)
             DrawFlash();
-    }
-
-    // Show the undamaged (original) value of whatever valuable the LOCAL player is holding.
-    private void DrawGrabValue()
-    {
-        var dir = ValuableDirector.instance;
-        if (dir == null || dir.valuableList == null)
-            return;
-
-        ValuableObject held = null;
-        foreach (var v in dir.valuableList)
-        {
-            if (v == null)
-                continue;
-            var pgo = v.physGrabObject;
-            if (pgo != null && pgo.grabbedLocal)
-            {
-                held = v;
-                break;
-            }
-        }
-        if (held == null)
-            return;
-
-        EnsureStyles();
-
-        int original = Mathf.RoundToInt(held.dollarValueOriginal);
-        int current = Mathf.RoundToInt(held.dollarValueCurrent);
-        string text = current < original
-            ? $"Value: ${current}  (undamaged ${original})"
-            : $"Value: ${original}";
-
-        var rect = new Rect(0f, Screen.height * 0.72f, Screen.width, 24f);
-        DrawShadowed(rect, text, _valueStyle, new Color(1f, 0.85f, 0.35f));
     }
 
     private void DrawFlash()
@@ -131,13 +93,6 @@ internal sealed class ItemUnstuckController : MonoBehaviour
 
     private void EnsureStyles()
     {
-        _valueStyle ??= new GUIStyle
-        {
-            fontSize = 15,
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.MiddleCenter,
-            richText = false,
-        };
         _flashStyle ??= new GUIStyle
         {
             fontSize = 13,
@@ -173,8 +128,12 @@ internal sealed class ItemUnstuckController : MonoBehaviour
 internal sealed class ValuableGuard : MonoBehaviour
 {
     private const float CheckInterval = 0.5f;
-    private const float EmbedRadius = 0.18f;   // sphere at the object's centre to test for solids
     private const float RestSpeed = 0.35f;     // below this the object is "settled"
+    // How deep the item's OWN collider must be buried inside static geometry before we call it
+    // embedded. Resting on/in furniture (a shelf, a drawer, a cabinet nook) only makes shallow
+    // contact — a few mm of penetration at most. Being genuinely stuck inside a wall/floor buries
+    // the collider much deeper. This depth threshold is what tells the two apart.
+    private const float EmbedDepth = 0.12f;
 
     private ValuableObject _v;
     private PhysGrabObject _pgo;
@@ -236,12 +195,8 @@ internal sealed class ValuableGuard : MonoBehaviour
             return;
         }
 
-        Vector3 center = _pgo.impactDetector != null ? _pgo.impactDetector.centerPoint : Vector3.zero;
-        if (center == Vector3.zero)
-            center = _pgo.transform.position;
-
         bool resting = _rb == null || _rb.velocity.sqrMagnitude < RestSpeed * RestSpeed;
-        bool embedded = IsEmbedded(center);
+        bool embedded = IsEmbedded();
 
         if (embedded && resting)
         {
@@ -265,20 +220,43 @@ internal sealed class ValuableGuard : MonoBehaviour
         }
     }
 
-    // True when the object's centre sits inside a static, non-trigger collider (i.e. embedded in
-    // level geometry). Own colliders and other dynamic/grabbable bodies are ignored.
-    private bool IsEmbedded(Vector3 center)
+    // True only when the item's OWN collider is buried DEEP inside static geometry (a wall/floor),
+    // rather than merely touching or resting inside furniture. We measure the actual penetration
+    // depth between each of the item's colliders and every overlapping static (non-grabbable,
+    // rigidbody-less) collider via Physics.ComputePenetration. Resting on a shelf, in a drawer, or
+    // in a cabinet nook produces only shallow contact penetration (well under EmbedDepth), so those
+    // legitimately-placed valuables are (correctly) left alone. An item that has fallen/clipped INTO
+    // level geometry overlaps it deeply and crosses the threshold. This is far more reliable than
+    // point-sampling, which couldn't distinguish "buried in a wall" from "surrounded by furniture".
+    private bool IsEmbedded()
     {
-        var hits = Physics.OverlapSphere(center, EmbedRadius, ~0, QueryTriggerInteraction.Ignore);
-        foreach (var c in hits)
+        var myCols = GetComponentsInChildren<Collider>();
+        if (myCols == null || myCols.Length == 0)
+            return false;
+
+        foreach (var mine in myCols)
         {
-            if (c == null || c.isTrigger)
+            if (mine == null || mine.isTrigger || !mine.enabled)
                 continue;
-            if (c.attachedRigidbody != null)          // dynamic body, not static geometry
-                continue;
-            if (c.GetComponentInParent<PhysGrabObject>() != null) // another grabbable, not geometry
-                continue;
-            return true;
+
+            var b = mine.bounds;
+            var overlaps = Physics.OverlapBox(
+                b.center, b.extents, Quaternion.identity, ~0, QueryTriggerInteraction.Ignore);
+            foreach (var other in overlaps)
+            {
+                if (other == null || other == mine || other.isTrigger)
+                    continue;
+                if (other.attachedRigidbody != null)                     // dynamic body, not geometry
+                    continue;
+                if (other.GetComponentInParent<PhysGrabObject>() != null) // another grabbable
+                    continue;
+
+                if (Physics.ComputePenetration(
+                        mine, mine.transform.position, mine.transform.rotation,
+                        other, other.transform.position, other.transform.rotation,
+                        out _, out float depth) && depth >= EmbedDepth)
+                    return true;
+            }
         }
         return false;
     }

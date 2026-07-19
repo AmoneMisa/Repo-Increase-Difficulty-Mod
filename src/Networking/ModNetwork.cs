@@ -75,6 +75,9 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 
         LevelTimerController.Tick(Time.deltaTime);
         LateJoinController.Tick();
+        // Client-side: keep every enemy's per-player dictionaries in sync with mid-run joins
+        // (and mid-run enemy spawns) so late joiners don't crash the enemy AI coroutines.
+        LateJoinController.EnsureEnemyRegistrations();
     }
 
     /// <summary>Host broadcasts the authoritative timer state to other clients.</summary>

@@ -4,87 +4,147 @@ using UnityEngine;
 namespace IncreaseHardMod.Patches.Effects;
 
 /// <summary>
-/// Announces each level change using REPO's own styled HUD (the big centred message,
-/// <see cref="BigMessageUI"/> via <c>SemiFunc.UIBigMessage</c>) instead of raw IMGUI,
-/// so the text is crisp and matches the game. It polls RunManager.instance.levelCurrent
-/// every frame, so it works identically for host and joined clients without any host-only
-/// patch. Press LevelInfoToggleKey to suppress the announcement.
+/// Persistent on-screen level info. While you're on a run level (or the shop/truck), a small
+/// panel at the top-centre shows the current level number + name and, when the run has a special
+/// modifier active, that modifier. It reads RunManager.instance every frame so it works the same
+/// for the host and joined clients with no host-only patch. Press LevelInfoToggleKey to hide it.
 ///
-/// BigMessageUI hides itself ~0.2s after the last call, so we re-issue the message every
-/// frame for <see cref="DisplaySeconds"/> to keep it readable.
+/// Drawn with IMGUI (no game HUD dependency) so it always renders once a level is loaded, instead
+/// of relying on the game's BigMessageUI which only flashes briefly on a level change.
 /// </summary>
 internal sealed class LevelInfoHud : MonoBehaviour
 {
-    private const float DisplaySeconds = 4f;
     private static readonly Color Gold = new(1f, 0.8f, 0.3f);
+    private static readonly Color ModColor = new(1f, 0.55f, 0.9f);
 
-    private Level _lastLevel;
-    private string _message;
-    private float _timer;
+    private GUIStyle _title;
+    private GUIStyle _sub;
     private bool _suppressed;
 
     private void Update()
     {
         if (!ModConfig.LevelInfoEnabled.Value)
             return;
-
         if (Input.GetKeyDown(ModConfig.LevelInfoToggleKey.Value))
             _suppressed = !_suppressed;
+    }
 
-        DetectLevelChange();
+    private void OnGUI()
+    {
+        if (!ModConfig.LevelInfoEnabled.Value || _suppressed)
+            return;
+        if (SafeMenuLevel())
+            return;
 
-        // Keep re-issuing so the game's HUD keeps it on screen for the full duration.
-        if (_timer > 0f && !_suppressed)
+        var run = RunManager.instance;
+        if (run == null || run.levelCurrent == null)
+            return;
+
+        EnsureStyles();
+
+        string title = BuildTitle(run, run.levelCurrent);
+        var rect = new Rect(0f, 6f, Screen.width, 22f);
+        DrawShadowed(rect, title, _title, Gold);
+
+        // Active level modifiers are listed at the TOP-RIGHT, beneath the game's quota / extraction
+        // readout (the "$x / $goal" and "n / m" lines), one modifier per line, right-aligned.
+        var mods = ModifierManager.Current;
+        if (SafeRunIsLevel() && mods != null && mods.IsSpecial)
         {
-            _timer -= Time.deltaTime;
-            ShowBigMessage(_message);
+            var parts = BuildParts(mods);
+            const float w = 460f;
+            const float lineH = 18f;
+            float x = Screen.width - w - 24f;
+            float y = Screen.height * 0.30f; // clears the quota + extraction-point HUD above it
+            for (int i = 0; i < parts.Count; i++)
+            {
+                var lineRect = new Rect(x, y + i * lineH, w, lineH);
+                DrawShadowed(lineRect, $"\u2726 {parts[i]}", _sub, ModColor);
+            }
         }
     }
 
-    private void DetectLevelChange()
+    // Friendly, readable names for each active modifier TYPE (the raw enum renders as code-y
+    // PascalCase). Order follows the enum; the three parametrized modifiers append their rolled
+    // value so the HUD conveys not just which twist is active but how strong it is.
+    private static readonly (ModifierType Flag, string Name)[] Names =
     {
-        var run = RunManager.instance;
-        if (run == null)
-            return;
+        (ModifierType.FragileLoot, "Fragile Loot"),
+        (ModifierType.HeavyLoot, "Heavy Loot"),
+        (ModifierType.LightLoot, "Light Loot"),
+        (ModifierType.ProtectedLoot, "Protected Loot"),
+        (ModifierType.DangerousLoot, "Dangerous Loot"),
+        (ModifierType.ExtraSmallCart, "Extra Small Cart"),
+        (ModifierType.ExtraBigCart, "Extra Big Cart"),
+        (ModifierType.ExtraSouls, "Extra Souls"),
+        (ModifierType.SpreadUpgrades, "Spread Upgrades"),
+        (ModifierType.NoMap, "No Map"),
+        (ModifierType.ReducedPlayerHp, "Reduced HP"),
+        (ModifierType.AutoRevive, "Auto-Revive"),
+        (ModifierType.MoneyLossOnDeath, "Money Loss on Death"),
+        (ModifierType.LevelTimer, "Timed Level"),
+        (ModifierType.ChangeVoices, "Changed Voices"),
+        (ModifierType.MoreGachaCubes, "More Gacha Cubes"),
+        (ModifierType.SoulsExplodeHarder, "Souls Explode Harder"),
+        (ModifierType.BiggerSoulDrops, "Bigger Soul Drops"),
+        (ModifierType.MonstersPitTanky, "Pit-Tanky Monsters"),
+        (ModifierType.LightMonsters, "Light Monsters"),
+        (ModifierType.HeavyMonsters, "Heavy Monsters"),
+    };
 
-        var current = run.levelCurrent;
-        if (current == _lastLevel)
-            return;
-        _lastLevel = current; // track even for menus, so menu -> level still triggers
-
-        if (current == null || SafeMenuLevel())
-            return; // don't announce the main/lobby menus themselves
-
-        _message = BuildMessage(run, current);
-        _timer = DisplaySeconds;
+    private static System.Collections.Generic.List<string> BuildParts(LevelModifiers mods)
+    {
+        var parts = new System.Collections.Generic.List<string>();
+        foreach (var (flag, name) in Names)
+        {
+            if (!mods.Has(flag))
+                continue;
+            if (flag == ModifierType.ReducedPlayerHp)
+                parts.Add($"{name} ({mods.PlayerHpPercent}%)");
+            else if (flag == ModifierType.ExtraSouls)
+                parts.Add($"{name} ({mods.ExtraSouls})");
+            else if (flag == ModifierType.MoneyLossOnDeath)
+                parts.Add($"{name} ({mods.MoneyLossPercent}%)");
+            else
+                parts.Add(name);
+        }
+        if (parts.Count == 0)
+            parts.Add(mods.Active.ToString());
+        return parts;
     }
 
-    private static string BuildMessage(RunManager run, Level level)
+    private static string BuildTitle(RunManager run, Level level)
     {
         string name = !string.IsNullOrEmpty(level.NarrativeName) ? level.NarrativeName : Clean(level.name);
-
-        string msg = SemiFunc.RunIsLevel()
-            ? $"Lv {run.levelsCompleted + 1}  -  {name}"
-            : name;
-
-        var mods = ModifierManager.Current;
-        if (SemiFunc.RunIsLevel() && mods != null && mods.IsSpecial)
-            msg += $"\n<size=60%>\u2726 {mods.Active}</size>";
-
-        return msg;
+        return SafeRunIsLevel() ? $"Lv {run.levelsCompleted + 1}  -  {name}" : name;
     }
 
-    private static void ShowBigMessage(string message)
+    private static void DrawShadowed(Rect rect, string text, GUIStyle style, Color color)
     {
-        try
+        var prev = GUI.color;
+        GUI.color = new Color(0f, 0f, 0f, 0.9f);
+        GUI.Label(new Rect(rect.x + 1f, rect.y + 1f, rect.width, rect.height), text, style);
+        GUI.color = color;
+        GUI.Label(rect, text, style);
+        GUI.color = prev;
+    }
+
+    private void EnsureStyles()
+    {
+        _title ??= new GUIStyle
         {
-            if (BigMessageUI.instance != null)
-                SemiFunc.UIBigMessage(message, "", 40f, Gold, Color.white);
-        }
-        catch
+            fontSize = 16,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter,
+            richText = false,
+        };
+        _sub ??= new GUIStyle
         {
-            // HUD not ready yet (e.g. mid-transition); ignore this frame.
-        }
+            fontSize = 12,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleRight,
+            richText = false,
+        };
     }
 
     private static string Clean(string raw)
@@ -96,13 +156,13 @@ internal sealed class LevelInfoHud : MonoBehaviour
 
     private static bool SafeMenuLevel()
     {
-        try
-        {
-            return SemiFunc.MenuLevel();
-        }
-        catch
-        {
-            return false;
-        }
+        try { return SemiFunc.MenuLevel(); }
+        catch { return false; }
+    }
+
+    private static bool SafeRunIsLevel()
+    {
+        try { return SemiFunc.RunIsLevel(); }
+        catch { return false; }
     }
 }

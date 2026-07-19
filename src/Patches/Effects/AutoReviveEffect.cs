@@ -65,16 +65,24 @@ internal static class AutoReviveEffect
     }
 
     /// <summary>
-    /// Wait until the player's death head exists (so Revive() has a valid respawn
-    /// anchor), then revive. Give up after a few seconds as a safety net so we never
-    /// spin forever if the head never spawns.
+    /// Wait until the death sequence has FULLY settled, then revive.
+    ///
+    /// It is NOT enough to wait for the death head: that head is pre-spawned at level start
+    /// (LevelGenerator gives every avatar one before any death), so it's already non-null the
+    /// instant PlayerDeathRPC fires. Reviving then runs mid-death-animation, and the still-pending
+    /// PlayerDeathDone() — which sets isDisabled=true and disables the avatar GameObject — fires a
+    /// moment later and RE-KILLS the freshly revived player, dropping them into the spectating
+    /// death head ("flying at 0 HP"). So we wait until isDisabled becomes true, which marks the
+    /// death as fully committed; reviving after that is safe and won't be clobbered. Give up after
+    /// a timeout as a safety net so we never spin forever.
     /// </summary>
     private static IEnumerator ReviveWhenReady(PlayerAvatar player)
     {
-        const float timeout = 5f;
+        const float timeout = 10f;
         float waited = 0f;
 
-        while (player != null && player.playerDeathHead == null && waited < timeout)
+        while (player != null && waited < timeout &&
+               (player.playerDeathHead == null || !player.isDisabled || !player.deadSet))
         {
             waited += 0.1f;
             yield return new WaitForSeconds(0.1f);
@@ -83,8 +91,9 @@ internal static class AutoReviveEffect
         if (player == null || player.playerDeathHead == null)
             yield break;
 
-        // Still the host and still dead? Then bring them back.
-        if (!SemiFunc.IsMasterClientOrSingleplayer() || !player.deadSet)
+        // Still the host and still fully dead? Then bring them back. (A teammate/truck revive in
+        // the meantime clears deadSet/isDisabled — in that case we must not revive again.)
+        if (!SemiFunc.IsMasterClientOrSingleplayer() || !player.deadSet || !player.isDisabled)
             yield break;
 
         if (ModConfig.AutoReviveAtCar.Value && TryMoveHeadToCar(player))

@@ -39,7 +39,7 @@ internal static class ChargeEfficiencyEffect
 
     private static void Apply(ChargingStation station)
     {
-        if (!ModConfig.CartUpgradesEnabled.Value)
+        if (!ModConfig.TruckUpgradesEnabled.Value)
         {
             station.chargeRate = _baseRate;
             return;

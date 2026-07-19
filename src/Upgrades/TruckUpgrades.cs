@@ -17,7 +17,7 @@ namespace IncreaseHardMod.Upgrades;
 ///   • Heal Power        — leveled: scales ALL healing (truck final-heal, medkits, drones…).
 ///   • Charge Efficiency — leveled: slows the truck charging station's energy drain.
 ///   • Loot Cash-In      — one-time unlock: leftover valuables are auto-cashed (for
-///                          <see cref="ModConfig.CartSellFraction"/>) once every quota closes.
+///                          <see cref="ModConfig.TruckSellFraction"/>) once every quota closes.
 /// </summary>
 internal static class TruckUpgrades
 {
@@ -27,7 +27,7 @@ internal static class TruckUpgrades
 
     public static void Register()
     {
-        if (!ModConfig.PlayerUpgradesEnabled.Value || !ModConfig.CartUpgradesEnabled.Value)
+        if (!ModConfig.PlayerUpgradesEnabled.Value || !ModConfig.TruckUpgradesEnabled.Value)
             return;
 
         PlayerUpgradeRegistry.Define(new PlayerUpgradeRegistry.Definition
@@ -35,8 +35,8 @@ internal static class TruckUpgrades
             Id = HealId,
             DisplayName = "Heal Power",
             Description = "Truck upgrade (whole team): all healing is stronger. Stacks per level.",
-            MaxLevel = Mathf.Max(1, ModConfig.CartHealMaxLevel.Value),
-            BaseShopPrice = ModConfig.CartHealBaseCost.Value,
+            MaxLevel = Mathf.Max(1, ModConfig.TruckHealMaxLevel.Value),
+            BaseShopPrice = ModConfig.TruckHealBaseCost.Value,
             IconFile = "Upgrade_Truck_Heal-Power.png",
         });
 
@@ -45,8 +45,8 @@ internal static class TruckUpgrades
             Id = ChargeId,
             DisplayName = "Charge Efficiency",
             Description = "Truck upgrade (whole team): the charging station drains its energy slower. Stacks per level.",
-            MaxLevel = Mathf.Max(1, ModConfig.CartChargeMaxLevel.Value),
-            BaseShopPrice = ModConfig.CartChargeBaseCost.Value,
+            MaxLevel = Mathf.Max(1, ModConfig.TruckChargeMaxLevel.Value),
+            BaseShopPrice = ModConfig.TruckChargeBaseCost.Value,
             IconFile = "Upgrade_Truck_Charge-Power.png",
         });
 
@@ -56,7 +56,7 @@ internal static class TruckUpgrades
             DisplayName = "Loot Cash-In",
             Description = "Truck upgrade (whole team): once owned, leftover valuables are auto-cashed when every quota is closed. One-time unlock.",
             MaxLevel = 1,
-            BaseShopPrice = ModConfig.CartSellCost.Value,
+            BaseShopPrice = ModConfig.TruckSellCost.Value,
         });
     }
 
@@ -87,11 +87,11 @@ internal static class TruckUpgrades
 
     /// <summary>All-healing multiplier derived from the team's Heal Power level (>= 1).</summary>
     public static float HealMultiplier =>
-        1f + TeamLevel(HealId) * Mathf.Max(0f, ModConfig.CartHealPercentPerLevel.Value);
+        1f + TeamLevel(HealId) * Mathf.Max(0f, ModConfig.TruckHealPercentPerLevel.Value);
 
     /// <summary>Charging-station drain multiplier derived from the team's Charge Efficiency (0.05..1).</summary>
     public static float ChargeDrainMultiplier =>
-        Mathf.Clamp(1f - TeamLevel(ChargeId) * Mathf.Max(0f, ModConfig.CartChargePercentPerLevel.Value), 0.05f, 1f);
+        Mathf.Clamp(1f - TeamLevel(ChargeId) * Mathf.Max(0f, ModConfig.TruckChargePercentPerLevel.Value), 0.05f, 1f);
 
     /// <summary>True when anyone on the team owns the Loot Cash-In unlock.</summary>
     public static bool SellUnlocked => TeamLevel(SellId) > 0;
@@ -109,7 +109,7 @@ internal static class TruckUpgrades
     }
 
     /// <summary>
-    /// Cash in every remaining valuable for CartSellFraction of its value, zeroing each so it
+    /// Cash in every remaining valuable for TruckSellFraction of its value, zeroing each so it
     /// can't be extracted or sold again. Host-only; shared run currency syncs through
     /// SemiFunc.StatSetRunCurrency. Returns the currency credited.
     /// </summary>
@@ -118,7 +118,7 @@ internal static class TruckUpgrades
         if (!CanSellNow())
             return 0;
 
-        float fraction = Mathf.Clamp01(ModConfig.CartSellFraction.Value);
+        float fraction = Mathf.Clamp01(ModConfig.TruckSellFraction.Value);
         float total = 0f;
         foreach (var v in Object.FindObjectsOfType<ValuableObject>())
         {
@@ -149,7 +149,7 @@ internal static class TruckUpgrades
 
         private void Update()
         {
-            if (!ModConfig.CartUpgradesEnabled.Value)
+            if (!ModConfig.TruckUpgradesEnabled.Value)
                 return;
 
             // Reset the latch off-level (truck/shop) so the next level can auto-sell again.

@@ -43,7 +43,7 @@ internal sealed class PingHud : MonoBehaviour
         if (!ModConfig.PingEnabled.Value || PingController.Active.Count == 0)
             return;
 
-        var cam = (PhysGrabber.instance != null ? PhysGrabber.instance.playerCamera : null) ?? Camera.main;
+        var cam = PingController.ActiveCamera();
         if (cam == null)
             return;
 
@@ -69,15 +69,55 @@ internal sealed class PingHud : MonoBehaviour
             var color = PingController.ColorFor(ping.Type);
             color.a = alpha;
 
-            DrawDot(x, y, color);
+            // Size the highlight box by distance so nearer targets get a bigger frame,
+            // roughly matching the on-screen footprint of the object (sp.z = camera depth).
+            float half = Mathf.Clamp(Screen.height * 0.9f / Mathf.Max(1f, sp.z), 16f, 140f);
+            DrawHighlightBox(x, y, half, color);
 
             string text = $"{PingController.GlyphFor(ping.Type)} {ping.Label}";
             if (!string.IsNullOrEmpty(ping.Sender))
                 text += $"  ({ping.Sender})";
-            DrawLabel(x + 12f, y - 10f, text, color);
+            DrawLabel(x + half + 6f, y - 10f, text, color);
         }
 
         GUI.color = Color.white;
+    }
+
+    // A coloured highlight like the game's own marker: a faint translucent fill plus four
+    // L-shaped corner brackets. Centred on (cx, cy) with the given half-size in pixels.
+    private static void DrawHighlightBox(float cx, float cy, float half, Color color)
+    {
+        float size = half * 2f;
+        var box = new Rect(cx - half, cy - half, size, size);
+
+        // Translucent fill (the "cube" glow).
+        var fill = color;
+        fill.a *= 0.14f;
+        GUI.color = fill;
+        GUI.DrawTexture(box, _dot);
+
+        // Corner brackets.
+        float len = Mathf.Clamp(half * 0.4f, 6f, 26f);
+        float t = 2f;
+        GUI.color = color;
+
+        // Top-left
+        Line(box.xMin, box.yMin, len, t);            // horizontal
+        Line(box.xMin, box.yMin, t, len);            // vertical
+        // Top-right
+        Line(box.xMax - len, box.yMin, len, t);
+        Line(box.xMax - t, box.yMin, t, len);
+        // Bottom-left
+        Line(box.xMin, box.yMax - t, len, t);
+        Line(box.xMin, box.yMax - len, t, len);
+        // Bottom-right
+        Line(box.xMax - len, box.yMax - t, len, t);
+        Line(box.xMax - t, box.yMax - len, t, len);
+    }
+
+    private static void Line(float x, float y, float w, float h)
+    {
+        GUI.DrawTexture(new Rect(x, y, w, h), _dot);
     }
 
     private static bool IsOccluded(Vector3 from, Vector3 to)
@@ -87,13 +127,6 @@ internal sealed class PingHud : MonoBehaviour
             return false;
         // Stop short of the target so we don't hit the pinged object's own collider.
         return Physics.Raycast(from, (to - from).normalized, d - 0.5f, ~0, QueryTriggerInteraction.Ignore);
-    }
-
-    private static void DrawDot(float cx, float cy, Color color)
-    {
-        const float s = 8f;
-        GUI.color = color;
-        GUI.DrawTexture(new Rect(cx - s * 0.5f, cy - s * 0.5f, s, s), _dot);
     }
 
     private static void DrawLabel(float x, float y, string text, Color color)

@@ -17,6 +17,11 @@ public static class ModConfig
     // kicks in from the 5th level onward (i.e. once levelsCompleted >= 4).
     public static ConfigEntry<int> RampStartLevel;
 
+    // How many levels of depth make up ONE ramp step. 1 = stats grow every level
+    // (the classic behaviour); 2 = stats only step up every 2nd level past the
+    // start, etc. Lets you stretch the ramp out over a longer run.
+    public static ConfigEntry<int> RampLevelsPerStep;
+
     // Enemy max HP. +PerLevel each level of depth, clamped to Max.
     public static ConfigEntry<float> EnemyHealthPerLevel;
     public static ConfigEntry<float> EnemyHealthMax;
@@ -90,7 +95,7 @@ public static class ModConfig
     // --- Late Join ---
     // When enabled, the host keeps the Photon room (and Steam lobby) reachable
     // during a run/shop/truck instead of sealing it at run start, and re-syncs
-    // mod state (modifiers, timer, cart upgrades) whenever a new player connects.
+    // mod state (modifiers, timer, truck upgrades) whenever a new player connects.
     public static ConfigEntry<bool> LateJoinEnabled;
 
     // --- Ping ---
@@ -109,13 +114,12 @@ public static class ModConfig
     public static ConfigEntry<int> PinBasePrice;
 
     // --- Item Unstuck (valuable safety net) ---
-    // Host-authoritative safeguards for valuables: relocate ones trapped in geometry,
-    // keep them invulnerable until first grabbed, and show a valuable's undamaged value.
+    // Host-authoritative safeguards for valuables: relocate ones trapped in geometry
+    // and keep them invulnerable until first grabbed.
     public static ConfigEntry<bool> ItemUnstuckEnabled;
     public static ConfigEntry<bool> ValuableRelocateStuck;
     public static ConfigEntry<float> ValuableStuckSeconds;
     public static ConfigEntry<bool> ValuableInvulnerableUntilGrab;
-    public static ConfigEntry<bool> ValuableShowUndamagedValue;
 
     // --- Dead Map Access ---
     // Let a dead/spectating player still open their map tool (the map view is re-anchored to
@@ -144,22 +148,22 @@ public static class ModConfig
     public static ConfigEntry<bool> AutoBackupKeepSave;
     public static ConfigEntry<int> AutoBackupMaxPerSave;
 
-    // --- Cart / truck upgrades ---
-    // Team-wide truck upgrades sold in the normal shop (once anyone owns a level, the whole
-    // squad gets the effect). Effects apply themselves; there is no separate menu.
-    public static ConfigEntry<bool> CartUpgradesEnabled;
+    // --- Truck upgrades ---
+    // Team-wide truck upgrades sold in the normal shop like any other upgrade (once anyone owns a
+    // level, the whole squad gets the effect). Effects apply themselves; there is no separate menu.
+    public static ConfigEntry<bool> TruckUpgradesEnabled;
     // Heal power: scales all incoming healing (truck final-heal, medkits, drones).
-    public static ConfigEntry<float> CartHealPercentPerLevel;
-    public static ConfigEntry<int> CartHealMaxLevel;
-    public static ConfigEntry<int> CartHealBaseCost;
+    public static ConfigEntry<float> TruckHealPercentPerLevel;
+    public static ConfigEntry<int> TruckHealMaxLevel;
+    public static ConfigEntry<int> TruckHealBaseCost;
     // Charge efficiency: slows the truck charging station's energy-pool drain.
-    public static ConfigEntry<float> CartChargePercentPerLevel;
-    public static ConfigEntry<int> CartChargeMaxLevel;
-    public static ConfigEntry<int> CartChargeBaseCost;
+    public static ConfigEntry<float> TruckChargePercentPerLevel;
+    public static ConfigEntry<int> TruckChargeMaxLevel;
+    public static ConfigEntry<int> TruckChargeBaseCost;
     // Post-quota selling: once bought, leftover valuables are auto-cashed AFTER
-    // every extraction quota is closed, for CartSellFraction of their value.
-    public static ConfigEntry<int> CartSellCost;
-    public static ConfigEntry<float> CartSellFraction;
+    // every extraction quota is closed, for TruckSellFraction of their value.
+    public static ConfigEntry<int> TruckSellCost;
+    public static ConfigEntry<float> TruckSellFraction;
 
     // --- Player Upgrades (custom per-player upgrades sold in the DEFAULT shop) ---
     // Registered via REPOLib as runtime clones of vanilla upgrade items, so they roll
@@ -213,6 +217,12 @@ public static class ModConfig
     // Passive lobby/menu overlay showing current Photon region, ping, room code and
     // player count. Reads PhotonNetwork state only — never opens sockets or callbacks.
     public static ConfigEntry<bool> ServerInfoEnabled;
+
+    // --- Shopping List panel ---
+    // In-shop overlay listing everything currently in the cart (ShopManager.shoppingList),
+    // aggregated by name with quantity + summed price, colour-coded by item type, plus a
+    // total-vs-currency footer. Reads ShopManager state only.
+    public static ConfigEntry<bool> ShoppingListEnabled;
 
     // --- More Players ---
     // Raise the room's player cap above REPO's default of 6 (host-side; the host's
@@ -280,11 +290,15 @@ public static class ModConfig
             "DIAGNOSTIC (default off). If true, skip ALL Harmony gameplay patches. Used only to isolate whether the mod's patches interfere with Photon connecting. Leave off for normal play.");
         DiagnosticDisableRuntimeObjects = cfg.Bind(
             "Diagnostics", "DisableRuntimeObjects", false,
-            "DIAGNOSTIC (default off). If true, skip creating the mod's runtime menu/HUD objects (networking, timer, cart menu, ping, Photon HUD). Used only to isolate whether they interfere with Photon connecting. Leave off for normal play.");
+            "DIAGNOSTIC (default off). If true, skip creating the mod's runtime menu/HUD objects (networking, timer, ping, Photon HUD). Used only to isolate whether they interfere with Photon connecting. Leave off for normal play.");
 
         RampStartLevel = BindInt(cfg,
             "General", "RampStartLevel", 4, 0, 30,
             "Levels completed before difficulty scaling starts. 4 = first 4 levels are vanilla, scaling begins on the 5th.");
+
+        RampLevelsPerStep = BindInt(cfg,
+            "General", "RampLevelsPerStep", 1, 1, 10,
+            "How many levels of depth make up ONE difficulty step. 1 = stats grow every level; 2 = stats step up only every 2nd level past the start (stretches the ramp).");
 
         EnemyHealthPerLevel = BindFloat(cfg,
             "Enemies", "HealthPerLevel", 0.15f, 0f, 2f,
@@ -294,9 +308,9 @@ public static class ModConfig
             "Global upper cap on the enemy HP multiplier. 3.0 = at most 3x vanilla HP.");
         // Free-form string (name:mult list) — REPOConfig can't render this sensibly, so hide it.
         EnemyHealthMaxPerEnemy = cfg.Bind(
-            "Enemies", "HealthMaxPerEnemy", "Elsa:2, Loom:1.5, Cleanup Crew:1.5, Tick:1.5",
+            "Enemies", "HealthMaxPerEnemy", "Elsa:1, Loom:1, Cleanup Crew:1.5, Tick:1.5",
             new ConfigDescription(
-                "Per-enemy HP cap overrides. Format: 'Name:multiplier, Name:multiplier'. Names match EnemyParent.enemyName (case-insensitive). Unlisted enemies use HealthMaxMultiplier. Enable LogEnemyNames to see exact names.",
+                "Per-enemy HP cap overrides. Format: 'Name:multiplier, Name:multiplier'. Names match EnemyParent.enemyName (case-insensitive). A cap of 1 EXCLUDES that enemy from HP scaling (Elsa/Loom are excluded by default). Unlisted enemies use HealthMaxMultiplier. Enable LogEnemyNames to see exact names.",
                 null, HideFromRepoConfig));
         LogEnemyNames = cfg.Bind(
             "Enemies", "LogEnemyNames", true,
@@ -438,9 +452,6 @@ public static class ModConfig
         ValuableInvulnerableUntilGrab = cfg.Bind(
             "Item Unstuck", "InvulnerableUntilGrab", true,
             "Valuables take no damage / lose no value until a player grabs them for the first time (uses the game's own indestructible flag). Host-side.");
-        ValuableShowUndamagedValue = cfg.Bind(
-            "Item Unstuck", "ShowUndamagedValue", true,
-            "While you hold a valuable, show its ORIGINAL (undamaged) value on-screen alongside its current value. Client-side, cosmetic.");
 
         // --- Dead Map Access ---
         DeadMapAccessEnabled = cfg.Bind(
@@ -483,6 +494,11 @@ public static class ModConfig
             "Server Info", "Enabled", true,
             "Show a passive overlay in the lobby/menu with the current Photon region, ping, room code and player count. Reads connection state only — never opens sockets, so it's safe on the main menu.");
 
+        // --- Shopping List panel ---
+        ShoppingListEnabled = cfg.Bind(
+            "Shopping List", "Enabled", false,
+            "While in the shop, show a panel listing everything in the cart (yours and your friends'): quantity, name and summed price per item, colour-coded by item type, with a running total vs. your team's currency.");
+
         // --- More Players ---
         MorePlayersEnabled = cfg.Bind(
             "More Players", "Enabled", false,
@@ -516,33 +532,33 @@ public static class ModConfig
             "Auto Backup Saves", "MaxBackupsPerSave", 5, 0, 100,
             "How many timestamped backups to keep per save file. Oldest are pruned. 0 = keep all.");
 
-        // --- Cart / truck upgrades ---
-        CartUpgradesEnabled = cfg.Bind(
-            "Cart Upgrades", "Enabled", true,
+        // --- Truck upgrades ---
+        TruckUpgradesEnabled = cfg.Bind(
+            "Truck Upgrades", "Enabled", true,
             "Enable the team-wide truck upgrades (Heal Power, Charge Efficiency, Loot Cash-In). Bought in the normal shop; effects apply for the whole team.");
-        CartHealPercentPerLevel = BindFloat(cfg,
-            "Cart Upgrades", "HealPercentPerLevel", 0.25f, 0f, 2f,
+        TruckHealPercentPerLevel = BindFloat(cfg,
+            "Truck Upgrades", "HealPercentPerLevel", 0.25f, 0f, 2f,
             "Heal Power: extra healing effectiveness per level. 0.25 = +25% healing per level (truck final-heal, medkits, drones).");
-        CartHealMaxLevel = BindInt(cfg,
-            "Cart Upgrades", "HealMaxLevel", 3, 0, 20,
+        TruckHealMaxLevel = BindInt(cfg,
+            "Truck Upgrades", "HealMaxLevel", 3, 0, 20,
             "Heal Power: maximum purchasable level.");
-        CartHealBaseCost = BindInt(cfg,
-            "Cart Upgrades", "HealBaseCost", 10000, 0, 1000000,
+        TruckHealBaseCost = BindInt(cfg,
+            "Truck Upgrades", "HealBaseCost", 10000, 0, 1000000,
             "Heal Power: cost of the first level (grows by CostGrowth each level).");
-        CartChargePercentPerLevel = BindFloat(cfg,
-            "Cart Upgrades", "ChargePercentPerLevel", 0.20f, 0f, 1f,
+        TruckChargePercentPerLevel = BindFloat(cfg,
+            "Truck Upgrades", "ChargePercentPerLevel", 0.20f, 0f, 1f,
             "Charge Efficiency: reduction of the truck charging station's energy-pool drain per level. 0.20 = -20% drain per level.");
-        CartChargeMaxLevel = BindInt(cfg,
-            "Cart Upgrades", "ChargeMaxLevel", 3, 0, 20,
+        TruckChargeMaxLevel = BindInt(cfg,
+            "Truck Upgrades", "ChargeMaxLevel", 3, 0, 20,
             "Charge Efficiency: maximum purchasable level.");
-        CartChargeBaseCost = BindInt(cfg,
-            "Cart Upgrades", "ChargeBaseCost", 10000, 0, 1000000,
+        TruckChargeBaseCost = BindInt(cfg,
+            "Truck Upgrades", "ChargeBaseCost", 10000, 0, 1000000,
             "Charge Efficiency: cost of the first level (grows by CostGrowth each level).");
-        CartSellCost = BindInt(cfg,
-            "Cart Upgrades", "SellUnlockCost", 50000, 0, 1000000,
+        TruckSellCost = BindInt(cfg,
+            "Truck Upgrades", "SellUnlockCost", 50000, 0, 1000000,
             "Loot Cash-In: one-time cost to unlock selling leftover valuables after all quotas are closed.");
-        CartSellFraction = BindFloat(cfg,
-            "Cart Upgrades", "SellFraction", 0.75f, 0f, 1f,
+        TruckSellFraction = BindFloat(cfg,
+            "Truck Upgrades", "SellFraction", 0.75f, 0f, 1f,
             "Loot Cash-In: fraction of a leftover valuable's value returned as currency when sold. 0.75 = 75%.");
 
         // --- Player Upgrades (custom, sold in the default shop via REPOLib) ---
