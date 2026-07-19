@@ -37,6 +37,10 @@ internal static class LateJoinController
     private static int _lastRegPlayers = -1;
     private static int _lastRegEnemies = -1;
 
+    // State for the client-side frozen-health safety net (see EnsureLocalHealthInitialized).
+    private static float _healthCheckDwell;
+    private static bool _localHealthFixed;
+
     /// <summary>Re-open the room the same way returning to the lobby would.</summary>
     public static void OpenRoom(string reason)
     {
@@ -170,6 +174,83 @@ internal static class LateJoinController
         catch (System.Exception e)
         {
             Plugin.Log.LogWarning($"[LateJoin] Enemy registration failed harmlessly: {e.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Client-side safety net for a mid-run joiner's FROZEN HEALTH (immune to all damage AND healing).
+    ///
+    /// <c>PlayerHealth.Fetch()</c> is the ONLY thing that initializes a player's health, and it only
+    /// runs for the avatar's owner. Its first line is <c>while (!LevelGenerator.Instance.Generated)</c>
+    /// — but a player who joins AFTER the level was generated never sees that flag flip on their client,
+    /// so Fetch spins forever and never reaches its body. The avatar is therefore left on its field
+    /// defaults: <c>health == maxHealth == 100</c> and <c>healthSet == false</c>. That single state is
+    /// exactly the reported freeze: <c>Heal()</c> early-returns on <c>health == maxHealth</c> (heal pack /
+    /// ally heal / truck all no-op) and no real value is ever established or synced.
+    ///
+    /// Fix: on our OWN (owning) client, once we're actually playing a level, if Fetch clearly never
+    /// finished we run its body ourselves — read the authoritative health/maxHealth from StatsManager,
+    /// clamp, write it back, broadcast <c>UpdateHealthRPC</c> to the others, and set <c>healthSet</c>.
+    /// A normal client reaches <c>gameState.Main</c> only AFTER generation+Fetch, so a short dwell guards
+    /// the Load->Main frame against preempting a healthy start.
+    /// </summary>
+    public static void EnsureLocalHealthInitialized()
+    {
+        if (!ModConfig.LateJoinEnabled.Value)
+            return;
+
+        try
+        {
+            // Only relevant while actually playing a settled run level.
+            if (GameDirector.instance == null ||
+                GameDirector.instance.currentState != GameDirector.gameState.Main ||
+                !SemiFunc.RunIsLevel())
+            {
+                _healthCheckDwell = 0f;
+                _localHealthFixed = false;
+                return;
+            }
+
+            if (_localHealthFixed)
+                return;
+
+            var avatar = SemiFunc.PlayerAvatarLocal();
+            if (avatar == null || avatar.playerHealth == null)
+                return;
+
+            var ph = avatar.playerHealth;
+
+            // Fetch completed normally -> nothing to do (and never touch it again this level).
+            if (ph.healthSet)
+            {
+                _localHealthFixed = true;
+                return;
+            }
+
+            // Give the normal Load->Main handoff a moment so we never race a healthy Fetch.
+            _healthCheckDwell += Time.deltaTime;
+            if (_healthCheckDwell < 3f)
+                return;
+
+            // Run exactly what PlayerHealth.Fetch() would have done, on our owning client.
+            string steamID = SemiFunc.PlayerGetSteamID(avatar);
+            int num = StatsManager.instance.GetPlayerHealth(steamID);
+            if (num <= 0)
+                num = 1;
+            ph.health = num;
+            ph.maxHealth = 100 + StatsManager.instance.GetPlayerMaxHealth(steamID);
+            ph.health = Mathf.Clamp(ph.health, 0, ph.maxHealth);
+            StatsManager.instance.SetPlayerHealth(steamID, ph.health, setInShop: false);
+            if (GameManager.Multiplayer() && ph.photonView != null)
+                ph.photonView.RPC("UpdateHealthRPC", RpcTarget.Others, ph.health, ph.maxHealth, true, false);
+            ph.healthSet = true;
+            _localHealthFixed = true;
+            Plugin.Log.LogInfo(
+                $"[LateJoin] Completed stuck health init for local late-joiner: {ph.health}/{ph.maxHealth}.");
+        }
+        catch (System.Exception e)
+        {
+            Plugin.Log.LogWarning($"[LateJoin] Local health init failed harmlessly: {e.Message}");
         }
     }
 }

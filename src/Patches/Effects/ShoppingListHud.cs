@@ -7,7 +7,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// In-shop "Shopping List" overlay. While you're on the shop level, this reads
 /// <c>ShopManager.instance.shoppingList</c> (the shared cart — everything you and your
 /// friends have carried into the extraction point) every frame and draws a panel on the
-/// left of the screen: each distinct item on its own row as "{qty}x {name}  ${sum}",
+/// right of the screen: each distinct item on its own row as "{qty}x {name}  ${sum}",
 /// colour-coded by the item's <see cref="SemiFunc.itemType"/>, followed by a total-cost
 /// vs. team-currency footer.
 ///
@@ -50,36 +50,39 @@ internal sealed class ShoppingListHud : MonoBehaviour
         EnsureStyles();
         Aggregate(shop);
 
-        const float x = 12f;
-        const float width = 300f;
-        float rowH = 18f;
+        const float width = 420f;
+        const float sumW = 90f;
+        float rowH = 26f;
+        // Right-align the panel: the top-left corner is taken by the server/debug HUD, so the
+        // shopping list overlapped it. The shop screen has nothing on the right, so anchor there.
+        float x = Screen.width - width - 24f;
         float y = 120f;
 
-        float panelH = 30f + _rows.Count * rowH + 26f;
+        float panelH = 40f + _rows.Count * rowH + 32f;
         GUI.color = new Color(0f, 0f, 0f, 0.6f);
-        GUI.DrawTexture(new Rect(x - 6f, y - 6f, width + 12f, panelH), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(x - 8f, y - 8f, width + 16f, panelH), Texture2D.whiteTexture);
         GUI.color = Color.white;
 
-        DrawShadowed(new Rect(x, y, width, 22f), "Shopping List", _title, TitleColor);
-        y += 26f;
+        DrawShadowed(new Rect(x, y, width, 30f), "Shopping List", _title, TitleColor);
+        y += 34f;
 
         int total = 0;
         foreach (var r in _rows)
         {
             string text = $"{r.Count}x {r.Name}";
-            DrawShadowed(new Rect(x, y, width - 70f, rowH), text, _row, r.Color);
-            DrawShadowed(new Rect(x + width - 70f, y, 70f, rowH), $"${r.Sum}", _row, r.Color,
+            DrawShadowed(new Rect(x, y, width - sumW, rowH), text, _row, r.Color);
+            DrawShadowed(new Rect(x + width - sumW, y, sumW, rowH), $"${r.Sum}", _row, r.Color,
                 TextAnchor.MiddleRight);
             total += r.Sum;
             y += rowH;
         }
 
-        y += 4f;
+        y += 6f;
         int currency = SafeCurrency(shop);
         bool afford = currency < 0 || total <= currency;
         var totColor = afford ? new Color(0.5f, 1f, 0.5f) : new Color(1f, 0.45f, 0.45f);
         string footer = currency >= 0 ? $"Total  ${total} / ${currency}" : $"Total  ${total}";
-        DrawShadowed(new Rect(x, y, width, 20f), footer, _footer, totColor);
+        DrawShadowed(new Rect(x, y, width, 28f), footer, _footer, totColor);
     }
 
     // Collapse the flat shopping list into distinct-name rows with counts + summed value,
@@ -148,15 +151,15 @@ internal sealed class ShoppingListHud : MonoBehaviour
             return;
         _title = new GUIStyle
         {
-            fontSize = 16, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleLeft, richText = false,
+            fontSize = 24, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleLeft, richText = false,
         };
         _row = new GUIStyle
         {
-            fontSize = 13, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleLeft, richText = false,
+            fontSize = 19, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleLeft, richText = false,
         };
         _footer = new GUIStyle
         {
-            fontSize = 14, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleLeft, richText = false,
+            fontSize = 20, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleLeft, richText = false,
         };
     }
 
@@ -168,7 +171,7 @@ internal sealed class ShoppingListHud : MonoBehaviour
 
         var prev = GUI.color;
         GUI.color = new Color(0f, 0f, 0f, 0.85f);
-        GUI.Label(new Rect(rect.x + 1f, rect.y + 1f, rect.width, rect.height), text, style);
+        GUI.Label(new Rect(rect.x + 2f, rect.y + 2f, rect.width, rect.height), text, style);
         GUI.color = color;
         GUI.Label(rect, text, style);
         GUI.color = prev;

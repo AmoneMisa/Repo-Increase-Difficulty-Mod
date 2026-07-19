@@ -78,6 +78,9 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         // Client-side: keep every enemy's per-player dictionaries in sync with mid-run joins
         // (and mid-run enemy spawns) so late joiners don't crash the enemy AI coroutines.
         LateJoinController.EnsureEnemyRegistrations();
+        // Client-side: unfreeze a mid-run joiner whose PlayerHealth.Fetch() never completed
+        // (health/maxHealth stuck at 100 defaults -> immune to all damage AND healing).
+        LateJoinController.EnsureLocalHealthInitialized();
     }
 
     /// <summary>Host broadcasts the authoritative timer state to other clients.</summary>

@@ -237,6 +237,15 @@ internal static class PlayerUpgradeRegistry
         }
 
         RepoUpgrades.RegisterUpgrade(def.Id, item, def.StartAction, def.UpgradeAction);
+
+        // Give the truck's upgrade screen a clean label. That screen (StatsUI.GetUpgradeDisplayName)
+        // shows StatsManager.upgradesInfo[key].displayName if present, otherwise it space-splits the
+        // raw upgrade id — turning "IHM_DroneBattery" into "IHM_ DRONE BATTERY". Registering our own
+        // UpgradeInfo makes it read our DisplayName ("Drone Battery") instead.
+        var stats = StatsManager.instance;
+        if (stats != null && stats.upgradesInfo != null && !stats.upgradesInfo.ContainsKey(def.Id))
+            stats.upgradesInfo[def.Id] = new StatsManager.UpgradeInfo { displayName = def.DisplayName };
+
         Plugin.Log.LogInfo($"[Upgrades] Built '{def.Id}' ({def.DisplayName}) maxLvl={def.MaxLevel} price~{def.BaseShopPrice}.");
         return true;
     }

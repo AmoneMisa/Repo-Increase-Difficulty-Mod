@@ -58,6 +58,13 @@ internal sealed class PingHud : MonoBehaviour
             float x = sp.x;
             float y = Screen.height - sp.y;
 
+            // Only mark pings whose anchor is actually ON-SCREEN. Otherwise a ping you've turned
+            // away from (or one at the screen edge) projects to the border and smears a big bracket
+            // into a corner instead of sitting on the object. The highlight stays strictly on the
+            // pinged object while it's in view, and shows nothing once it leaves the frame.
+            if (x < 0f || x > Screen.width || y < 0f || y > Screen.height)
+                continue;
+
             // Fade out over the last second of life.
             float remaining = ping.Expire - Time.time;
             float alpha = Mathf.Clamp01(remaining);
@@ -69,9 +76,10 @@ internal sealed class PingHud : MonoBehaviour
             var color = PingController.ColorFor(ping.Type);
             color.a = alpha;
 
-            // Size the highlight box by distance so nearer targets get a bigger frame,
-            // roughly matching the on-screen footprint of the object (sp.z = camera depth).
-            float half = Mathf.Clamp(Screen.height * 0.9f / Mathf.Max(1f, sp.z), 16f, 140f);
+            // Size the highlight by distance so nearer targets get a slightly bigger frame
+            // (sp.z = camera depth). Kept small so it snugly frames the object rather than
+            // covering a big chunk of the screen.
+            float half = Mathf.Clamp(Screen.height * 0.25f / Mathf.Max(1f, sp.z), 12f, 60f);
             DrawHighlightBox(x, y, half, color);
 
             string text = $"{PingController.GlyphFor(ping.Type)} {ping.Label}";

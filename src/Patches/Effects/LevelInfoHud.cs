@@ -52,8 +52,8 @@ internal sealed class LevelInfoHud : MonoBehaviour
         if (SafeRunIsLevel() && mods != null && mods.IsSpecial)
         {
             var parts = BuildParts(mods);
-            const float w = 460f;
-            const float lineH = 18f;
+            const float w = 620f;
+            const float lineH = 30f;
             float x = Screen.width - w - 24f;
             float y = Screen.height * 0.30f; // clears the quota + extraction-point HUD above it
             for (int i = 0; i < parts.Count; i++)
@@ -123,7 +123,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
     {
         var prev = GUI.color;
         GUI.color = new Color(0f, 0f, 0f, 0.9f);
-        GUI.Label(new Rect(rect.x + 1f, rect.y + 1f, rect.width, rect.height), text, style);
+        GUI.Label(new Rect(rect.x + 2f, rect.y + 2f, rect.width, rect.height), text, style);
         GUI.color = color;
         GUI.Label(rect, text, style);
         GUI.color = prev;
@@ -140,7 +140,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
         };
         _sub ??= new GUIStyle
         {
-            fontSize = 12,
+            fontSize = 24,
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleRight,
             richText = false,

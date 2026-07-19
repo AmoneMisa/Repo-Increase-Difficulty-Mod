@@ -140,6 +140,7 @@ internal sealed class ValuableGuard : MonoBehaviour
     private Rigidbody _rb;
 
     private bool _grabbedOnce;
+    private bool _relocated;   // relocate each valuable at most once per level
     private float _checkTimer;
     private float _stuckTimer;
 
@@ -187,6 +188,14 @@ internal sealed class ValuableGuard : MonoBehaviour
 
     private void StuckLogic(bool grabbed)
     {
+        // Relocate each valuable AT MOST ONCE per level. If the recovery spot itself is embedded
+        // (or the item re-settles into the same bad pocket), the stuck timer would rebuild and we'd
+        // teleport it forever — the "vase respawning repeatedly" bug. One rescue attempt, then leave
+        // it be; a player can still pick it up. Guards are per-object and rebuilt each level, so the
+        // budget naturally resets on the next level.
+        if (_relocated)
+            return;
+
         // Don't touch loot that's held, dead/broken, or riding in a cart.
         bool inCart = _pgo.impactDetector != null && _pgo.impactDetector.inCart;
         if (grabbed || _pgo.dead || inCart)
@@ -230,6 +239,14 @@ internal sealed class ValuableGuard : MonoBehaviour
     // point-sampling, which couldn't distinguish "buried in a wall" from "surrounded by furniture".
     private bool IsEmbedded()
     {
+        // A resting valuable — even one sitting right against a couch, table, or rug — keeps its
+        // collision CENTER in open air above whatever it rests on. Only an item that has fallen or
+        // clipped INTO a wall/floor has its center buried inside solid geometry. Requiring the center
+        // to be buried is what stops us from "rescuing" loot that's merely on the floor next to
+        // furniture (the Mortar Vase Big false positive). We then still confirm a deep penetration.
+        if (!CenterBuried())
+            return false;
+
         var myCols = GetComponentsInChildren<Collider>();
         if (myCols == null || myCols.Length == 0)
             return false;
@@ -261,6 +278,29 @@ internal sealed class ValuableGuard : MonoBehaviour
         return false;
     }
 
+    // True when the item's collision CENTER sits inside static (non-grabbable, rigidbody-less)
+    // geometry — i.e. the middle of the object is actually inside a wall/floor. A small probe
+    // radius tolerates thin surfaces without flagging an item that merely touches one.
+    private bool CenterBuried()
+    {
+        Vector3 c = _pgo != null ? _pgo.centerPoint : transform.position;
+        var hits = Physics.OverlapSphere(c, 0.06f, ~0, QueryTriggerInteraction.Ignore);
+        if (hits == null)
+            return false;
+
+        foreach (var other in hits)
+        {
+            if (other == null || other.isTrigger)
+                continue;
+            if (other.attachedRigidbody != null)                     // dynamic body, not geometry
+                continue;
+            if (other.GetComponentInParent<PhysGrabObject>() != null) // another grabbable
+                continue;
+            return true;
+        }
+        return false;
+    }
+
     private void Relocate()
     {
         Vector3 target = _haveSafe ? _safePos : _pgo.transform.position + Vector3.up * 1.5f;
@@ -272,6 +312,7 @@ internal sealed class ValuableGuard : MonoBehaviour
             _rb.velocity = Vector3.zero;
             _rb.angularVelocity = Vector3.zero;
         }
+        _relocated = true;
         ItemUnstuckController.NotifyRelocated(_v);
     }
 }
