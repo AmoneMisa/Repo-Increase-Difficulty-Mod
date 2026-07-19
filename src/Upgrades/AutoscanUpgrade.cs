@@ -32,7 +32,7 @@ internal static class AutoscanUpgrade
             Description = "Automatically discovers nearby valuables. Higher levels scan farther.",
             MaxLevel = ModConfig.AutoscanMaxLevel.Value,
             BaseShopPrice = ModConfig.AutoscanBasePrice.Value,
-            IconFile = "Upgrade_Ping.png", // placeholder art for now
+            IconFile = "Upgrade_Autoscan.png",
         });
     }
 

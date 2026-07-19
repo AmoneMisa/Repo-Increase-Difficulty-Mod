@@ -57,6 +57,7 @@ internal static class TruckUpgrades
             Description = "Truck upgrade (whole team): once owned, leftover valuables are auto-cashed when every quota is closed. One-time unlock.",
             MaxLevel = 1,
             BaseShopPrice = ModConfig.TruckSellCost.Value,
+            IconFile = "Upgrade_Truck_Cache.png",
         });
     }
 

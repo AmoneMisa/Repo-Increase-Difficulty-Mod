@@ -35,6 +35,7 @@ internal static class HpRegenUpgrade
             BaseShopPrice = ModConfig.RegenBasePrice.Value,
             StartAction = null,
             UpgradeAction = null,
+            IconFile = "Upgrade_HP-Regen.png",
         });
     }
 
