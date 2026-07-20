@@ -128,6 +128,13 @@ public static class ModConfig
     // the spectate camera so it stays visible). Client-side; each player controls their own.
     public static ConfigEntry<bool> DeadMapAccessEnabled;
 
+    // --- Spectator Minimap ---
+    // While dead/spectating on a level, draw the game's own map render in a screen corner so you
+    // can keep watching the level layout without holding the map tool open. Client-side.
+    public static ConfigEntry<bool> SpectatorMinimapEnabled;
+    public static ConfigEntry<UnityEngine.KeyCode> SpectatorMinimapKey;
+    public static ConfigEntry<float> SpectatorMinimapScale;
+
     // --- Map Vote ---
     // While in the truck lobby, players vote on which map to run next (a small set of random
     // candidates). Whatever is leading when the truck departs is used instead of the game's
@@ -462,6 +469,17 @@ public static class ModConfig
         DeadMapAccessEnabled = cfg.Bind(
             "Dead Map Access", "Enabled", true,
             "Allow dead/spectating players to open their map tool. The map view is re-anchored to the spectate camera so it stays visible. Client-side — each player controls their own map.");
+
+        // --- Spectator Minimap ---
+        SpectatorMinimapEnabled = cfg.Bind(
+            "Spectator Minimap", "Enabled", true,
+            "While dead/spectating on a level, HOLD the minimap key to show the game's own map render in the centre of the screen so you can track the level without the full map tool. Hidden automatically if you open the full map tool. Client-side.");
+        SpectatorMinimapKey = cfg.Bind(
+            "Spectator Minimap", "HoldKey", UnityEngine.KeyCode.Tab,
+            "Hold this key while dead to show the spectator minimap (default: Tab).");
+        SpectatorMinimapScale = BindFloat(cfg,
+            "Spectator Minimap", "Scale", 0.5f, 0.1f, 0.9f,
+            "Minimap size as a fraction of screen height. 0.5 = half the screen tall.");
 
         // --- Map Vote ---
         MapVoteEnabled = cfg.Bind(

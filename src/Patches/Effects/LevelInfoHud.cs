@@ -6,24 +6,27 @@ using UnityEngine;
 namespace IncreaseHardMod.Patches.Effects;
 
 /// <summary>
-/// Persistent on-screen level info. While you're on a run level (or the shop/truck), a small
-/// title at the top-centre shows the current level number + name and, when the run has a special
-/// modifier active, that modifier is listed at the top-right beneath the game's quota readout.
-/// It reads RunManager.instance every frame so it works the same for the host and joined clients
-/// with no host-only patch. Press LevelInfoToggleKey to hide it.
+/// Persistent on-screen level info, rendered with the game's OWN TextMeshPro pixel font so it matches
+/// the in-game HUD exactly (two native <see cref="TextMeshProUGUI"/> labels under <see cref="HUDCanvas"/>,
+/// cloning the font + material from the quota text via <see cref="StatsUI"/>).
 ///
-/// Rendered with the game's OWN TextMeshPro pixel font: two native <see cref="TextMeshProUGUI"/>
-/// labels are created under <see cref="HUDCanvas"/>, cloning the font + material from the quota
-/// text (<see cref="StatsUI"/>). That way the overlay matches the in-game HUD style exactly instead
-/// of the old IMGUI (Arial) look. The labels live under HUDCanvas, so REPO destroys them on scene
-/// change; we recreate them lazily whenever the HUD (and a font template) are available again.
+/// - Top-centre: the LevelTimer countdown, shown only while a timed level is running (white, turning
+///   red in the final seconds). Driven by <see cref="LevelTimerController"/>.
+/// - Top-right: when the run has a special modifier active, the list of active modifiers, beneath the
+///   game's quota readout.
+///
+/// It reads <see cref="RunManager"/> / the timer state every frame so it works the same for the host
+/// and joined clients with no host-only patch. The labels live under HUDCanvas, so REPO destroys them
+/// on scene change; we recreate them lazily whenever the HUD (and a font template) are available again.
+/// Press LevelInfoToggleKey to hide it.
 /// </summary>
 internal sealed class LevelInfoHud : MonoBehaviour
 {
-    private static readonly Color Gold = new(1f, 0.8f, 0.3f);
+    private static readonly Color TimerColor = Color.white;
+    private static readonly Color TimerWarn = new(1f, 0.3f, 0.3f);
     private static readonly Color ModColor = new(1f, 0.55f, 0.9f);
 
-    private TextMeshProUGUI _titleLabel;
+    private TextMeshProUGUI _timerLabel;
     private TextMeshProUGUI _modsLabel;
     private bool _suppressed;
 
@@ -56,8 +59,20 @@ internal sealed class LevelInfoHud : MonoBehaviour
         if (!EnsureLabels())
             return; // HUD or font template not ready yet
 
-        _titleLabel.text = BuildTitle(run, run.levelCurrent);
-        _titleLabel.enabled = true;
+        // Top-centre countdown for the LevelTimer modifier.
+        if (LevelTimerController.Running)
+        {
+            float remaining = Mathf.Max(0f, LevelTimerController.Remaining);
+            int minutes = (int)(remaining / 60f);
+            int seconds = (int)(remaining % 60f);
+            _timerLabel.text = $"{minutes:0}:{seconds:00}";
+            _timerLabel.color = remaining <= 30f ? TimerWarn : TimerColor;
+            _timerLabel.enabled = true;
+        }
+        else
+        {
+            _timerLabel.enabled = false;
+        }
 
         var mods = ModifierManager.Current;
         if (SafeRunIsLevel() && mods != null && mods.IsSpecial)
@@ -79,16 +94,16 @@ internal sealed class LevelInfoHud : MonoBehaviour
         if (HUDCanvas.instance == null)
             return false;
 
-        if (_titleLabel != null && _modsLabel != null)
+        if (_timerLabel != null && _modsLabel != null)
             return true;
 
         var template = FindTemplate();
         if (template == null)
             return false;
 
-        // Top-centre title.
-        if (_titleLabel == null)
-            _titleLabel = CreateLabel("IHM_LevelTitle", template, Gold,
+        // Top-centre timer.
+        if (_timerLabel == null)
+            _timerLabel = CreateLabel("IHM_LevelTimer", template, TimerColor,
                 TextAlignmentOptions.Top, new Vector2(0.5f, 1f), new Vector2(0f, -10f), 820f);
 
         // Top-right modifier list (positioned per-frame under the quota HUD).
@@ -134,8 +149,8 @@ internal sealed class LevelInfoHud : MonoBehaviour
 
     private void HideAll()
     {
-        if (_titleLabel != null)
-            _titleLabel.enabled = false;
+        if (_timerLabel != null)
+            _timerLabel.enabled = false;
         if (_modsLabel != null)
             _modsLabel.enabled = false;
     }
@@ -195,19 +210,6 @@ internal sealed class LevelInfoHud : MonoBehaviour
         }
         if (parts.Count == 0)
             parts.Add(mods.Active.ToString());
-    }
-
-    private static string BuildTitle(RunManager run, Level level)
-    {
-        string name = !string.IsNullOrEmpty(level.NarrativeName) ? level.NarrativeName : Clean(level.name);
-        return SafeRunIsLevel() ? $"Lv {run.levelsCompleted + 1}  -  {name}" : name;
-    }
-
-    private static string Clean(string raw)
-    {
-        if (string.IsNullOrEmpty(raw))
-            return "Unknown";
-        return raw.Replace("Level - ", "").Replace("Level ", "").Trim();
     }
 
     private static bool SafeMenuLevel()

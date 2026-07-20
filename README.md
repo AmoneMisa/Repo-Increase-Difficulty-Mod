@@ -56,7 +56,8 @@ A global anti-flood cap limits how many pings can be on screen at once.
 
 All settings live in `BepInEx/config/com.kubai.increasehardmod.cfg` and are editable in-game via
 REPOConfig. Sections include: General, Enemies, Quota, Surprises, Modifier Tuning, Player Upgrades,
-Truck Upgrades, Ping, Shop, Map Vote, Late Join, Item Unstuck, More Players, and various HUD toggles
+Truck Upgrades, Ping, Shop, Map Vote, Late Join, Item Unstuck, More Players, Dead Map Access,
+Spectator Minimap, and various HUD toggles
 (Level Info, Server Info, Shopping List, Photon HUD). A Diagnostics section can disable all patches or
 runtime objects for troubleshooting.
 
