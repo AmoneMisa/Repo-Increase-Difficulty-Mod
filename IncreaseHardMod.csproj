@@ -57,6 +57,11 @@
       <HintPath>$(ManagedDir)\Photon3Unity3D.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <!-- Needed to recolour the game's native ping highlight (ValuableDiscoverGraphic uses UI.Image). -->
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(ManagedDir)\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <!-- REPOLib (Zehs) — required dependency for registering custom shop upgrades.
          Vendored under libs/ so the mod compiles without a local game install; players
          must also install REPOLib via the mod manager for it to work at runtime. -->

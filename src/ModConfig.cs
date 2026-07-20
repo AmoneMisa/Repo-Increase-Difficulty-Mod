@@ -107,6 +107,8 @@ public static class ModConfig
     public static ConfigEntry<float> PingDurationSeconds;
     // Max live Location pings per player (gated behind the "Ping Anywhere" upgrade).
     public static ConfigEntry<int> MaxLocationPings;
+    // Global cap on how many ping markers can be on screen at once (anti-flood).
+    public static ConfigEntry<int> MaxActivePings;
     // Shop prices for the two ping-gate upgrades.
     public static ConfigEntry<int> PingAnywhereBasePrice;
     public static ConfigEntry<int> PingInfoBasePrice;
@@ -429,6 +431,9 @@ public static class ModConfig
         MaxLocationPings = BindInt(cfg,
             "Ping", "MaxLocationPings", 3, 1, 20,
             "Maximum live Location pings a single player can have at once (needs the 'Ping Anywhere' upgrade). Placing more drops your oldest.");
+        MaxActivePings = BindInt(cfg,
+            "Ping", "MaxActivePings", 3, 1, 20,
+            "Global anti-flood cap: the most ping markers shown on screen at once (across all players). Placing more drops the oldest.");
         PingAnywhereBasePrice = BindInt(cfg,
             "Ping", "PingAnywhereBasePrice", 6000, 0, 1000000,
             "Ping Anywhere upgrade: approximate shop price (unlocks Location pings on any surface / through walls).");

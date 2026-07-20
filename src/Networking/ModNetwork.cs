@@ -115,8 +115,12 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             SendOptions.SendReliable);
     }
 
-    /// <summary>Any player broadcasts a ping to all other clients (not echoed to self).</summary>
-    public void BroadcastPing(byte type, Vector3 pos, string label, string sender)
+    /// <summary>
+    /// Any player broadcasts a ping to all other clients (not echoed to self). The pinged
+    /// object's PhotonView <paramref name="viewID"/> (0 for Location pings) lets every client
+    /// resolve the SAME PhysGrabObject and spawn the game's native highlight on it.
+    /// </summary>
+    public void BroadcastPing(byte type, Vector3 pos, string label, string sender, int viewID)
     {
         if (!PhotonNetwork.InRoom)
             return;
@@ -124,7 +128,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         var options = new RaiseEventOptions { Receivers = ReceiverGroup.All };
         PhotonNetwork.RaiseEvent(
             PingEventCode,
-            new object[] { type, pos.x, pos.y, pos.z, label, sender },
+            new object[] { type, pos.x, pos.y, pos.z, label, sender, viewID },
             options,
             SendOptions.SendReliable);
     }
@@ -185,7 +189,8 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         {
             var data = (object[])photonEvent.CustomData;
             var pos = new Vector3((float)data[1], (float)data[2], (float)data[3]);
-            PingController.AddNetworkPing((byte)data[0], pos, (string)data[4], (string)data[5]);
+            int viewID = data.Length > 6 ? (int)data[6] : 0;
+            PingController.AddNetworkPing((byte)data[0], pos, (string)data[4], (string)data[5], viewID);
             return;
         }
 
