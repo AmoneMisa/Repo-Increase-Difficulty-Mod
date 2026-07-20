@@ -62,6 +62,11 @@
       <HintPath>$(ManagedDir)\UnityEngine.UI.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <!-- Needed to render HUD text with the game's own TMP pixel font (Level Info overlay). -->
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(ManagedDir)\Unity.TextMeshPro.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <!-- REPOLib (Zehs) — required dependency for registering custom shop upgrades.
          Vendored under libs/ so the mod compiles without a local game install; players
          must also install REPOLib via the mod manager for it to work at runtime. -->

@@ -88,9 +88,9 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<Upgrades.TruckUpgrades.SellController>();
         // Main-menu Photon name-server reachability overlay (IMGUI, background TCP probes).
         netObject.AddComponent<PhotonHud>();
-        // Team ping system (input + world-anchored IMGUI markers, synced over Photon).
+        // Team ping system (input + native ValuableDiscoverGraphic highlights, synced over Photon).
         netObject.AddComponent<PingHud>();
-        // Right-side level-change log (IMGUI, toggle with LevelInfoToggleKey).
+        // Level info overlay (native TMP: top-centre title + top-right modifier list, toggle with LevelInfoToggleKey).
         netObject.AddComponent<LevelInfoHud>();
         // Item Unstuck: host-side valuable safety net (relocate stuck loot, invuln-until-grab)
         // plus a client-side undamaged-value HUD.
