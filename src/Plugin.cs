@@ -13,7 +13,7 @@ public static class PluginInfo
 {
     public const string PLUGIN_GUID = "com.kubai.increasehardmod";
     public const string PLUGIN_NAME = "Increase Hard Mod";
-    public const string PLUGIN_VERSION = "0.1.0";
+    public const string PLUGIN_VERSION = "0.2.0";
 }
 
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -92,6 +92,8 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<LevelInfoHud>();
         // Spectator Minimap: while dead on a level, draws the game's own map render in a screen corner.
         netObject.AddComponent<SpectatorMinimapHud>();
+        // End-of-level MVP / OOPS CHAMP scoreboard (stats recorded host-side by RoundStats).
+        netObject.AddComponent<RoundResultsHud>();
         // Item Unstuck: host-side valuable safety net (relocate stuck loot, invuln-until-grab)
         // plus a client-side undamaged-value HUD.
         netObject.AddComponent<ItemUnstuckController>();

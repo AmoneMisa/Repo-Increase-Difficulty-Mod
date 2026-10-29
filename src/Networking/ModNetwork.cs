@@ -32,6 +32,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     public const byte PingEventCode = 181;
     public const byte MapVoteCandidatesEventCode = 182;
     public const byte MapVoteBallotEventCode = 183;
+    public const byte RoundStatsEventCode = 184;
 
     public static ModNetwork Instance { get; private set; }
 
@@ -74,6 +75,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         }
 
         LevelTimerController.Tick(Time.deltaTime);
+        RoundStats.Tick(Time.deltaTime);
         LateJoinController.Tick();
         // Client-side: keep every enemy's per-player dictionaries in sync with mid-run joins
         // (and mid-run enemy spawns) so late joiners don't crash the enemy AI coroutines.
@@ -166,6 +168,40 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             SendOptions.SendReliable);
     }
 
+    /// <summary>
+    /// Host broadcasts the finished level scoreboard (parallel arrays, one slot per player) so every
+    /// client's results screen shows identical numbers. Reliable; not echoed to the host.
+    /// </summary>
+    public void BroadcastRoundStats(System.Collections.Generic.List<PlayerRoundStat> rows)
+    {
+        if (!PhotonNetwork.InRoom)
+            return;
+
+        int n = rows.Count;
+        var names = new string[n];
+        var broken = new int[n];
+        var brokenCount = new int[n];
+        var delivered = new int[n];
+        var deaths = new int[n];
+        var revives = new int[n];
+        for (int i = 0; i < n; i++)
+        {
+            names[i] = rows[i].Name ?? "?";
+            broken[i] = rows[i].BrokenValue;
+            brokenCount[i] = rows[i].BrokenCount;
+            delivered[i] = rows[i].Delivered;
+            deaths[i] = rows[i].Deaths;
+            revives[i] = rows[i].Revives;
+        }
+
+        var options = new RaiseEventOptions { Receivers = ReceiverGroup.Others };
+        PhotonNetwork.RaiseEvent(
+            RoundStatsEventCode,
+            new object[] { names, broken, brokenCount, delivered, deaths, revives },
+            options,
+            SendOptions.SendReliable);
+    }
+
     /// <summary>Photon calls this on every client for every raised event.</summary>
     public void OnEvent(EventData photonEvent)
     {
@@ -205,6 +241,26 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         {
             var data = (object[])photonEvent.CustomData;
             MapVoteState.ReceiveBallot((int)data[0], (int)data[1], (int)data[2], (string)data[3]);
+            return;
+        }
+
+        if (photonEvent.Code == RoundStatsEventCode)
+        {
+            var d = (object[])photonEvent.CustomData;
+            var names = (string[])d[0];
+            var rows = new System.Collections.Generic.List<PlayerRoundStat>();
+            for (int i = 0; i < names.Length; i++)
+                rows.Add(new PlayerRoundStat
+                {
+                    Name = names[i],
+                    BrokenValue = ((int[])d[1])[i],
+                    BrokenCount = ((int[])d[2])[i],
+                    Delivered = ((int[])d[3])[i],
+                    Deaths = ((int[])d[4])[i],
+                    Revives = ((int[])d[5])[i],
+                });
+            if (ModConfig.RoundResultsEnabled.Value)
+                RoundStats.ApplyResults(rows);
         }
     }
 }

@@ -5,7 +5,7 @@ challenge as a run goes deeper, sprinkles in random per-level "surprise" modifie
 custom shop upgrades — including a team ping system that uses the game's own on-screen highlight.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.1.0`
+- **Version:** `0.2.0`
 
 ## Requirements
 
@@ -36,6 +36,13 @@ whole lobby shares the same set. Examples:
 
 Stamina, HP Regeneration, Death Protection, Battery Life, Autoscan, Map Suite, Truck upgrades, and the
 ping upgrades below.
+
+### Level results (MVP / OOPS CHAMP)
+
+When a level ends, a results board shows per-player loot hauled, loot broken, deaths and revives,
+plus an **MVP** (best score) and an **OOPS CHAMP** (most value broken). The host records the stats
+and broadcasts them, so everyone running the mod sees identical numbers; hauled loot is credited only
+on a successful extraction. `F7` dismisses / recalls it (configurable under *Round Results*).
 
 ### Team ping system
 

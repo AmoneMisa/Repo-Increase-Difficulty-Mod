@@ -135,6 +135,13 @@ public static class ModConfig
     public static ConfigEntry<UnityEngine.KeyCode> SpectatorMinimapKey;
     public static ConfigEntry<float> SpectatorMinimapScale;
 
+    // --- Round Results ---
+    // End-of-level MVP / OOPS CHAMP screen with a per-player scoreboard. The host records, everyone
+    // with the mod sees the same board; players without the mod simply don't get a screen.
+    public static ConfigEntry<bool> RoundResultsEnabled;
+    public static ConfigEntry<float> RoundResultsSeconds;
+    public static ConfigEntry<UnityEngine.KeyCode> RoundResultsKey;
+
     // --- Map Vote ---
     // While in the truck lobby, players vote on which map to run next (a small set of random
     // candidates). Whatever is leading when the truck departs is used instead of the game's
@@ -480,6 +487,17 @@ public static class ModConfig
         SpectatorMinimapScale = BindFloat(cfg,
             "Spectator Minimap", "Scale", 0.5f, 0.1f, 0.9f,
             "Minimap size as a fraction of screen height. 0.5 = half the screen tall.");
+
+        // --- Round Results ---
+        RoundResultsEnabled = cfg.Bind(
+            "Round Results", "Enabled", true,
+            "After each level show an MVP / OOPS CHAMP screen with per-player stats: loot broken, loot delivered, deaths and revives. Stats are recorded by the host, so the host must run this mod for the board to appear.");
+        RoundResultsSeconds = BindFloat(cfg,
+            "Round Results", "ShowSeconds", 20f, 5f, 60f,
+            "How long the results screen stays up after a level ends.");
+        RoundResultsKey = cfg.Bind(
+            "Round Results", "ToggleKey", UnityEngine.KeyCode.F7,
+            "Press to dismiss the results screen, or to bring the last results back.");
 
         // --- Map Vote ---
         MapVoteEnabled = cfg.Bind(
