@@ -93,7 +93,18 @@ Team-wide **Truck upgrades**:
 - **Charge Efficiency** — the charging station drains slower.
 - **Loot Cash-In** — leftover valuables are auto-cashed once every quota is closed (one-time unlock).
 
-#### Team ping system
+#### Utility drones (shop)
+
+Four extra drones, built as clones of the game's own drones (same beam/attach/battery controls):
+
+- **Ghost Drone** - on a valuable: players walk through it, and it is left out of extraction counting while the drone is on.
+- **Silencer Drone** - on a valuable, item, cart, player or enemy: its noise, voice and the radius enemies investigate it from are cut (default 8%).
+- **Link Drone Set (A + B)** - buying the set grants both halves. Attach one to each of two objects within range to tie them with a cable; grab one end to reel in the other.
+- **Repair Drone** - on a damaged valuable: restores lost value up to its original (500/s, a full battery repairs 12,000).
+
+Every player must run the mod with `Drones/Enabled` set the same. Settings: *Drones* config section.
+
+### Team ping system
 
 Press the ping key to mark whatever you're aiming at. Pings use the game's own
 `ValuableDiscoverGraphic` highlight (the animated corner-bracket square from valuable discovery),

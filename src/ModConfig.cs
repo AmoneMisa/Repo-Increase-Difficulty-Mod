@@ -151,6 +151,11 @@ public static class ModConfig
     public static ConfigEntry<float> RoundResultsSeconds;
     public static ConfigEntry<UnityEngine.KeyCode> RoundResultsKey;
 
+    // --- Utility Drones ---
+    public static ConfigEntry<bool> DronesEnabled;
+    public static ConfigEntry<float> LinkMaxDistance;
+    public static ConfigEntry<float> SilencerNoiseMultiplier;
+
     // --- Map Vote ---
     // While in the truck lobby, players vote on which map to run next (a small set of random
     // candidates). Whatever is leading when the truck departs is used instead of the game's
@@ -518,6 +523,17 @@ public static class ModConfig
         RoundResultsKey = cfg.Bind(
             "Round Results", "ToggleKey", UnityEngine.KeyCode.F7,
             "Press to dismiss the results screen, or to bring the last results back.");
+
+        // --- Utility Drones ---
+        DronesEnabled = cfg.Bind(
+            "Drones", "Enabled", true,
+            "Add the Ghost, Silencer and Link utility drones to the shop. EVERY player must run this mod with the same setting, otherwise shop items and effects will not match. Takes effect on game restart.");
+        LinkMaxDistance = BindFloat(cfg,
+            "Drones", "LinkMaxDistance", 6f, 1f, 12f,
+            "Link drone: maximum distance (metres) between the two attached objects for the cable to connect. The cable fits the gap when it connects.");
+        SilencerNoiseMultiplier = BindFloat(cfg,
+            "Drones", "SilencerNoiseMultiplier", 0.08f, 0.01f, 0.35f,
+            "Silencer drone: multiplier applied to the attached target's emitted sound, voice and the radius enemies investigate it from. 0.08 = 8% as loud.");
 
         // --- Map Vote ---
         MapVoteEnabled = cfg.Bind(

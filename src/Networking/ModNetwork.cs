@@ -33,6 +33,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     public const byte MapVoteCandidatesEventCode = 182;
     public const byte MapVoteBallotEventCode = 183;
     public const byte RoundStatsEventCode = 184;
+    public const byte RepairEventCode = 185;
 
     public static ModNetwork Instance { get; private set; }
 
@@ -76,6 +77,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 
         LevelTimerController.Tick(Time.deltaTime);
         RoundStats.Tick(Time.deltaTime);
+        Drones.LinkManager.Tick(Time.deltaTime);
         LateJoinController.Tick();
         // Client-side: keep every enemy's per-player dictionaries in sync with mid-run joins
         // (and mid-run enemy spawns) so late joiners don't crash the enemy AI coroutines.
@@ -202,6 +204,16 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             SendOptions.SendReliable);
     }
 
+    /// <summary>Host tells everyone a valuable's current value after the Repair drone restored some.</summary>
+    public void BroadcastRepair(ValuableObject valuable, float value)
+    {
+        var pv = valuable != null ? valuable.GetComponent<PhotonView>() : null;
+        if (!PhotonNetwork.InRoom || pv == null)
+            return;
+        PhotonNetwork.RaiseEvent(RepairEventCode, new object[] { pv.ViewID, value },
+            new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
+    }
+
     /// <summary>Photon calls this on every client for every raised event.</summary>
     public void OnEvent(EventData photonEvent)
     {
@@ -241,6 +253,16 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         {
             var data = (object[])photonEvent.CustomData;
             MapVoteState.ReceiveBallot((int)data[0], (int)data[1], (int)data[2], (string)data[3]);
+            return;
+        }
+
+        if (photonEvent.Code == RepairEventCode)
+        {
+            var d = (object[])photonEvent.CustomData;
+            var pv = PhotonView.Find((int)d[0]);
+            var v = pv != null ? pv.GetComponent<ValuableObject>() : null;
+            if (v != null)
+                v.dollarValueCurrent = Mathf.Min((float)d[1], v.dollarValueOriginal);
             return;
         }
 
