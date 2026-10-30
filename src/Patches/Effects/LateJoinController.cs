@@ -57,8 +57,8 @@ internal static class LateJoinController
             room.IsOpen = true;
             if (GameManager.instance != null && GameManager.instance.connectRandom)
                 room.IsVisible = true;
-            else if (SteamManager.instance != null)
-                SteamManager.instance.UnlockLobby(false);
+            else if (SteamLobbyManager.instance != null)
+                SteamLobbyManager.instance.UnlockLobby(false);
             Plugin.Log.LogInfo($"[LateJoin] Re-opened the session ({reason}) so players can join mid-game.");
         }
         catch (System.Exception e)

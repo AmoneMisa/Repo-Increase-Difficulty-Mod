@@ -29,6 +29,9 @@ internal static class EnemyDamagePatch
         if (enemyIndex < 0 || hurtByHeal || damage <= 0)
             return;
 
+        if (!ModConfig.ScaleEnemyDamage.Value)
+            return;
+
         float mult = Difficulty.Multiplier(
             ModConfig.EnemyDamagePerLevel.Value,
             ModConfig.EnemyDamageMax.Value);

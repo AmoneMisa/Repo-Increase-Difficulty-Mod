@@ -27,6 +27,9 @@ a team ping system, a round-results board and a set of quality-of-life features 
 - [BepInEx 5](https://github.com/BepInEx/BepInEx) (5.4.21)
 - [REPOLib](https://thunderstore.io/c/repo/p/Zehs/REPOLib/) — required for the custom shop upgrades.
   A client without REPOLib will not see this mod's custom upgrades in the shop.
+- Optional: [REPOConfig](https://thunderstore.io/c/repo/p/REPOModding/REPOConfig/) (needs
+  [MenuLib](https://thunderstore.io/c/repo/p/REPOModding/MenuLib/)) for editing settings in-game.
+  Both now live under the **REPOModding** author (the old `nickklmao` packages are deprecated).
 - Everyone in the lobby should run the mod to avoid desync (several features are host-authoritative).
 
 ### Features

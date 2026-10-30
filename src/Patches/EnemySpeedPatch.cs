@@ -22,6 +22,9 @@ internal static class EnemySpeedPatch
     [HarmonyPostfix]
     private static void Postfix(EnemyNavMeshAgent __instance)
     {
+        if (!ModConfig.ScaleEnemySpeed.Value)
+            return;
+
         float mult = Difficulty.Multiplier(
             ModConfig.EnemySpeedPerLevel.Value,
             ModConfig.EnemySpeedMax.Value);

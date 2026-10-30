@@ -26,6 +26,9 @@ internal static class QuotaPatch
         if (!SemiFunc.IsMasterClientOrSingleplayer())
             return;
 
+        if (!ModConfig.ScaleQuota.Value)
+            return;
+
         float mult = Difficulty.Multiplier(
             ModConfig.QuotaPerLevel.Value,
             ModConfig.QuotaMax.Value);

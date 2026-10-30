@@ -22,6 +22,15 @@ public static class ModConfig
     // start, etc. Lets you stretch the ramp out over a longer run.
     public static ConfigEntry<int> RampLevelsPerStep;
 
+    // Per-stat switches for the depth ramp. Off = that stat stays vanilla (the other ramps and all
+    // surprise modifiers are unaffected). Each client reads its own copy, so keep them identical
+    // across players (the host's quota switch is what matters for the quota).
+    public static ConfigEntry<bool> ScaleEnemyHealth;
+    public static ConfigEntry<bool> ScaleEnemyDamage;
+    public static ConfigEntry<bool> ScaleEnemySpeed;
+    public static ConfigEntry<bool> ScaleEnemyRespawn;
+    public static ConfigEntry<bool> ScaleQuota;
+
     // Enemy max HP. +PerLevel each level of depth, clamped to Max.
     public static ConfigEntry<float> EnemyHealthPerLevel;
     public static ConfigEntry<float> EnemyHealthMax;
@@ -260,7 +269,7 @@ public static class ModConfig
     public static ConfigEntry<bool> DiagnosticDisablePatches;
     public static ConfigEntry<bool> DiagnosticDisableRuntimeObjects;
 
-    // REPOConfig (nickklmao) reads this exact string tag on a ConfigEntry to exclude it
+    // REPOConfig (REPOModding) reads this exact string tag on a ConfigEntry to exclude it
     // from the in-game menu. Used for free-form strings it can't render as a slider/list.
     private const string HideFromRepoConfig = "HideFromREPOConfig";
 
@@ -315,6 +324,17 @@ public static class ModConfig
         RampLevelsPerStep = BindInt(cfg,
             "General", "RampLevelsPerStep", 1, 1, 10,
             "How many levels of depth make up ONE difficulty step. 1 = stats grow every level; 2 = stats step up only every 2nd level past the start (stretches the ramp).");
+
+        ScaleEnemyHealth = cfg.Bind("Scaling", "EnemyHealth", true,
+            "Enemies gain max HP as the run goes deeper. Off = vanilla enemy HP.");
+        ScaleEnemyDamage = cfg.Bind("Scaling", "EnemyDamage", true,
+            "Enemies deal more damage to players as the run goes deeper. Off = vanilla damage.");
+        ScaleEnemySpeed = cfg.Bind("Scaling", "EnemySpeed", true,
+            "Enemies move faster as the run goes deeper. Off = vanilla speed.");
+        ScaleEnemyRespawn = cfg.Bind("Scaling", "EnemyRespawn", true,
+            "Enemies respawn faster as the run goes deeper. Off = vanilla respawn time.");
+        ScaleQuota = cfg.Bind("Scaling", "Quota", true,
+            "The extraction quota grows as the run goes deeper. Off = vanilla quota (host setting).");
 
         EnemyHealthPerLevel = BindFloat(cfg,
             "Enemies", "HealthPerLevel", 0.15f, 0f, 2f,

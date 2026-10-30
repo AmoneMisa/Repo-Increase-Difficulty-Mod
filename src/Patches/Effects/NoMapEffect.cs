@@ -39,8 +39,19 @@ internal static class NoMapEffect
         }
     }
 
-    [HarmonyPatch(typeof(InputManager), "InputToggleGet")]
+    [HarmonyPatch(typeof(InputManager), "InputToggleGet", new[] { typeof(InputKey) })]
     private static class BlockToggle
+    {
+        [HarmonyPostfix]
+        private static void Postfix(InputKey key, ref bool __result)
+        {
+            if (Suppressed(key))
+                __result = false;
+        }
+    }
+
+    [HarmonyPatch(typeof(InputManager), "InputToggleGet", new[] { typeof(InputKey), typeof(string) })]
+    private static class BlockToggleScheme
     {
         [HarmonyPostfix]
         private static void Postfix(InputKey key, ref bool __result)

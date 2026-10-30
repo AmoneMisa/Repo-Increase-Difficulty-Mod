@@ -41,7 +41,17 @@ public class Plugin : BaseUnityPlugin
         if (ModConfig.DiagnosticDisablePatches.Value)
             Log.LogWarning("[Diagnostics] DisablePatches=true — skipping ALL Harmony patches.");
         else
-            _harmony.PatchAll();
+        {
+            // Patch class-by-class: one patch broken by a game update must not abort the rest
+            // (a throw out of PatchAll used to kill Awake before the runtime object / upgrades existed).
+            foreach (var type in typeof(Plugin).Assembly.GetTypes())
+            {
+                if (!type.IsDefined(typeof(HarmonyPatch), true))
+                    continue;
+                try { _harmony.CreateClassProcessor(type).Patch(); }
+                catch (System.Exception e) { Log.LogError($"Patch {type.FullName} failed: {e.Message}"); }
+            }
+        }
 
         // Declare custom shop upgrades before the registration patch fires (on RunStartStats).
         // Effects are applied per-player via REPOLib start/upgrade actions (or a ticking

@@ -37,6 +37,9 @@ internal static class EnemyHealthPatch
         if (ModConfig.LogEnemyNames.Value && _loggedNames.Add(enemyName))
             Plugin.Log.LogInfo($"[Enemy] Spawned enemy internal name: \"{enemyName}\"");
 
+        if (!ModConfig.ScaleEnemyHealth.Value)
+            return;
+
         // Per-enemy cap: Elsa 2x, Tick/Loom/Cleanup Crew 1.5x, others global.
         float cap = ModConfig.HealthMaxForEnemy(enemyName);
 

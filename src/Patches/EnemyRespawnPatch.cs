@@ -22,6 +22,9 @@ internal static class EnemyRespawnPatch
     [HarmonyPostfix]
     private static void Postfix(EnemyParent __instance)
     {
+        if (!ModConfig.ScaleEnemyRespawn.Value)
+            return;
+
         float mult = Difficulty.ReduceMultiplier(
             ModConfig.EnemyRespawnFasterPerLevel.Value,
             ModConfig.EnemyRespawnMinFactor.Value);
