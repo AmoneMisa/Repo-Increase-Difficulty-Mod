@@ -230,6 +230,12 @@ internal sealed class LevelInfoHud : MonoBehaviour
             else
                 parts.Add(name);
         }
+        foreach (int id in mods.Stats)
+        {
+            var sm = StatModifiers.Get(id);
+            if (sm != null)
+                parts.Add(sm.Name);
+        }
         if (parts.Count == 0)
             parts.Add(mods.Active.ToString());
     }

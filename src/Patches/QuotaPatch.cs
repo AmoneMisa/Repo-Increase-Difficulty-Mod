@@ -29,7 +29,8 @@ internal static class QuotaPatch
         float mult = ModConfig.ScaleQuota.Value
             ? Difficulty.Multiplier(ModConfig.QuotaPerLevel.Value, ModConfig.QuotaMax.Value)
             : 1f;
-        mult *= Economy.EconomyEvents.QuotaMult; // level economy event (e.g. Heavy Quota)
+        mult *= Economy.EconomyEvents.QuotaMult;                        // level economy event (e.g. Heavy Quota)
+        mult *= Modifiers.StatModifiers.Mult(Modifiers.StatAxis.Quota); // level modifier (e.g. Heavy Load)
 
         if (!Mathf.Approximately(mult, 1f))
             __instance.haulGoal = Mathf.CeilToInt(__instance.haulGoal * mult);

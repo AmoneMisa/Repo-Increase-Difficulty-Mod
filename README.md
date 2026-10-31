@@ -73,6 +73,27 @@ level is configurable.
 | Monsters | Monsters Pit-Tanky | Monsters take less death-pit damage |
 | Monsters | Light / Heavy Monsters | All monsters weigh less (easy to shove) or more (hard to shove) |
 
+#### More surprise modifiers: tiers, conflicts, depth-weighted pool
+
+On top of the 21 original surprises there are now 25 **stat modifiers** (46 in total). Each one is
+data-driven (a tier, a category and up to three multipliers) and is rolled, synced, shown in the HUD, blocked
+in the Black Market and switched on/off in the *Surprise Modifiers* config section exactly like the originals.
+
+- **Tiers:** Very good, Good, Mixed, Bad, Very bad. The pool is weighted by tier, and the weighting tilts with depth:
+  deeper runs roll more bad modifiers and fewer generous ones.
+- **Conflicts:** two modifiers never turn the same lever on one level (no *Brutal* and *Docile* Monsters together), the
+  original opposites stay exclusive (Heavy / Light Loot, Fragile / Protected Loot, Light / Heavy Monsters), and no
+  second punishment is piled onto the same lever (no *Heavy Load* on a *Timed Level*, no extra damage taken with *Reduced Player HP*, no cheaper loot with *Fragile Loot*).
+- **They compose** with the depth ramp, the economy events, the truck's Heal Power and the shield items - the multipliers
+  multiply; they are applied by the same hooks.
+
+| Category | Modifiers |
+| --- | --- |
+| Loot | *Gilded Loot* (+25% value), *Rich Pickings* (+50% value, +25% quota), *Cheap Trinkets* (-20% value), *Light Load* (-20% quota), *Heavy Load* (+25% quota) |
+| Monsters | *Frail*, *Docile*, *Sluggish* Monsters, *Slow Respawns*, *Thin Patrols*; *Tough*, *Brutal*, *Hasty* Monsters, *Relentless Respawns*, *Infestation*; *Apex Hunters* (tougher, harder, faster), *Swarm* (+60% monsters, -15% health) |
+| Players | *Padded Suits* (-20% damage taken), *Stimulants* (+40% healing), *Glass Cannons* (+30% damage taken, monsters -30% health), *Thin Skin* (+30% damage taken), *Poor Medicine* (-40% healing), *Fragile Everything* |
+| Environment | *Sprawling Facility* (+25% size, +15% loot value), *Compact Facility* (-20% size, -15% monsters), *Extra Dock* (+1 extraction), *Cramped Dock* (-1 extraction) |
+
 #### Level scaling and economy events
 
 Each of these has its own switch in the `Modules` section and its numbers in the *Level Scaling* and
@@ -318,6 +339,27 @@ The build deploys the compiled plugin into your BepInEx plugins folder for the a
 | Монстры | Души взрываются сильнее | Взрывающиеся души наносят больше урона |
 | Монстры | Монстры устойчивы к ямам | Монстры получают меньше урона от смертельных ям |
 | Монстры | Лёгкие / тяжёлые монстры | Все монстры весят меньше (легко толкать) или больше (тяжело толкать) |
+
+#### Больше модификаторов-«сюрпризов»: тиры, конфликты, пул по глубине
+
+К 21 исходному «сюрпризу» добавлено 25 **статовых модификаторов** (всего 46). Каждый описан данными (тир, категория и до трёх
+множителей) и бросается, синхронизируется, показывается в HUD, блокируется на Чёрном рынке и включается/выключается в
+секции *Surprise Modifiers* конфига так же, как исходные.
+
+- **Тиры:** очень хорошо, хорошо, смешанный, плохо, очень плохо. Пул взвешен по тирам, и вес смещается с глубиной:
+  чем глубже забег, тем больше плохих модификаторов и меньше щедрых.
+- **Конфликты:** два модификатора никогда не тянут один и тот же рычаг на одном уровне (нет *Brutal* вместе с *Docile* Monsters),
+  исходные противоположности остаются взаимоисключающими (тяжёлый/лёгкий лут, хрупкий/защищённый лут, лёгкие/тяжёлые монстры),
+  и нет второго наказания на том же рычаге (нет *Heavy Load* на *Timed Level*, нет лишнего урона по игрокам вместе с *Reduced Player HP*, нет подешевевшего лута вместе с *Fragile Loot*).
+- **Складываются** с ростом сложности по глубине, событиями экономики, лечением грузовика (Heal Power) и щитами: множители
+  перемножаются, применяются в тех же местах.
+
+| Категория | Модификаторы |
+| --- | --- |
+| Лут | *Gilded Loot* (+25% стоимости), *Rich Pickings* (+50% стоимости, +25% квота), *Cheap Trinkets* (-20% стоимости), *Light Load* (-20% квота), *Heavy Load* (+25% квота) |
+| Монстры | *Frail*, *Docile*, *Sluggish* Monsters, *Slow Respawns*, *Thin Patrols*; *Tough*, *Brutal*, *Hasty* Monsters, *Relentless Respawns*, *Infestation*; *Apex Hunters* (крепче, сильнее, быстрее), *Swarm* (+60% монстров, -15% здоровья) |
+| Игроки | *Padded Suits* (-20% получаемого урона), *Stimulants* (+40% лечения), *Glass Cannons* (+30% получаемого урона, у монстров -30% здоровья), *Thin Skin* (+30% получаемого урона), *Poor Medicine* (-40% лечения), *Fragile Everything* |
+| Окружение | *Sprawling Facility* (+25% размер, +15% стоимости лута), *Compact Facility* (-20% размер, -15% монстров), *Extra Dock* (+1 экстракция), *Cramped Dock* (-1 экстракция) |
 
 #### Масштаб уровня и события экономики
 

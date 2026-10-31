@@ -161,6 +161,7 @@ public static class ModConfig
     public static ConfigEntry<int> ShopEconomyChance, BlackMarketModifierPrice, BlackMarketEconomyPrice, BlackMarketShopEconomyPrice;
     public static ConfigEntry<float> BlackMarketPerLevel;
     public static ConfigEntry<UnityEngine.KeyCode> BlackMarketKey;
+    public static readonly Dictionary<int, ConfigEntry<bool>> StatModifierEnabled = new();
     public static ConfigEntry<bool> GearEnabled;
     public static ConfigEntry<bool> DefenceOrbEnabled, DefenceDroneEnabled, ProtectionOrbEnabled;
     public static ConfigEntry<bool> PoisonCrossbowEnabled, DecoyGrenadeEnabled, IcePistolEnabled, StickyPistolEnabled;
@@ -819,6 +820,10 @@ public static class ModConfig
                 "Surprise Modifiers", m.ToString(), true,
                 $"{ModifierDescription(m)} Toggle whether it can be rolled on special levels.");
         }
+
+        foreach (var sm in Modifiers.StatModifiers.All)
+            StatModifierEnabled[sm.Id] = cfg.Bind("Surprise Modifiers", sm.Name, true,
+                $"{sm.Description} Toggle whether it can be rolled on special levels.");
 
         RebuildPerEnemyCaps();
         EnemyHealthMaxPerEnemy.SettingChanged += (_, _) => RebuildPerEnemyCaps();

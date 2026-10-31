@@ -112,7 +112,15 @@ internal static class ShieldPatches
         [HarmonyPriority(Priority.Last)]
         private static void Prefix(PlayerHealth __instance, ref int damage, bool hurtByHeal)
         {
-            if (hurtByHeal || damage <= 0 || ShieldItem.All.Count == 0)
+            if (hurtByHeal || damage <= 0)
+                return;
+
+            // Level modifiers (Padded Suits / Thin Skin ...) first, so shields work on the final number.
+            float taken = Modifiers.StatModifiers.Mult(Modifiers.StatAxis.PlayerDamage);
+            if (!Mathf.Approximately(taken, 1f))
+                damage = Mathf.Max(1, Mathf.CeilToInt(damage * taken));
+
+            if (ShieldItem.All.Count == 0)
                 return;
             var avatar = __instance.playerAvatar;
             if (avatar == null)

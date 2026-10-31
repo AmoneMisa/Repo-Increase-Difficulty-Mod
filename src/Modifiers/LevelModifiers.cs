@@ -17,6 +17,7 @@ public sealed class LevelModifiers
     public int ExtraSouls;              // ExtraSouls: how many souls monsters drop (e.g. 4-10)
     public int PlayerHpPercent = 100;   // ReducedPlayerHp: starting current HP as a percent of carried-over HP (10-90)
     public int MoneyLossPercent;        // MoneyLossOnDeath: percent of money lost per death
+    public int[] Stats = System.Array.Empty<int>(); // ids of the data-driven stat modifiers (see StatModifiers)
 
     /// <summary>True if the given modifier is active this level.</summary>
     public bool Has(ModifierType m) => (Active & m) != 0;
@@ -24,7 +25,7 @@ public sealed class LevelModifiers
     /// <summary>An empty set (normal, non-special level).</summary>
     public static LevelModifiers Empty => new();
 
-    public bool IsSpecial => Active != ModifierType.None;
+    public bool IsSpecial => Active != ModifierType.None || Stats.Length > 0;
 
     /// <summary>
     /// Pack into a primitive array for network send. Order MUST match Deserialize.
@@ -36,6 +37,7 @@ public sealed class LevelModifiers
         ExtraSouls,
         PlayerHpPercent,
         MoneyLossPercent,
+        Stats,
     };
 
     /// <summary>Rebuild from the array produced by Serialize (order-sensitive).</summary>
@@ -49,6 +51,8 @@ public sealed class LevelModifiers
         m.ExtraSouls       = (int)data[1];
         m.PlayerHpPercent  = (int)data[2];
         m.MoneyLossPercent = (int)data[3];
+        if (data.Length >= 5 && data[4] is int[] stats)
+            m.Stats = stats;
         return m;
     }
 
@@ -56,7 +60,7 @@ public sealed class LevelModifiers
     {
         if (!IsSpecial)
             return "Normal level (no modifiers)";
-        return $"Active=[{Active}], ExtraSouls={ExtraSouls}, " +
+        return $"Active=[{Active}], Stats=[{string.Join(",", Stats)}], ExtraSouls={ExtraSouls}, " +
                $"PlayerHpPercent={PlayerHpPercent}, MoneyLossPercent={MoneyLossPercent}";
     }
 }

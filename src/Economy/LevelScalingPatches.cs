@@ -31,7 +31,7 @@ internal static class LevelScalingPatches
             if (__state || !SemiFunc.IsMasterClientOrSingleplayer() || !SemiFunc.RunIsLevel())
                 return; // already valued earlier, or not host-authoritative
 
-            float mult = EconomyEvents.LootMult;
+            float mult = EconomyEvents.LootMult * Modifiers.StatModifiers.Mult(Modifiers.StatAxis.LootValue);
             if (ModConfig.ScaleMapValue.Value)
                 mult *= Mathf.Min(ModConfig.MapValueMax.Value,
                     Mathf.Pow(1f + ModConfig.MapValuePerLevel.Value, Depth(ModConfig.MapValueStartLevel.Value)));
@@ -51,13 +51,24 @@ internal static class LevelScalingPatches
         [HarmonyPostfix]
         private static void Postfix(EnemyDirector __instance)
         {
-            if (!ModConfig.ScaleEnemyCap.Value || !SemiFunc.IsMasterClientOrSingleplayer())
+            if (!SemiFunc.IsMasterClientOrSingleplayer())
                 return;
-            float mult = Mathf.Min(ModConfig.EnemyCapMax.Value,
-                1f + ModConfig.EnemyCapPerLevel.Value * Depth(ModConfig.EnemyCapStartLevel.Value));
+            float mult = Modifiers.StatModifiers.Mult(Modifiers.StatAxis.EnemyCount);
+            if (ModConfig.ScaleEnemyCap.Value)
+                mult *= Mathf.Min(ModConfig.EnemyCapMax.Value,
+                    1f + ModConfig.EnemyCapPerLevel.Value * Depth(ModConfig.EnemyCapStartLevel.Value));
             int extra = Mathf.RoundToInt(__instance.totalAmount * (mult - 1f));
-            if (extra <= 0)
+            if (extra == 0)
                 return;
+
+            if (extra < 0)
+            {
+                // Fewer monsters: drop picks from the end of the list.
+                int drop = Mathf.Min(-extra, __instance.enemyListCurrent.Count);
+                __instance.enemyListCurrent.RemoveRange(__instance.enemyListCurrent.Count - drop, drop);
+                __instance.totalAmount = Mathf.Max(0, __instance.totalAmount - drop);
+                return;
+            }
 
             // Extra picks come from the hardest tier the run has already unlocked.
             var list = SemiFunc.RunGetDifficultyMultiplier3() > 0f ? __instance.enemiesDifficulty3
@@ -77,11 +88,13 @@ internal static class LevelScalingPatches
         [HarmonyPrefix]
         private static void Prefix(LevelGenerator __instance)
         {
-            if (!ModConfig.ScaleLevelSize.Value || !SemiFunc.IsMasterClientOrSingleplayer() || !SemiFunc.RunIsLevel())
+            if (!SemiFunc.IsMasterClientOrSingleplayer() || !SemiFunc.RunIsLevel())
                 return;
-            float mult = Mathf.Min(ModConfig.LevelSizeMax.Value,
-                1f + ModConfig.LevelSizePerLevel.Value * Depth(ModConfig.LevelSizeStartLevel.Value));
-            if (mult > 1f)
+            float mult = Modifiers.StatModifiers.Mult(Modifiers.StatAxis.LevelSize);
+            if (ModConfig.ScaleLevelSize.Value)
+                mult *= Mathf.Min(ModConfig.LevelSizeMax.Value,
+                    1f + ModConfig.LevelSizePerLevel.Value * Depth(ModConfig.LevelSizeStartLevel.Value));
+            if (!Mathf.Approximately(mult, 1f))
                 __instance.DebugLevelSize = mult; // the game's own multiplier on module count and grid size
         }
 
@@ -104,13 +117,16 @@ internal static class LevelScalingPatches
 
         private static void AddExtractions(LevelGenerator gen)
         {
-            if (!ModConfig.ScaleExtractions.Value || !SemiFunc.IsMasterClientOrSingleplayer() || !SemiFunc.RunIsLevel())
+            if (!SemiFunc.IsMasterClientOrSingleplayer() || !SemiFunc.RunIsLevel())
                 return;
             if (gen.ExtractionAmount <= 0)
                 return; // special/small levels without extraction stay as they are
-            int interval = Mathf.Max(1, ModConfig.ExtractionBonusInterval.Value);
-            int bonus = Depth(0) / interval;
-            gen.ExtractionAmount = Mathf.Min(ModConfig.ExtractionMax.Value, gen.ExtractionAmount + bonus);
+            int bonus = Modifiers.StatModifiers.Add(Modifiers.StatAxis.Extractions);
+            if (ModConfig.ScaleExtractions.Value)
+                bonus += Depth(0) / Mathf.Max(1, ModConfig.ExtractionBonusInterval.Value);
+            if (bonus == 0)
+                return;
+            gen.ExtractionAmount = Mathf.Clamp(gen.ExtractionAmount + bonus, 1, Mathf.Max(ModConfig.ExtractionMax.Value, gen.ExtractionAmount));
         }
     }
 

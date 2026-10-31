@@ -52,7 +52,7 @@ internal static class BlackMarket
         { ModifierType.LightMonsters, EconomyTier.Good },
     };
 
-    private static EconomyTier TierOf(ModifierType m) => ModifierTiers.TryGetValue(m, out var t) ? t : EconomyTier.Mixed;
+    internal static EconomyTier TierOfModifier(ModifierType m) => ModifierTiers.TryGetValue(m, out var t) ? t : EconomyTier.Mixed;
 
     public static int Price(Kind kind, EconomyTier tier)
     {
@@ -125,10 +125,19 @@ internal static class BlackMarket
         switch (kind)
         {
             case Kind.Modifier:
+                if (id.StartsWith("stat:", StringComparison.Ordinal))
+                {
+                    var sm = int.TryParse(id.Substring(5), out int sid) ? StatModifiers.Get(sid) : null;
+                    if (sm == null)
+                        return false;
+                    name = sm.Name;
+                    tier = sm.Tier;
+                    return true;
+                }
                 if (!Enum.TryParse(id, out ModifierType m) || m == ModifierType.None)
                     return false;
                 name = LevelInfoHud.NameOf(m);
-                tier = TierOf(m);
+                tier = TierOfModifier(m);
                 return true;
             case Kind.Economy:
                 if (!int.TryParse(id, out int e) || e < 1 || e > EconomyEvents.All.Count)
@@ -154,6 +163,8 @@ internal static class BlackMarket
                 foreach (ModifierType m in Enum.GetValues(typeof(ModifierType)))
                     if (m != ModifierType.None)
                         ids.Add(m.ToString());
+                foreach (var sm in StatModifiers.All)
+                    ids.Add("stat:" + sm.Id);
                 break;
             case Kind.Economy:
                 foreach (var e in EconomyEvents.All)
