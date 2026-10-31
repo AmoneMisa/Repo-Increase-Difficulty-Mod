@@ -73,6 +73,20 @@ level is configurable.
 | Monsters | Monsters Pit-Tanky | Monsters take less death-pit damage |
 | Monsters | Light / Heavy Monsters | All monsters weigh less (easy to shove) or more (hard to shove) |
 
+#### Level scaling and economy events
+
+Each of these has its own switch in the `Modules` section and its numbers in the *Level Scaling* and
+*Economy* sections. Everything is host-side; clients get the result through the game's normal sync.
+
+| Module | What it does (defaults) |
+| --- | --- |
+| **Map value** | Valuables gain value with depth: x1.02 per level after level 2, capped at x3. |
+| **Enemy count** | More monsters per level after level 8: +3% per level, capped at x2 (the extras come from the hardest tier already unlocked). |
+| **Level size** | Bigger maps after level 8: +3% modules and grid per level, capped at x1.5. More modules also means more extraction points through the game's own thresholds. |
+| **Extractions** | One extra extraction point every 10 levels, at most 5 per level. |
+| **Moon phases** | Off by default. When on, the moon advances every 15 levels instead of every 5. |
+| **Economy events** | From level 3 on, a level gets a random event with 50% chance: a multiplier on the value of loot, on the quota and/or on the cash an extraction pays. 20 events from *Gold Rush* (+35% loot value) and *Windfall* (+30% pay) to *Tax Audit* (-25% pay, +10% quota) and *Crushing Quota* (+40%). Bad events get likelier with depth, good ones rarer. The active event is shown under the level info HUD. |
+
 #### Shop upgrades (via REPOLib)
 
 All of these are sold in the normal shop. Prices are approximate (the game scales them with player
@@ -294,6 +308,20 @@ The build deploys the compiled plugin into your BepInEx plugins folder for the a
 | Монстры | Души взрываются сильнее | Взрывающиеся души наносят больше урона |
 | Монстры | Монстры устойчивы к ямам | Монстры получают меньше урона от смертельных ям |
 | Монстры | Лёгкие / тяжёлые монстры | Все монстры весят меньше (легко толкать) или больше (тяжело толкать) |
+
+#### Масштаб уровня и события экономики
+
+У каждого свой переключатель в секции `Modules`, числа лежат в секциях *Level Scaling* и *Economy*.
+Всё считает хост, клиенты получают результат обычной синхронизацией игры.
+
+| Модуль | Что делает (по умолчанию) |
+| --- | --- |
+| **Ценность карты** | Ценности дорожают с глубиной: x1,02 за уровень после 2-го, максимум x3. |
+| **Число врагов** | Больше монстров после 8-го уровня: +3% за уровень, максимум x2 (добавка берётся из самого сильного уже открытого тира). |
+| **Размер уровня** | Карты крупнее после 8-го уровня: +3% модулей и сетки за уровень, максимум x1,5. Больше модулей — больше точек экстракции по пороговым значениям игры. |
+| **Экстракции** | Одна дополнительная точка экстракции раз в 10 уровней, не больше 5 на уровень. |
+| **Фазы луны** | По умолчанию выключено. Если включить, луна меняется раз в 15 уровней вместо 5. |
+| **События экономики** | Начиная с 3-го уровня уровень с шансом 50% получает случайное событие: множитель стоимости лута, квоты и/или оплаты за экстракцию. 20 событий, от *Gold Rush* (+35% к стоимости лута) и *Windfall* (+30% к оплате) до *Tax Audit* (-25% к оплате, +10% к квоте) и *Crushing Quota* (+40% к квоте). Плохие события с глубиной выпадают чаще, хорошие реже. Активное событие показано под информацией об уровне. |
 
 #### Улучшения в магазине (через REPOLib)
 

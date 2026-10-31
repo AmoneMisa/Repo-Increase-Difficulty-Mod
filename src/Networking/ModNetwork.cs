@@ -34,6 +34,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     public const byte MapVoteBallotEventCode = 183;
     public const byte RoundStatsEventCode = 184;
     public const byte RepairEventCode = 185;
+    public const byte EconomyEventCode = 188;
     public const byte BatteryDrainEventCode = 186;
     public const byte EnemyStatusEventCode = 187;
 
@@ -216,6 +217,15 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             new RaiseEventOptions { Receivers = ReceiverGroup.MasterClient }, SendOptions.SendReliable);
     }
 
+    /// <summary>Host tells everyone which level economy event (0 = none) is active.</summary>
+    public void BroadcastEconomy(int id)
+    {
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient)
+            return;
+        PhotonNetwork.RaiseEvent(EconomyEventCode, new object[] { id },
+            new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
+    }
+
     /// <summary>Host tells everyone a valuable's current value after the Repair drone restored some.</summary>
     public void BroadcastRepair(ValuableObject valuable, float value)
     {
@@ -297,6 +307,14 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         {
             var data = (object[])photonEvent.CustomData;
             MapVoteState.ReceiveBallot((int)data[0], (int)data[1], (int)data[2], (string)data[3]);
+            return;
+        }
+
+        if (photonEvent.Code == EconomyEventCode)
+        {
+            if (photonEvent.CustomData is object[] ed && ed.Length == 1 && ed[0] is int eid &&
+                PhotonNetwork.MasterClient != null && photonEvent.Sender == PhotonNetwork.MasterClient.ActorNumber)
+                Economy.EconomyEvents.Set(eid);
             return;
         }
 

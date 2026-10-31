@@ -27,6 +27,7 @@ internal static class ChangeLevelPatch
         {
             // Clear any leftover modifiers so shops/lobby are clean.
             ModifierManager.ApplyReceived(LevelModifiers.Empty);
+            Economy.EconomyEvents.Clear();
             // The host must also TELL clients to clear. Otherwise a client keeps the last level's
             // modifier set into the shop and its per-level effects (e.g. ReducedPlayerHp on the
             // shop's health Fetch) fire when they shouldn't. RollForNextLevel broadcasts for real
@@ -41,5 +42,6 @@ internal static class ChangeLevelPatch
             return;
 
         ModifierManager.RollForNextLevel(RunManager.instance.levelsCompleted);
+        Economy.EconomyEvents.RollForNextLevel(RunManager.instance.levelsCompleted);
     }
 }

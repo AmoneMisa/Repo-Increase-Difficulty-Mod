@@ -75,9 +75,15 @@ internal sealed class LevelInfoHud : MonoBehaviour
         }
 
         var mods = ModifierManager.Current;
-        if (SafeRunIsLevel() && mods != null && mods.IsSpecial)
+        bool special = SafeRunIsLevel() && mods != null && mods.IsSpecial;
+        var econ = SafeRunIsLevel() ? Economy.EconomyEvents.Current : null;
+        if (special || econ != null)
         {
-            BuildParts(mods, _parts);
+            _parts.Clear();
+            if (special)
+                BuildParts(mods, _parts);
+            if (econ != null)
+                _parts.Add($"Economy: {econ.Name}");
             _modsLabel.text = string.Join("\n", _parts);
             _modsLabel.enabled = true;
             PositionMods();

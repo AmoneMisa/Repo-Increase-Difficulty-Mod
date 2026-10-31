@@ -153,6 +153,10 @@ public static class ModConfig
 
     // --- Utility Drones ---
     public static ConfigEntry<bool> DronesEnabled;
+    public static ConfigEntry<bool> EconomyEventsEnabled, ScaleMapValue, ScaleEnemyCap, ScaleLevelSize, ScaleExtractions, ScaleMoon;
+    public static ConfigEntry<int> EconomyEventChance, EconomyStartLevel;
+    public static ConfigEntry<int> MapValueStartLevel, EnemyCapStartLevel, LevelSizeStartLevel, ExtractionBonusInterval, ExtractionMax, MoonLevelsPerPhase;
+    public static ConfigEntry<float> MapValuePerLevel, MapValueMax, EnemyCapPerLevel, EnemyCapMax, LevelSizePerLevel, LevelSizeMax;
     public static ConfigEntry<bool> GearEnabled;
     public static ConfigEntry<bool> DefenceOrbEnabled, DefenceDroneEnabled, ProtectionOrbEnabled;
     public static ConfigEntry<bool> PoisonCrossbowEnabled, DecoyGrenadeEnabled, IcePistolEnabled, StickyPistolEnabled;
@@ -333,6 +337,12 @@ public static class ModConfig
     private static void BindModules(ConfigFile cfg)
     {
         SurprisesEnabled = Module(cfg, "Surprises", "Enabled", true, "Surprises", "Master switch for the surprise/special-level system.");
+        EconomyEventsEnabled = Module(cfg, "Economy", "Enabled", true, "EconomyEvents", "Per-level economy events (taxes, bonuses, rich or poor loot, harder or lighter quotas, better or worse extraction pay). Host rolls one per level; every player should have it on.");
+        ScaleMapValue = Module(cfg, "Level Scaling", "MapValue", true, "ScaleMapValue", "Valuables are worth more the deeper the run goes.");
+        ScaleEnemyCap = Module(cfg, "Level Scaling", "EnemyCount", true, "ScaleEnemyCount", "More monsters spawn per level the deeper the run goes.");
+        ScaleLevelSize = Module(cfg, "Level Scaling", "LevelSize", true, "ScaleLevelSize", "Levels get more modules (a bigger map) the deeper the run goes.");
+        ScaleExtractions = Module(cfg, "Level Scaling", "Extractions", true, "ScaleExtractions", "Deeper levels get extra extraction points.");
+        ScaleMoon = Module(cfg, "Level Scaling", "Moon", false, "ScaleMoon", "Moon phases advance every MoonLevelsPerPhase levels instead of every 5 (slows the moon-based difficulty).");
         PlayerUpgradesEnabled = Module(cfg, "Player Upgrades", "Enabled", true, "PlayerUpgrades", "Master switch for the mod's custom per-player upgrades that appear in the normal shop. Requires REPOLib. Takes effect on restart.");
         TruckUpgradesEnabled = Module(cfg, "Truck Upgrades", "Enabled", true, "TruckUpgrades", "Enable the team-wide truck upgrades (Heal Power, Charge Efficiency, Loot Cash-In). Bought in the normal shop; effects apply for the whole team.");
         ScaleEnemyHealth = Module(cfg, "Scaling", "EnemyHealth", true, "ScaleEnemyHealth", "Enemies gain max HP as the run goes deeper. Off = vanilla enemy HP.");
@@ -345,6 +355,21 @@ public static class ModConfig
         SilencerEnabled = Module(cfg, "Drones", "SilencerEnabled", true, "SilencerDrone", "Sell the Silencer Drone. Needs Drones/Enabled. Same on every player; applies on game restart.");
         LinkEnabled = Module(cfg, "Drones", "LinkEnabled", true, "LinkDrone", "Sell the Link Drone Set (A + B). Needs Drones/Enabled. Same on every player; applies on game restart.");
         RepairEnabled = Module(cfg, "Drones", "RepairEnabled", true, "RepairDrone", "Sell the Repair Drone. Needs Drones/Enabled. Same on every player; applies on game restart.");
+        const string Lvl = "Level Scaling";
+        EconomyEventChance = BindInt(cfg, "Economy", "EventChancePercent", 50, 0, 100, "Chance (percent) that an eligible level gets an economy event.");
+        EconomyStartLevel = BindInt(cfg, "Economy", "StartLevel", 2, 0, 30, "Levels completed before economy events can happen. 2 = from the 3rd level.");
+        MapValueStartLevel = BindInt(cfg, Lvl, "MapValueStartLevel", 2, 0, 50, "Levels completed before valuables start gaining value.");
+        MapValuePerLevel = BindFloat(cfg, Lvl, "MapValuePerLevel", 0.02f, 0f, 0.5f, "Valuable value growth per level (compounding). 0.02 = x1.02 per level.");
+        MapValueMax = BindFloat(cfg, Lvl, "MapValueMax", 3f, 1f, 20f, "Cap on the depth multiplier of valuables' value.");
+        EnemyCapStartLevel = BindInt(cfg, Lvl, "EnemyCountStartLevel", 8, 0, 100, "Levels completed before extra monsters appear.");
+        EnemyCapPerLevel = BindFloat(cfg, Lvl, "EnemyCountPerLevel", 0.03f, 0f, 1f, "Extra monsters per level past the start, as a fraction of the normal count (0.03 = +3%).");
+        EnemyCapMax = BindFloat(cfg, Lvl, "EnemyCountMax", 2f, 1f, 5f, "Cap on the monster count multiplier.");
+        LevelSizeStartLevel = BindInt(cfg, Lvl, "LevelSizeStartLevel", 8, 0, 100, "Levels completed before levels start growing.");
+        LevelSizePerLevel = BindFloat(cfg, Lvl, "LevelSizePerLevel", 0.03f, 0f, 1f, "Level size growth per level past the start (0.03 = +3% modules and grid).");
+        LevelSizeMax = BindFloat(cfg, Lvl, "LevelSizeMax", 1.5f, 1f, 3f, "Cap on the level size multiplier.");
+        ExtractionBonusInterval = BindInt(cfg, Lvl, "ExtractionBonusInterval", 10, 1, 50, "One extra extraction point every this many levels.");
+        ExtractionMax = BindInt(cfg, Lvl, "ExtractionMax", 5, 1, 8, "Most extraction points a level can have.");
+        MoonLevelsPerPhase = BindInt(cfg, Lvl, "MoonLevelsPerPhase", 15, 5, 60, "With ScaleMoon on: levels per moon phase (vanilla is 5).");
         GearEnabled = Module(cfg, "Gear", "Enabled", true, "ExtraGear", "Add the extra shop gear (Defence/Protection orbs, Defence drone, poison crossbow, decoy grenade, ice pistol, sticky pistol). EVERY player must run this mod with the same settings. Applies on game restart.");
         DefenceOrbEnabled = Module(cfg, "Gear", "DefenceOrbEnabled", true, "DefenceOrb", "Sell the Defence Orb.");
         DefenceDroneEnabled = Module(cfg, "Gear", "DefenceDroneEnabled", true, "DefenceDrone", "Sell the Defence Drone.");
