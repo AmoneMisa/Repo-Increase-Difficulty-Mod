@@ -11,7 +11,7 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.4.0`
+- **Version:** `0.5.0`
 
 ### Contents
 
@@ -281,7 +281,7 @@ The build deploys the compiled plugin into your BepInEx plugins folder for the a
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.4.0`
+- **Версия:** `0.5.0`
 
 ### Содержание
 
