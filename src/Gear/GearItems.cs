@@ -1,0 +1,293 @@
+using System;
+using System.Collections.Generic;
+using IncreaseHardMod.Drones;
+using REPOLib.Modules;
+using UnityEngine;
+using Object = UnityEngine.Object;
+
+namespace IncreaseHardMod.Gear;
+
+internal enum GearKind
+{
+    Poison,
+    Ice,
+    Sticky,
+}
+
+internal enum ShieldMode
+{
+    DefenceOrb,
+    ProtectionOrb,
+    DefenceDrone,
+}
+
+/// <summary>
+/// Registers the extra shop gear. Like the utility drones, nothing here needs custom assets: every item is
+/// a clone of a vanilla item (orb / gun / grenade / drone) with the vanilla effect scripts stripped and our
+/// own component added, then handed to REPOLib. Built once, from the same RunStartStats hook as the drones.
+/// </summary>
+internal static class GearItems
+{
+    private static bool _built;
+
+    public static void BuildOnce()
+    {
+        if (_built || !ModConfig.GearEnabled.Value)
+            return;
+        _built = true;
+        try
+        {
+            DroneItems.EnsureHolder();
+
+            // Bases are picked by their vanilla asset name (falling back to any item with the right component).
+            var orb = FindBase<ItemOrb>("Item Orb Indestructible", _ => false);
+            var gun = FindBase<ItemGun>("Item Gun Handgun", p => p.GetComponent<ItemGunTranq>() != null || p.GetComponent<ItemGunRevolver>() != null);
+            var pulseGun = FindBase<ItemGun>("Item Gun Shockwave", _ => false); // the pink pulse pistol that repels
+            var grenade = FindBase<ItemGrenade>("Item Grenade Stun", _ => false);
+
+            if (orb != null)
+            {
+                if (ModConfig.DefenceOrbEnabled.Value)
+                    MakeOrb(orb, "Item Orb Defence", "Defence Orb", ShieldMode.DefenceOrb, 9500f, 12000f, new Color(0.3f, 0.6f, 1f),
+                        "Absorbs incoming damage for players inside its field while charged (about 350 damage in total).");
+                if (ModConfig.ProtectionOrbEnabled.Value)
+                    MakeOrb(orb, "Item Orb Protection", "Protection Orb", ShieldMode.ProtectionOrb, 5500f, 7500f, new Color(1f, 0.85f, 0.3f),
+                        "Players inside its field take 25% less damage. Drains its charge quickly.");
+            }
+            else
+                Plugin.Log.LogWarning("[Gear] No vanilla orb found to clone; orbs disabled.");
+
+            if (ModConfig.DefenceDroneEnabled.Value)
+            {
+                var drone = DroneItems.FindBaseDrone();
+                if (drone != null)
+                    DroneItems.Make(drone, "Item Drone Defence", "Defence Drone", DroneKind.Defence, 0, 5500f, 7500f, shop: 1,
+                        new Color(0.3f, 0.6f, 1f),
+                        "Attach to a player: absorbs damage that player takes while charged (about 350 damage in total).",
+                        targets: (false, false, true, false));
+            }
+
+            if (gun != null)
+            {
+                if (ModConfig.PoisonCrossbowEnabled.Value)
+                    MakeGun(gun, "Item Gun Poison Crossbow", "Poison Crossbow", GearKind.Poison, 9500f, 12000f, new Color(0.4f, 1f, 0.3f),
+                        "Poison bolts: a little damage plus a 15 second poison that refreshes (never stacks). Fewer shots than a normal gun.");
+                if (ModConfig.IcePistolEnabled.Value)
+                    MakeGun(pulseGun ?? gun, "Item Gun Ice Pulse", "Pulse Ice Pistol", GearKind.Ice, 5500f, 7500f, new Color(0.5f, 0.85f, 1f),
+                        "Freezes an enemy for a few seconds. Frozen enemies cannot be lifted, take less firearm damage and 35% more melee damage.");
+                if (ModConfig.StickyPistolEnabled.Value)
+                    MakeGun(gun, "Item Gun Sticky", "Sticky Pistol", GearKind.Sticky, 4500f, 5000f, new Color(1f, 0.5f, 0.9f),
+                        "Pulls a monster or object toward you, if you could lift it with one strength level less.");
+            }
+            else
+                Plugin.Log.LogWarning("[Gear] No vanilla gun found to clone; guns disabled.");
+
+            if (grenade != null && ModConfig.DecoyGrenadeEnabled.Value)
+                MakeDecoy(grenade);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.LogError($"[Gear] Failed to build gear items: {e}");
+        }
+    }
+
+    private static Item FindBase<T>(string preferredName, Func<GameObject, bool> reject) where T : Component
+    {
+        if (StatsManager.instance.itemDictionary.TryGetValue(preferredName, out var named) &&
+            named.prefab != null && named.prefab.Prefab != null && named.prefab.Prefab.GetComponent<T>() != null)
+            return named;
+        var names = new List<string>(StatsManager.instance.itemDictionary.Keys);
+        names.Sort(StringComparer.Ordinal);
+        Item fallback = null;
+        foreach (var n in names)
+        {
+            var item = StatsManager.instance.itemDictionary[n];
+            var prefab = item != null && item.prefab != null ? item.prefab.Prefab : null;
+            if (prefab == null || prefab.GetComponent<T>() == null)
+                continue;
+            fallback ??= item;
+            if (!reject(prefab))
+                return item;
+        }
+        return fallback;
+    }
+
+    // Clones the Item asset + prefab, strips vanilla components chosen by `strip`, and tints it.
+    private static (Item item, GameObject go, ItemAttributes attributes) Clone(Item baseItem, string assetName,
+        string display, float priceMin, float priceMax, Color color, string description, Func<MonoBehaviour, bool> strip, bool tint)
+    {
+        var item = Object.Instantiate(baseItem);
+        item.name = assetName;
+        item.itemName = display;
+        item.itemNameLocalized = null;
+        item.description = description;
+        item.maxAmount = 3;
+        item.maxAmountInShop = 1;
+        item.maxPurchase = false;
+        item.minPlayerCount = 1;
+        item.value = Object.Instantiate(baseItem.value);
+        item.value.valueMin = priceMin;
+        item.value.valueMax = priceMax;
+        var preset = ScriptableObject.CreateInstance<ColorPresets>();
+        preset.colorMain = color;
+        preset.colorLight = Color.Lerp(color, Color.white, 0.5f);
+        preset.colorDark = Color.Lerp(color, Color.black, 0.5f);
+        item.colorPreset = preset;
+
+        var go = Object.Instantiate(baseItem.prefab.Prefab, DroneItems.EnsureHolder().transform);
+        go.name = assetName;
+        foreach (var mb in go.GetComponents<MonoBehaviour>())
+            if (mb != null && strip(mb))
+                Object.DestroyImmediate(mb);
+
+        if (tint)
+            Tint(go, color);
+
+        var attributes = go.GetComponent<ItemAttributes>();
+        attributes.item = item;
+        return (item, go, attributes);
+    }
+
+    private static void Tint(GameObject go, Color color)
+    {
+        foreach (var r in go.GetComponentsInChildren<Renderer>(true))
+        {
+            if (r is not (MeshRenderer or SkinnedMeshRenderer))
+                continue;
+            foreach (var m in r.materials)
+            {
+                if (m.HasProperty("_BaseColor"))
+                    m.SetColor("_BaseColor", Color.Lerp(m.GetColor("_BaseColor"), color, 0.45f));
+                else if (m.HasProperty("_Color"))
+                    m.SetColor("_Color", Color.Lerp(m.color, color, 0.45f));
+            }
+        }
+    }
+
+    private static void Register(ItemAttributes attributes, string name)
+    {
+        if (Items.RegisterItem(attributes) == null)
+            Plugin.Log.LogWarning($"[Gear] REPOLib refused to register {name}.");
+        else
+            Plugin.Log.LogInfo($"[Gear] Registered {name}.");
+    }
+
+    private static void MakeOrb(Item baseItem, string name, string display, ShieldMode mode, float priceMin, float priceMax, Color color, string desc)
+    {
+        var (_, go, attributes) = Clone(baseItem, name, display, priceMin, priceMax, color, desc,
+            mb => mb.GetType().Name.StartsWith("ItemOrb") && mb.GetType().Name != "ItemOrb", tint: false);
+        var orb = go.GetComponent<ItemOrb>();
+        orb.targetValuables = orb.targetNonValuables = orb.targetEnemies = false;
+        orb.targetPlayers = true;
+        var shield = go.AddComponent<ShieldItem>();
+        shield.mode = mode;
+        Register(attributes, name);
+    }
+
+    private static void MakeGun(Item baseItem, string name, string display, GearKind kind, float priceMin, float priceMax, Color color, string desc)
+    {
+        var (_, go, attributes) = Clone(baseItem, name, display, priceMin, priceMax, color, desc,
+            mb => mb.GetType().Name == "ItemGunTranq", tint: true);
+
+        var gun = go.GetComponent<ItemGun>();
+        gun.numberOfBullets = 1;
+        gun.gunRandomSpread = 0f;
+
+        // The bullet prefab is instantiated locally on every client, so a private clone is enough.
+        if (gun.bulletPrefab != null)
+        {
+            var bullet = Object.Instantiate(gun.bulletPrefab, DroneItems.EnsureHolder().transform);
+            bullet.name = name + " Bullet";
+            var hurt = bullet.GetComponentInChildren<HurtCollider>(true);
+            if (hurt != null)
+            {
+                if (kind == GearKind.Poison)
+                {
+                    hurt.enemyDamage = ModConfig.PoisonHitDamage.Value;
+                    hurt.enemyStun = false;
+                }
+                else if (kind == GearKind.Sticky)
+                {
+                    hurt.enemyDamage = 0;
+                    hurt.enemyStun = false;
+                }
+            }
+            gun.bulletPrefab = bullet;
+        }
+
+        if (kind == GearKind.Poison)
+        {
+            // A third fewer shots from the same battery = each shot costs 1.5x as much.
+            if (gun.batteryDrainFullBar)
+                gun.batteryDrainFullBars = Mathf.Max(1, Mathf.RoundToInt(gun.batteryDrainFullBars * 1.5f));
+            else
+                gun.batteryDrain *= 1.5f;
+        }
+
+        var marker = go.AddComponent<GearGun>();
+        marker.kind = kind;
+        Register(attributes, name);
+    }
+
+    private static void MakeDecoy(Item baseItem)
+    {
+        var (_, go, attributes) = Clone(baseItem, "Item Grenade Decoy", "Decoy Grenade", 500f, 650f, new Color(1f, 0.6f, 0.2f),
+            "Once armed it lures nearby monsters to itself for a few seconds, then disappears.",
+            mb => mb.GetType().Name.StartsWith("ItemGrenade") && mb.GetType().Name != "ItemGrenade", tint: true);
+        go.AddComponent<DecoyGrenade>();
+        Register(attributes, "Item Grenade Decoy");
+    }
+}
+
+/// <summary>Marks a cloned gun with its special behaviour (see <see cref="GearEffects"/>).</summary>
+internal sealed class GearGun : MonoBehaviour
+{
+    public GearKind kind;
+}
+
+/// <summary>
+/// Decoy grenade: from the moment it is armed it keeps pinging the enemy director at its position for
+/// <c>DecoySeconds</c>, which sends nearby monsters to investigate it, then removes itself. The vanilla
+/// fuse is pushed far out so the (stripped) explosion logic never fires.
+/// </summary>
+internal sealed class DecoyGrenade : MonoBehaviour
+{
+    private ItemGrenade _grenade;
+    private float _armedFor = -1f;
+    private float _ping;
+
+    private void Start()
+    {
+        _grenade = GetComponent<ItemGrenade>();
+        if (_grenade != null)
+            _grenade.tickTime = 9999f;
+    }
+
+    private void Update()
+    {
+        if (_grenade == null || !SemiFunc.IsMasterClientOrSingleplayer())
+            return;
+
+        if (_grenade.isActive && _armedFor < 0f)
+            _armedFor = 0f;
+        if (_armedFor < 0f)
+            return;
+
+        _armedFor += Time.deltaTime;
+        _ping -= Time.deltaTime;
+        if (_ping <= 0f)
+        {
+            _ping = 0.4f;
+            EnemyDirector.instance.SetInvestigate(transform.position, 40f);
+        }
+
+        if (_armedFor >= ModConfig.DecoySeconds.Value)
+        {
+            var pgo = GetComponent<PhysGrabObject>();
+            if (pgo != null)
+                pgo.DestroyPhysGrabObject();
+            else
+                Destroy(gameObject);
+        }
+    }
+}

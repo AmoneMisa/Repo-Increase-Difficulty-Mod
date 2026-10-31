@@ -104,6 +104,17 @@ Four extra drones, built as clones of the game's own drones (same beam/attach/ba
 
 Every player must run the mod with `Drones/Enabled` set the same. Settings: *Drones* config section.
 
+### Extra gear (shop)
+
+Built as clones of vanilla items, same rules as the drones (every player needs the mod; per-item toggles in the *Gear* config section):
+
+- **Defence Orb / Defence Drone** - absorb up to 350 damage in total (the battery is the pool). The orb covers players inside its field, the drone the player it is attached to.
+- **Protection Orb** - 25% less damage inside its field; drains its charge quickly.
+- **Poison Crossbow** - 7 damage plus a 15 s poison (125 HP in total) that refreshes, never stacks; a third fewer shots than a normal gun.
+- **Decoy Grenade** - once armed, lures nearby monsters to it for 5 s, then disappears.
+- **Pulse Ice Pistol** - the pink pulse pistol (keeps its knockback) that also freezes an enemy for 4.5 s; frozen enemies can't be lifted, take less firearm damage and +35% melee damage.
+- **Sticky Pistol** - pulls a monster or object toward you if you could lift it with one strength level less.
+
 ### Team ping system
 
 Press the ping key to mark whatever you're aiming at. Pings use the game's own

@@ -11,6 +11,7 @@ internal enum DroneKind
     Silencer,
     Link,
     Repair,
+    Defence,
 }
 
 /// <summary>
@@ -40,13 +41,28 @@ internal static class DroneItems
     private static bool _built;
     private static GameObject _holder;
 
+    internal static GameObject EnsureHolder()
+    {
+        if (_holder == null)
+        {
+            _holder = new GameObject("IHM_DronePrefabs");
+            _holder.SetActive(false);
+            Object.DontDestroyOnLoad(_holder);
+        }
+        return _holder;
+    }
+
     [HarmonyPatch(typeof(StatsManager), "RunStartStats")]
     private static class OnRunStartStats
     {
         // Run before REPOLib's own postfix so our items are queued in time to be added this pass.
         [HarmonyPostfix]
         [HarmonyPriority(Priority.High)]
-        private static void Postfix() => BuildOnce();
+        private static void Postfix()
+        {
+            BuildOnce();
+            Gear.GearItems.BuildOnce();
+        }
     }
 
     private static void BuildOnce()
@@ -63,30 +79,34 @@ internal static class DroneItems
                 return;
             }
 
-            _holder = new GameObject("IHM_DronePrefabs");
-            _holder.SetActive(false);
-            Object.DontDestroyOnLoad(_holder);
+            EnsureHolder();
 
-            Make(baseItem, GhostName, "Ghost Drone", DroneKind.Ghost, 0, 3000f, shop: 1,
+            if (ModConfig.GhostEnabled.Value)
+                Make(baseItem, GhostName, "Ghost Drone", DroneKind.Ghost, 0, 5500f, 7500f, shop: 1,
                 new Color(0.75f, 0.85f, 1f),
                 "Attach to a valuable to let players walk through it and take it out of extraction counting while the drone is on.",
                 targets: (true, false, false, false));
-            Make(baseItem, SilencerName, "Silencer Drone", DroneKind.Silencer, 0, 3500f, shop: 1,
+            if (ModConfig.SilencerEnabled.Value)
+                Make(baseItem, SilencerName, "Silencer Drone", DroneKind.Silencer, 0, 3500f, 4500f, shop: 1,
                 new Color(0.55f, 0.55f, 0.6f),
                 "Attach to a valuable, item, cart, player or enemy to make its noise (and the noise enemies investigate) much quieter.",
                 targets: (true, true, true, true));
-            Make(baseItem, RepairName, "Repair Drone", DroneKind.Repair, 0, 16500f, shop: 1,
+            if (ModConfig.RepairEnabled.Value)
+                Make(baseItem, RepairName, "Repair Drone", DroneKind.Repair, 0, 15000f, 18000f, shop: 1,
                 new Color(0.4f, 1f, 0.5f),
                 "Attach to a damaged valuable to restore its lost value (up to its original value). Destroyed valuables cannot be repaired.",
                 targets: (true, false, false, false));
-            Make(baseItem, LinkAName, "Link Drone Set (A + B)", DroneKind.Link, 0, 4500f, shop: 1,
+            if (ModConfig.LinkEnabled.Value)
+            {
+                Make(baseItem, LinkAName, "Link Drone Set (A + B)", DroneKind.Link, 0, 9500f, 12000f, shop: 1,
                 new Color(1f, 0.6f, 0.2f),
                 "Two drones (A + B). Attach one to each of two objects to tie them together with a physical cable; grab one to reel the other in.",
                 targets: (true, true, false, true));
-            Make(baseItem, LinkBName, "Link Drone B", DroneKind.Link, 1, 0f, shop: 0,
+            Make(baseItem, LinkBName, "Link Drone B", DroneKind.Link, 1, 0f, 0f, shop: 0,
                 new Color(0.2f, 0.8f, 1f),
                 "Second half of the Link Drone Set.",
                 targets: (true, true, false, true));
+            }
         }
         catch (System.Exception e)
         {
@@ -95,8 +115,11 @@ internal static class DroneItems
     }
 
     // Any vanilla drone Item whose prefab has an ItemDrone. Sorted for a deterministic pick on every client.
-    private static Item FindBaseDrone()
+    internal static Item FindBaseDrone()
     {
+        if (StatsManager.instance.itemDictionary.TryGetValue("Item Drone Indestructible", out var named) &&
+            named.prefab != null && named.prefab.Prefab != null && named.prefab.Prefab.GetComponent<ItemDrone>() != null)
+            return named;
         var names = new List<string>(StatsManager.instance.itemDictionary.Keys);
         names.Sort(System.StringComparer.Ordinal);
         foreach (var n in names)
@@ -109,8 +132,8 @@ internal static class DroneItems
         return null;
     }
 
-    private static void Make(Item baseItem, string assetName, string display, DroneKind kind, int slot,
-        float price, int shop, Color color, string description,
+    internal static void Make(Item baseItem, string assetName, string display, DroneKind kind, int slot,
+        float priceMin, float priceMax, int shop, Color color, string description,
         (bool valuables, bool nonValuables, bool players, bool enemies) targets)
     {
         var item = Object.Instantiate(baseItem);
@@ -123,8 +146,8 @@ internal static class DroneItems
         item.maxPurchase = false;
         item.minPlayerCount = 1;
         item.value = Object.Instantiate(baseItem.value);
-        item.value.valueMin = price * 0.9f;
-        item.value.valueMax = price;
+        item.value.valueMin = priceMin;
+        item.value.valueMax = priceMax;
         var preset = ScriptableObject.CreateInstance<ColorPresets>();
         preset.colorMain = color;
         preset.colorLight = Color.Lerp(color, Color.white, 0.5f);
@@ -153,6 +176,8 @@ internal static class DroneItems
         var ud = go.AddComponent<UtilityDrone>();
         ud.kind = kind;
         ud.slot = slot;
+        if (kind == DroneKind.Defence)
+            go.AddComponent<Gear.ShieldItem>().mode = Gear.ShieldMode.DefenceDrone;
 
         var attributes = go.GetComponent<ItemAttributes>();
         attributes.item = item;

@@ -153,6 +153,17 @@ public static class ModConfig
 
     // --- Utility Drones ---
     public static ConfigEntry<bool> DronesEnabled;
+    public static ConfigEntry<bool> GearEnabled;
+    public static ConfigEntry<bool> DefenceOrbEnabled, DefenceDroneEnabled, ProtectionOrbEnabled;
+    public static ConfigEntry<bool> PoisonCrossbowEnabled, DecoyGrenadeEnabled, IcePistolEnabled, StickyPistolEnabled;
+    public static ConfigEntry<int> DefenceAbsorb, ProtectionReductionPercent;
+    public static ConfigEntry<int> PoisonHitDamage, PoisonTotalDamage;
+    public static ConfigEntry<float> PoisonSeconds, IceFreezeSeconds, DecoySeconds, StickyFreeLiftMass;
+    public static ConfigEntry<int> IceGunDamagePercent, IceMeleeBonusPercent;
+    public static ConfigEntry<bool> GhostEnabled;
+    public static ConfigEntry<bool> SilencerEnabled;
+    public static ConfigEntry<bool> LinkEnabled;
+    public static ConfigEntry<bool> RepairEnabled;
     public static ConfigEntry<float> LinkMaxDistance;
     public static ConfigEntry<float> SilencerNoiseMultiplier;
 
@@ -528,6 +539,41 @@ public static class ModConfig
         DronesEnabled = cfg.Bind(
             "Drones", "Enabled", true,
             "Add the Ghost, Silencer and Link utility drones to the shop. EVERY player must run this mod with the same setting, otherwise shop items and effects will not match. Takes effect on game restart.");
+        const string Gear = "Gear";
+        GearEnabled = cfg.Bind(Gear, "Enabled", true,
+            "Add the extra shop gear (Defence/Protection orbs, Defence drone, poison crossbow, decoy grenade, ice pistol, sticky pistol). EVERY player must run this mod with the same settings. Applies on game restart.");
+        DefenceOrbEnabled = cfg.Bind(Gear, "DefenceOrbEnabled", true, "Sell the Defence Orb.");
+        DefenceDroneEnabled = cfg.Bind(Gear, "DefenceDroneEnabled", true, "Sell the Defence Drone.");
+        ProtectionOrbEnabled = cfg.Bind(Gear, "ProtectionOrbEnabled", true, "Sell the Protection Orb.");
+        PoisonCrossbowEnabled = cfg.Bind(Gear, "PoisonCrossbowEnabled", true, "Sell the Poison Crossbow.");
+        DecoyGrenadeEnabled = cfg.Bind(Gear, "DecoyGrenadeEnabled", true, "Sell the Decoy Grenade.");
+        IcePistolEnabled = cfg.Bind(Gear, "IcePistolEnabled", true, "Sell the Pulse Ice Pistol.");
+        StickyPistolEnabled = cfg.Bind(Gear, "StickyPistolEnabled", true, "Sell the Sticky Pistol.");
+        DefenceAbsorb = BindInt(cfg, Gear, "DefenceAbsorb", 350, 50, 2000,
+            "Total damage a fully charged Defence Orb/Drone can absorb before its battery is empty.");
+        ProtectionReductionPercent = BindInt(cfg, Gear, "ProtectionReductionPercent", 25, 5, 90,
+            "Damage reduction inside an active Protection Orb.");
+        PoisonHitDamage = BindInt(cfg, Gear, "PoisonHitDamage", 7, 1, 100, "Direct damage of a poison bolt.");
+        PoisonTotalDamage = BindInt(cfg, Gear, "PoisonTotalDamage", 125, 1, 1000, "Total poison damage over the full duration.");
+        PoisonSeconds = BindFloat(cfg, Gear, "PoisonSeconds", 15f, 1f, 60f,
+            "Poison duration. Each hit refreshes it to this value (it does not stack).");
+        IceFreezeSeconds = BindFloat(cfg, Gear, "IceFreezeSeconds", 4.5f, 0.5f, 30f, "How long the Ice Pistol freezes an enemy.");
+        IceGunDamagePercent = BindInt(cfg, Gear, "IceGunDamagePercent", 60, 10, 100,
+            "Firearm damage frozen enemies take, in percent of normal.");
+        IceMeleeBonusPercent = BindInt(cfg, Gear, "IceMeleeBonusPercent", 35, 0, 300,
+            "Extra melee damage frozen enemies take, in percent.");
+        DecoySeconds = BindFloat(cfg, Gear, "DecoySeconds", 5f, 1f, 30f, "How long the Decoy Grenade attracts monsters once armed.");
+        StickyFreeLiftMass = BindFloat(cfg, Gear, "StickyFreeLiftMass", 10f, 1f, 100f,
+            "Approximate mass (kg) a player with base grab strength can lift freely. The Sticky Pistol can pull things up to what ONE strength level less could lift.");
+
+        GhostEnabled = cfg.Bind("Drones", "GhostEnabled", true,
+            "Sell the Ghost Drone. Needs Drones/Enabled. Same on every player; applies on game restart.");
+        SilencerEnabled = cfg.Bind("Drones", "SilencerEnabled", true,
+            "Sell the Silencer Drone. Needs Drones/Enabled. Same on every player; applies on game restart.");
+        LinkEnabled = cfg.Bind("Drones", "LinkEnabled", true,
+            "Sell the Link Drone Set (A + B). Needs Drones/Enabled. Same on every player; applies on game restart.");
+        RepairEnabled = cfg.Bind("Drones", "RepairEnabled", true,
+            "Sell the Repair Drone. Needs Drones/Enabled. Same on every player; applies on game restart.");
         LinkMaxDistance = BindFloat(cfg,
             "Drones", "LinkMaxDistance", 6f, 1f, 12f,
             "Link drone: maximum distance (metres) between the two attached objects for the cable to connect. The cable fits the gap when it connects.");

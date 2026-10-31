@@ -34,6 +34,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     public const byte MapVoteBallotEventCode = 183;
     public const byte RoundStatsEventCode = 184;
     public const byte RepairEventCode = 185;
+    public const byte BatteryDrainEventCode = 186;
 
     public static ModNetwork Instance { get; private set; }
 
@@ -78,6 +79,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         LevelTimerController.Tick(Time.deltaTime);
         RoundStats.Tick(Time.deltaTime);
         Drones.LinkManager.Tick(Time.deltaTime);
+        Gear.GearEffects.Tick(Time.deltaTime);
         LateJoinController.Tick();
         // Client-side: keep every enemy's per-player dictionaries in sync with mid-run joins
         // (and mid-run enemy spawns) so late joiners don't crash the enemy AI coroutines.
@@ -204,6 +206,15 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             SendOptions.SendReliable);
     }
 
+    /// <summary>A client that absorbed damage with a shield item asks the host to drain its battery.</summary>
+    public void BroadcastBatteryDrain(int viewId, float percent)
+    {
+        if (!PhotonNetwork.InRoom)
+            return;
+        PhotonNetwork.RaiseEvent(BatteryDrainEventCode, new object[] { viewId, percent },
+            new RaiseEventOptions { Receivers = ReceiverGroup.MasterClient }, SendOptions.SendReliable);
+    }
+
     /// <summary>Host tells everyone a valuable's current value after the Repair drone restored some.</summary>
     public void BroadcastRepair(ValuableObject valuable, float value)
     {
@@ -253,6 +264,18 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         {
             var data = (object[])photonEvent.CustomData;
             MapVoteState.ReceiveBallot((int)data[0], (int)data[1], (int)data[2], (string)data[3]);
+            return;
+        }
+
+        if (photonEvent.Code == BatteryDrainEventCode)
+        {
+            if (!PhotonNetwork.IsMasterClient)
+                return;
+            var d = (object[])photonEvent.CustomData;
+            var pv = PhotonView.Find((int)d[0]);
+            var battery = pv != null ? pv.GetComponent<ItemBattery>() : null;
+            if (battery != null)
+                battery.batteryLife = Mathf.Max(0f, battery.batteryLife - (float)d[1]);
             return;
         }
 
