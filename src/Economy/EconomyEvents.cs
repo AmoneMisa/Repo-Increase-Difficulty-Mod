@@ -119,17 +119,40 @@ internal static class EconomyEvents
             _ => 2f * bad,
         };
 
+        // Blocked in the Black Market, or clashing with this level's surprise modifiers, is out.
+        float W(EconomyEvent e) =>
+            BlackMarket.IsBanned(BlackMarket.Kind.Economy, e.Id.ToString()) || Clashes(e) ? 0f : Weight(e.Tier);
+
         float total = 0f;
         foreach (var e in All)
-            total += Weight(e.Tier);
+            total += W(e);
+        if (total <= 0f)
+            return 0;
         float roll = Random.value * total;
         foreach (var e in All)
         {
-            roll -= Weight(e.Tier);
-            if (roll <= 0f)
+            roll -= W(e);
+            if (roll <= 0f && W(e) > 0f)
                 return e.Id;
         }
-        return All[All.Count - 1].Id;
+        return 0;
+    }
+
+    // Don't pile a second punishment onto the same lever a surprise modifier already hits.
+    private static bool Clashes(EconomyEvent e)
+    {
+        var mods = Modifiers.ModifierManager.Current;
+        if (mods == null)
+            return false;
+        if (e.Pay < 0.9f && mods.Has(Modifiers.ModifierType.MoneyLossOnDeath))
+            return true;                       // money already punished on death
+        if (e.Quota > 1.2f && mods.Has(Modifiers.ModifierType.LevelTimer))
+            return true;                       // timed level + a much heavier quota is unwinnable
+        if (e.Loot < 0.9f && mods.Has(Modifiers.ModifierType.FragileLoot))
+            return true;                       // loot already easier to ruin
+        if (e.Loot > 1.2f && mods.Has(Modifiers.ModifierType.BiggerSoulDrops))
+            return true;                       // already richer
+        return false;
     }
 
     // Extraction payouts (the only way currency rises while inside a level): scale the increase.

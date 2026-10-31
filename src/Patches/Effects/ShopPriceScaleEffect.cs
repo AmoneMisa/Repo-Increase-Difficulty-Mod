@@ -23,26 +23,32 @@ internal static class ShopPriceScaleEffect
     [HarmonyPostfix]
     private static void Postfix(ItemAttributes __instance)
     {
-        if (!ModConfig.ShopPriceScaleEnabled.Value)
-            return;
         if (!__instance.shopItem)
             return;
         // GetValue's body only assigns value on the master client; skip on remote clients.
         if (GameManager.Multiplayer() && !PhotonNetwork.IsMasterClient)
             return;
 
-        var gd = GameDirector.instance;
-        if (gd == null || gd.PlayerList == null)
-            return;
+        float factor = 1f;
+        if (ModConfig.ShopPriceScaleEnabled.Value)
+        {
+            var gd = GameDirector.instance;
+            if (gd != null && gd.PlayerList != null)
+            {
+                int extra = gd.PlayerList.Count - ModConfig.ShopPriceBaselinePlayers.Value;
+                if (extra > 0)
+                    factor += ModConfig.ShopPricePerExtraPlayer.Value * extra;
+            }
+        }
 
-        int players = gd.PlayerList.Count;
-        int baseline = ModConfig.ShopPriceBaselinePlayers.Value;
-        int extra = players - baseline;
-        if (extra <= 0)
-            return;
+        // The shop economy event: upgrades, health packs and crystals are scaled where the game prices them
+        // (Economy.ShopEconomy); every other item goes through here, including this mod's drones and gear.
+        var type = __instance.item != null ? __instance.item.itemType : SemiFunc.itemType.gun;
+        if (type != SemiFunc.itemType.item_upgrade && type != SemiFunc.itemType.player_upgrade &&
+            type != SemiFunc.itemType.healthPack && type != SemiFunc.itemType.power_crystal)
+            factor *= Economy.ShopEconomy.ItemMult;
 
-        float factor = 1f + ModConfig.ShopPricePerExtraPlayer.Value * extra;
-        if (factor <= 1f)
+        if (Mathf.Approximately(factor, 1f))
             return;
 
         __instance.value = Mathf.Max(1, Mathf.CeilToInt(__instance.value * factor));

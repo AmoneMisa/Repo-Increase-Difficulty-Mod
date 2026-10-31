@@ -77,13 +77,21 @@ internal sealed class LevelInfoHud : MonoBehaviour
         var mods = ModifierManager.Current;
         bool special = SafeRunIsLevel() && mods != null && mods.IsSpecial;
         var econ = SafeRunIsLevel() ? Economy.EconomyEvents.Current : null;
-        if (special || econ != null)
+        bool inShop = false;
+        try { inShop = SemiFunc.RunIsShop(); } catch { }
+        var shopEcon = inShop ? Economy.ShopEconomy.Current : null;
+        bool market = inShop && ModConfig.BlackMarketEnabled.Value;
+        if (special || econ != null || shopEcon != null || market)
         {
             _parts.Clear();
             if (special)
                 BuildParts(mods, _parts);
             if (econ != null)
                 _parts.Add($"Economy: {econ.Name}");
+            if (shopEcon != null)
+                _parts.Add($"Shop: {shopEcon.Name}");
+            if (market)
+                _parts.Add($"[{ModConfig.BlackMarketKey.Value}] Black Market");
             _modsLabel.text = string.Join("\n", _parts);
             _modsLabel.enabled = true;
             PositionMods();
@@ -173,7 +181,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
     // Friendly, readable names for each active modifier TYPE (the raw enum renders as code-y
     // PascalCase). Order follows the enum; the three parametrized modifiers append their rolled
     // value so the HUD conveys not just which twist is active but how strong it is.
-    private static readonly (ModifierType Flag, string Name)[] Names =
+    internal static readonly (ModifierType Flag, string Name)[] Names =
     {
         (ModifierType.FragileLoot, "Fragile Loot"),
         (ModifierType.HeavyLoot, "Heavy Loot"),
@@ -197,6 +205,14 @@ internal sealed class LevelInfoHud : MonoBehaviour
         (ModifierType.LightMonsters, "Light Monsters"),
         (ModifierType.HeavyMonsters, "Heavy Monsters"),
     };
+
+    internal static string NameOf(ModifierType m)
+    {
+        foreach (var (flag, name) in Names)
+            if (flag == m)
+                return name;
+        return m.ToString();
+    }
 
     private static void BuildParts(LevelModifiers mods, List<string> parts)
     {

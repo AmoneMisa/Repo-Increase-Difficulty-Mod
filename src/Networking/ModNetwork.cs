@@ -35,6 +35,9 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     public const byte RoundStatsEventCode = 184;
     public const byte RepairEventCode = 185;
     public const byte EconomyEventCode = 188;
+    public const byte ShopEconomyEventCode = 189;
+    public const byte BanRequestEventCode = 190;
+    public const byte BanListEventCode = 191;
     public const byte BatteryDrainEventCode = 186;
     public const byte EnemyStatusEventCode = 187;
 
@@ -217,6 +220,33 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             new RaiseEventOptions { Receivers = ReceiverGroup.MasterClient }, SendOptions.SendReliable);
     }
 
+    /// <summary>Host tells everyone which shop economy (0 = none) is active.</summary>
+    public void BroadcastShopEconomy(int id)
+    {
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient)
+            return;
+        PhotonNetwork.RaiseEvent(ShopEconomyEventCode, new object[] { id },
+            new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
+    }
+
+    /// <summary>A client asks the host to buy a Black Market block.</summary>
+    public void RequestBan(byte kind, string id)
+    {
+        if (!PhotonNetwork.InRoom)
+            return;
+        PhotonNetwork.RaiseEvent(BanRequestEventCode, new object[] { kind, id },
+            new RaiseEventOptions { Receivers = ReceiverGroup.MasterClient }, SendOptions.SendReliable);
+    }
+
+    /// <summary>Host tells everyone the full list of blocked keys.</summary>
+    public void BroadcastBans(System.Collections.Generic.IEnumerable<string> keys)
+    {
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient)
+            return;
+        PhotonNetwork.RaiseEvent(BanListEventCode, new object[] { new System.Collections.Generic.List<string>(keys).ToArray() },
+            new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
+    }
+
     /// <summary>Host tells everyone which level economy event (0 = none) is active.</summary>
     public void BroadcastEconomy(int id)
     {
@@ -307,6 +337,30 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         {
             var data = (object[])photonEvent.CustomData;
             MapVoteState.ReceiveBallot((int)data[0], (int)data[1], (int)data[2], (string)data[3]);
+            return;
+        }
+
+        if (photonEvent.Code == ShopEconomyEventCode)
+        {
+            if (photonEvent.CustomData is object[] sd && sd.Length == 1 && sd[0] is int sid &&
+                PhotonNetwork.MasterClient != null && photonEvent.Sender == PhotonNetwork.MasterClient.ActorNumber)
+                Economy.ShopEconomy.Set(sid);
+            return;
+        }
+
+        if (photonEvent.Code == BanRequestEventCode)
+        {
+            if (PhotonNetwork.IsMasterClient && photonEvent.CustomData is object[] bd && bd.Length == 2 &&
+                bd[0] is byte bk && bk <= 2 && bd[1] is string bid && bid.Length < 48)
+                Economy.BlackMarket.TryBuy((Economy.BlackMarket.Kind)bk, bid);
+            return;
+        }
+
+        if (photonEvent.Code == BanListEventCode)
+        {
+            if (photonEvent.CustomData is object[] ld && ld.Length == 1 && ld[0] is string[] keys &&
+                PhotonNetwork.MasterClient != null && photonEvent.Sender == PhotonNetwork.MasterClient.ActorNumber)
+                Economy.BlackMarket.SetFromNetwork(keys);
             return;
         }
 

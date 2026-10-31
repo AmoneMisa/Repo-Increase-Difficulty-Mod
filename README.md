@@ -87,6 +87,16 @@ Each of these has its own switch in the `Modules` section and its numbers in the
 | **Moon phases** | Off by default. When on, the moon advances every 15 levels instead of every 5. |
 | **Economy events** | From level 3 on, a level gets a random event with 50% chance: a multiplier on the value of loot, on the quota and/or on the cash an extraction pays. 20 events from *Gold Rush* (+35% loot value) and *Windfall* (+30% pay) to *Tax Audit* (-25% pay, +10% quota) and *Crushing Quota* (+40%). Bad events get likelier with depth, good ones rarer. The active event is shown under the level info HUD. |
 
+#### Shop economy and the Black Market
+
+| Module | What it does |
+| --- | --- |
+| **Shop economy** | On entering a shop the host may roll a price event (50% by default): 19 of them from *Black Friday* (everything 45% off) and *Medic Sale* to *Inflation*, *Luxury Tax* and *Hyper Inflation* (up to +90%). Each event moves four price channels separately - items, upgrades, health packs, power crystals - and this mod's drones, gear, personal upgrades and truck upgrades follow the same channels automatically. It stacks with the player-count price scaling. Bad events get likelier with depth. The active event is shown in the HUD. |
+| **Black Market** | In the shop press `B`: a keyboard-driven screen (Left/Right tab, Up/Down choose, Enter buys) lists every surprise modifier, level economy event and shop economy. Pay to block one for the rest of the run (it is saved with the run and reset by a new run). Base price 35 / 50 / 65 (modifier / level economy / shop economy), x2 for the nastiest things down to x0.5 for perks, plus 7% per level completed. Guests can buy too; the host checks the price and the balance. |
+
+Level economy events also avoid clashing with the surprise modifiers already on the level (for example no
+pay cut together with *Money Loss on Death*, no heavy quota on a *Timed Level*).
+
 #### Shop upgrades (via REPOLib)
 
 All of these are sold in the normal shop. Prices are approximate (the game scales them with player
@@ -322,6 +332,16 @@ The build deploys the compiled plugin into your BepInEx plugins folder for the a
 | **Экстракции** | Одна дополнительная точка экстракции раз в 10 уровней, не больше 5 на уровень. |
 | **Фазы луны** | По умолчанию выключено. Если включить, луна меняется раз в 15 уровней вместо 5. |
 | **События экономики** | Начиная с 3-го уровня уровень с шансом 50% получает случайное событие: множитель стоимости лута, квоты и/или оплаты за экстракцию. 20 событий, от *Gold Rush* (+35% к стоимости лута) и *Windfall* (+30% к оплате) до *Tax Audit* (-25% к оплате, +10% к квоте) и *Crushing Quota* (+40% к квоте). Плохие события с глубиной выпадают чаще, хорошие реже. Активное событие показано под информацией об уровне. |
+
+#### Экономика магазина и Чёрный рынок
+
+| Модуль | Что делает |
+| --- | --- |
+| **Экономика магазина** | При входе в магазин хост может бросить событие цен (по умолчанию 50%): 19 штук, от *Black Friday* (всё на 45% дешевле) и *Medic Sale* до *Inflation*, *Luxury Tax* и *Hyper Inflation* (до +90%). Каждое событие отдельно двигает четыре канала цен - предметы, улучшения, аптечки, кристаллы энергии, - и дроны, снаряжение, личные и грузовые улучшения этого мода идут по тем же каналам автоматически. Складывается с масштабированием цен по числу игроков. С глубиной плохие события выпадают чаще. Активное событие видно в HUD. |
+| **Чёрный рынок** | В магазине нажми `B`: экран с управлением клавиатурой (Влево/Вправо - вкладка, Вверх/Вниз - выбор, Enter - купить) показывает все модификаторы-«сюрпризы», события экономики уровня и экономики магазина. Заплати, чтобы заблокировать нужное до конца забега (сохраняется с забегом, новый забег сбрасывает). Базовая цена 35 / 50 / 65 (модификатор / экономика уровня / экономика магазина), от x2 за самое неприятное до x0,5 за бонусы, плюс 7% за каждый пройденный уровень. Покупать могут и гости; хост проверяет цену и баланс. |
+
+События экономики уровня также избегают конфликтов с уже выпавшими модификаторами (например, нет
+урезанной оплаты вместе с *Money Loss on Death* и тяжёлой квоты на *Timed Level*).
 
 #### Улучшения в магазине (через REPOLib)
 

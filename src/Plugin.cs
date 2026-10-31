@@ -104,6 +104,8 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<SpectatorMinimapHud>();
         // End-of-level MVP / OOPS CHAMP scoreboard (stats recorded host-side by RoundStats).
         netObject.AddComponent<RoundResultsHud>();
+        // Black Market (shop): pay to block unwanted modifiers / economies. Keyboard driven.
+        netObject.AddComponent<Economy.BlackMarketHud>();
         // Item Unstuck: host-side valuable safety net (relocate stuck loot, invuln-until-grab)
         // plus a client-side undamaged-value HUD.
         netObject.AddComponent<ItemUnstuckController>();

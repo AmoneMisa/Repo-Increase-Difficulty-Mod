@@ -48,7 +48,7 @@ public static class ModifierRoller
         var pool = new List<ModifierType>();
         foreach (var kv in ModConfig.ModifierEnabled)
         {
-            if (kv.Value.Value)
+            if (kv.Value.Value && !Economy.BlackMarket.IsBanned(Economy.BlackMarket.Kind.Modifier, kv.Key.ToString()))
                 pool.Add(kv.Key);
         }
         if (pool.Count == 0)

@@ -157,6 +157,10 @@ public static class ModConfig
     public static ConfigEntry<int> EconomyEventChance, EconomyStartLevel;
     public static ConfigEntry<int> MapValueStartLevel, EnemyCapStartLevel, LevelSizeStartLevel, ExtractionBonusInterval, ExtractionMax, MoonLevelsPerPhase;
     public static ConfigEntry<float> MapValuePerLevel, MapValueMax, EnemyCapPerLevel, EnemyCapMax, LevelSizePerLevel, LevelSizeMax;
+    public static ConfigEntry<bool> ShopEconomyEnabled, BlackMarketEnabled;
+    public static ConfigEntry<int> ShopEconomyChance, BlackMarketModifierPrice, BlackMarketEconomyPrice, BlackMarketShopEconomyPrice;
+    public static ConfigEntry<float> BlackMarketPerLevel;
+    public static ConfigEntry<UnityEngine.KeyCode> BlackMarketKey;
     public static ConfigEntry<bool> GearEnabled;
     public static ConfigEntry<bool> DefenceOrbEnabled, DefenceDroneEnabled, ProtectionOrbEnabled;
     public static ConfigEntry<bool> PoisonCrossbowEnabled, DecoyGrenadeEnabled, IcePistolEnabled, StickyPistolEnabled;
@@ -343,6 +347,8 @@ public static class ModConfig
         ScaleLevelSize = Module(cfg, "Level Scaling", "LevelSize", true, "ScaleLevelSize", "Levels get more modules (a bigger map) the deeper the run goes.");
         ScaleExtractions = Module(cfg, "Level Scaling", "Extractions", true, "ScaleExtractions", "Deeper levels get extra extraction points.");
         ScaleMoon = Module(cfg, "Level Scaling", "Moon", false, "ScaleMoon", "Moon phases advance every MoonLevelsPerPhase levels instead of every 5 (slows the moon-based difficulty).");
+        ShopEconomyEnabled = Module(cfg, "Shop Economy", "Enabled", true, "ShopEconomy", "Shop price events: when the run reaches a shop it may get a sale, a tax or an inflation spike that changes item, upgrade, health pack and crystal prices (including this mod's own items and upgrades). Host rolls it.");
+        BlackMarketEnabled = Module(cfg, "Black Market", "Enabled", true, "BlackMarket", "Black Market: in the shop, pay to keep a surprise modifier, level economy or shop economy from ever being rolled again this run. Keyboard driven.");
         PlayerUpgradesEnabled = Module(cfg, "Player Upgrades", "Enabled", true, "PlayerUpgrades", "Master switch for the mod's custom per-player upgrades that appear in the normal shop. Requires REPOLib. Takes effect on restart.");
         TruckUpgradesEnabled = Module(cfg, "Truck Upgrades", "Enabled", true, "TruckUpgrades", "Enable the team-wide truck upgrades (Heal Power, Charge Efficiency, Loot Cash-In). Bought in the normal shop; effects apply for the whole team.");
         ScaleEnemyHealth = Module(cfg, "Scaling", "EnemyHealth", true, "ScaleEnemyHealth", "Enemies gain max HP as the run goes deeper. Off = vanilla enemy HP.");
@@ -355,6 +361,12 @@ public static class ModConfig
         SilencerEnabled = Module(cfg, "Drones", "SilencerEnabled", true, "SilencerDrone", "Sell the Silencer Drone. Needs Drones/Enabled. Same on every player; applies on game restart.");
         LinkEnabled = Module(cfg, "Drones", "LinkEnabled", true, "LinkDrone", "Sell the Link Drone Set (A + B). Needs Drones/Enabled. Same on every player; applies on game restart.");
         RepairEnabled = Module(cfg, "Drones", "RepairEnabled", true, "RepairDrone", "Sell the Repair Drone. Needs Drones/Enabled. Same on every player; applies on game restart.");
+        ShopEconomyChance = BindInt(cfg, "Shop Economy", "EventChancePercent", 50, 0, 100, "Chance (percent) that a shop visit gets a price event.");
+        BlackMarketKey = cfg.Bind("Black Market", "Key", UnityEngine.KeyCode.B, "Key that opens the Black Market while you are in the shop.");
+        BlackMarketModifierPrice = BindInt(cfg, "Black Market", "ModifierPrice", 35, 1, 5000, "Base price (in the game's K currency) to block a surprise modifier. Scaled by how harmful it is and by depth.");
+        BlackMarketEconomyPrice = BindInt(cfg, "Black Market", "EconomyPrice", 50, 1, 5000, "Base price to block a level economy event.");
+        BlackMarketShopEconomyPrice = BindInt(cfg, "Black Market", "ShopEconomyPrice", 65, 1, 5000, "Base price to block a shop economy.");
+        BlackMarketPerLevel = BindFloat(cfg, "Black Market", "PricePerLevel", 0.07f, 0f, 1f, "Price growth per level completed (0.07 = +7% per level).");
         const string Lvl = "Level Scaling";
         EconomyEventChance = BindInt(cfg, "Economy", "EventChancePercent", 50, 0, 100, "Chance (percent) that an eligible level gets an economy event.");
         EconomyStartLevel = BindInt(cfg, "Economy", "StartLevel", 2, 0, 30, "Levels completed before economy events can happen. 2 = from the 3rd level.");
