@@ -157,6 +157,9 @@ public static class ModConfig
     public static ConfigEntry<bool> DefenceOrbEnabled, DefenceDroneEnabled, ProtectionOrbEnabled;
     public static ConfigEntry<bool> PoisonCrossbowEnabled, DecoyGrenadeEnabled, IcePistolEnabled, StickyPistolEnabled;
     public static ConfigEntry<int> DefenceAbsorb, ProtectionReductionPercent;
+    public static ConfigEntry<float> DefenceIdleDrainPerMinute;
+    public static ConfigEntry<int> DefenceItemAbsorb;
+    public static ConfigEntry<float> DefenceDroneSeconds;
     public static ConfigEntry<int> PoisonHitDamage, PoisonTotalDamage;
     public static ConfigEntry<float> PoisonSeconds, IceFreezeSeconds, DecoySeconds, StickyFreeLiftMass;
     public static ConfigEntry<int> IceGunDamagePercent, IceMeleeBonusPercent;
@@ -550,7 +553,13 @@ public static class ModConfig
         IcePistolEnabled = cfg.Bind(Gear, "IcePistolEnabled", true, "Sell the Pulse Ice Pistol.");
         StickyPistolEnabled = cfg.Bind(Gear, "StickyPistolEnabled", true, "Sell the Sticky Pistol.");
         DefenceAbsorb = BindInt(cfg, Gear, "DefenceAbsorb", 350, 50, 2000,
-            "Total damage a fully charged Defence Orb/Drone can absorb before its battery is empty.");
+            "Total damage a fully charged Defence DRONE can absorb for the player it is attached to.");
+        DefenceItemAbsorb = BindInt(cfg, Gear, "DefenceItemAbsorb", 3500, 100, 50000,
+            "Defence ORB (protects loot): value, in dollars, a fully charged orb can absorb from valuables breaking inside its field. The Defence DRONE protects a player instead, see DefenceAbsorb.");
+        DefenceDroneSeconds = BindFloat(cfg, Gear, "DefenceDroneSeconds", 45f, 5f, 600f,
+            "Defence DRONE: seconds from a full battery to empty while it is running, even if the player takes no damage (hits drain it faster).");
+        DefenceIdleDrainPerMinute = BindFloat(cfg, Gear, "DefenceIdleDrainPercentPerMinute", 20f, 0f, 60f,
+            "Slow passive discharge of an active Defence ORB, in percent of battery per minute, applied whether or not it is taking hits (hits drain it further). 20 = about 5 minutes from full.");
         ProtectionReductionPercent = BindInt(cfg, Gear, "ProtectionReductionPercent", 25, 5, 90,
             "Damage reduction inside an active Protection Orb.");
         PoisonHitDamage = BindInt(cfg, Gear, "PoisonHitDamage", 7, 1, 100, "Direct damage of a poison bolt.");

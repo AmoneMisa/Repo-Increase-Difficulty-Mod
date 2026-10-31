@@ -100,7 +100,7 @@ Four extra drones, built as clones of the game's own drones (same beam/attach/ba
 - **Ghost Drone** - on a valuable: players walk through it, and it is left out of extraction counting while the drone is on.
 - **Silencer Drone** - on a valuable, item, cart, player or enemy: its noise, voice and the radius enemies investigate it from are cut (default 8%).
 - **Link Drone Set (A + B)** - buying the set grants both halves. Attach one to each of two objects within range to tie them with a cable; grab one end to reel in the other.
-- **Repair Drone** - on a damaged valuable: restores lost value up to its original (500/s, a full battery repairs 12,000).
+- **Repair Drone** - on a damaged valuable: restores lost value up to its original (500/s, a full battery repairs 25,000, more than the crystal it takes to recharge).
 
 Every player must run the mod with `Drones/Enabled` set the same. Settings: *Drones* config section.
 
@@ -108,7 +108,8 @@ Every player must run the mod with `Drones/Enabled` set the same. Settings: *Dro
 
 Built as clones of vanilla items, same rules as the drones (every player needs the mod; per-item toggles in the *Gear* config section):
 
-- **Defence Orb / Defence Drone** - absorb up to 350 damage in total (the battery is the pool). The orb covers players inside its field, the drone the player it is attached to.
+- **Defence Orb** - protects loot: value valuables would lose from breakage inside its field is absorbed from the battery (about $3,500 at full charge).
+- **Defence Drone** - protects a player: attach it to them and it absorbs up to 350 damage in total (the battery is the pool).
 - **Protection Orb** - 25% less damage inside its field; drains its charge quickly.
 - **Poison Crossbow** - 7 damage plus a 15 s poison (125 HP in total) that refreshes, never stacks; a third fewer shots than a normal gun.
 - **Decoy Grenade** - once armed, lures nearby monsters to it for 5 s, then disappears.

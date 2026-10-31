@@ -71,7 +71,7 @@ internal sealed class UtilityDrone : MonoBehaviour
     // ----------------------------------------------------------------- Repair
 
     private const float RepairPerSecond = 500f;
-    private const float RepairPerFullBattery = 12000f;
+    private const float RepairPerFullBattery = 25000f; // > a 20k power crystal (one crystal recharges one full battery)
     private float _repairSync;
     private ValuableObject _repairing;
 

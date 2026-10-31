@@ -48,10 +48,10 @@ internal static class GearItems
             if (orb != null)
             {
                 if (ModConfig.DefenceOrbEnabled.Value)
-                    MakeOrb(orb, "Item Orb Defence", "Defence Orb", ShieldMode.DefenceOrb, 9500f, 12000f, new Color(0.3f, 0.6f, 1f),
-                        "Absorbs incoming damage for players inside its field while charged (about 350 damage in total).");
+                    MakeOrb(orb, "Item Orb Defence", "Defence Orb", ShieldMode.DefenceOrb, 19000f, 24000f, new Color(0.3f, 0.6f, 1f),
+                        "Protects loot: value that valuables would lose from breaking inside its field is absorbed while it is charged.");
                 if (ModConfig.ProtectionOrbEnabled.Value)
-                    MakeOrb(orb, "Item Orb Protection", "Protection Orb", ShieldMode.ProtectionOrb, 5500f, 7500f, new Color(1f, 0.85f, 0.3f),
+                    MakeOrb(orb, "Item Orb Protection", "Protection Orb", ShieldMode.ProtectionOrb, 11000f, 15000f, new Color(1f, 0.85f, 0.3f),
                         "Players inside its field take 25% less damage. Drains its charge quickly.");
             }
             else
@@ -61,22 +61,22 @@ internal static class GearItems
             {
                 var drone = DroneItems.FindBaseDrone();
                 if (drone != null)
-                    DroneItems.Make(drone, "Item Drone Defence", "Defence Drone", DroneKind.Defence, 0, 5500f, 7500f, shop: 1,
+                    DroneItems.Make(drone, "Item Drone Defence", "Defence Drone", DroneKind.Defence, 0, 11000f, 15000f, shop: 1,
                         new Color(0.3f, 0.6f, 1f),
-                        "Attach to a player: absorbs damage that player takes while charged (about 350 damage in total).",
+                        "Attach to a player: absorbs damage that player takes while charged (about 350 damage in total). Players only.",
                         targets: (false, false, true, false));
             }
 
             if (gun != null)
             {
                 if (ModConfig.PoisonCrossbowEnabled.Value)
-                    MakeGun(gun, "Item Gun Poison Crossbow", "Poison Crossbow", GearKind.Poison, 9500f, 12000f, new Color(0.4f, 1f, 0.3f),
+                    MakeGun(gun, "Item Gun Poison Crossbow", "Poison Crossbow", GearKind.Poison, 19000f, 24000f, new Color(0.4f, 1f, 0.3f),
                         "Poison bolts: a little damage plus a 15 second poison that refreshes (never stacks). Fewer shots than a normal gun.");
                 if (ModConfig.IcePistolEnabled.Value)
-                    MakeGun(pulseGun ?? gun, "Item Gun Ice Pulse", "Pulse Ice Pistol", GearKind.Ice, 5500f, 7500f, new Color(0.5f, 0.85f, 1f),
+                    MakeGun(pulseGun ?? gun, "Item Gun Ice Pulse", "Pulse Ice Pistol", GearKind.Ice, 11000f, 15000f, new Color(0.5f, 0.85f, 1f),
                         "Freezes an enemy for a few seconds. Frozen enemies cannot be lifted, take less firearm damage and 35% more melee damage.");
                 if (ModConfig.StickyPistolEnabled.Value)
-                    MakeGun(gun, "Item Gun Sticky", "Sticky Pistol", GearKind.Sticky, 4500f, 5000f, new Color(1f, 0.5f, 0.9f),
+                    MakeGun(gun, "Item Gun Sticky", "Sticky Pistol", GearKind.Sticky, 9000f, 10000f, new Color(1f, 0.5f, 0.9f),
                         "Pulls a monster or object toward you, if you could lift it with one strength level less.");
             }
             else
@@ -231,7 +231,7 @@ internal static class GearItems
 
     private static void MakeDecoy(Item baseItem)
     {
-        var (_, go, attributes) = Clone(baseItem, "Item Grenade Decoy", "Decoy Grenade", 500f, 650f, new Color(1f, 0.6f, 0.2f),
+        var (_, go, attributes) = Clone(baseItem, "Item Grenade Decoy", "Decoy Grenade", 1000f, 1300f, new Color(1f, 0.6f, 0.2f),
             "Once armed it lures nearby monsters to itself for a few seconds, then disappears.",
             mb => mb.GetType().Name.StartsWith("ItemGrenade") && mb.GetType().Name != "ItemGrenade", tint: true);
         go.AddComponent<DecoyGrenade>();

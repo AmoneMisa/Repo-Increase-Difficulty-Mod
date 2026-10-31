@@ -82,23 +82,23 @@ internal static class DroneItems
             EnsureHolder();
 
             if (ModConfig.GhostEnabled.Value)
-                Make(baseItem, GhostName, "Ghost Drone", DroneKind.Ghost, 0, 5500f, 7500f, shop: 1,
+                Make(baseItem, GhostName, "Ghost Drone", DroneKind.Ghost, 0, 11000f, 15000f, shop: 1,
                 new Color(0.75f, 0.85f, 1f),
                 "Attach to a valuable to let players walk through it and take it out of extraction counting while the drone is on.",
                 targets: (true, false, false, false));
             if (ModConfig.SilencerEnabled.Value)
-                Make(baseItem, SilencerName, "Silencer Drone", DroneKind.Silencer, 0, 3500f, 4500f, shop: 1,
+                Make(baseItem, SilencerName, "Silencer Drone", DroneKind.Silencer, 0, 7000f, 9000f, shop: 1,
                 new Color(0.55f, 0.55f, 0.6f),
                 "Attach to a valuable, item, cart, player or enemy to make its noise (and the noise enemies investigate) much quieter.",
                 targets: (true, true, true, true));
             if (ModConfig.RepairEnabled.Value)
-                Make(baseItem, RepairName, "Repair Drone", DroneKind.Repair, 0, 15000f, 18000f, shop: 1,
+                Make(baseItem, RepairName, "Repair Drone", DroneKind.Repair, 0, 30000f, 36000f, shop: 1,
                 new Color(0.4f, 1f, 0.5f),
                 "Attach to a damaged valuable to restore its lost value (up to its original value). Destroyed valuables cannot be repaired.",
                 targets: (true, false, false, false));
             if (ModConfig.LinkEnabled.Value)
             {
-                Make(baseItem, LinkAName, "Link Drone Set (A + B)", DroneKind.Link, 0, 9500f, 12000f, shop: 1,
+                Make(baseItem, LinkAName, "Link Drone Set (A + B)", DroneKind.Link, 0, 19000f, 24000f, shop: 1,
                 new Color(1f, 0.6f, 0.2f),
                 "Two drones (A + B). Attach one to each of two objects to tie them together with a physical cable; grab one to reel the other in.",
                 targets: (true, true, false, true));

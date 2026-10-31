@@ -35,17 +35,31 @@ internal sealed class ShieldItem : MonoBehaviour
         _orb = GetComponent<ItemOrb>();
         _drone = GetComponent<UtilityDrone>();
         Battery = GetComponent<ItemBattery>();
-        if (mode == ShieldMode.ProtectionOrb)
-            StartCoroutine(FasterDrain());
+        StartCoroutine(AdjustDrain());
     }
 
-    // ItemOrb.Start sets the drain from its preset; scale it once that has run.
-    private System.Collections.IEnumerator FasterDrain()
+    // ItemOrb / ItemDrone set the drain from their preset in Start; override it once that has run.
+    // (ItemBattery drains batteryDrainRate * 2 percent per second while the item is in use.)
+    private System.Collections.IEnumerator AdjustDrain()
     {
         yield return null;
         yield return null;
-        if (Battery != null)
+        if (Battery == null)
+            yield break;
+        if (mode == ShieldMode.ProtectionOrb)
             Battery.batteryDrainRate *= 3f;
+        else if (mode == ShieldMode.DefenceDrone)
+            Battery.batteryDrainRate = 100f / ModConfig.DefenceDroneSeconds.Value / 2f; // time from full to empty
+        else
+            Battery.batteryDrainRate = ModConfig.DefenceIdleDrainPerMinute.Value / 60f / 2f;
+    }
+
+    /// <summary>Is this valuable inside an active Defence Orb field?</summary>
+    public bool CoversObject(Vector3 position)
+    {
+        if (mode != ShieldMode.DefenceOrb || Battery == null || _orb == null || _orb.currentState != ItemOrb.State.Active)
+            return false;
+        return Vector3.Distance(transform.position, position) <= _orb.orbRadius + 0.5f;
     }
 
     public bool Covers(PlayerAvatar p)
@@ -62,6 +76,34 @@ internal sealed class ShieldItem : MonoBehaviour
 
 internal static class ShieldPatches
 {
+    // Defence Orb: protects LOOT. Value lost to breakage inside its field is absorbed from the battery
+    // (100% = DefenceItemAbsorb dollars). Break only runs on the host, which owns the batteries.
+    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), "Break")]
+    private static class BreakValuable
+    {
+        [HarmonyPrefix]
+        private static bool Prefix(PhysGrabObjectImpactDetector __instance, ref float valueLost)
+        {
+            if (valueLost <= 0f || !__instance.isValuable || ShieldItem.All.Count == 0 ||
+                !SemiFunc.IsMasterClientOrSingleplayer())
+                return true;
+
+            float perPercent = ModConfig.DefenceItemAbsorb.Value / 100f; // dollars absorbed per 1% of battery
+            Vector3 pos = __instance.transform.position;
+            foreach (var s in ShieldItem.All)
+            {
+                if (valueLost <= 0f)
+                    break;
+                if (s.Battery == null || s.Battery.batteryLife <= 0f || !s.CoversObject(pos))
+                    continue;
+                float absorbed = Mathf.Min(valueLost, s.Battery.batteryLife * perPercent);
+                valueLost -= absorbed;
+                s.Battery.batteryLife = Mathf.Max(0f, s.Battery.batteryLife - absorbed / perPercent);
+            }
+            return valueLost > 0.5f; // fully absorbed: no break at all
+        }
+    }
+
     [HarmonyPatch(typeof(PlayerHealth), "Hurt")]
     private static class Hurt
     {
@@ -92,7 +134,7 @@ internal static class ShieldPatches
             {
                 if (damage <= 0)
                     break;
-                if (s.mode == ShieldMode.ProtectionOrb || s.Battery == null || s.Battery.batteryLife <= 0f || !s.Covers(avatar))
+                if (s.mode != ShieldMode.DefenceDrone || s.Battery == null || s.Battery.batteryLife <= 0f || !s.Covers(avatar))
                     continue;
                 int absorbed = Mathf.Min(damage, Mathf.FloorToInt(s.Battery.batteryLife * perPercent));
                 if (absorbed <= 0)
