@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using HarmonyLib;
+using IncreaseHardMod.Visuals;
 using REPOLib.Modules;
 using UnityEngine;
 
@@ -17,8 +18,8 @@ internal enum DroneKind
 /// <summary>
 /// Registers the mod's utility drones as real shop items.
 ///
-/// There are no custom 3D assets: each drone is a CLONE of a vanilla drone (prefab + Item asset),
-/// recoloured, with the vanilla effect scripts stripped and our <see cref="UtilityDrone"/> added.
+/// Each drone is a CLONE of a vanilla drone (prefab + Item asset),
+/// with custom coatings and emission icons, with the vanilla effect scripts stripped and our <see cref="UtilityDrone"/> added.
 /// The vanilla <see cref="ItemDrone"/> keeps doing targeting (beam, attach, battery, on/off sync),
 /// so everything about aiming/attaching behaves exactly like the game's own drones; we only add
 /// the effect that runs on the attached target.
@@ -181,6 +182,9 @@ internal static class DroneItems
 
         var attributes = go.GetComponent<ItemAttributes>();
         attributes.item = item;
+        string artKey = kind == DroneKind.Link ? (slot == 0 ? "link_a" : "link_b") : kind.ToString().ToLowerInvariant();
+        ItemArt.Skin(go, artKey, orb: false);
+        ItemAudio.Attach(go, artKey);
 
         var prefabRef = Items.RegisterItem(attributes);
         if (prefabRef == null)

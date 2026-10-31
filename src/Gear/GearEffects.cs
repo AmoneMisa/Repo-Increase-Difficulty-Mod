@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using HarmonyLib;
+using IncreaseHardMod.Networking;
 using UnityEngine;
 
 namespace IncreaseHardMod.Gear;
@@ -19,8 +20,11 @@ internal static class GearEffects
     private sealed class Poison
     {
         public EnemyHealth Health;
+        public Enemy Enemy;
+        public PlayerAvatar Shooter;
         public float Remaining;
         public float Carry;
+        public float AggroTimer;
     }
 
     private static readonly Dictionary<EnemyHealth, Poison> Poisoned = new();
@@ -33,6 +37,7 @@ internal static class GearEffects
     }
     private static readonly List<Pull> Pulls = new();
     private static readonly List<Enemy> Scratch = new();
+    private static float _visualSync;
 
     public static bool IsFrozen(Enemy e) => e != null && Frozen.TryGetValue(e, out var until) && until > Time.time;
 
@@ -49,11 +54,12 @@ internal static class GearEffects
             foreach (var kv in Poisoned)
             {
                 var p = kv.Value;
-                if (p.Health == null || p.Health.healthCurrent <= 0 || p.Remaining <= 0f)
+                if (p.Enemy == null || !p.Enemy.isActiveAndEnabled || p.Health == null || p.Health.dead || p.Health.healthCurrent <= 0 || p.Remaining <= 0f)
                 {
                     (done ??= new List<EnemyHealth>()).Add(kv.Key);
                     continue;
                 }
+                KeepAggressive(p, dt);
                 float step = Mathf.Min(dt, p.Remaining);
                 p.Remaining -= step;
                 p.Carry += rate * step;
@@ -75,13 +81,26 @@ internal static class GearEffects
             Scratch.Clear();
             foreach (var kv in Frozen)
             {
-                if (kv.Key == null || kv.Value <= Time.time)
+                if (kv.Key == null || !kv.Key.isActiveAndEnabled || kv.Value <= Time.time ||
+                    (kv.Key.HasHealth && kv.Key.Health != null && kv.Key.Health.dead))
                     Scratch.Add(kv.Key);
                 else if (kv.Key.HasRigidbody && kv.Key.Rigidbody.physGrabObject != null)
                     kv.Key.Rigidbody.physGrabObject.OverrideGrabDisable(0.2f);
             }
             foreach (var e in Scratch)
                 Frozen.Remove(e);
+        }
+
+        // Periodic snapshots cover late joiners and targets whose PhotonView was not ready yet.
+        // No event caching: expired effects cannot attach to a reused view ID on a later level.
+        _visualSync -= dt;
+        if (_visualSync <= 0f)
+        {
+            _visualSync = .8f;
+            foreach (var p in Poisoned.Values)
+                if (p.Remaining > 0f) ModNetwork.BroadcastEnemyStatus(p.Enemy, 0, p.Remaining);
+            foreach (var ice in Frozen)
+                ModNetwork.BroadcastEnemyStatus(ice.Key, 1, ice.Value - Time.time);
         }
 
         // Sticky
@@ -104,6 +123,54 @@ internal static class GearEffects
             Vector3 wanted = Vector3.MoveTowards(current, to.normalized * 10f, 40f * dt);
             p.Body.AddForce(wanted - current, ForceMode.VelocityChange);
         }
+    }
+
+    // A poisoned monster is actively hostile: it is (re)pointed at a player - the one who shot it, else the
+    // nearest living one - and its chase is kept alive for as long as the poison lasts. This deliberately
+    // overrides the enemy's own "stop chasing" cooldown.
+    private static void KeepAggressive(Poison p, float dt)
+    {
+        var e = p.Enemy;
+        if (e == null || !e.HasStateChase || e.IsStunned() || IsFrozen(e))
+            return;
+
+        if (e.CurrentState is EnemyState.ChaseBegin or EnemyState.Chase or EnemyState.ChaseSlow)
+            e.SetChaseTimer(); // keeps the current chase from timing out
+
+        p.AggroTimer -= dt;
+        if (p.AggroTimer > 0f)
+            return;
+        p.AggroTimer = 0.5f;
+
+        if (e.CurrentState is EnemyState.Chase or EnemyState.ChaseBegin)
+            return; // already after somebody
+
+        var target = p.Shooter != null && !p.Shooter.isDisabled ? p.Shooter : NearestPlayer(e.transform.position);
+        if (target == null)
+            return;
+        e.DisableChaseTimer = 0f;
+        e.SetChaseTarget(target);
+    }
+
+    private static PlayerAvatar NearestPlayer(Vector3 from)
+    {
+        PlayerAvatar best = null;
+        float bestD = float.MaxValue;
+        var list = GameDirector.instance != null ? GameDirector.instance.PlayerList : null;
+        if (list == null)
+            return null;
+        foreach (var pl in list)
+        {
+            if (pl == null || pl.isDisabled)
+                continue;
+            float d = (pl.transform.position - from).sqrMagnitude;
+            if (d < bestD)
+            {
+                bestD = d;
+                best = pl;
+            }
+        }
+        return best;
     }
 
     private static Enemy EnemyAt(Vector3 point)
@@ -137,8 +204,10 @@ internal static class GearEffects
                     if (enemy != null && enemy.HasHealth)
                     {
                         if (!Poisoned.TryGetValue(enemy.Health, out var p))
-                            Poisoned[enemy.Health] = p = new Poison { Health = enemy.Health };
+                            Poisoned[enemy.Health] = p = new Poison { Health = enemy.Health, Enemy = enemy };
                         p.Remaining = ModConfig.PoisonSeconds.Value; // refresh, never stack
+                        p.Shooter = SemiFunc.PlayerAvatarGetFromPhotonID(_shooterID);
+                        ModNetwork.BroadcastEnemyStatus(enemy, 0, p.Remaining);
                     }
                     break;
                 }
@@ -150,6 +219,7 @@ internal static class GearEffects
                         float t = ModConfig.IceFreezeSeconds.Value;
                         enemy.Freeze(t);
                         Frozen[enemy] = Time.time + t;
+                        ModNetwork.BroadcastEnemyStatus(enemy, 1, t);
                     }
                     break;
                 }

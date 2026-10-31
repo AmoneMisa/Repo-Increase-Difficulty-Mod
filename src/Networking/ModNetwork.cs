@@ -35,6 +35,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     public const byte RoundStatsEventCode = 184;
     public const byte RepairEventCode = 185;
     public const byte BatteryDrainEventCode = 186;
+    public const byte EnemyStatusEventCode = 187;
 
     public static ModNetwork Instance { get; private set; }
 
@@ -225,9 +226,41 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
     }
 
+    /// <summary>Host-confirmed target identity and remaining lifetime; never infer hits on clients.</summary>
+    internal static void BroadcastEnemyStatus(Enemy enemy, byte kind, float seconds)
+    {
+        if (enemy == null || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+        Visuals.EnemyStatusVisual.Apply(enemy, kind, seconds);
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient) return;
+        var parent = enemy.GetComponentInParent<EnemyParent>();
+        var view = enemy.GetComponent<PhotonView>();
+        if (view == null && parent != null) view = parent.GetComponent<PhotonView>();
+        if (view == null || view.ViewID == 0) return;
+        PhotonNetwork.RaiseEvent(EnemyStatusEventCode,
+            new object[] { view.ViewID, kind, seconds, PhotonNetwork.Time },
+            new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
+    }
+
     /// <summary>Photon calls this on every client for every raised event.</summary>
     public void OnEvent(EventData photonEvent)
     {
+        if (photonEvent.Code == EnemyStatusEventCode)
+        {
+            if (!PhotonNetwork.InRoom || PhotonNetwork.MasterClient == null ||
+                photonEvent.Sender != PhotonNetwork.MasterClient.ActorNumber ||
+                photonEvent.CustomData is not object[] data || data.Length != 4 ||
+                data[0] is not int id || data[1] is not byte kind || kind > 1 ||
+                data[2] is not float seconds || data[3] is not double sent ||
+                float.IsNaN(seconds) || float.IsInfinity(seconds) || seconds <= 0f || seconds > 600f ||
+                double.IsNaN(sent) || double.IsInfinity(sent)) return;
+            float age = (float)System.Math.Max(0d, PhotonNetwork.Time - sent);
+            if (age >= seconds) return;
+            var view = PhotonView.Find(id);
+            var enemy = view != null ? view.GetComponentInChildren<Enemy>(true) : null;
+            Visuals.EnemyStatusVisual.Apply(enemy, kind, seconds - age);
+            return;
+        }
+
         if (photonEvent.Code == ModifierEventCode)
         {
             var data = (object[])photonEvent.CustomData;

@@ -31,6 +31,9 @@
   <!-- Upgrade icons: embedded into the DLL so they ship as a single file (no extra deploy). -->
   <ItemGroup>
     <EmbeddedResource Include="src\Textures\*.png" />
+    <EmbeddedResource Include="src\Art\*.png" />
+    <EmbeddedResource Include="src\Art\*.mesh.json" />
+    <EmbeddedResource Include="src\Audio\*.wav" />
   </ItemGroup>
 
   <ItemGroup>

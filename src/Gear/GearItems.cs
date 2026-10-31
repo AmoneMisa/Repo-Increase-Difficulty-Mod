@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using IncreaseHardMod.Drones;
+using IncreaseHardMod.Visuals;
 using REPOLib.Modules;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -22,9 +23,9 @@ internal enum ShieldMode
 }
 
 /// <summary>
-/// Registers the extra shop gear. Like the utility drones, nothing here needs custom assets: every item is
+/// Registers the extra shop gear with embedded Blender visuals. Every item is
 /// a clone of a vanilla item (orb / gun / grenade / drone) with the vanilla effect scripts stripped and our
-/// own component added, then handed to REPOLib. Built once, from the same RunStartStats hook as the drones.
+/// own component and visual layer added, then handed to REPOLib. Built once from the drones' RunStartStats hook.
 /// </summary>
 internal static class GearItems
 {
@@ -71,7 +72,7 @@ internal static class GearItems
             {
                 if (ModConfig.PoisonCrossbowEnabled.Value)
                     MakeGun(gun, "Item Gun Poison Crossbow", "Poison Crossbow", GearKind.Poison, 19000f, 24000f, new Color(0.4f, 1f, 0.3f),
-                        "Poison bolts: a little damage plus a 15 second poison that refreshes (never stacks). Fewer shots than a normal gun.");
+                        "Poison bolts: a little damage plus a 15 second poison that refreshes (never stacks) and keeps the monster hunting players. Fewer shots than a normal gun.");
                 if (ModConfig.IcePistolEnabled.Value)
                     MakeGun(pulseGun ?? gun, "Item Gun Ice Pulse", "Pulse Ice Pistol", GearKind.Ice, 11000f, 15000f, new Color(0.5f, 0.85f, 1f),
                         "Freezes an enemy for a few seconds. Frozen enemies cannot be lifted, take less firearm damage and 35% more melee damage.");
@@ -181,6 +182,8 @@ internal static class GearItems
         orb.targetPlayers = true;
         var shield = go.AddComponent<ShieldItem>();
         shield.mode = mode;
+        ItemArt.Skin(go, mode == ShieldMode.DefenceOrb ? "defence" : "protection", orb: true);
+        ItemAudio.Attach(go, mode == ShieldMode.DefenceOrb ? "defence" : "protection");
         Register(attributes, name);
     }
 
@@ -226,6 +229,8 @@ internal static class GearItems
 
         var marker = go.AddComponent<GearGun>();
         marker.kind = kind;
+        ItemArt.Weapon(go, kind.ToString().ToLowerInvariant());
+        ItemAudio.Attach(go, kind.ToString().ToLowerInvariant());
         Register(attributes, name);
     }
 
@@ -235,6 +240,8 @@ internal static class GearItems
             "Once armed it lures nearby monsters to itself for a few seconds, then disappears.",
             mb => mb.GetType().Name.StartsWith("ItemGrenade") && mb.GetType().Name != "ItemGrenade", tint: true);
         go.AddComponent<DecoyGrenade>();
+        ItemArt.Weapon(go, "decoy");
+        ItemAudio.Attach(go, "decoy");
         Register(attributes, "Item Grenade Decoy");
     }
 }

@@ -111,7 +111,7 @@ Built as clones of vanilla items, same rules as the drones (every player needs t
 - **Defence Orb** - protects loot: value valuables would lose from breakage inside its field is absorbed from the battery (about $3,500 at full charge).
 - **Defence Drone** - protects a player: attach it to them and it absorbs up to 350 damage in total (the battery is the pool).
 - **Protection Orb** - 25% less damage inside its field; drains its charge quickly.
-- **Poison Crossbow** - 7 damage plus a 15 s poison (125 HP in total) that refreshes, never stacks; a third fewer shots than a normal gun.
+- **Poison Crossbow** - 7 damage plus a 15 s poison (125 HP in total) that refreshes, never stacks, and keeps the monster actively hunting players while it lasts; a third fewer shots than a normal gun.
 - **Decoy Grenade** - once armed, lures nearby monsters to it for 5 s, then disappears.
 - **Pulse Ice Pistol** - the pink pulse pistol (keeps its knockback) that also freezes an enemy for 4.5 s; frozen enemies can't be lifted, take less firearm damage and +35% melee damage.
 - **Sticky Pistol** - pulls a monster or object toward you if you could lift it with one strength level less.
