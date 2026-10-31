@@ -13,7 +13,7 @@ public static class PluginInfo
 {
     public const string PLUGIN_GUID = "com.kubai.increasehardmod";
     public const string PLUGIN_NAME = "Increase Hard Mod";
-    public const string PLUGIN_VERSION = "0.3.0";
+    public const string PLUGIN_VERSION = "0.4.0";
 }
 
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]

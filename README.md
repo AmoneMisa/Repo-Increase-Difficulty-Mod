@@ -11,7 +11,7 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.3.0`
+- **Version:** `0.4.0`
 
 ### Contents
 
@@ -73,48 +73,63 @@ level is configurable.
 | Monsters | Monsters Pit-Tanky | Monsters take less death-pit damage |
 | Monsters | Light / Heavy Monsters | All monsters weigh less (easy to shove) or more (hard to shove) |
 
-#### Custom shop upgrades (via REPOLib)
+#### Shop upgrades (via REPOLib)
 
-Per-player:
+All of these are sold in the normal shop. Prices are approximate (the game scales them with player
+count) and, like every number below, are configurable.
 
-- **Slower Stamina Use** — sprinting drains less stamina.
-- **HP Regeneration** — slowly regenerate health up to a fraction of max HP.
-- **Death Protection** — survive one lethal hit at 1 HP; consumed on use, re-buy to restore.
-- **Drone Battery Life** and per-gun **Battery Life** — longer batteries (up to +100%).
-- **Autoscan** — automatically discovers nearby valuables; higher levels scan farther.
-- **Map Suite** — unlocks map features as it levels: live player/monster counts, quota heading and
-  valuable tracker, team pings on the map, zoom-out (zoom keys `-` / `=`), trackers. Optionally
-  replaces the vanilla *Map Player Count* upgrade.
-- **Ping Info**, **Ping Anywhere**, **Pin** — see [Team ping system](#team-ping-system).
+**Personal upgrades** - each player buys and levels their own:
 
-Team-wide **Truck upgrades**:
+| Upgrade | Levels | What it does |
+| --- | --- | --- |
+| **Slower Stamina Use** | 5 | Sprinting drains 10% less stamina per level. ~4,000 |
+| **HP Regeneration** | 3 | Heals 0.2% of max HP per second per level, but only until you are back to 30% of max HP - it is an emergency trickle, not a full heal. ~20,000 |
+| **Death Protection** | 1 charge | Survive one lethal hit with 1 HP. The charge is spent when it saves you; re-buy to restore it. ~50,000 |
+| **Drone Battery Life** | 20 | Your drones' batteries last 5% longer per level (up to +100%). ~6,000 |
+| **Gun Battery Life** (one per gun type: bullet / laser / tranq) | 20 each | That gun's battery lasts 5% longer per level (up to +100%). ~6,000 |
+| **Autoscan** | 5 | Automatically discovers valuables around you every second, 5 m further per level (5-25 m). ~8,000 |
+| **Map Suite** | 10 | One upgrade, ten map features: L1 alive-player count, L2 dead-player count, L3 active monsters, L4 respawning monsters, L5 quota heading and valuable tracker (found/total, haul), L6 team pings on the map, L7-L8 zoom the map out (zoom keys `-` / `=`), L9 cosmetic-box tracker, L10 monsters as dots. Replaces the vanilla *Map Player Count* upgrade by default. ~15,000 for the first level |
+| **Ping Info** | 1 | Your pings show the valuable's value, cosmetic rarity and exact name. ~6,000 |
+| **Ping Anywhere** | 1 | Place location pings on any surface, visible through walls (limited live pings per player). ~6,000 |
+| **Pin** | 1 | The permanent version of Ping Anywhere: buy once, keep it forever. ~30,000 |
 
-- **Heal Power** — all healing is stronger.
-- **Charge Efficiency** — the charging station drains slower.
-- **Loot Cash-In** — leftover valuables are auto-cashed once every quota is closed (one-time unlock).
+**Truck upgrades** - bought once, they apply to the whole team:
+
+| Upgrade | Levels | What it does |
+| --- | --- | --- |
+| **Heal Power** | 3 | All healing (truck final heal, health packs, healing drones) is 25% stronger per level. Starts at 10,000 |
+| **Charge Efficiency** | 3 | The truck's charging station spends 20% less energy per level when it recharges items. Starts at 10,000. Stacks with the power-crystal economy: fewer crystals burned per recharge |
+| **Loot Cash-In** | 1 | Once every quota is closed, leftover valuables are sold automatically for 75% of their value. One-time unlock, 50,000 |
 
 #### Utility drones (shop)
 
-Four extra drones, built as clones of the game's own drones (same beam/attach/battery controls):
+Four extra drones. They are built on the game's own drones, so aiming, the beam, attaching,
+the on/off switch, the opening animation and the battery work exactly like the originals. Every
+player must run the mod, with the same module toggles.
 
-- **Ghost Drone** - on a valuable: players walk through it, and it is left out of extraction counting while the drone is on.
-- **Silencer Drone** - on a valuable, item, cart, player or enemy: its noise, voice and the radius enemies investigate it from are cut (default 8%).
-- **Link Drone Set (A + B)** - buying the set grants both halves. Attach one to each of two objects within range to tie them with a cable; grab one end to reel in the other.
-- **Repair Drone** - on a damaged valuable: restores lost value up to its original (500/s, a full battery repairs 25,000, more than the crystal it takes to recharge).
+| Drone | Price (value tier) | What it does |
+| --- | --- | --- |
+| **Ghost Drone** | 11,000-15,000 | Attach it to a valuable: players walk straight through that valuable and it is left out of extraction counting and suction while the drone is on. Weight, price and durability are unchanged. Anyone still inside it when the drone goes off stays pass-through until they step out. |
+| **Silencer Drone** | 7,000-9,000 | Attach it to a valuable, item, cart, player or monster: the noise it makes (collisions, sounds, voice chat/TTS, and the radius monsters investigate it from) drops to 8% by default. It does not make the target deaf. |
+| **Link Drone Set (A + B)** | 19,000-24,000 | One purchase gives both halves. Attach A to one object and B to another within 6 m: a physical cable ties them together (the cable is straight, colour-coded; faint amber while waiting, red under strain). Grab one end and the other is slowly reeled in, 0.75 m/s down to 1.25 m. It lets go if over-stretched for too long; switch a half off and on to relink. |
+| **Repair Drone** | 30,000-36,000 | Attach it to a damaged valuable to restore its lost value, up to its original value, at up to 500 per second. A full battery repairs 25,000 - more than the 20,000 power crystal it takes to recharge. A valuable that was fully destroyed cannot be repaired. |
 
-Every player must run the mod with `Drones/Enabled` set the same. Settings: *Drones* config section.
+#### Extra gear (shop)
 
-### Extra gear (shop)
+Orbs, guns and a grenade, again built on vanilla items (so models, handling and battery UI feel native)
+with this mod's own models, animations and sounds.
 
-Built as clones of vanilla items, same rules as the drones (every player needs the mod; per-item toggles in the *Gear* config section):
+| Item | Price (value tier) | What it does |
+| --- | --- | --- |
+| **Defence Orb** | 19,000-24,000 | Protects **loot**. While active, value that valuables would lose from breaking inside its field is paid from its battery instead (about 3,500 at full charge). Slowly self-discharges (default 20% per minute). |
+| **Defence Drone** | 11,000-15,000 | Protects a **player**: attach it to a teammate (or yourself) and it absorbs up to 350 damage in total - the battery is the pool, so hits drain it. It also empties on its own in 45 seconds. When the pool runs out mid-hit, the remainder reaches the player. |
+| **Protection Orb** | 11,000-15,000 | Players inside the field take 25% less damage, but the orb burns through its charge about three times faster than a normal orb. |
+| **Poison Crossbow** | 19,000-24,000 | 7 damage per bolt and a poison that deals 125 damage over 15 seconds. Every bolt refreshes the poison to 15 s, it never stacks. A poisoned monster stays actively hostile and hunts players while the poison lasts. A third fewer shots than a normal pistol. |
+| **Decoy Grenade** | 1,000-1,300 | Arm it and throw it: for 5 seconds it lures nearby monsters to itself, then disappears. |
+| **Pulse Ice Pistol** | 11,000-15,000 | Freezes a monster for 4.5 seconds without pushing it. Frozen monsters cannot be picked up, take only 60% of firearm damage, and take 35% more from melee weapons. |
+| **Sticky Pistol** | 9,000-10,000 | Pulls a monster or object toward you, as long as you could lift it freely with one strength level less than you have. |
 
-- **Defence Orb** - protects loot: value valuables would lose from breakage inside its field is absorbed from the battery (about $3,500 at full charge).
-- **Defence Drone** - protects a player: attach it to them and it absorbs up to 350 damage in total (the battery is the pool).
-- **Protection Orb** - 25% less damage inside its field; drains its charge quickly.
-- **Poison Crossbow** - 7 damage plus a 15 s poison (125 HP in total) that refreshes, never stacks, and keeps the monster actively hunting players while it lasts; a third fewer shots than a normal gun.
-- **Decoy Grenade** - once armed, lures nearby monsters to it for 5 s, then disappears.
-- **Pulse Ice Pistol** - the pink pulse pistol (keeps its knockback) that also freezes an enemy for 4.5 s; frozen enemies can't be lifted, take less firearm damage and +35% melee damage.
-- **Sticky Pistol** - pulls a monster or object toward you if you could lift it with one strength level less.
+Each drone, orb and gun has its own on/off switch in the `Modules` section of the config.
 
 ### Team ping system
 
@@ -181,7 +196,9 @@ only on a successful extraction.
 ### Configuration
 
 All settings live in `BepInEx/config/com.kubai.increasehardmod.cfg` and are editable in-game via
-REPOConfig. Sections: General, Enemies, Quota, Surprises, Surprise Modifiers, Modifier Tuning,
+REPOConfig. **Every module on/off switch is gathered in the first section, `Modules`** (surprises, upgrades,
+each drone and gear item, each difficulty scaling stat, lobby tools, HUDs...), so you don't have to scroll
+through tuning values to find them; values from the old sections are carried over the first time. Other sections: General, Enemies, Quota, Surprises, Surprise Modifiers, Modifier Tuning,
 Player Upgrades, Truck Upgrades, Ping, Shop, Map Vote, Late Join, Item Unstuck, More Players,
 Dead Map Access, Spectator Minimap, Round Results, Auto Backup Saves, and HUD toggles (Level Info,
 Server Info, Shopping List, Photon HUD), plus Diagnostics.
@@ -219,7 +236,7 @@ The build deploys the compiled plugin into your BepInEx plugins folder for the a
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.3.0`
+- **Версия:** `0.4.0`
 
 ### Содержание
 
@@ -278,25 +295,63 @@ The build deploys the compiled plugin into your BepInEx plugins folder for the a
 | Монстры | Монстры устойчивы к ямам | Монстры получают меньше урона от смертельных ям |
 | Монстры | Лёгкие / тяжёлые монстры | Все монстры весят меньше (легко толкать) или больше (тяжело толкать) |
 
-#### Кастомные улучшения в магазине (через REPOLib)
+#### Улучшения в магазине (через REPOLib)
 
-Личные:
+Всё продаётся в обычном магазине. Цены примерные (игра сама масштабирует их по числу игроков) и,
+как и все числа ниже, настраиваются.
 
-- **Slower Stamina Use** — бег тратит меньше выносливости.
-- **HP Regeneration** — медленная регенерация здоровья до доли от максимума.
-- **Death Protection** — переживаешь один смертельный удар с 1 HP; расходуется, покупается заново.
-- **Drone Battery Life** и **Battery Life** для оружия — батареи служат дольше (до +100%).
-- **Autoscan** — автоматически находит ценности рядом; выше уровень — дальше радиус.
-- **Map Suite** — открывает функции карты по мере прокачки: живой счётчик игроков/монстров,
-  направление к квоте и трекер ценностей, пинги команды на карте, отдаление (зум `-` / `=`),
-  трекеры. Может заменять ванильное улучшение *Map Player Count*.
-- **Ping Info**, **Ping Anywhere**, **Pin** — см. [Командные пинги](#командные-пинги).
+**Личные улучшения** - каждый игрок покупает и качает свои:
 
-Командные **улучшения грузовика**:
+| Улучшение | Уровни | Что делает |
+| --- | --- | --- |
+| **Slower Stamina Use** | 5 | Бег тратит на 10% меньше выносливости за уровень. ~4 000 |
+| **HP Regeneration** | 3 | Лечит 0,2% максимума здоровья в секунду за уровень, но только пока здоровье не поднимется до 30% от максимума - это аварийная струйка, а не полное лечение. ~20 000 |
+| **Death Protection** | 1 заряд | Переживаешь один смертельный удар с 1 HP. Заряд тратится, когда он тебя спас; купи снова, чтобы восстановить. ~50 000 |
+| **Drone Battery Life** | 20 | Батареи твоих дронов служат на 5% дольше за уровень (до +100%). ~6 000 |
+| **Gun Battery Life** (своё на каждый тип оружия: пули / лазер / транквилизатор) | по 20 | Батарея этого оружия служит на 5% дольше за уровень (до +100%). ~6 000 |
+| **Autoscan** | 5 | Раз в секунду находит ценности вокруг, на 5 м дальше за уровень (5-25 м). ~8 000 |
+| **Map Suite** | 10 | Одно улучшение, десять функций карты: L1 число живых игроков, L2 число мёртвых, L3 активные монстры, L4 возрождающиеся монстры, L5 направление к квоте и трекер ценностей (найдено/всего, добыча), L6 командные пинги на карте, L7-L8 отдаление карты (клавиши `-` / `=`), L9 трекер косметических ящиков, L10 монстры точками. По умолчанию заменяет ванильное *Map Player Count*. ~15 000 за первый уровень |
+| **Ping Info** | 1 | Твои пинги показывают стоимость ценности, редкость косметики и точное название. ~6 000 |
+| **Ping Anywhere** | 1 | Ставь пинги-метки на любой поверхности, видимые сквозь стены (число живых пингов на игрока ограничено). ~6 000 |
+| **Pin** | 1 | Постоянная версия Ping Anywhere: купил один раз - навсегда. ~30 000 |
 
-- **Heal Power** — любое лечение сильнее.
-- **Charge Efficiency** — зарядная станция тратит энергию медленнее.
-- **Loot Cash-In** — оставшиеся ценности автоматически обналичиваются, когда все квоты закрыты (разовая разблокировка).
+**Улучшения грузовика** - покупаются один раз и действуют на всю команду:
+
+| Улучшение | Уровни | Что делает |
+| --- | --- | --- |
+| **Heal Power** | 3 | Всё лечение (финальное лечение грузовика, аптечки, лечащие дроны) сильнее на 25% за уровень. От 10 000 |
+| **Charge Efficiency** | 3 | Зарядная станция тратит на 20% меньше энергии за уровень при зарядке предметов. От 10 000. Работает вместе с экономикой кристаллов: на зарядку уходит меньше кристаллов |
+| **Loot Cash-In** | 1 | Когда все квоты закрыты, оставшиеся ценности продаются автоматически за 75% стоимости. Разовая разблокировка, 50 000 |
+
+#### Утилитарные дроны (магазин)
+
+Четыре дополнительных дрона. Они сделаны на основе игровых дронов, поэтому наведение, луч,
+прикрепление, выключатель, анимация раскрытия и батарея работают так же, как у оригиналов. Мод
+должен стоять у всех игроков, и переключатели модулей должны совпадать.
+
+| Дрон | Цена (категория) | Что делает |
+| --- | --- | --- |
+| **Ghost Drone** | 11 000-15 000 | Прикрепи к ценности: игроки проходят сквозь неё, а при экстракции она не считается и не засасывается, пока дрон включён. Вес, цена и прочность не меняются. Кто остался внутри при выключении дрона, проходит сквозь, пока не выйдет. |
+| **Silencer Drone** | 7 000-9 000 | Прикрепи к ценности, предмету, тележке, игроку или монстру: шум от него (столкновения, звуки, голос и TTS, радиус, с которого монстры идут на шум) падает до 8% по умолчанию. Цель не глохнет. |
+| **Link Drone Set (A + B)** | 19 000-24 000 | Одна покупка даёт обе половины. Прикрепи A к одному объекту, B к другому в радиусе 6 м: физический трос стягивает их (трос прямой, цветной; бледно-жёлтый в ожидании, красный при натяжении). Если держать один конец, второй медленно подтягивается, 0,75 м/с до 1,25 м. При долгом перенапряжении трос отпускает; выключи и включи половину, чтобы связать снова. |
+| **Repair Drone** | 30 000-36 000 | Прикрепи к повреждённой ценности: возвращает потерянную стоимость до оригинальной, до 500 в секунду. Полной батареи хватает на 25 000 - больше, чем стоит кристалл в 20 000 для перезарядки. Полностью разрушенную ценность починить нельзя. |
+
+#### Дополнительное снаряжение (магазин)
+
+Орбы, оружие и граната, тоже на основе ванильных предметов (поэтому модели, управление и индикатор
+батареи ощущаются родными), но со своими моделями, анимациями и звуками.
+
+| Предмет | Цена (категория) | Что делает |
+| --- | --- | --- |
+| **Defence Orb** | 19 000-24 000 | Защищает **лут**. Пока активен, стоимость, которую ценности потеряли бы при поломке внутри поля, оплачивается из его батареи (около 3 500 на полном заряде). Медленно разряжается сам (по умолчанию 20% в минуту). |
+| **Defence Drone** | 11 000-15 000 | Защищает **игрока**: прикрепи к товарищу (или себе), он поглощает до 350 урона суммарно - пул это батарея, удары её расходуют. Сам тоже разряжается за 45 секунд. Если пул кончился посреди удара, остаток доходит до игрока. |
+| **Protection Orb** | 11 000-15 000 | Игроки в поле получают на 25% меньше урона, но орб тратит заряд примерно втрое быстрее обычного. |
+| **Poison Crossbow** | 19 000-24 000 | 7 урона за болт и яд, наносящий 125 урона за 15 секунд. Каждый болт обновляет яд до 15 с, не накапливается. Отравленный монстр остаётся активно враждебным и охотится на игроков, пока яд действует. На треть меньше выстрелов, чем у обычного пистолета. |
+| **Decoy Grenade** | 1 000-1 300 | Активируй и брось: 5 секунд приманивает ближайших монстров к себе, затем исчезает. |
+| **Pulse Ice Pistol** | 11 000-15 000 | Замораживает монстра на 4,5 секунды, не отталкивая. Замороженного нельзя поднять, он получает 60% урона от огнестрела и на 35% больше от оружия ближнего боя. |
+| **Sticky Pistol** | 9 000-10 000 | Притягивает монстра или предмет к тебе, если ты смог бы свободно поднять его с силой на один уровень ниже твоей. |
+
+У каждого дрона, орба и оружия свой переключатель в секции `Modules` конфига.
 
 #### Командные пинги
 
@@ -361,7 +416,7 @@ The build deploys the compiled plugin into your BepInEx plugins folder for the a
 ### Настройка
 
 Все настройки хранятся в `BepInEx/config/com.kubai.increasehardmod.cfg` и редактируются прямо в
-игре через REPOConfig. Секции: General, Enemies, Quota, Surprises, Surprise Modifiers, Modifier
+игре через REPOConfig. **Все переключатели модулей собраны в первой секции `Modules`** (сюрпризы, улучшения, каждый дрон и предмет, каждая характеристика роста сложности, лобби-инструменты, HUD...), чтобы не листать значения настройки; значения из прежних секций переносятся при первом запуске. Остальные секции: General, Enemies, Quota, Surprises, Surprise Modifiers, Modifier
 Tuning, Player Upgrades, Truck Upgrades, Ping, Shop, Map Vote, Late Join, Item Unstuck, More
 Players, Dead Map Access, Spectator Minimap, Round Results, Auto Backup Saves, переключатели HUD
 (Level Info, Server Info, Shopping List, Photon HUD) и Diagnostics.

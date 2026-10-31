@@ -204,6 +204,9 @@ internal static class GearItems
             var hurt = bullet.GetComponentInChildren<HurtCollider>(true);
             if (hurt != null)
             {
+                if (kind == GearKind.Ice)
+                    foreach (var h in bullet.GetComponentsInChildren<HurtCollider>(true))
+                        NoKnockback(h);
                 if (kind == GearKind.Poison)
                 {
                     hurt.enemyDamage = ModConfig.PoisonHitDamage.Value;
@@ -232,6 +235,23 @@ internal static class GearItems
         ItemArt.Weapon(go, kind.ToString().ToLowerInvariant());
         ItemAudio.Attach(go, kind.ToString().ToLowerInvariant());
         Register(attributes, name);
+    }
+
+    // The Ice Pistol borrows the pink pulse gun, but must not push anything: strip every force/stun from its hits.
+    private static void NoKnockback(HurtCollider h)
+    {
+        h.playerHitForce = 0f;
+        h.playerTumbleForce = 0f;
+        h.playerTumbleTorque = 0f;
+        h.playerTumbleTime = 0f;
+        h.playerStunTime = 0f;
+        h.physHitForce = 0f;
+        h.physHitTorque = 0f;
+        h.enemyHitForce = 0f;
+        h.enemyHitTorque = 0f;
+        h.enemyStun = false;
+        h.enemyStunTime = 0f;
+        h.horizontalVerticalHitForce = Vector2.zero;
     }
 
     private static void MakeDecoy(Item baseItem)

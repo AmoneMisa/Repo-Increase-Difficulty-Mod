@@ -327,8 +327,71 @@ public static class ModConfig
         _                                         => $"The '{m}' surprise modifier.",
     };
 
+    // All on/off switches for the mod's modules live together in one section at the top of the config, so
+    // you don't have to scroll through every tuning value to find them. Existing values from the old
+    // sections are carried over the first time.
+    private static void BindModules(ConfigFile cfg)
+    {
+        SurprisesEnabled = Module(cfg, "Surprises", "Enabled", true, "Surprises", "Master switch for the surprise/special-level system.");
+        PlayerUpgradesEnabled = Module(cfg, "Player Upgrades", "Enabled", true, "PlayerUpgrades", "Master switch for the mod's custom per-player upgrades that appear in the normal shop. Requires REPOLib. Takes effect on restart.");
+        TruckUpgradesEnabled = Module(cfg, "Truck Upgrades", "Enabled", true, "TruckUpgrades", "Enable the team-wide truck upgrades (Heal Power, Charge Efficiency, Loot Cash-In). Bought in the normal shop; effects apply for the whole team.");
+        ScaleEnemyHealth = Module(cfg, "Scaling", "EnemyHealth", true, "ScaleEnemyHealth", "Enemies gain max HP as the run goes deeper. Off = vanilla enemy HP.");
+        ScaleEnemyDamage = Module(cfg, "Scaling", "EnemyDamage", true, "ScaleEnemyDamage", "Enemies deal more damage to players as the run goes deeper. Off = vanilla damage.");
+        ScaleEnemySpeed = Module(cfg, "Scaling", "EnemySpeed", true, "ScaleEnemySpeed", "Enemies move faster as the run goes deeper. Off = vanilla speed.");
+        ScaleEnemyRespawn = Module(cfg, "Scaling", "EnemyRespawn", true, "ScaleEnemyRespawn", "Enemies respawn faster as the run goes deeper. Off = vanilla respawn time.");
+        ScaleQuota = Module(cfg, "Scaling", "Quota", true, "ScaleQuota", "The extraction quota grows as the run goes deeper. Off = vanilla quota (host setting).");
+        DronesEnabled = Module(cfg, "Drones", "Enabled", true, "Drones", "Add the Ghost, Silencer and Link utility drones to the shop. EVERY player must run this mod with the same setting, otherwise shop items and effects will not match. Takes effect on game restart.");
+        GhostEnabled = Module(cfg, "Drones", "GhostEnabled", true, "GhostDrone", "Sell the Ghost Drone. Needs Drones/Enabled. Same on every player; applies on game restart.");
+        SilencerEnabled = Module(cfg, "Drones", "SilencerEnabled", true, "SilencerDrone", "Sell the Silencer Drone. Needs Drones/Enabled. Same on every player; applies on game restart.");
+        LinkEnabled = Module(cfg, "Drones", "LinkEnabled", true, "LinkDrone", "Sell the Link Drone Set (A + B). Needs Drones/Enabled. Same on every player; applies on game restart.");
+        RepairEnabled = Module(cfg, "Drones", "RepairEnabled", true, "RepairDrone", "Sell the Repair Drone. Needs Drones/Enabled. Same on every player; applies on game restart.");
+        GearEnabled = Module(cfg, "Gear", "Enabled", true, "ExtraGear", "Add the extra shop gear (Defence/Protection orbs, Defence drone, poison crossbow, decoy grenade, ice pistol, sticky pistol). EVERY player must run this mod with the same settings. Applies on game restart.");
+        DefenceOrbEnabled = Module(cfg, "Gear", "DefenceOrbEnabled", true, "DefenceOrb", "Sell the Defence Orb.");
+        DefenceDroneEnabled = Module(cfg, "Gear", "DefenceDroneEnabled", true, "DefenceDrone", "Sell the Defence Drone.");
+        ProtectionOrbEnabled = Module(cfg, "Gear", "ProtectionOrbEnabled", true, "ProtectionOrb", "Sell the Protection Orb.");
+        PoisonCrossbowEnabled = Module(cfg, "Gear", "PoisonCrossbowEnabled", true, "PoisonCrossbow", "Sell the Poison Crossbow.");
+        DecoyGrenadeEnabled = Module(cfg, "Gear", "DecoyGrenadeEnabled", true, "DecoyGrenade", "Sell the Decoy Grenade.");
+        IcePistolEnabled = Module(cfg, "Gear", "IcePistolEnabled", true, "IcePistol", "Sell the Pulse Ice Pistol.");
+        StickyPistolEnabled = Module(cfg, "Gear", "StickyPistolEnabled", true, "StickyPistol", "Sell the Sticky Pistol.");
+        LateJoinEnabled = Module(cfg, "Late Join", "Enabled", true, "LateJoin", "Host keeps the room/lobby joinable during a run/shop/truck (REPO normally seals it at run start) and re-syncs mod state to anyone who connects mid-game.");
+        PingEnabled = Module(cfg, "Ping", "Enabled", true, "Ping", "Enable the ping system: press the ping key to mark what you're looking at for the whole team.");
+        ItemUnstuckEnabled = Module(cfg, "Item Unstuck", "Enabled", true, "ItemUnstuck", "Master switch for the valuable safety-net features (relocate stuck loot, invulnerable-until-grab, undamaged-value HUD). The relocate/invuln parts are HOST-SIDE (computed by the host).");
+        DeadMapAccessEnabled = Module(cfg, "Dead Map Access", "Enabled", true, "DeadMapAccess", "Allow dead/spectating players to open their map tool. The map view is re-anchored to the spectate camera so it stays visible. Client-side — each player controls their own map.");
+        SpectatorMinimapEnabled = Module(cfg, "Spectator Minimap", "Enabled", true, "SpectatorMinimap", "While dead/spectating on a level, HOLD the minimap key to show the game's own map render in the centre of the screen so you can track the level without the full map tool. Hidden automatically if you open the full map tool. Client-side.");
+        RoundResultsEnabled = Module(cfg, "Round Results", "Enabled", true, "RoundResults", "After each level show an MVP / OOPS CHAMP screen with per-player stats: loot broken, loot delivered, deaths and revives. Stats are recorded by the host, so the host must run this mod for the board to appear.");
+        MapVoteEnabled = Module(cfg, "Map Vote", "Enabled", true, "MapVote", "While in the truck lobby, let players vote on the next map from a few random candidates. Whatever is leading when the truck departs is used instead of the game's random pick. Vote with the number keys (or the on-screen buttons). If nobody votes, the game's normal random selection is used, so this is harmless when ignored. HOST-SIDE: the host applies the winning map and syncs it to everyone normally.");
+        AutoBackupEnabled = Module(cfg, "Auto Backup Saves", "Enabled", true, "AutoBackup", "Back up the run save before REPO deletes it on a level fail/wipe. Backups go to a 'saves_IncreaseHardMod_backups' folder next to your saves.");
+        MorePlayersEnabled = Module(cfg, "More Players", "Enabled", false, "MorePlayers", "Raise the room's max player count above REPO's default of 6. HOST-SIDE: the host's value defines the room cap; joiners don't need this on. Everyone in the lobby should still run the mod to avoid desync.");
+        ShopPriceScaleEnabled = Module(cfg, "Shop", "PriceScaleEnabled", false, "ShopPriceScale", "Scale shop item prices up with the number of players, so bigger lobbies (which earn more) still feel expensive. HOST-SIDE: prices are computed by the host and synced.");
+        ShoppingListEnabled = Module(cfg, "Shopping List", "Enabled", false, "ShoppingList", "While in the shop, show a panel listing everything in the cart (yours and your friends'): quantity, name and summed price per item, colour-coded by item type, with a running total vs. your team's currency.");
+        LevelInfoEnabled = Module(cfg, "Level Info", "Enabled", true, "LevelInfo", "Show a panel on the right side of the screen that logs each level change (run number + name, plus any rolled surprise modifiers).");
+        ServerInfoEnabled = Module(cfg, "Server Info", "Enabled", true, "ServerInfo", "Show a passive overlay in the lobby/menu with the current Photon region, ping, room code and player count. Reads connection state only — never opens sockets, so it's safe on the main menu.");
+        PhotonHudEnabled = Module(cfg, "Photon HUD", "Enabled", false, "PhotonHud", "OPT-IN DIAGNOSTIC (default off). Show a small overlay on the main menu with reachability/latency to Photon region name servers. " + "Leave this OFF for normal play: it TCP-probes the same Photon name servers the game uses, and that connection churn can stall REPO's own 'pick best region' step (regions spin forever / stuck loading online). Only enable it briefly when you're actively diagnosing a connection problem.");
+    }
+
+    private static ConfigEntry<bool> Module(ConfigFile cfg, string oldSection, string oldKey, bool def, string key, string desc)
+    {
+        var newDef = new ConfigDefinition("Modules", key);
+        var orphans = Orphans(cfg);
+        bool existed = orphans != null && orphans.ContainsKey(newDef);
+        var entry = cfg.Bind(newDef, def, new ConfigDescription(desc));
+        if (!existed && orphans != null && orphans.TryGetValue(new ConfigDefinition(oldSection, oldKey), out var raw))
+            entry.SetSerializedValue(raw);
+        return entry;
+    }
+
+    // Values present in the .cfg that nothing has bound (yet). BepInEx keeps this non-public.
+    private static Dictionary<ConfigDefinition, string> Orphans(ConfigFile cfg)
+    {
+        var prop = typeof(ConfigFile).GetProperty("OrphanedEntries",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+        return prop?.GetValue(cfg) as Dictionary<ConfigDefinition, string>;
+    }
+
     public static void Init(ConfigFile cfg)
     {
+        BindModules(cfg);
+
         DiagnosticDisablePatches = cfg.Bind(
             "Diagnostics", "DisablePatches", false,
             "DIAGNOSTIC (default off). If true, skip ALL Harmony gameplay patches. Used only to isolate whether the mod's patches interfere with Photon connecting. Leave off for normal play.");
@@ -344,17 +407,7 @@ public static class ModConfig
             "General", "RampLevelsPerStep", 1, 1, 10,
             "How many levels of depth make up ONE difficulty step. 1 = stats grow every level; 2 = stats step up only every 2nd level past the start (stretches the ramp).");
 
-        ScaleEnemyHealth = cfg.Bind("Scaling", "EnemyHealth", true,
-            "Enemies gain max HP as the run goes deeper. Off = vanilla enemy HP.");
-        ScaleEnemyDamage = cfg.Bind("Scaling", "EnemyDamage", true,
-            "Enemies deal more damage to players as the run goes deeper. Off = vanilla damage.");
-        ScaleEnemySpeed = cfg.Bind("Scaling", "EnemySpeed", true,
-            "Enemies move faster as the run goes deeper. Off = vanilla speed.");
-        ScaleEnemyRespawn = cfg.Bind("Scaling", "EnemyRespawn", true,
-            "Enemies respawn faster as the run goes deeper. Off = vanilla respawn time.");
-        ScaleQuota = cfg.Bind("Scaling", "Quota", true,
-            "The extraction quota grows as the run goes deeper. Off = vanilla quota (host setting).");
-
+                                        
         EnemyHealthPerLevel = BindFloat(cfg,
             "Enemies", "HealthPerLevel", 0.15f, 0f, 2f,
             "Extra enemy max HP per level past the ramp start. 0.15 = +15% per level (cumulative, additive).");
@@ -464,15 +517,9 @@ public static class ModConfig
             "LevelTimer: seconds added when an extraction point's quota is completed.");
 
         // --- Late Join ---
-        LateJoinEnabled = cfg.Bind(
-            "Late Join", "Enabled", true,
-            "Host keeps the room/lobby joinable during a run/shop/truck (REPO normally seals it at run start) and re-syncs mod state to anyone who connects mid-game.");
-
+        
         // --- Ping ---
-        PingEnabled = cfg.Bind(
-            "Ping", "Enabled", true,
-            "Enable the ping system: press the ping key to mark what you're looking at for the whole team.");
-        PingKey = cfg.Bind(
+                PingKey = cfg.Bind(
             "Ping", "PingKey", UnityEngine.KeyCode.Mouse2,
             "Key/button to place a ping on whatever you're aiming at (default: middle mouse).");
         PingMaxDistance = BindFloat(cfg,
@@ -498,10 +545,7 @@ public static class ModConfig
             "Pin: approximate shop price for the one-time permanent unlock (buy once, place Location pins forever — like 'Ping Anywhere').");
 
         // --- Item Unstuck ---
-        ItemUnstuckEnabled = cfg.Bind(
-            "Item Unstuck", "Enabled", true,
-            "Master switch for the valuable safety-net features (relocate stuck loot, invulnerable-until-grab, undamaged-value HUD). The relocate/invuln parts are HOST-SIDE (computed by the host).");
-        ValuableRelocateStuck = cfg.Bind(
+                ValuableRelocateStuck = cfg.Bind(
             "Item Unstuck", "RelocateStuck", true,
             "Detect valuables that have settled embedded inside world geometry and teleport them back to their last safe resting spot (or lift them out). Anti-softlock; host-side.");
         ValuableStuckSeconds = BindFloat(cfg,
@@ -512,15 +556,9 @@ public static class ModConfig
             "Valuables take no damage / lose no value until a player grabs them for the first time (uses the game's own indestructible flag). Host-side.");
 
         // --- Dead Map Access ---
-        DeadMapAccessEnabled = cfg.Bind(
-            "Dead Map Access", "Enabled", true,
-            "Allow dead/spectating players to open their map tool. The map view is re-anchored to the spectate camera so it stays visible. Client-side — each player controls their own map.");
-
+        
         // --- Spectator Minimap ---
-        SpectatorMinimapEnabled = cfg.Bind(
-            "Spectator Minimap", "Enabled", true,
-            "While dead/spectating on a level, HOLD the minimap key to show the game's own map render in the centre of the screen so you can track the level without the full map tool. Hidden automatically if you open the full map tool. Client-side.");
-        SpectatorMinimapKey = cfg.Bind(
+                SpectatorMinimapKey = cfg.Bind(
             "Spectator Minimap", "HoldKey", UnityEngine.KeyCode.Tab,
             "Hold this key while dead to show the spectator minimap (default: Tab).");
         SpectatorMinimapScale = BindFloat(cfg,
@@ -528,10 +566,7 @@ public static class ModConfig
             "Minimap size as a fraction of screen height. 0.5 = half the screen tall.");
 
         // --- Round Results ---
-        RoundResultsEnabled = cfg.Bind(
-            "Round Results", "Enabled", true,
-            "After each level show an MVP / OOPS CHAMP screen with per-player stats: loot broken, loot delivered, deaths and revives. Stats are recorded by the host, so the host must run this mod for the board to appear.");
-        RoundResultsSeconds = BindFloat(cfg,
+                RoundResultsSeconds = BindFloat(cfg,
             "Round Results", "ShowSeconds", 20f, 5f, 60f,
             "How long the results screen stays up after a level ends.");
         RoundResultsKey = cfg.Bind(
@@ -539,20 +574,8 @@ public static class ModConfig
             "Press to dismiss the results screen, or to bring the last results back.");
 
         // --- Utility Drones ---
-        DronesEnabled = cfg.Bind(
-            "Drones", "Enabled", true,
-            "Add the Ghost, Silencer and Link utility drones to the shop. EVERY player must run this mod with the same setting, otherwise shop items and effects will not match. Takes effect on game restart.");
-        const string Gear = "Gear";
-        GearEnabled = cfg.Bind(Gear, "Enabled", true,
-            "Add the extra shop gear (Defence/Protection orbs, Defence drone, poison crossbow, decoy grenade, ice pistol, sticky pistol). EVERY player must run this mod with the same settings. Applies on game restart.");
-        DefenceOrbEnabled = cfg.Bind(Gear, "DefenceOrbEnabled", true, "Sell the Defence Orb.");
-        DefenceDroneEnabled = cfg.Bind(Gear, "DefenceDroneEnabled", true, "Sell the Defence Drone.");
-        ProtectionOrbEnabled = cfg.Bind(Gear, "ProtectionOrbEnabled", true, "Sell the Protection Orb.");
-        PoisonCrossbowEnabled = cfg.Bind(Gear, "PoisonCrossbowEnabled", true, "Sell the Poison Crossbow.");
-        DecoyGrenadeEnabled = cfg.Bind(Gear, "DecoyGrenadeEnabled", true, "Sell the Decoy Grenade.");
-        IcePistolEnabled = cfg.Bind(Gear, "IcePistolEnabled", true, "Sell the Pulse Ice Pistol.");
-        StickyPistolEnabled = cfg.Bind(Gear, "StickyPistolEnabled", true, "Sell the Sticky Pistol.");
-        DefenceAbsorb = BindInt(cfg, Gear, "DefenceAbsorb", 350, 50, 2000,
+                const string Gear = "Gear";
+                                                                        DefenceAbsorb = BindInt(cfg, Gear, "DefenceAbsorb", 350, 50, 2000,
             "Total damage a fully charged Defence DRONE can absorb for the player it is attached to.");
         DefenceItemAbsorb = BindInt(cfg, Gear, "DefenceItemAbsorb", 3500, 100, 50000,
             "Defence ORB (protects loot): value, in dollars, a fully charged orb can absorb from valuables breaking inside its field. The Defence DRONE protects a player instead, see DefenceAbsorb.");
@@ -575,15 +598,7 @@ public static class ModConfig
         StickyFreeLiftMass = BindFloat(cfg, Gear, "StickyFreeLiftMass", 10f, 1f, 100f,
             "Approximate mass (kg) a player with base grab strength can lift freely. The Sticky Pistol can pull things up to what ONE strength level less could lift.");
 
-        GhostEnabled = cfg.Bind("Drones", "GhostEnabled", true,
-            "Sell the Ghost Drone. Needs Drones/Enabled. Same on every player; applies on game restart.");
-        SilencerEnabled = cfg.Bind("Drones", "SilencerEnabled", true,
-            "Sell the Silencer Drone. Needs Drones/Enabled. Same on every player; applies on game restart.");
-        LinkEnabled = cfg.Bind("Drones", "LinkEnabled", true,
-            "Sell the Link Drone Set (A + B). Needs Drones/Enabled. Same on every player; applies on game restart.");
-        RepairEnabled = cfg.Bind("Drones", "RepairEnabled", true,
-            "Sell the Repair Drone. Needs Drones/Enabled. Same on every player; applies on game restart.");
-        LinkMaxDistance = BindFloat(cfg,
+                                        LinkMaxDistance = BindFloat(cfg,
             "Drones", "LinkMaxDistance", 6f, 1f, 12f,
             "Link drone: maximum distance (metres) between the two attached objects for the cable to connect. The cable fits the gap when it connects.");
         SilencerNoiseMultiplier = BindFloat(cfg,
@@ -591,10 +606,7 @@ public static class ModConfig
             "Silencer drone: multiplier applied to the attached target's emitted sound, voice and the radius enemies investigate it from. 0.08 = 8% as loud.");
 
         // --- Map Vote ---
-        MapVoteEnabled = cfg.Bind(
-            "Map Vote", "Enabled", true,
-            "While in the truck lobby, let players vote on the next map from a few random candidates. Whatever is leading when the truck departs is used instead of the game's random pick. Vote with the number keys (or the on-screen buttons). If nobody votes, the game's normal random selection is used, so this is harmless when ignored. HOST-SIDE: the host applies the winning map and syncs it to everyone normally.");
-        MapVoteChoices = BindInt(cfg,
+                MapVoteChoices = BindInt(cfg,
             "Map Vote", "Choices", 3, 2, 6,
             "How many random candidate maps to offer for the vote each lobby.");
         MapVoteSeconds = BindFloat(cfg,
@@ -602,11 +614,7 @@ public static class ModConfig
             "How long the vote stays open (host-authoritative). It closes early the moment everyone in the lobby has voted. When it closes, the leading map is locked in and used when the truck departs. If nobody votes, the game's normal random selection is used.");
 
         // --- Photon reachability HUD ---
-        PhotonHudEnabled = cfg.Bind(
-            "Photon HUD", "Enabled", false,
-            "OPT-IN DIAGNOSTIC (default off). Show a small overlay on the main menu with reachability/latency to Photon region name servers. " +
-            "Leave this OFF for normal play: it TCP-probes the same Photon name servers the game uses, and that connection churn can stall REPO's own 'pick best region' step (regions spin forever / stuck loading online). Only enable it briefly when you're actively diagnosing a connection problem.");
-        PhotonHudRegions = cfg.Bind(
+                PhotonHudRegions = cfg.Bind(
             "Photon HUD", "Regions", "ns=ns.photonengine.io, exitgames=ns.exitgames.com",
             new ConfigDescription(
                 "Comma-separated 'label=host' (or 'label=host:port') pairs to TCP-probe for the HUD. " +
@@ -614,36 +622,21 @@ public static class ModConfig
                 null, HideFromRepoConfig));
 
         // --- Level Info panel ---
-        LevelInfoEnabled = cfg.Bind(
-            "Level Info", "Enabled", true,
-            "Show a panel on the right side of the screen that logs each level change (run number + name, plus any rolled surprise modifiers).");
-        LevelInfoToggleKey = cfg.Bind(
+                LevelInfoToggleKey = cfg.Bind(
             "Level Info", "ToggleKey", UnityEngine.KeyCode.F8,
             "Key to hide/show the level info announcement.");
 
         // --- Server Info panel ---
-        ServerInfoEnabled = cfg.Bind(
-            "Server Info", "Enabled", true,
-            "Show a passive overlay in the lobby/menu with the current Photon region, ping, room code and player count. Reads connection state only — never opens sockets, so it's safe on the main menu.");
-
+        
         // --- Shopping List panel ---
-        ShoppingListEnabled = cfg.Bind(
-            "Shopping List", "Enabled", false,
-            "While in the shop, show a panel listing everything in the cart (yours and your friends'): quantity, name and summed price per item, colour-coded by item type, with a running total vs. your team's currency.");
-
+        
         // --- More Players ---
-        MorePlayersEnabled = cfg.Bind(
-            "More Players", "Enabled", false,
-            "Raise the room's max player count above REPO's default of 6. HOST-SIDE: the host's value defines the room cap; joiners don't need this on. Everyone in the lobby should still run the mod to avoid desync.");
-        MorePlayersMax = BindInt(cfg,
+                MorePlayersMax = BindInt(cfg,
             "More Players", "MaxPlayers", 6, 2, 20,
             "Maximum players allowed in the room when More Players is enabled. REPO supports up to 20 internally. Large lobbies are unofficial and may be unstable.");
 
         // --- Shop ---
-        ShopPriceScaleEnabled = cfg.Bind(
-            "Shop", "PriceScaleEnabled", false,
-            "Scale shop item prices up with the number of players, so bigger lobbies (which earn more) still feel expensive. HOST-SIDE: prices are computed by the host and synced.");
-        ShopPriceBaselinePlayers = BindInt(cfg,
+                ShopPriceBaselinePlayers = BindInt(cfg,
             "Shop", "PriceBaselinePlayers", 4, 1, 20,
             "Player count at which prices are unchanged. Each player above this raises prices by PricePerExtraPlayer; at or below it, prices are vanilla.");
         ShopPricePerExtraPlayer = BindFloat(cfg,
@@ -654,10 +647,7 @@ public static class ModConfig
             "Allow the same item (e.g. a gun) to appear more than once in a single shop by adding this many extra copies of each item to the shop pool. 0 = vanilla (usually one of each).");
 
         // --- Auto Backup Saves ---
-        AutoBackupEnabled = cfg.Bind(
-            "Auto Backup Saves", "Enabled", true,
-            "Back up the run save before REPO deletes it on a level fail/wipe. Backups go to a 'saves_IncreaseHardMod_backups' folder next to your saves.");
-        AutoBackupKeepSave = cfg.Bind(
+                AutoBackupKeepSave = cfg.Bind(
             "Auto Backup Saves", "KeepSaveLoadable", true,
             "Also skip the deletion entirely so the failed save stays in your normal save list and can be reloaded from its last checkpoint (the shop before the failed level).");
         AutoBackupMaxPerSave = BindInt(cfg,
@@ -665,10 +655,7 @@ public static class ModConfig
             "How many timestamped backups to keep per save file. Oldest are pruned. 0 = keep all.");
 
         // --- Truck upgrades ---
-        TruckUpgradesEnabled = cfg.Bind(
-            "Truck Upgrades", "Enabled", true,
-            "Enable the team-wide truck upgrades (Heal Power, Charge Efficiency, Loot Cash-In). Bought in the normal shop; effects apply for the whole team.");
-        TruckHealPercentPerLevel = BindFloat(cfg,
+                TruckHealPercentPerLevel = BindFloat(cfg,
             "Truck Upgrades", "HealPercentPerLevel", 0.25f, 0f, 2f,
             "Heal Power: extra healing effectiveness per level. 0.25 = +25% healing per level (truck final-heal, medkits, drones).");
         TruckHealMaxLevel = BindInt(cfg,
@@ -694,10 +681,7 @@ public static class ModConfig
             "Loot Cash-In: fraction of a leftover valuable's value returned as currency when sold. 0.75 = 75%.");
 
         // --- Player Upgrades (custom, sold in the default shop via REPOLib) ---
-        PlayerUpgradesEnabled = cfg.Bind(
-            "Player Upgrades", "Enabled", true,
-            "Master switch for the mod's custom per-player upgrades that appear in the normal shop. Requires REPOLib. Takes effect on restart.");
-        StaminaPercentPerLevel = BindFloat(cfg,
+                StaminaPercentPerLevel = BindFloat(cfg,
             "Player Upgrades", "StaminaPercentPerLevel", 0.10f, 0.01f, 0.5f,
             "Slower Stamina Use: sprint energy drain reduction per level. 0.10 = -10% drain per level (per player).");
         StaminaMaxLevel = BindInt(cfg,
@@ -777,10 +761,7 @@ public static class ModConfig
             "Remove the vanilla 'Map Player Count' upgrade from the shop so Map Suite replaces it (Map Suite already includes live player counts).");
 
         // --- Surprise / special-level system ---
-        SurprisesEnabled = cfg.Bind(
-            "Surprises", "Enabled", true,
-            "Master switch for the surprise/special-level system.");
-        SpecialLevelChancePercent = BindInt(cfg,
+                SpecialLevelChancePercent = BindInt(cfg,
             "Surprises", "SpecialLevelChancePercent", 40, 0, 100,
             "Percent chance (0-100) that any eligible level becomes a special level with modifiers.");
         ModifiersPerLevelMin = BindInt(cfg,
