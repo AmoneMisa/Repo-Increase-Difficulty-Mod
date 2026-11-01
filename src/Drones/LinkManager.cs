@@ -5,11 +5,10 @@ using UnityEngine;
 namespace IncreaseHardMod.Drones;
 
 /// <summary>
-/// Pairs Link drones by slot and ties their engaged targets together with a physical cable.
+/// Pairs Link drones by their saved set identity and slot and ties their engaged targets together with a physical cable.
 ///
-/// Every client derives the same pairs from replicated drone state (A drones and B drones, each
-/// ordered by PhotonView id, paired index by index - so the first-bought A goes with the first B)
-/// and draws the cable. Only the host creates the physics joint, so guests never fight it.
+/// Each purchase delivers two physical items with one saved set ID. Replicated owned-item keys
+/// retain that identity across inventory changes, despawns and reloads. Only the host creates joints.
 ///
 /// The joint is a rope (a ConfigurableJoint with a spherical linear limit): slack when close, a firm pull past
 /// the cable length. The limit starts at the gap when connected (capped by the configured range) and
@@ -68,20 +67,25 @@ internal static class LinkManager
                 continue;
             (d.slot == 0 ? ListA : ListB).Add(d);
         }
-        ListA.Sort((x, y) => ViewId(x).CompareTo(ViewId(y)));
-        ListB.Sort((x, y) => ViewId(x).CompareTo(ViewId(y)));
-
+        LinkSets.TickMigration();
         Alive.Clear();
-        int pairs = Mathf.Min(ListA.Count, ListB.Count);
-        for (int i = 0; i < pairs; i++)
+        foreach (var a in ListA)
         {
-            var a = ListA[i];
-            var b = ListB[i];
-            long key = ((long)ViewId(a) << 32) | (uint)ViewId(b);
-            Alive.Add(key);
-            if (!Links.TryGetValue(key, out var link))
-                Links[key] = link = new Link { A = a, B = b };
-            UpdateLink(link, i, dt);
+            int set = LinkSets.SetOf(a.GetComponent<ItemAttributes>());
+            if (set <= 0) continue; // Wait for owned-item identity / host's saved pairing to arrive.
+            UtilityDrone b = null;
+            foreach (var candidate in ListB)
+                if (LinkSets.SetOf(candidate.GetComponent<ItemAttributes>()) == set &&
+                    (b == null || ViewId(candidate) < ViewId(b))) b = candidate;
+            if (b == null || !Alive.Add(set)) continue;
+            if (Links.TryGetValue(set, out var previous) && (previous.A != a || previous.B != b))
+            {
+                DestroyLink(previous);
+                Links.Remove(set);
+            }
+            if (!Links.TryGetValue(set, out var link))
+                Links[set] = link = new Link { A = a, B = b };
+            UpdateLink(link, set - 1, dt);
         }
 
         // Drop pairs whose drones were disabled, destroyed or re-paired.

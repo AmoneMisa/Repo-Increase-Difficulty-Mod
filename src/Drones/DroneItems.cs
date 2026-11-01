@@ -140,9 +140,11 @@ internal static class DroneItems
         var item = Object.Instantiate(baseItem);
         item.name = assetName;
         item.itemName = display;
+        item.physicalItem = true;
         item.itemNameLocalized = null;
         item.description = description;
-        item.maxAmount = 3;
+        // Spare B halves must not block delivery of the companion in a newly purchased kit.
+        item.maxAmount = kind == DroneKind.Link && slot == 1 ? int.MaxValue : 3;
         item.maxAmountInShop = shop;
         item.maxPurchase = false;
         item.minPlayerCount = 1;
@@ -198,11 +200,12 @@ internal static class DroneItems
     [HarmonyPatch(typeof(StatsManager), "ItemPurchase")]
     private static class OnPurchase
     {
+        [HarmonyPrefix]
+        private static void Prefix(StatsManager __instance, string itemName, out LinkSets.Purchase __state)
+            => __state = LinkSets.BeforePurchase(__instance, itemName);
+
         [HarmonyPostfix]
-        private static void Postfix(StatsManager __instance, string itemName)
-        {
-            if (itemName == LinkAName && __instance.itemDictionary.ContainsKey(LinkBName))
-                __instance.ItemPurchase(LinkBName);
-        }
+        private static void Postfix(StatsManager __instance, string itemName, LinkSets.Purchase __state)
+            => LinkSets.AfterPurchase(__instance, itemName, __state);
     }
 }

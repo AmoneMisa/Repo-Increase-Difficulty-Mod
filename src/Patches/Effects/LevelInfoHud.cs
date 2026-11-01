@@ -5,21 +5,7 @@ using UnityEngine;
 
 namespace IncreaseHardMod.Patches.Effects;
 
-/// <summary>
-/// Persistent on-screen level info, rendered with the game's OWN TextMeshPro pixel font so it matches
-/// the in-game HUD exactly (two native <see cref="TextMeshProUGUI"/> labels under <see cref="HUDCanvas"/>,
-/// cloning the font + material from the quota text via <see cref="StatsUI"/>).
-///
-/// - Top-centre: the LevelTimer countdown, shown only while a timed level is running (white, turning
-///   red in the final seconds). Driven by <see cref="LevelTimerController"/>.
-/// - Top-right: when the run has a special modifier active, the list of active modifiers, beneath the
-///   game's quota readout.
-///
-/// It reads <see cref="RunManager"/> / the timer state every frame so it works the same for the host
-/// and joined clients with no host-only patch. The labels live under HUDCanvas, so REPO destroys them
-/// on scene change; we recreate them lazily whenever the HUD (and a font template) are available again.
-/// Press LevelInfoToggleKey to hide it.
-/// </summary>
+/// <summary>Bounded native-font modifier labels below the quota and level-number widgets.</summary>
 internal sealed class LevelInfoHud : MonoBehaviour
 {
     private static readonly Color TimerColor = Color.white;
@@ -119,7 +105,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
                 }
                 if(econ!=null)_parts.Add(econ.Name+": "+econ.Description);
                 if(shopEcon!=null)_parts.Add(shopEcon.Name+": "+shopEcon.Description);
-                _detailsLabel.text=string.Join("\n\n",_parts);
+                _detailsLabel.text=string.Join("\n",_parts);
                 _detailsLabel.enabled=_parts.Count>0;
                 PositionDetails();
             }
@@ -156,7 +142,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
         }
         if (_detailsLabel == null)
         {
-            _detailsLabel=Fill(_detailsPanel,"Description",24f,ModColor,TextAlignmentOptions.TopRight);
+            _detailsLabel=Fill(_detailsPanel,"Description",22f,ModColor,TextAlignmentOptions.TopLeft);
             _detailsLabel.enableWordWrapping=true;
             _detailsLabel.maskable=false;
         }
@@ -178,57 +164,66 @@ internal sealed class LevelInfoHud : MonoBehaviour
         return text;
     }
 
+    private void LateUpdate()
+    {
+        // Native SemiUI animates during Update; measure its final position for this frame.
+        if (_modsLabel != null && _modsLabel.enabled) PositionMods();
+        if (_detailsLabel != null && _detailsLabel.enabled) PositionDetails();
+    }
+
     private void PositionMods()
     {
-        float height = _modsLabel.GetPreferredValues(_modsLabel.text, 440f, Mathf.Infinity).y;
-        _modsPanel.Panel.sizeDelta = new Vector2(440f, Mathf.Max(40f, height + 8f));
-        float top=250f;
-        var canvas=((RectTransform)_modsPanel.transform).rect;
-        if(_modsPanel.NativeBounds(GoalUI.instance,out var quota) && quota.center.x>canvas.center.x && quota.center.y>canvas.center.y)
-            top=Mathf.Clamp(canvas.yMax-quota.yMin+14f,180f,canvas.height*.65f);
-        // The shopping cart sits in the same column; never draw the modifier names over it.
-        if(ShoppingListHud.PanelBottom>0f)
-            top=Mathf.Max(top,ShoppingListHud.PanelBottom+14f);
-        _modsPanel.Panel.anchoredPosition=new Vector2(-24f,-top);
+        var canvas = _modsPanel.Viewport;
+        float width = Mathf.Min(380f, canvas.width * .28f);
+        float height = _modsLabel.GetPreferredValues(_modsLabel.text, width, Mathf.Infinity).y;
+        _modsPanel.Panel.sizeDelta = new Vector2(width, Mathf.Max(40f, height + 12f));
+        // Conservative fallback remains below both money and extraction counters.
+        float top = 320f;
+        bool found = false;
+        foreach (var anchor in new Component[] { GoalUI.instance, HaulUI.instance })
+            if (_modsPanel.NativeBounds(anchor, out var bounds) && bounds.center.x > canvas.center.x)
+            {
+                float below = canvas.yMax - bounds.yMin + 18f;
+                top = found ? Mathf.Max(top, below) : below;
+                found = true;
+            }
+        if (ShoppingListHud.PanelBottom > 0f) top = Mathf.Max(top, ShoppingListHud.PanelBottom + 18f);
+        _modsPanel.Panel.anchoredPosition = new Vector2(-24f, -top);
         _modsPanel.Fit();
     }
 
     private void PositionDetails()
     {
-        // Attach to the exact level NUMBER, in its native canvas and coordinate system.
-        // Projecting the LevelUI group included unrelated map text and followed its hidden animation.
         var heading = LevelUI.instance != null ? LevelUI.instance.textNumber : null;
-        if (heading == null || !heading.isActiveAndEnabled)
+        if (heading == null || !heading.isActiveAndEnabled || !_detailsPanel.NativeBounds(heading, out var level))
         {
-            _detailsLabel.enabled=false;
+            _detailsLabel.enabled = false;
             return;
         }
-        heading.ForceMeshUpdate();
-        var ink = heading.textBounds;
-        if (ink.size.y <= 0f)
-        {
-            _detailsLabel.enabled=false;
-            return;
-        }
-        var rt = _detailsLabel.rectTransform;
-        if (rt.parent != heading.rectTransform) rt.SetParent(heading.rectTransform, false);
-        rt.localScale=Vector3.one;
-        rt.localRotation=Quaternion.identity;
-        rt.anchorMin=rt.anchorMax=heading.rectTransform.pivot;
-        rt.pivot=new Vector2(1f,1f);
-        _detailsLabel.enableAutoSizing=false;
-        _detailsLabel.fontSize=heading.fontSize*.38f;
-        float width=ink.size.y*7f;
-        float height=_detailsLabel.GetPreferredValues(_detailsLabel.text,width,Mathf.Infinity).y;
-        rt.sizeDelta=new Vector2(width,Mathf.Max(ink.size.y*.5f,height+ink.size.y*.1f));
-        rt.anchoredPosition3D=new Vector3(ink.max.x,ink.min.y-ink.size.y*.2f,0f);
+        // Follow the level NUMBER in screen coordinates. Its scale must not scale paragraph text.
+        var canvas = _detailsPanel.Viewport;
+        float width = Mathf.Min(380f, canvas.width * .28f);
+        float center = Mathf.Clamp(level.center.x, canvas.xMin + width * .5f + 24f, canvas.xMax - width * .5f - 24f);
+        float top = level.yMin - 16f;
+        float available = top - (canvas.yMin + 140f);
+        if (available < 60f) { _detailsLabel.enabled = false; return; }
+        float height = _detailsLabel.GetPreferredValues(_detailsLabel.text, width, Mathf.Infinity).y + 12f;
+        var panel = _detailsPanel.Panel;
+        panel.anchorMin = panel.anchorMax = panel.pivot = new Vector2(.5f, 1f);
+        panel.sizeDelta = new Vector2(width, Mathf.Min(height, available));
+        panel.anchoredPosition = new Vector2(center - canvas.center.x, top - canvas.yMax);
+        _detailsLabel.enableAutoSizing = true;
+        _detailsLabel.fontSizeMax = 22f;
+        _detailsLabel.fontSizeMin = 18f;
+        _detailsLabel.fontSize = 22f;
+        _detailsPanel.Fit();
     }
 
     private void OnDestroy()
     {
         if (_timerPanel != null) Destroy(_timerPanel.gameObject);
         if (_modsPanel != null) Destroy(_modsPanel.gameObject);
-        // The description follows LevelUI, so its lifetime is independent of the style owner.
+        // Labels and style owners are recreated with the native HUD.
         if (_detailsLabel != null) Destroy(_detailsLabel.gameObject);
         if (_detailsPanel != null) Destroy(_detailsPanel.gameObject);
     }

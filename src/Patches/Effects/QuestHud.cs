@@ -1,184 +1,173 @@
 using System.Collections.Generic;
 using System.Text;
 using IncreaseHardMod.Quests;
+using IncreaseHardMod.Upgrades;
 using TMPro;
 using UnityEngine;
 
 namespace IncreaseHardMod.Patches.Effects;
 
-/// <summary>
-/// The quest tracker, drawn with the game's OWN TextMeshPro pixel font (cloned from the quota
-/// label via <see cref="StatsUI"/>) so it matches the native HUD, exactly like
-/// <see cref="LevelInfoHud"/>. It lists the active team quests (with live progress + reward)
-/// and the local player's personal quest, under a header showing the player's contract rank.
-///
-/// Visibility: on a run level, it shows whenever the full map tool is open (so it lives inside
-/// the opened map like the user asked) OR while the peek hotkey is held (for no-map levels).
-/// The label lives under HUDCanvas, which REPO destroys on scene change, so we recreate it
-/// lazily whenever the HUD and a font template are available again.
-/// </summary>
+/// <summary>Bounded quest sidebar that follows the visible upgrade list without covering the map.</summary>
 internal sealed class QuestHud : MonoBehaviour
 {
-    private static readonly Color HeaderColor = new(1f, 0.85f, 0.2f);
-    private const string ActiveHex = "#FFFFFF";
-    private const string DoneHex = "#7CFF7C";
-    private const string FailHex = "#FF6B6B";
-    private const string RewardHex = "#FFD24D";
-
     private TextMeshProUGUI _label;
-    private readonly StringBuilder _sb = new();
+    private NativeHudPanel _surface;
+    private readonly List<string> _pages = new();
+    private int _page;
+    private bool _questsVisible;
+    internal void ToggleQuests() { _questsVisible = !_questsVisible; _page = 0; }
+    private bool ShowQuests => ModConfig.QuestsEnabled.Value && _questsVisible;
+    private static string MapInfo => VisibleMap() ? MapUpgrade.MapController.VisibleInfo : "";
+    private const float Margin = 24f;
 
-    private void Update()
+    private void LateUpdate()
     {
-        if (!ModConfig.QuestsEnabled.Value)
-        {
-            Hide();
-            return;
-        }
-
         if (SafeMenuLevel() || !SafeRunIsLevel())
         {
+            _questsVisible = false;
             Hide();
             return;
         }
-
-        if (!Visible())
+        if (ModConfig.QuestsEnabled.Value && SemiFunc.NoTextInputsActive() && Input.GetKeyDown(ModConfig.QuestPeekKey.Value)) ToggleQuests();
+        if (!ShowQuests && string.IsNullOrEmpty(MapInfo))
         {
             Hide();
             return;
         }
-
-        if (!EnsureLabel())
-            return;
-
+        if (!EnsureLabel()) return;
+        _surface.gameObject.SetActive(true);
+        Position();
+        if (_surface.Panel.sizeDelta.y < 80f) { Hide(); return; }
         BuildText();
-        _label.text = _sb.ToString();
+        if (_pages.Count > 1)
+        {
+            if (SemiFunc.NoTextInputsActive() && Input.GetKeyDown(KeyCode.PageDown)) _page = (_page + 1) % _pages.Count;
+            if (SemiFunc.NoTextInputsActive() && Input.GetKeyDown(KeyCode.PageUp)) _page = (_page + _pages.Count - 1) % _pages.Count;
+        }
+        _page = Mathf.Clamp(_page, 0, Mathf.Max(0, _pages.Count - 1));
+        _label.text = Header() + _pages[_page] + (_pages.Count > 1 ? $"\n<size=80%>PGUP / PGDN  {_page + 1}/{_pages.Count}</size>" : "");
         _label.enabled = true;
     }
 
-    // Show while the map tool is open, or while the peek key is held.
-    private static bool Visible()
-    {
-        bool mapOpen = MapToolController.instance != null && MapToolController.instance.Active;
-        bool peek = Input.GetKey(ModConfig.QuestPeekKey.Value);
-        return mapOpen || peek;
-    }
-
-    private void BuildText()
-    {
-        _sb.Clear();
-
-        var rank = QuestManager.LocalRank();
-        int perRank = Mathf.Max(1, QuestManager.LocalRankRequirement());
-        _sb.Append($"<color={ColorHex(HeaderColor)}>QUESTS  —  Rank {QuestRankInfo.Label(rank)}  ({QuestManager.LocalRankProgress()}/{perRank})</color>\n");
-
-        var team = QuestManager.TeamQuests;
-        if (team.Count == 0)
-        {
-            _sb.Append($"<color={ActiveHex}>No team quests this level.</color>\n");
-        }
-        else
-        {
-            foreach (var q in team)
-                AppendQuest(q, prefix: "");
-        }
-
-        var personal = QuestManager.PersonalQuest;
-        if (personal != null)
-        {
-            _sb.Append("\n");
-            AppendQuest(personal, prefix: "You: ");
-        }
-    }
-
-    private void AppendQuest(ActiveQuest q, string prefix)
-    {
-        string hex = q.Completed ? DoneHex : (q.Failed ? FailHex : ActiveHex);
-        string status = StatusText(q);
-        _sb.Append($"<color={hex}>[{QuestRankInfo.Label(q.Rank)}] {prefix}{q.Title}  {status}</color>");
-        if (!q.Failed)
-            _sb.Append($"  <color={RewardHex}>{QuestManager.RewardLabel(q)}</color>");
-        _sb.Append("\n");
-    }
-
-    private static string StatusText(ActiveQuest q)
-    {
-        if (q.Completed)
-            return "\u2713";      // check mark
-        if (q.Failed)
-            return "\u2717";      // cross mark
-        switch (q.Objective)
-        {
-            case ObjectiveType.NoDeaths:
-            case ObjectiveType.NoDamage:
-            case ObjectiveType.NoGunKills:
-                return "...";
-            case ObjectiveType.ReachHaul:
-                return $"${Mathf.RoundToInt(q.Progress / 1000f)}K/${Mathf.RoundToInt(q.Target / 1000f)}K";
-            default:
-                return $"{q.Progress}/{q.Target}";
-        }
-    }
+    private static bool VisibleMap() =>
+        (MapToolController.instance != null && MapToolController.instance.Active) ||
+        (Map.Instance != null && Map.Instance.Active);
 
     private bool EnsureLabel()
     {
-        if (HUDCanvas.instance == null)
-            return false;
-        if (_label != null)
-            return true;
+        if (_surface != null && !_surface.HasCurrentOwner)
+        {
+            Destroy(_surface.gameObject);
+            _surface = null;
+            _label = null;
+        }
+        if (_surface == null)
+        {
+            _surface = NativeHudPanel.Create("IHM_QuestHud", new Vector2(380f, 300f),
+                new Vector2(0f, 1f), new Vector2(Margin, -200f), 0f);
+            if (_surface == null) return false;
+            _label = _surface.Label("Quests", 22f, TextAlignmentOptions.TopLeft);
+            _label.enableWordWrapping = true;
+            _label.enableAutoSizing = false;
+            _label.overflowMode = TextOverflowModes.Ellipsis;
+            var rt = _label.rectTransform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+        }
+        return _label != null;
+    }
 
-        var template = FindTemplate();
-        if (template == null)
-            return false;
+    private void Position()
+    {
+        var canvas = _surface.Viewport;
+        float width = Mathf.Min(380f, canvas.width * .28f);
+        float left = canvas.xMin + Margin;
+        float top = canvas.yMax - 180f;
+        float bottom = canvas.yMin + 140f; // Leave the focus hint and inventory band clear.
+        foreach (var vital in new Component[] { HealthUI.instance, EnergyUI.instance })
+            if (_surface.NativeBounds(vital, out var bounds) && bounds.center.x < canvas.center.x)
+                top = Mathf.Min(top, bounds.yMin - 18f);
+        if (_surface.NativeBounds(StatsUI.instance, out var upgrades, true) && upgrades.center.x < canvas.center.x)
+        {
+            // Choose the larger free interval above/below the complete visible upgrade group.
+            float belowTop = Mathf.Min(top, upgrades.yMin - 18f);
+            float aboveBottom = Mathf.Max(bottom, upgrades.yMax + 18f);
+            if (belowTop - bottom >= top - aboveBottom) top = belowTop;
+            else bottom = aboveBottom;
+            left = Mathf.Clamp(upgrades.xMin, canvas.xMin + Margin, canvas.xMax - width - Margin);
+        }
+        float height = Mathf.Max(0f, top - bottom);
+        // Do not paint over native widgets when no usable sidebar interval exists.
+        _surface.Panel.sizeDelta = new Vector2(width, height);
+        _surface.Panel.anchoredPosition = new Vector2(left - canvas.xMin, top - canvas.yMax);
+        _label.fontSize = height < 180f ? 18f : 22f;
+        _surface.Fit();
+    }
 
-        var go = new GameObject("IHM_QuestHud");
-        go.transform.SetParent(HUDCanvas.instance.transform, false);
+    private string Header() => "<color=#FFD24D><b>" +
+        (!string.IsNullOrEmpty(MapInfo) ? "MAP SUITE" : "QUESTS") + "</b></color>\n";
 
-        var tmp = go.AddComponent<TextMeshProUGUI>();
-        tmp.font = template.font;
-        tmp.fontSharedMaterial = template.fontSharedMaterial;
-        tmp.fontSize = template.fontSize * 0.8f;
-        tmp.color = Color.white;
-        tmp.alignment = TextAlignmentOptions.TopLeft;
-        tmp.enableWordWrapping = false;
-        tmp.raycastTarget = false;
-        tmp.richText = true;
+    private void BuildText()
+    {
+        _pages.Clear();
+        var body = new StringBuilder();
+        var entries = new List<string>();
+        string mapInfo = MapInfo;
+        if (!string.IsNullOrEmpty(mapInfo))
+            foreach (string line in mapInfo.Split('\n')) entries.Add(Clean(line) + "\n");
+        if (ShowQuests)
+        {
+            entries.Add($"<color=#FFD24D><b>{(string.IsNullOrEmpty(mapInfo) ? "" : "QUESTS / ")}RANK {QuestRankInfo.Label(QuestManager.LocalRank())}  {QuestManager.LocalRankProgress()}/{Mathf.Max(1, QuestManager.LocalRankRequirement())}</b></color>\n");
+            foreach (var q in QuestManager.TeamQuests) if (q != null) entries.Add(Entry(q, ""));
+            if (QuestManager.PersonalQuest != null) entries.Add(Entry(QuestManager.PersonalQuest, "YOU: "));
+        }
+        if (entries.Count == 0) entries.Add("NO QUESTS THIS LEVEL.\n");
+        float width = _surface.Panel.sizeDelta.x;
+        float height = _surface.Panel.sizeDelta.y;
+        foreach (string entry in entries)
+        {
+            string candidate = Header() + body + entry + "\n<size=80%>PGUP / PGDN  1/6</size>";
+            if (body.Length > 0 && _label.GetPreferredValues(candidate, width, Mathf.Infinity).y > height)
+            {
+                _pages.Add(body.ToString());
+                body.Clear();
+            }
+            body.Append(entry);
+        }
+        if (body.Length > 0) _pages.Add(body.ToString());
+    }
 
-        var rt = tmp.rectTransform;
-        rt.anchorMin = new Vector2(0f, 1f);
-        rt.anchorMax = new Vector2(0f, 1f);
-        rt.pivot = new Vector2(0f, 1f);
-        rt.sizeDelta = new Vector2(760f, 400f);
-        rt.anchoredPosition = new Vector2(24f, -150f);
+    private static string Entry(ActiveQuest q, string prefix)
+    {
+        string colour = q.Completed ? "#7CFF7C" : q.Failed ? "#FF6B6B" : "#FFFFFF";
+        string title = Clean(q.Title);
+        string line = $"<color={colour}>[{QuestRankInfo.Label(q.Rank)}] {prefix}{title}  {StatusText(q)}</color>\n";
+        if (!q.Failed) line += $"<size=90%><color=#FFD24D>{Clean(QuestManager.RewardLabel(q))}</color></size>\n";
+        return line;
+    }
 
-        _label = tmp;
-        return true;
+    private static string Clean(string value) => (value ?? "").Replace("<", "[").Replace(">", "]").Replace("\r", " ").Replace("\n", " ");
+
+    private static string StatusText(ActiveQuest q)
+    {
+        if (q.Completed) return "DONE";
+        if (q.Failed) return "FAILED";
+        return q.Objective switch
+        {
+            ObjectiveType.NoDeaths or ObjectiveType.NoDamage or ObjectiveType.NoGunKills => "...",
+            ObjectiveType.ReachHaul => $"${Mathf.RoundToInt(q.Progress / 1000f)}K/${Mathf.RoundToInt(q.Target / 1000f)}K",
+            _ => $"{q.Progress}/{q.Target}",
+        };
     }
 
     private void Hide()
     {
-        if (_label != null)
-            _label.enabled = false;
+        if (_surface != null) _surface.gameObject.SetActive(false);
+        if (_label != null) _label.enabled = false;
     }
 
-    private static TextMeshProUGUI FindTemplate()
-    {
-        if (StatsUI.instance != null && StatsUI.instance.Text != null)
-            return StatsUI.instance.Text;
-        return HUDCanvas.instance != null ? HUDCanvas.instance.GetComponentInChildren<TextMeshProUGUI>() : null;
-    }
-
-    private static string ColorHex(Color c) => $"#{ColorUtility.ToHtmlStringRGB(c)}";
-
-    private static bool SafeMenuLevel()
-    {
-        try { return SemiFunc.MenuLevel(); }
-        catch { return false; }
-    }
-
-    private static bool SafeRunIsLevel()
-    {
-        try { return SemiFunc.RunIsLevel(); }
-        catch { return false; }
-    }
+    private void OnDestroy() { if (_surface != null) Destroy(_surface.gameObject); }
+    private static bool SafeMenuLevel() { try { return SemiFunc.MenuLevel(); } catch { return false; } }
+    private static bool SafeRunIsLevel() { try { return SemiFunc.RunIsLevel(); } catch { return false; } }
 }

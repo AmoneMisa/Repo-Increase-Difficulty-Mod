@@ -13,17 +13,7 @@ namespace IncreaseHardMod.Quests;
 /// </summary>
 public static class QuestRewards
 {
-    public static void GrantMoney(int amount)
-    {
-        if (amount <= 0)
-            return;
-        if (!SemiFunc.IsMasterClientOrSingleplayer())
-            return;
-
-        int current = SemiFunc.StatGetRunCurrency();
-        SemiFunc.StatSetRunCurrency(current + amount);
-        Plugin.Log.LogInfo($"[Quests] Reward: +${amount} run currency (now {current + amount}).");
-    }
+    public static void GrantMoney(int amount) => QuestMoney.Grant(amount);
 
     /// <summary>
     /// Heal the whole squad. HealOther is owner-authoritative but RPCs to everyone, so the host

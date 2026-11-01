@@ -156,19 +156,5 @@ internal static class EconomyEvents
         return false;
     }
 
-    // Extraction payouts (the only way currency rises while inside a level): scale the increase.
-    [HarmonyPatch(typeof(SemiFunc), "StatSetRunCurrency")]
-    private static class PayPatch
-    {
-        [HarmonyPrefix]
-        private static void Prefix(ref int value)
-        {
-            float mult = PayMult;
-            if (mult == 1f || !SemiFunc.IsMasterClientOrSingleplayer() || !SemiFunc.RunIsLevel())
-                return;
-            int current = SemiFunc.StatGetRunCurrency();
-            if (value > current)
-                value = current + Mathf.Max(0, Mathf.RoundToInt((value - current) * mult));
-        }
-    }
+    // Extraction-only payout scaling is scoped in CurrencyPayout.
 }

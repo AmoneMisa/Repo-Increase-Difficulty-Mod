@@ -1,0 +1,41 @@
+using IncreaseHardMod.Drones;
+int checks=0;
+void Check(bool ok,string label){if(!ok)throw new Exception(label);checks++;Console.WriteLine("PASS: "+label);}
+void Reset(){StatsManager.instance=new();var s=StatsManager.instance;s.itemDictionary[DroneItems.LinkAName]=new(){name=DroneItems.LinkAName};s.itemDictionary[DroneItems.LinkBName]=new(){name=DroneItems.LinkBName};SemiFunc.Host=true;PunManager.instance=new();}
+ItemAttributes Part(int slot,int number)=>new(){instanceName=(slot==0?DroneItems.LinkAName:DroneItems.LinkBName)+"/"+number};
+Reset();var s=StatsManager.instance;s.ItemPurchase(DroneItems.LinkAName);
+Check(s.item.Count==2&&s.PartnerPurchases==1,"One purchase creates exactly two physical items and one companion purchase");
+int first=LinkSets.SetOf(Part(0,1));Check(first>0&&first==LinkSets.SetOf(Part(1,1)),"Both delivered parts share a positive persistent set ID");
+s.ItemPurchase(DroneItems.LinkAName);int second=LinkSets.SetOf(Part(0,2));
+Check(s.item.Count==4&&s.PartnerPurchases==2,"Two purchases create two complete deployable pairs");
+Check(second>first&&second==LinkSets.SetOf(Part(1,2)),"Separate purchases have separate monotonic set identities");
+Check(PunManager.instance.Replications==6,"Counter and both endpoint identities use native replicated run stats");
+var saved=new Dictionary<string,int>(s.runStats);s.runStats=new(saved);
+Check(LinkSets.SetOf(Part(0,1))==first&&LinkSets.SetOf(Part(1,2))==second,"Save/reload retains pairs independently of scene/Photon IDs");
+s.item.Remove(Part(1,1).instanceName);LinkSets.EnsureLegacyPairs();
+Check(LinkSets.SetOf(Part(0,1))==first&&LinkSets.SetOf(Part(1,2))==second,"Losing one endpoint does not steal another set's surviving partner");
+Check(LinkSets.SetOf(new ItemAttributes())==0&&LinkSets.SetOf((ItemAttributes)null)==0,"Uninitialized scene items wait for their owned-item identity");
+SemiFunc.Host=false;int count=s.item.Count;s.ItemPurchase(DroneItems.LinkAName);
+Check(s.item.Count==count+1&&s.PartnerPurchases==2,"Non-host purchase callback cannot create a duplicate companion");
+int rep=GuestMutationAttempts();Check(PunManager.instance.Replications==rep,"Guests cannot bind or migrate sets");
+Reset();s=StatsManager.instance;s.item[Part(0,1).instanceName]=1;s.item[Part(1,1).instanceName]=1;s.item[Part(0,2).instanceName]=1;s.item[Part(1,2).instanceName]=1;LinkSets.EnsureLegacyPairs();
+Check(LinkSets.SetOf(Part(0,1))==LinkSets.SetOf(Part(1,1))&&LinkSets.SetOf(Part(0,2))==LinkSets.SetOf(Part(1,2)),"Legacy owned pairs migrate once into saved fixed sets");
+first=LinkSets.SetOf(Part(0,1));LinkSets.EnsureLegacyPairs();Check(LinkSets.SetOf(Part(0,1))==first&&s.runStats["IHM_LinkNextSet"]==2,"Repeated migration never reassigns existing sets");
+s.item.Clear();s.ItemPurchase(DroneItems.LinkAName);Check(LinkSets.SetOf(Part(0,1))==3&&LinkSets.SetOf(Part(1,1))==3,"Reused native owned-item suffixes get a fresh pair identity");
+Reset();s=StatsManager.instance;s.itemDictionary[DroneItems.LinkAName].physicalItem=false;s.ItemPurchase(DroneItems.LinkAName);Check(s.item.Count==0&&s.PartnerPurchases==0,"No A delivery does not create an orphan B");
+Reset();s=StatsManager.instance;s.itemDictionary.Remove(DroneItems.LinkBName);s.ItemPurchase(DroneItems.LinkAName);Check(s.item.Count==1,"Temporarily unavailable B definition does not crash purchase");
+Reset();s=StatsManager.instance;s.ItemPurchase(DroneItems.LinkAName);var named=Part(0,1);named.item=s.itemDictionary[DroneItems.LinkAName];
+typeof(LinkSets).GetNestedType("PartName",System.Reflection.BindingFlags.NonPublic).GetMethod("Prefix",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Static).Invoke(null,new object[]{named});
+Check(named.cachedItemName=="Link Drone A / Set 1"&&named.itemName==named.cachedItemName,"Pair labels update the current game's cached prompt and per-item name");
+Reset();s=StatsManager.instance;s.Shop=true;s.ItemPurchase(DroneItems.LinkAName);
+Check(s.item.Count==0&&s.itemsPurchased[DroneItems.LinkAName]==1&&s.itemsPurchased[DroneItems.LinkBName]==1,"Real shop purchase reserves two delivery counts without requiring owned instances");
+s.Shop=false;s.ItemAdd(DroneItems.LinkBName);s.ItemAdd(DroneItems.LinkAName);
+Check(LinkSets.SetOf(Part(0,1))>0&&LinkSets.SetOf(Part(0,1))==LinkSets.SetOf(Part(1,1)),"Deferred A/B truck delivery resolves the saved set in either spawn order");
+first=LinkSets.SetOf(Part(0,1));s.item.Clear();s.Shop=true;s.ItemPurchase(DroneItems.LinkAName);s.Shop=false;s.ItemAdd(DroneItems.LinkAName);s.ItemAdd(DroneItems.LinkBName);
+Check(LinkSets.SetOf(Part(0,1))>first&&LinkSets.SetOf(Part(0,1))==LinkSets.SetOf(Part(1,1)),"Newly delivered items replace stale mappings when native suffixes are reused");
+Reset();s=StatsManager.instance;s.item[Part(0,1).instanceName]=1;s.Shop=true;s.ItemPurchase(DroneItems.LinkAName);int orphan=LinkSets.SetOf(Part(0,1));s.Shop=false;s.ItemAdd(DroneItems.LinkAName);s.ItemAdd(DroneItems.LinkBName);LinkSets.EnsureLegacyPairs();
+Check(orphan>0&&LinkSets.SetOf(Part(0,2))==LinkSets.SetOf(Part(1,1))&&LinkSets.SetOf(Part(0,2))!=orphan,"A pre-existing orphan cannot consume the next kit's reserved B");
+Reset();s=StatsManager.instance;s.Shop=true;s.ItemPurchase(DroneItems.LinkAName);s.ItemPurchase(DroneItems.LinkAName);var pending=new Dictionary<string,int>(s.runStats);s.runStats=new(pending);s.Shop=false;s.ItemAdd(DroneItems.LinkAName);s.ItemAdd(DroneItems.LinkAName);s.ItemAdd(DroneItems.LinkBName);s.ItemAdd(DroneItems.LinkBName);
+Check(LinkSets.SetOf(Part(0,1))==LinkSets.SetOf(Part(1,1))&&LinkSets.SetOf(Part(0,2))==LinkSets.SetOf(Part(1,2))&&LinkSets.SetOf(Part(0,1))!=LinkSets.SetOf(Part(0,2)),"Multiple queued kits retain two distinct pairs after pending-state save/reload");
+Console.WriteLine("LINK_SET_AUDIT_PASS: "+checks);
+int GuestMutationAttempts(){int before=PunManager.instance.Replications;LinkSets.Bind("a","b");LinkSets.EnsureLegacyPairs();return before;}

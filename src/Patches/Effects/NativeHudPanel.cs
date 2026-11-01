@@ -8,6 +8,8 @@ namespace IncreaseHardMod.Patches.Effects;
 internal sealed class NativeHudPanel : MonoBehaviour
 {
     internal RectTransform Panel;
+    internal Rect Viewport => _canvasRect.rect;
+    internal bool HasCurrentOwner => _owner != null && _owner == HUDCanvas.instance;
     private RectTransform _canvasRect;
     private TMP_FontAsset _font;
     private Material _material;
@@ -54,8 +56,7 @@ internal sealed class NativeHudPanel : MonoBehaviour
         result._material = new Material(template.fontSharedMaterial);
         if (result._material.HasProperty(ShaderUtilities.ID_FaceColor))
             result._material.SetColor(ShaderUtilities.ID_FaceColor, Color.white);
-        if (result._material.HasProperty(ShaderUtilities.ID_GlowColor))
-            result._material.SetColor(ShaderUtilities.ID_GlowColor, Color.clear);
+        // Preserve the native glow preset; only reset hidden face colour and stencil state.
         if (result._material.HasProperty("_StencilComp")) result._material.SetFloat("_StencilComp", 8f);
         if (result._material.HasProperty("_Stencil")) result._material.SetFloat("_Stencil", 0f);
         result._material.DisableKeyword("UNITY_UI_CLIP_RECT");
@@ -128,13 +129,15 @@ internal sealed class NativeHudPanel : MonoBehaviour
 
     // Project native HUD glyphs through their own canvas camera. Rect sizes alone can include
     // large empty padding, and the native canvas uses different render coordinates.
-    internal bool NativeBounds(Component native, out Rect bounds)
+    internal bool NativeBounds(Component native, out Rect bounds) => NativeBounds(native, out bounds, false);
+
+    internal bool NativeBounds(Component native, out Rect bounds, bool includeChildren)
     {
         bounds = default;
         if (native == null || !native.gameObject.activeInHierarchy) return false;
         bool found = false;
         var primary=native.GetComponent<TextMeshProUGUI>();
-        var labels=primary!=null && !(native is HealthUI) && !(native is EnergyUI)
+        var labels=!includeChildren && primary!=null && !(native is HealthUI) && !(native is EnergyUI)
             ?new[]{primary}:native.GetComponentsInChildren<TextMeshProUGUI>(true);
         foreach (var text in labels)
         {
@@ -143,7 +146,7 @@ internal sealed class NativeHudPanel : MonoBehaviour
             if (canvas == null) continue;
             text.ForceMeshUpdate();
             if (text.textInfo.characterCount == 0) continue;
-            var camera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+            var camera = HudProjection.CanvasCamera(canvas);
             var box = text.textBounds;
             for (int x=0;x<2;x++) for (int y=0;y<2;y++)
             {

@@ -146,15 +146,15 @@ count) and, like every number below, are configurable.
 | **Gun Battery Life** (one per gun type: bullet / laser / tranq) | 20 each | That gun's battery lasts 5% longer per level (up to +100%). ~6,000 |
 | **Autoscan** | 5 | Automatically discovers valuables around you every second, 5 m further per level (5-25 m). ~8,000 |
 | **Map Suite** | 10 | One upgrade, ten map features: L1 alive-player count, L2 dead-player count, L3 active monsters, L4 respawning monsters, L5 quota heading and valuable tracker (found/total, haul), L6 team pings on the map, L7-L8 zoom the map out (zoom keys `-` / `=`), L9 cosmetic-box tracker, L10 monsters as dots. Replaces the vanilla *Map Player Count* upgrade by default. ~15,000 for the first level |
-| **Ping Info** | 1 | Your pings show the valuable's value, cosmetic rarity and exact name. ~6,000 |
-| **Ping Anywhere** | 1 | Place location pings on any surface, visible through walls (limited live pings per player). ~6,000 |
+| **Ping Info** | 1 | Addon for Ping Anywhere: adds valuable prices, rarity and exact target names. Cannot place pings alone. ~6,000 |
+| **Ping Anywhere** | 1 | Unlocks team pings for players, monsters, valuables, carts, items and surfaces (limited live markers). ~6,000 |
 
 **Truck upgrades** - bought once, they apply to the whole team:
 
 | Upgrade | Levels | What it does |
 | --- | --- | --- |
-| **Heal Power** | 3 | All healing (truck final heal, health packs, healing drones) is 25% stronger per level. Starts at 10,000 |
-| **Charge Efficiency** | 3 | The truck's charging station spends 20% less energy per level when it recharges items. Starts at 10,000. Stacks with the power-crystal economy: fewer crystals burned per recharge |
+| **Heal Power** | 3 | All healing gains diminishing bonuses: 1.25x / 1.4375x / 1.5781x at levels 1–3, approaching 2x. Starts at 10,000 |
+| **Charge Efficiency** | 3 | The charging station multiplies remaining energy drain by 0.8 per level: 80% / 64% / 51.2%; minimum 5%. Starts at 10,000. Stacks with the power-crystal economy: fewer crystals burned per recharge |
 | **Loot Cash-In** | 1 | Once every quota is closed, leftover valuables are sold automatically for 75% of their value. One-time unlock, 50,000 |
 
 #### Utility drones (shop)
@@ -197,8 +197,8 @@ position; the sender draws once locally and ignores its own network echo.
 
 Gated behind ping upgrades:
 
-- **Ping Info** — enriches ping labels (value, rarity, name).
-- **Ping Anywhere** — unlocks Location pings (anywhere you aim, visible through walls),
+- **Ping Info** — optional information addon for Ping Anywhere (value, rarity, exact names). Does not enable pinging.
+- **Ping Anywhere** — unlocks all team pings (players, monsters, objects and surfaces, visible through walls),
   capped per player.
 
 A global anti-flood cap limits how many pings can be on screen at once.
@@ -492,15 +492,15 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 | **Gun Battery Life** (своё на каждый тип оружия: пули / лазер / транквилизатор) | по 20 | Батарея этого оружия служит на 5% дольше за уровень (до +100%). ~6 000 |
 | **Autoscan** | 5 | Раз в секунду находит ценности вокруг, на 5 м дальше за уровень (5-25 м). ~8 000 |
 | **Map Suite** | 10 | Одно улучшение, десять функций карты: L1 число живых игроков, L2 число мёртвых, L3 активные монстры, L4 возрождающиеся монстры, L5 направление к квоте и трекер ценностей (найдено/всего, добыча), L6 командные пинги на карте, L7-L8 отдаление карты (клавиши `-` / `=`), L9 трекер косметических ящиков, L10 монстры точками. По умолчанию заменяет ванильное *Map Player Count*. ~15 000 за первый уровень |
-| **Ping Info** | 1 | Твои пинги показывают стоимость ценности, редкость косметики и точное название. ~6 000 |
-| **Ping Anywhere** | 1 | Ставь пинги-метки на любой поверхности, видимые сквозь стены (число живых пингов на игрока ограничено). ~6 000 |
+| **Ping Info** | 1 | Дополнение к Ping Anywhere: стоимость, редкость и точные названия. Само по себе не позволяет пинговать. ~6 000 |
+| **Ping Anywhere** | 1 | Открывает пинги игроков, монстров, ценностей, тележек, предметов и поверхностей. ~6 000 |
 
 **Улучшения грузовика** - покупаются один раз и действуют на всю команду:
 
 | Улучшение | Уровни | Что делает |
 | --- | --- | --- |
-| **Heal Power** | 3 | Всё лечение (финальное лечение грузовика, аптечки, лечащие дроны) сильнее на 25% за уровень. От 10 000 |
-| **Charge Efficiency** | 3 | Зарядная станция тратит на 20% меньше энергии за уровень при зарядке предметов. От 10 000. Работает вместе с экономикой кристаллов: на зарядку уходит меньше кристаллов |
+| **Heal Power** | 3 | Всё лечение получает убывающий бонус: 1,25x / 1,4375x / 1,5781x на уровнях 1–3, с пределом 2x. От 10 000 |
+| **Charge Efficiency** | 3 | Остаточный расход энергии умножается на 0,8 за уровень: 80% / 64% / 51,2%; минимум 5%. От 10 000. Работает вместе с экономикой кристаллов: на зарядку уходит меньше кристаллов |
 | **Loot Cash-In** | 1 | Когда все квоты закрыты, оставшиеся ценности продаются автоматически за 75% стоимости. Разовая разблокировка, 50 000 |
 
 #### Утилитарные дроны (магазин)
@@ -543,8 +543,8 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 
 Зависят от улучшений:
 
-- **Ping Info** — расширяет подписи пингов (стоимость, редкость, название).
-- **Ping Anywhere** — открывают пинги-точки (куда угодно, видны сквозь стены), с лимитом на игрока.
+- **Ping Info** — дополнение к Ping Anywhere: стоимость, редкость и точные названия; не открывает пинги.
+- **Ping Anywhere** — открывает все пинги команды: игроков, монстров, предметов и поверхностей, с лимитом на игрока.
 
 Глобальный анти-флуд ограничивает число пингов на экране одновременно.
 
@@ -718,7 +718,7 @@ inventory action shares a binding with voting, the inventory action takes priori
 Capped custom upgrades cannot be consumed at maximum level. Ping Info and Ping Anywhere cap
 at one; Map Suite at ten; Inventory Slot at four levels. Other upgrades use their declared/configured
 limits. Death Protection can be purchased/used again after its charge is spent.
-Ping Info alone does **not** unlock floor/wall pings: Ping Anywhere remains required.
+Ping Info alone does **not** enable any ping: Ping Anywhere is required for players, objects and surfaces.
 
 Truck **Heal Power**, **Charge Efficiency** and **Loot Cash-In** are team upgrades. A purchase
 increases the shared team level once, reaches late joiners, and remains after the buyer leaves.
@@ -736,7 +736,7 @@ They use host-synchronized saved levels. This does not make personal inventory s
 На максимальном уровне предмет улучшения не съедается. Ping Info и Ping Anywhere имеют
 кап 1, Map Suite — 10, Inventory Slot — 4 уровня. Для остальных действуют их объявленные/настроенные
 лимиты. Death Protection можно использовать повторно после расходования заряда.
-Ping Info сам по себе **не** открывает пинги пола и стен: нужен Ping Anywhere (прежняя покупка Pin переносится автоматически).
+Ping Info сам по себе **не** открывает никакие пинги: нужен Ping Anywhere (прежняя покупка Pin переносится автоматически).
 
 **Heal Power**, **Charge Efficiency** и **Loot Cash-In** машины действуют на всю команду. Покупка
 однократно повышает общий уровень, распространяется на поздно подключившихся и сохраняется после
@@ -835,3 +835,18 @@ Validation uses controlled Unity/game/Photon fixtures and current-game assembly 
 Retains the quest-system work already on remote master. Quest network events are separate from the ice pistol and Sticky Pistol; host state/buffs validate sender and payload. The merged build passes 93 controlled network checks and resolves 131 current-game Harmony targets. Quest progression/rewards still require in-game verification.
 
 Сохранена система квестов из remote master. Сетевые события квестов отделены от ледяного пистолета и Sticky Pistol; состояние и бонусы проверяют хоста и формат сообщения. После объединения проходят 93 сетевые проверки и разрешаются 131 точки патчей текущей игры. Прохождение квестов и награды ещё требуют проверки в игре.
+
+
+### 0.6.3 HUD, quests and balance corrections / исправления HUD, квестов и баланса
+
+- **J** toggles quests, closed by default; Tab no longer opens quests automatically. Change `Quests / PeekKey` in config to rebind it. PgUp/PgDn page crowded lists. Keys are ignored while typing.
+- Map Suite statistics stay on Tab in the same bounded sidebar renderer. No black text backplates. Modifier names clear the quota; explanations follow the level number in a narrow wrapped column.
+- Ping Anywhere is the base unlock for all target categories, including teammates. Ping Info only adds names, prices and rarity. Previous Pin ownership still migrates to Ping Anywhere.
+- Link Drone Set purchases deliver two separately deployable parts, A and B, with a shared saved set identity. Disabling or losing one part never pairs the other with a different kit. Pair labels identify each set; old owned pairs migrate once.
+- Quest dollar rewards are converted once into the native wallet's K units (rounded up to whole K, matching extraction). Economic payout multipliers apply only to extraction, not quest rewards. Existing inflated saved balances are **not** guessed or automatically rewritten.
+- Shared Heal Power uses `2 - (1-p)^level`; shared Charge Efficiency uses `max(0.05, (1-p)^level)`. Defaults: healing 1.25x / 1.4375x / 1.578125x, charging drain 80% / 64% / 51.2%. Existing upgrade IDs and owned levels are retained; formulas also apply to saved levels.
+
+**RU:** J открывает/закрывает квесты; по умолчанию они скрыты и не открываются через Tab. Клавиша меняется в `Quests / PeekKey`, страницы — PgUp/PgDn. Статистика Map Suite остаётся в Tab без чёрной подложки, в ограниченной колонке. Модификаторы расположены под квотой, описания — под номером уровня. Ping Anywhere открывает все пинги, Ping Info только добавляет сведения. Набор Link Drone даёт два отдельных предмета A/B с постоянной сохранённой парой. Денежные награды квестов переводятся в тысячи один раз, экономические множители применяются к выдаче денег за эвакуацию. Уже завышенный баланс сохранения автоматически не меняется. Улучшения грузовика действуют на команду с убывающей эффективностью по формулам выше; изученные уровни сохраняются.
+
+Replace the previous 0.6.3 DLL with the new package and restart every client. Controlled fixtures do not certify live multiplayer delivery or the game's final blur/chromatic post-processing.
+Замените предыдущую DLL 0.6.3 новой и перезапустите игру у всех участников. Проверки на стенде не заменяют проверку сетевой доставки предметов и итогового размытия HUD в самой игре.

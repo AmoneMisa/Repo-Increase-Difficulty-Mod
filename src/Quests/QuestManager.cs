@@ -387,7 +387,7 @@ public static class QuestManager
 
     private static string RewardText(ActiveQuest q) => q.RewardType switch
     {
-        RewardType.Money => $"${Mathf.RoundToInt(q.RewardAmount / 1000f)}K",
+        RewardType.Money => $"${QuestMoney.WalletUnits(q.RewardAmount)}K",
         RewardType.Cosmetic => "cosmetic box",
         RewardType.Heal => $"heal {q.RewardAmount}",
         RewardType.TempStat => $"+{q.RewardAmount} {StatKindInfo.Label(q.RewardStat)} (level)",
@@ -417,7 +417,7 @@ public static class QuestManager
                     ? $"Reward: {UpgradeTierInfo.Label(q.RewardTier)} upgrade"
                     : $"Reward: {q.RewardItem}";
             default:
-                return $"Reward: ${Mathf.RoundToInt(q.RewardAmount / 1000f)}K";
+                return $"Reward: ${QuestMoney.WalletUnits(q.RewardAmount)}K";
         }
     }
 

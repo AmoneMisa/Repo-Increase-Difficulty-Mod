@@ -75,4 +75,7 @@ PhotonNetwork.Sent.Clear();network.BroadcastQuestState(quest);network.BroadcastQ
 Check(PhotonNetwork.Sent.Count==0,"Non-host cannot broadcast authoritative quest state or buffs");
 PhotonNetwork.IsMasterClient=true;network.BroadcastQuestState(quest);network.BroadcastQuestBuff(1,2);
 Check(PhotonNetwork.Sent.Count==2&&PhotonNetwork.Sent.All(e=>e.Receivers==Photon.Realtime.ReceiverGroup.Others),"Locally applied quest broadcasts do not echo back to the host");
+Check(NetworkPayload.Ping(new object[]{(byte)8,1f,2f,3f,"Player","Sender",313},out _),"Player ping kind accepts a replicated avatar view ID");
+Check(!NetworkPayload.Ping(new object[]{(byte)9,1f,2f,3f,"unknown","Sender",0},out _),"Undefined ping kind remains rejected");
+Check(!NetworkPayload.Ping(new object[]{(byte)8,1f,2f,3f,"Player","Sender",-1},out _),"Player ping rejects a negative view ID");
 Console.WriteLine("NETWORK_AUDIT_PASS: "+checks);

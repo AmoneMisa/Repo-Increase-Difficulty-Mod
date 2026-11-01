@@ -16,6 +16,7 @@ internal enum PingType : byte
     CosmeticBox = 5,
     Scooter = 6,
     Upgrade = 7,
+    Player = 8,
 }
 
 /// <summary>Team pings with soft silhouette contours and large cyan location markers.
@@ -43,11 +44,10 @@ internal static class PingController
         if (!ModConfig.PingEnabled.Value)
             return;
 
-        // The whole ping system is a purchase: without ANY ping upgrade you can't ping at all.
-        // (Location pings additionally require Ping Anywhere, checked below.)
-        if (!OwnsAnyPing())
+        // Ping Anywhere is the base unlock. Ping Info only enriches its announcements.
+        if (!OwnsPingAnywhere())
         {
-            Announce("Requires a ping upgrade (Ping Info / Ping Anywhere)", Color.gray, "");
+            Announce("Requires Ping Anywhere", Color.gray, "");
             return;
         }
 
@@ -64,7 +64,8 @@ internal static class PingController
         string label;
         bool info = OwnsPingInfo();
 
-        if (TryAim(ray, maxDist, out RaycastHit hit))
+        RaycastHit hit;
+        if (TryAim(ray, maxDist, out hit))
         {
             ClassifyHit(hit, info, out type, out pos, out physGrab, out label);
         }
@@ -91,10 +92,12 @@ internal static class PingController
         }
 
         string sender = LocalName();
-        SpawnPing(type, pos, physGrab, local: true, sender);
+        var player = type == PingType.Player ? PlayerAt(hit.collider) : null;
+        SpawnPing(type, pos, physGrab, local: true, sender, player);
         Announce(label, ColorFor(type), sender);
 
-        int viewID = physGrab != null && physGrab.photonView != null ? physGrab.photonView.ViewID : 0;
+        int viewID = player != null && player.photonView != null ? player.photonView.ViewID :
+            physGrab != null && physGrab.photonView != null ? physGrab.photonView.ViewID : 0;
         ModNetwork.Instance?.BroadcastPing((byte)type, pos, label, sender, viewID);
     }
 
@@ -102,7 +105,7 @@ internal static class PingController
     // native highlight should frame. Location falls back to a null target (proxy built on spawn).
     internal static bool TryAim(Ray ray, float maxDistance, out RaycastHit selected)
     {
-        int mask = (int)SemiFunc.LayerMaskGetVisionObstruct() & ~LayerMask.GetMask("Player", "Ignore Raycast", "UI");
+        int mask = ((int)SemiFunc.LayerMaskGetVisionObstruct() | LayerMask.GetMask("Player")) & ~LayerMask.GetMask("Ignore Raycast", "UI");
         var hits = Physics.RaycastAll(ray,maxDistance,mask,QueryTriggerInteraction.Collide);
         System.Array.Sort(hits,(a,b)=>a.distance.CompareTo(b.distance));
         selected=default;
@@ -110,7 +113,7 @@ internal static class PingController
         foreach(var hit in hits)
         {
             if(hit.collider==null) continue;
-            var avatar=hit.collider.GetComponentInParent<PlayerAvatar>();
+            var avatar=PlayerAt(hit.collider);
             if(avatar!=null && avatar.isLocal) continue;
             ClassifyHit(hit,false,out var type,out _,out _,out _);
             if(type!=PingType.Location) {selected=hit;return true;}
@@ -124,7 +127,7 @@ internal static class PingController
         var camera=ActiveCamera();
         foreach(var hit in nearby)
         {
-            var avatar=hit.collider.GetComponentInParent<PlayerAvatar>();
+            var avatar=PlayerAt(hit.collider);
             if(avatar!=null && avatar.isLocal)continue;
             ClassifyHit(hit,false,out var type,out _,out var physical,out _);
             if(type==PingType.Location || physical==null || camera==null)continue;
@@ -138,7 +141,7 @@ internal static class PingController
             bool blocked=false;
             foreach(var blocker in blockers)
             {
-                if(blocker.collider.GetComponentInParent<PlayerAvatar>() is PlayerAvatar self && self.isLocal)continue;
+                if(PlayerAt(blocker.collider) is PlayerAvatar self && self.isLocal)continue;
                 if(blocker.collider.GetComponentInParent<PhysGrabObject>()!=physical && blocker.distance+.01f<direction.magnitude) {blocked=true;break;}
             }
             if(!blocked){selected=hit;return true;}
@@ -146,9 +149,24 @@ internal static class PingController
         return surface;
     }
 
+    internal static PlayerAvatar PlayerAt(Collider collider)
+    {
+        if (collider == null) return null;
+        return collider.GetComponentInParent<PlayerAvatar>() ?? collider.GetComponentInParent<PlayerTumble>()?.playerAvatar;
+    }
+
     internal static void ClassifyHit(RaycastHit hit, bool info,
         out PingType type, out Vector3 pos, out PhysGrabObject physGrab, out string label)
     {
+        var avatar = PlayerAt(hit.collider);
+        if (avatar != null && !avatar.isLocal)
+        {
+            type = PingType.Player;
+            pos = avatar.transform.position + Vector3.up * .8f;
+            physGrab = null;
+            label = !info || string.IsNullOrEmpty(avatar.playerName) ? "Player" : avatar.playerName.Replace("<", "[").Replace(">", "]");
+            return;
+        }
         var t=hit.collider.transform;
         var body=hit.collider.attachedRigidbody;
         physGrab=t.GetComponentInParent<PhysGrabObject>() ?? (body!=null?body.GetComponent<PhysGrabObject>():null);
@@ -247,24 +265,27 @@ internal static class PingController
     {
         if (!ModConfig.PingEnabled.Value) return;
         PhysGrabObject physGrab = null;
+        PlayerAvatar player = null;
         if (viewID != 0)
         {
             var pv = PhotonView.Find(viewID);
-            if (pv != null)
+            if (pv != null && type == (byte)PingType.Player)
+                player = pv.GetComponent<PlayerAvatar>() ?? pv.GetComponentInParent<PlayerAvatar>() ?? pv.GetComponentInChildren<PlayerAvatar>();
+            else if (pv != null)
                 physGrab = pv.GetComponent<PhysGrabObject>()
                            ?? pv.GetComponentInChildren<PhysGrabObject>()
                            ?? pv.GetComponentInParent<PhysGrabObject>();
         }
 
-        if(type>(byte)PingType.Upgrade) return;
-        SpawnPing((PingType)type, pos, physGrab, local: false, sender);
+        if(type>(byte)PingType.Player) return;
+        SpawnPing((PingType)type, pos, physGrab, local: false, sender, player);
         Announce(label, ColorFor((PingType)type), sender);
     }
 
     // Spawn (and track) the native highlight for a ping. If we have no object to frame (Location, or a
     // remote object that despawned), build a tiny invisible proxy at the position so there's something
     // for the graphic to bound.
-    private static void SpawnPing(PingType type, Vector3 pos, PhysGrabObject physGrab, bool local, string sender)
+    private static void SpawnPing(PingType type, Vector3 pos, PhysGrabObject physGrab, bool local, string sender, PlayerAvatar player = null)
     {
         // Refresh a repeated mark instead of stacking rings/contours at the same place.
         for(int i=_pings.Count-1;i>=0;i--)
@@ -272,12 +293,14 @@ internal static class PingController
             var old=_pings[i];
             if(old.Sender!=sender || old.Local!=local || old.Type!=type) continue;
             if((physGrab!=null && old.Graphic!=null && old.Graphic.target==physGrab) ||
+                (player!=null && old.Graphic!=null && old.Graphic.PlayerTarget==player) ||
                 (type==PingType.Location && Vector3.SqrMagnitude(old.Pos-pos)<.09f)) Remove(old);
         }
         EnforceGlobalCap();
 
         float duration = ModConfig.PingDurationSeconds.Value;
-        var graphic = PingOutline.Create(physGrab, pos, ColorFor(type), duration);
+        var graphic = player != null ? PingOutline.CreatePlayer(player, pos, ColorFor(type), duration) :
+            PingOutline.Create(physGrab, pos, ColorFor(type), duration);
 
         _pings.Add(new ActivePing
         {
@@ -337,7 +360,7 @@ internal static class PingController
 
             // The native graphic self-destroys after its wait time; once it (or its target) is gone,
             // the ping is over.
-            bool graphicDead = p.Graphic == null || (p.Graphic.HadTarget && p.Graphic.target == null);
+            bool graphicDead = p.Graphic == null || p.Graphic.TargetGone;
             if (now >= p.Expire || graphicDead)
             {
                 Remove(p);
@@ -347,6 +370,8 @@ internal static class PingController
             // Track the target so the map marker follows moving pings.
             if (p.Graphic != null && p.Graphic.target != null)
                 p.Pos = p.Graphic.target.centerPoint;
+            else if (p.Graphic != null && p.Graphic.PlayerTarget != null)
+                p.Pos = p.Graphic.PlayerTarget.transform.position + Vector3.up * .8f;
         }
     }
 
@@ -386,6 +411,7 @@ internal static class PingController
         PingType.Valuable => new Color(0.3f, 0.9f, 0.3f),   // green
         PingType.Item => new Color(0.4f, 0.6f, 1f),         // blue
         PingType.Upgrade => new Color(.5f,.85f,1f),
+        PingType.Player => new Color(.4f,.85f,1f),
         PingType.Enemy => new Color(1f, 0.35f, 0.35f),      // red
         PingType.Cart => new Color(0.3f, 0.9f, 0.95f),      // cyan
         PingType.CosmeticBox => new Color(1f, 0.4f, 0.8f),  // pink
@@ -426,8 +452,7 @@ internal static class PingController
     private static bool OwnsPingAnywhere() => PingUpgrades.OwnsPingAnywhere();
     private static bool OwnsPingInfo() => PingUpgrades.OwnsPingInfo();
     // True when the local player owns at least one ping upgrade (the gate for pinging at all).
-    private static bool OwnsAnyPing() =>
-        PingUpgrades.OwnsPingInfo() || PingUpgrades.OwnsPingAnywhere();
+
 
     private static string LocalName()
     {

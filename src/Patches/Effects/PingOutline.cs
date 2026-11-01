@@ -10,6 +10,9 @@ internal sealed class PingOutline : MaskableGraphic
 {
     internal PhysGrabObject target;
     internal bool HadTarget;
+    internal PlayerAvatar PlayerTarget;
+    private bool _hadPlayer;
+    internal bool TargetGone => (HadTarget && target == null) || (_hadPlayer && PlayerTarget == null);
     private Renderer[] _renderers;
     private Vector3 _point;
     private float _until;
@@ -51,11 +54,23 @@ internal sealed class PingOutline : MaskableGraphic
         return frame;
     }
 
+    internal static PingOutline CreatePlayer(PlayerAvatar player, Vector3 point, Color tint, float duration)
+    {
+        var frame = Create(null, point, tint, duration);
+        frame.PlayerTarget = player;
+        frame._hadPlayer = true;
+        var renderers = new List<Renderer>();
+        foreach (var renderer in player.GetComponentsInChildren<Renderer>(true))
+            if (renderer.GetComponentInParent<ItemAttributes>() == null) renderers.Add(renderer);
+        frame._renderers = renderers.ToArray();
+        return frame;
+    }
+
     internal void Close() { if (_root != null) {_root.SetActive(false);Destroy(_root);} }
 
     private void LateUpdate()
     {
-        if (Time.time >= _until || (HadTarget && target == null)) { Close(); return; }
+        if (Time.time >= _until || TargetGone) { Close(); return; }
         var camera = PingController.ActiveCamera();
         if (camera == null) { canvasRenderer.SetAlpha(0f); return; }
         Rect rectangle;
@@ -81,7 +96,7 @@ internal sealed class PingOutline : MaskableGraphic
         }
         else
         {
-            var screen=HudProjection.WorldToScreen(camera,target!=null?target.centerPoint:_point);
+            var screen=HudProjection.WorldToScreen(camera,target!=null?target.centerPoint:PlayerTarget!=null?PlayerTarget.transform.position+Vector3.up*.8f:_point);
             if(screen.z<=camera.nearClipPlane || !HudProjection.DisplayRect(camera).Contains(screen)) {canvasRenderer.SetAlpha(0f);return;}
             _markerScale=Mathf.Clamp(Screen.height/1080f,.8f,2.5f)*ModConfig.PingMarkerScale.Value;
             var size=new Vector2(96f,44f)*_markerScale;

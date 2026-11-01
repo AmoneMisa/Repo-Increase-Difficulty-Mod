@@ -64,7 +64,6 @@ internal static class MapUpgrade
     internal sealed class MapController : MonoBehaviour
     {
         private const float RefreshInterval = 0.25f;
-        private static readonly Color Gold = new(1f, 0.85f, 0.35f);
 
         private static readonly string[] Arrows =
             { "\u2191", "\u2197", "\u2192", "\u2198", "\u2193", "\u2199", "\u2190", "\u2196" };
@@ -72,8 +71,6 @@ internal static class MapUpgrade
         private float _timer;
         private bool _show;
         private string _text = "";
-        private NativeHudPanel _surface;
-        private TextMeshProUGUI _label;
 
         // Runtime zoom offset (in FOV units) added on top of the level's default, driven by the
         // zoom hotkeys. Persists while the game runs so re-opening the map keeps your chosen zoom.
@@ -86,6 +83,7 @@ internal static class MapUpgrade
             if (!ModConfig.PlayerUpgradesEnabled.Value)
             {
                 _show = false;
+                VisibleInfo = "";
                 return;
             }
 
@@ -93,8 +91,7 @@ internal static class MapUpgrade
             int level = mapOpen ? LocalLevel() : 0;
 
             _show = mapOpen && level > 0;
-            if (!_show)
-                return;
+            if (!_show) { VisibleInfo = ""; return; }
 
             // Only hijack the camera FOV while the local player is ALIVE. When dead/spectating the
             // map + camera are driven by the spectate system, and forcing our zoom onto that view
@@ -111,6 +108,7 @@ internal static class MapUpgrade
                 _timer = RefreshInterval;
                 _text = BuildInfo(level);
             }
+            PublishInfo();
         }
 
         // True only while the local avatar exists and is not disabled (dead/spectating). Used to
@@ -284,34 +282,13 @@ internal static class MapUpgrade
             return Arrows[idx];
         }
 
-        private void LateUpdate()
-        {
-            if (!_show || string.IsNullOrEmpty(_text))
-            {
-                if (_surface != null) _surface.gameObject.SetActive(false);
-                return;
-            }
-            if (_surface == null)
-            {
-                _surface = NativeHudPanel.Create("IHM_MapSuite", new Vector2(400f, 270f),
-                    new Vector2(0f, 0.5f), new Vector2(24f, 0f), 0.78f);
-                if (_surface == null) return;
-                _label = _surface.Label("MapInfo", 22f, TextAlignmentOptions.TopLeft);
-                _label.color = Gold;
-                _label.rectTransform.anchorMin = Vector2.zero;
-                _label.rectTransform.anchorMax = Vector2.one;
-                _label.rectTransform.offsetMin = new Vector2(16f, 12f);
-                _label.rectTransform.offsetMax = new Vector2(-16f, -12f);
-            }
-            _surface.gameObject.SetActive(true);
-            _label.text = "<line-height=30>" + _text;
-            int lines = 1;
-            foreach (char c in _text) if (c == '\n') lines++;
-            _surface.Panel.sizeDelta = new Vector2(400f, lines * 30f + 28f);
-            _surface.Fit();
-        }
+        // The shared sidebar renders map statistics and quests in one measured, paginated
+        // region. A separate map panel would overlap both upgrades and the quest tracker.
+        internal static string VisibleInfo { get; private set; } = "";
+        private void LateUpdate() => PublishInfo();
+        internal void PublishInfo() => VisibleInfo = _show ? _text : "";
+        private void OnDestroy() => VisibleInfo = "";
 
-        private void OnDestroy() { if (_surface != null) Destroy(_surface.gameObject); }
     }
 
     /// <summary>Marks a world object we've already given a map marker, so we don't double-add.</summary>

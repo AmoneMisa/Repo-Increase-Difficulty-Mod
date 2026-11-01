@@ -626,7 +626,7 @@ public static class ModConfig
             "Enable the quest progression layer: each run level offers 2-3 team quests plus a personal quest, scaled to team size / day / your contract rank. Completing quests advances your rank (F..SSS) and pays money or upgrade items. Team quests are rolled by the host and synced to everyone.");
         QuestPeekKey = cfg.Bind(
             "Quests", "PeekKey", UnityEngine.KeyCode.J,
-            "Hold this key to peek the quest tracker on levels with no map (the tracker also shows automatically whenever the full map tool is open).");
+            "Press this key to show/hide the quest tracker (default J). Quests start hidden and do not automatically open with Tab.");
         QuestsPerLevelMin = BindInt(cfg,
             "Quests", "QuestsPerLevelMin", 2, 1, 5,
             "Minimum number of TEAM quests offered per level.");
@@ -760,8 +760,8 @@ public static class ModConfig
 
         // --- Truck upgrades ---
                 TruckHealPercentPerLevel = BindFloat(cfg,
-            "Truck Upgrades", "HealPercentPerLevel", 0.25f, 0f, 2f,
-            "Heal Power: extra healing effectiveness per level. 0.25 = +25% healing per level (truck final-heal, medkits, drones).");
+            "Truck Upgrades", "HealPercentPerLevel", 0.25f, 0f, 0.95f,
+            "Heal Power: each level closes this fraction of the remaining bonus gap towards 2x healing. Multiplier = 2 - (1-p)^level. At p=0.25, levels 1/2/3 give 1.25x/1.4375x/1.5781x healing.");
         TruckHealMaxLevel = BindInt(cfg,
             "Truck Upgrades", "HealMaxLevel", 3, 0, 20,
             "Heal Power: maximum purchasable level.");
@@ -769,8 +769,8 @@ public static class ModConfig
             "Truck Upgrades", "HealBaseCost", 10000, 0, 1000000,
             "Heal Power: cost of the first level (grows by CostGrowth each level).");
         TruckChargePercentPerLevel = BindFloat(cfg,
-            "Truck Upgrades", "ChargePercentPerLevel", 0.20f, 0f, 1f,
-            "Charge Efficiency: reduction of the truck charging station's energy-pool drain per level. 0.20 = -20% drain per level.");
+            "Truck Upgrades", "ChargePercentPerLevel", 0.20f, 0f, 0.95f,
+            "Charge Efficiency: multiply remaining energy-pool drain by (1-p) per level, with a 5% minimum. At p=0.20, levels 1/2/3 spend 80%/64%/51.2% of normal energy.");
         TruckChargeMaxLevel = BindInt(cfg,
             "Truck Upgrades", "ChargeMaxLevel", 3, 0, 20,
             "Charge Efficiency: maximum purchasable level.");

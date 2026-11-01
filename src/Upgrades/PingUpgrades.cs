@@ -3,7 +3,7 @@ using RepoUpgrades = REPOLib.Modules.Upgrades;
 
 namespace IncreaseHardMod.Upgrades;
 
-/// <summary>One surface-marker unlock, plus an independent information upgrade.</summary>
+/// <summary>One base ping unlock, plus its optional information addon.</summary>
 internal static class PingUpgrades
 {
     public const string PingAnywhereId = "IHM_PingAnywhere";
@@ -16,14 +16,14 @@ internal static class PingUpgrades
         PlayerUpgradeRegistry.Define(new PlayerUpgradeRegistry.Definition
         {
             Id = PingAnywhereId, DisplayName = "Ping Anywhere",
-            Description = "Unlocks location pings on any surface, visible through walls. Markers expire after the configured duration; live markers are limited. Includes the former Pin unlock.",
+            Description = "Unlocks team pings for players, monsters, valuables, items, carts and any surface, visible through walls. Markers expire after the configured duration; live markers are limited. Includes the former Pin unlock.",
             MaxLevel = 1, BaseShopPrice = ModConfig.PingAnywhereBasePrice.Value,
             IconFile = "Upgrade_Ping.png",
         });
         PlayerUpgradeRegistry.Define(new PlayerUpgradeRegistry.Definition
         {
             Id = PingInfoId, DisplayName = "Ping Info",
-            Description = "Adds valuable prices, cosmetic rarity and exact names to your object pings. Does not unlock location pings.",
+            Description = "Information addon for Ping Anywhere: adds valuable prices, cosmetic rarity, player and monster names, and exact item names. Requires Ping Anywhere to place any ping.",
             MaxLevel = 1, BaseShopPrice = ModConfig.PingInfoBasePrice.Value,
             IconFile = "Upgrade_Ping_Info.png",
         });

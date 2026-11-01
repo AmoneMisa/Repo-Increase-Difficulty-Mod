@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using RepoUpgrades = REPOLib.Modules.Upgrades;
 
 namespace IncreaseHardMod.Upgrades;
@@ -59,7 +59,7 @@ internal static class TruckUpgrades
         {
             Id = HealId,
             DisplayName = "Heal Power",
-            Description = "Truck upgrade (whole team): all healing is stronger. Stacks per level.",
+            Description = "Truck upgrade (whole team): all healing is stronger, with diminishing returns towards 2x base healing.",
             MaxLevel = Mathf.Max(1, ModConfig.TruckHealMaxLevel.Value),
             BaseShopPrice = ModConfig.TruckHealBaseCost.Value,
             IconFile = "Upgrade_Truck_Heal-Power.png",
@@ -69,7 +69,7 @@ internal static class TruckUpgrades
         {
             Id = ChargeId,
             DisplayName = "Charge Efficiency",
-            Description = "Truck upgrade (whole team): the charging station drains its energy slower. Stacks per level.",
+            Description = "Truck upgrade (whole team): each level multiplies the charging station's remaining energy drain; at least 5% drain remains.",
             MaxLevel = Mathf.Max(1, ModConfig.TruckChargeMaxLevel.Value),
             BaseShopPrice = ModConfig.TruckChargeBaseCost.Value,
             IconFile = "Upgrade_Truck_Charge-Power.png",
@@ -103,13 +103,13 @@ internal static class TruckUpgrades
         return definition != null ? Mathf.Clamp(max, 0, definition.MaxLevel) : Mathf.Max(0, max);
     }
 
-    /// <summary>All-healing multiplier derived from the team's Heal Power level (>= 1).</summary>
+    /// <summary>All-healing multiplier approaches 2x by multiplying the remaining bonus gap each level.</summary>
     public static float HealMultiplier =>
-        1f + TeamLevel(HealId) * Mathf.Max(0f, ModConfig.TruckHealPercentPerLevel.Value);
+        1f + (1f - Mathf.Pow(1f - Mathf.Clamp(ModConfig.TruckHealPercentPerLevel.Value, 0f, .95f), TeamLevel(HealId)));
 
-    /// <summary>Charging-station drain multiplier derived from the team's Charge Efficiency (0.05..1).</summary>
+    /// <summary>Each level multiplies the remaining station drain, with a 5% minimum drain.</summary>
     public static float ChargeDrainMultiplier =>
-        Mathf.Clamp(1f - TeamLevel(ChargeId) * Mathf.Max(0f, ModConfig.TruckChargePercentPerLevel.Value), 0.05f, 1f);
+        Mathf.Max(.05f, Mathf.Pow(1f - Mathf.Clamp(ModConfig.TruckChargePercentPerLevel.Value, 0f, .95f), TeamLevel(ChargeId)));
 
     /// <summary>True when anyone on the team owns the Loot Cash-In unlock.</summary>
     public static bool SellUnlocked => TeamLevel(SellId) > 0;

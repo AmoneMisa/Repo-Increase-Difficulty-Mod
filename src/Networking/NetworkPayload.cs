@@ -18,7 +18,7 @@ internal static class NetworkPayload
         data[0] is float seconds && Finite(seconds) && seconds >= 0f && data[1] is bool;
 
     internal static bool Ping(object raw, out object[] data) => Envelope(raw, 6, 7, out data) &&
-        data[0] is byte kind && kind <= 7 && data[1] is float x && Finite(x) &&
+        data[0] is byte kind && kind <= 8 && data[1] is float x && Finite(x) &&
         data[2] is float y && Finite(y) && data[3] is float z && Finite(z) &&
         Text(data[4], 512) && Text(data[5], 128) && (data.Length == 6 || data[6] is int id && id >= 0);
 
