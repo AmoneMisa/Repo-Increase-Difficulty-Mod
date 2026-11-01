@@ -7,9 +7,8 @@ namespace IncreaseHardMod.Patches.Effects;
 /// Charge Efficiency truck upgrade — slows the truck charging station's energy drain.
 ///
 /// ChargingStation keeps an internal energy pool (chargeFloat) that ticks down by a
-/// private <c>chargeRate</c> each charge step while items charge during a run. The
-/// station computes that rate once in Start (chargeRate = 1 / energyPerCrystal /
-/// chargeTotal). We postfix Start to cache that freshly-computed BASE rate and then
+/// private <c>batteryChargeCost</c> each charge step while items charge during a run. The
+/// station computes that rate once in Start (batteryChargeCost = 1 / energyPerCrystal / 100). We postfix Start to cache that freshly-computed BASE rate and then
 /// scale the live field by the upgrade's drain multiplier (&lt;1 = slower drain).
 ///
 /// The multiplier comes from the team's highest Charge Efficiency level

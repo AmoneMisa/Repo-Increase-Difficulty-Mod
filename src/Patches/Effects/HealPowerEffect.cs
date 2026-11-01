@@ -20,11 +20,14 @@ internal static class HealPowerEffect
     [HarmonyPrefix]
     private static void Prefix(ref int healAmount)
     {
-        if (!ModConfig.TruckUpgradesEnabled.Value)
+        if (healAmount <= 0)
             return;
 
-        float m = TruckUpgrades.HealMultiplier;
-        if (m <= 1f || healAmount <= 0)
+        // Level modifiers (Stimulants / Poor Medicine) times the truck's Heal Power upgrade.
+        float m = Modifiers.StatModifiers.Mult(Modifiers.StatAxis.Healing);
+        if (ModConfig.TruckUpgradesEnabled.Value)
+            m *= TruckUpgrades.HealMultiplier;
+        if (Mathf.Approximately(m, 1f))
             return;
 
         healAmount = Mathf.RoundToInt(healAmount * m);

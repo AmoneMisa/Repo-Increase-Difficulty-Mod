@@ -1,4 +1,5 @@
 using HarmonyLib;
+using UnityEngine;
 
 namespace IncreaseHardMod.Patches;
 
@@ -22,11 +23,11 @@ internal static class EnemySpeedPatch
     [HarmonyPostfix]
     private static void Postfix(EnemyNavMeshAgent __instance)
     {
-        float mult = Difficulty.Multiplier(
-            ModConfig.EnemySpeedPerLevel.Value,
-            ModConfig.EnemySpeedMax.Value);
+        float mult = Modifiers.StatModifiers.Mult(Modifiers.StatAxis.EnemySpeed);
+        if (ModConfig.ScaleEnemySpeed.Value)
+            mult *= Difficulty.Multiplier(ModConfig.EnemySpeedPerLevel.Value, ModConfig.EnemySpeedMax.Value);
 
-        if (mult <= 1f)
+        if (Mathf.Approximately(mult, 1f))
             return;
 
         __instance.DefaultSpeed *= mult;

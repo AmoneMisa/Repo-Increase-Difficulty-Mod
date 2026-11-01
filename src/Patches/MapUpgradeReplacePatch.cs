@@ -14,7 +14,8 @@ namespace IncreaseHardMod.Patches;
 /// shelf. Host-only concern in practice, but harmless everywhere since it just filters a local
 /// candidate list; gated behind config + the player-upgrade system being on.
 /// </summary>
-[HarmonyPatch(typeof(ShopManager), "ShopInitialize")]
+// ShopInitialize() just forwards to ShopInitialize(List) - patch the real one (the name alone is ambiguous).
+[HarmonyPatch(typeof(ShopManager), "ShopInitialize", new[] { typeof(System.Collections.Generic.List<PunManager.ItemSpawn>) })]
 internal static class MapUpgradeReplacePatch
 {
     [HarmonyPostfix]

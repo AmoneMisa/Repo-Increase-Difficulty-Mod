@@ -37,14 +37,19 @@ internal static class EnemyHealthPatch
         if (ModConfig.LogEnemyNames.Value && _loggedNames.Add(enemyName))
             Plugin.Log.LogInfo($"[Enemy] Spawned enemy internal name: \"{enemyName}\"");
 
-        // Per-enemy cap: Elsa 2x, Tick/Loom/Cleanup Crew 1.5x, others global.
-        float cap = ModConfig.HealthMaxForEnemy(enemyName);
+        // Level modifiers (e.g. Tough / Frail Monsters) times the depth ramp.
+        float mult = Modifiers.StatModifiers.Mult(Modifiers.StatAxis.EnemyHealth);
+        if (ModConfig.ScaleEnemyHealth.Value)
+        {
+            // Per-enemy cap: Elsa 2x, Tick/Loom/Cleanup Crew 1.5x, others global.
+            float cap = ModConfig.HealthMaxForEnemy(enemyName);
 
-        // Raw ramp value (1 + perLevel * steps), then clamp to this enemy's cap.
-        float raw = 1f + ModConfig.EnemyHealthPerLevel.Value * Difficulty.Steps;
-        float mult = Mathf.Clamp(raw, 1f, cap);
+            // Raw ramp value (1 + perLevel * steps), then clamp to this enemy's cap.
+            float raw = 1f + ModConfig.EnemyHealthPerLevel.Value * Difficulty.Steps;
+            mult *= Mathf.Clamp(raw, 1f, cap);
+        }
 
-        if (mult <= 1f)
+        if (Mathf.Approximately(mult, 1f))
             return;
 
         __instance.health = Mathf.CeilToInt(__instance.health * mult);

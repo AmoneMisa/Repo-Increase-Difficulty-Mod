@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>IncreaseHardMod</AssemblyName>
     <Product>IncreaseHardMod</Product>
-    <Version>0.1.0</Version>
+    <Version>0.5.0</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -32,6 +32,9 @@
   <!-- Upgrade icons: embedded into the DLL so they ship as a single file (no extra deploy). -->
   <ItemGroup>
     <EmbeddedResource Include="src\Textures\*.png" />
+    <EmbeddedResource Include="src\Art\*.png" />
+    <EmbeddedResource Include="src\Art\*.mesh.json" />
+    <EmbeddedResource Include="src\Audio\*.wav" />
   </ItemGroup>
 
   <ItemGroup>

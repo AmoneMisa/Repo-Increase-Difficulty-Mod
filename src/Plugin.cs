@@ -13,7 +13,7 @@ public static class PluginInfo
 {
     public const string PLUGIN_GUID = "com.kubai.increasehardmod";
     public const string PLUGIN_NAME = "Increase Hard Mod";
-    public const string PLUGIN_VERSION = "0.1.0";
+    public const string PLUGIN_VERSION = "0.5.0";
 }
 
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -41,7 +41,17 @@ public class Plugin : BaseUnityPlugin
         if (ModConfig.DiagnosticDisablePatches.Value)
             Log.LogWarning("[Diagnostics] DisablePatches=true — skipping ALL Harmony patches.");
         else
-            _harmony.PatchAll();
+        {
+            // Patch class-by-class: one patch broken by a game update must not abort the rest
+            // (a throw out of PatchAll used to kill Awake before the runtime object / upgrades existed).
+            foreach (var type in typeof(Plugin).Assembly.GetTypes())
+            {
+                if (!type.IsDefined(typeof(HarmonyPatch), true))
+                    continue;
+                try { _harmony.CreateClassProcessor(type).Patch(); }
+                catch (System.Exception e) { Log.LogError($"Patch {type.FullName} failed: {e.Message}"); }
+            }
+        }
 
         // Declare custom shop upgrades before the registration patch fires (on RunStartStats).
         // Effects are applied per-player via REPOLib start/upgrade actions (or a ticking
@@ -95,6 +105,11 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<SpectatorMinimapHud>();
         // Quest tracker (native TMP): team + personal quests, shown in the open map or via the peek hotkey.
         netObject.AddComponent<QuestHud>();
+
+        // End-of-level MVP / OOPS CHAMP scoreboard (stats recorded host-side by RoundStats).
+        netObject.AddComponent<RoundResultsHud>();
+        // Black Market (shop): pay to block unwanted modifiers / economies. Keyboard driven.
+        netObject.AddComponent<Economy.BlackMarketHud>();
         // Item Unstuck: host-side valuable safety net (relocate stuck loot, invuln-until-grab)
         // plus a client-side undamaged-value HUD.
         netObject.AddComponent<ItemUnstuckController>();

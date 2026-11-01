@@ -1,4 +1,5 @@
 using HarmonyLib;
+using UnityEngine;
 
 namespace IncreaseHardMod.Patches;
 
@@ -22,11 +23,11 @@ internal static class EnemyRespawnPatch
     [HarmonyPostfix]
     private static void Postfix(EnemyParent __instance)
     {
-        float mult = Difficulty.ReduceMultiplier(
-            ModConfig.EnemyRespawnFasterPerLevel.Value,
-            ModConfig.EnemyRespawnMinFactor.Value);
+        float mult = Modifiers.StatModifiers.Mult(Modifiers.StatAxis.EnemyRespawn);
+        if (ModConfig.ScaleEnemyRespawn.Value)
+            mult *= Difficulty.ReduceMultiplier(ModConfig.EnemyRespawnFasterPerLevel.Value, ModConfig.EnemyRespawnMinFactor.Value);
 
-        if (mult >= 1f)
+        if (Mathf.Approximately(mult, 1f))
             return;
 
         __instance.DespawnedTimeMin *= mult;

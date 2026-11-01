@@ -32,10 +32,19 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     public const byte PingEventCode = 181;
     public const byte MapVoteCandidatesEventCode = 182;
     public const byte MapVoteBallotEventCode = 183;
+    public const byte RoundStatsEventCode = 184;
+    public const byte RepairEventCode = 185;
+    public const byte EconomyEventCode = 188;
+    public const byte ShopEconomyEventCode = 189;
+    public const byte BanRequestEventCode = 190;
+    public const byte BanListEventCode = 191;
+    public const byte BatteryDrainEventCode = 186;
+    public const byte EnemyStatusEventCode = 187;
+
     // Host broadcasts the authoritative team-quest set; any client asks the host to pay a personal reward.
-    public const byte QuestStateEventCode = 184;
-    public const byte QuestMoneyRequestEventCode = 185;
-    public const byte QuestBuffEventCode = 186;
+    public const byte QuestStateEventCode = 192;
+    public const byte QuestMoneyRequestEventCode = 193;
+    public const byte QuestBuffEventCode = 194;
 
     public static ModNetwork Instance { get; private set; }
 
@@ -79,6 +88,9 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 
         LevelTimerController.Tick(Time.deltaTime);
         Quests.QuestManager.Tick(Time.deltaTime);
+        RoundStats.Tick(Time.deltaTime);
+        Drones.LinkManager.Tick(Time.deltaTime);
+        Gear.GearEffects.Tick(Time.deltaTime);
         LateJoinController.Tick();
         // Client-side: keep every enemy's per-player dictionaries in sync with mid-run joins
         // (and mid-run enemy spawns) so late joiners don't crash the enemy AI coroutines.
@@ -171,6 +183,110 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             SendOptions.SendReliable);
     }
 
+    /// <summary>
+    /// Host broadcasts the finished level scoreboard (parallel arrays, one slot per player) so every
+    /// client's results screen shows identical numbers. Reliable; not echoed to the host.
+    /// </summary>
+    public void BroadcastRoundStats(System.Collections.Generic.List<PlayerRoundStat> rows)
+    {
+        if (!PhotonNetwork.InRoom)
+            return;
+
+        int n = rows.Count;
+        var names = new string[n];
+        var broken = new int[n];
+        var brokenCount = new int[n];
+        var delivered = new int[n];
+        var deaths = new int[n];
+        var revives = new int[n];
+        for (int i = 0; i < n; i++)
+        {
+            names[i] = rows[i].Name ?? "?";
+            broken[i] = rows[i].BrokenValue;
+            brokenCount[i] = rows[i].BrokenCount;
+            delivered[i] = rows[i].Delivered;
+            deaths[i] = rows[i].Deaths;
+            revives[i] = rows[i].Revives;
+        }
+
+        var options = new RaiseEventOptions { Receivers = ReceiverGroup.Others };
+        PhotonNetwork.RaiseEvent(
+            RoundStatsEventCode,
+            new object[] { names, broken, brokenCount, delivered, deaths, revives },
+            options,
+            SendOptions.SendReliable);
+    }
+
+    /// <summary>A client that absorbed damage with a shield item asks the host to drain its battery.</summary>
+    public void BroadcastBatteryDrain(int viewId, float percent)
+    {
+        if (!PhotonNetwork.InRoom)
+            return;
+        PhotonNetwork.RaiseEvent(BatteryDrainEventCode, new object[] { viewId, percent },
+            new RaiseEventOptions { Receivers = ReceiverGroup.MasterClient }, SendOptions.SendReliable);
+    }
+
+    /// <summary>Host tells everyone which shop economy (0 = none) is active.</summary>
+    public void BroadcastShopEconomy(int id)
+    {
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient)
+            return;
+        PhotonNetwork.RaiseEvent(ShopEconomyEventCode, new object[] { id },
+            new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
+    }
+
+    /// <summary>A client asks the host to buy a Black Market block.</summary>
+    public void RequestBan(byte kind, string id)
+    {
+        if (!PhotonNetwork.InRoom)
+            return;
+        PhotonNetwork.RaiseEvent(BanRequestEventCode, new object[] { kind, id },
+            new RaiseEventOptions { Receivers = ReceiverGroup.MasterClient }, SendOptions.SendReliable);
+    }
+
+    /// <summary>Host tells everyone the full list of blocked keys.</summary>
+    public void BroadcastBans(System.Collections.Generic.IEnumerable<string> keys)
+    {
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient)
+            return;
+        PhotonNetwork.RaiseEvent(BanListEventCode, new object[] { new System.Collections.Generic.List<string>(keys).ToArray() },
+            new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
+    }
+
+    /// <summary>Host tells everyone which level economy event (0 = none) is active.</summary>
+    public void BroadcastEconomy(int id)
+    {
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient)
+            return;
+        PhotonNetwork.RaiseEvent(EconomyEventCode, new object[] { id },
+            new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
+    }
+
+    /// <summary>Host tells everyone a valuable's current value after the Repair drone restored some.</summary>
+    public void BroadcastRepair(ValuableObject valuable, float value)
+    {
+        var pv = valuable != null ? valuable.GetComponent<PhotonView>() : null;
+        if (!PhotonNetwork.InRoom || pv == null)
+            return;
+        PhotonNetwork.RaiseEvent(RepairEventCode, new object[] { pv.ViewID, value },
+            new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
+    }
+
+    /// <summary>Host-confirmed target identity and remaining lifetime; never infer hits on clients.</summary>
+    internal static void BroadcastEnemyStatus(Enemy enemy, byte kind, float seconds)
+    {
+        if (enemy == null || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+        Visuals.EnemyStatusVisual.Apply(enemy, kind, seconds);
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient) return;
+        var parent = enemy.GetComponentInParent<EnemyParent>();
+        var view = enemy.GetComponent<PhotonView>();
+        if (view == null && parent != null) view = parent.GetComponent<PhotonView>();
+        if (view == null || view.ViewID == 0) return;
+        PhotonNetwork.RaiseEvent(EnemyStatusEventCode,
+            new object[] { view.ViewID, kind, seconds, PhotonNetwork.Time },
+            new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
+    }
+
     /// <summary>Host broadcasts the authoritative team-quest set to all clients.</summary>
     public void BroadcastQuestState(object[] data)
     {
@@ -219,6 +335,23 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     /// <summary>Photon calls this on every client for every raised event.</summary>
     public void OnEvent(EventData photonEvent)
     {
+        if (photonEvent.Code == EnemyStatusEventCode)
+        {
+            if (!PhotonNetwork.InRoom || PhotonNetwork.MasterClient == null ||
+                photonEvent.Sender != PhotonNetwork.MasterClient.ActorNumber ||
+                photonEvent.CustomData is not object[] data || data.Length != 4 ||
+                data[0] is not int id || data[1] is not byte kind || kind > 1 ||
+                data[2] is not float seconds || data[3] is not double sent ||
+                float.IsNaN(seconds) || float.IsInfinity(seconds) || seconds <= 0f || seconds > 600f ||
+                double.IsNaN(sent) || double.IsInfinity(sent)) return;
+            float age = (float)System.Math.Max(0d, PhotonNetwork.Time - sent);
+            if (age >= seconds) return;
+            var view = PhotonView.Find(id);
+            var enemy = view != null ? view.GetComponentInChildren<Enemy>(true) : null;
+            Visuals.EnemyStatusVisual.Apply(enemy, kind, seconds - age);
+            return;
+        }
+
         if (photonEvent.Code == ModifierEventCode)
         {
             var data = (object[])photonEvent.CustomData;
@@ -256,6 +389,79 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             var data = (object[])photonEvent.CustomData;
             MapVoteState.ReceiveBallot((int)data[0], (int)data[1], (int)data[2], (string)data[3]);
             return;
+        }
+
+        if (photonEvent.Code == ShopEconomyEventCode)
+        {
+            if (photonEvent.CustomData is object[] sd && sd.Length == 1 && sd[0] is int sid &&
+                PhotonNetwork.MasterClient != null && photonEvent.Sender == PhotonNetwork.MasterClient.ActorNumber)
+                Economy.ShopEconomy.Set(sid);
+            return;
+        }
+
+        if (photonEvent.Code == BanRequestEventCode)
+        {
+            if (PhotonNetwork.IsMasterClient && photonEvent.CustomData is object[] bd && bd.Length == 2 &&
+                bd[0] is byte bk && bk <= 2 && bd[1] is string bid && bid.Length < 48)
+                Economy.BlackMarket.TryBuy((Economy.BlackMarket.Kind)bk, bid);
+            return;
+        }
+
+        if (photonEvent.Code == BanListEventCode)
+        {
+            if (photonEvent.CustomData is object[] ld && ld.Length == 1 && ld[0] is string[] keys &&
+                PhotonNetwork.MasterClient != null && photonEvent.Sender == PhotonNetwork.MasterClient.ActorNumber)
+                Economy.BlackMarket.SetFromNetwork(keys);
+            return;
+        }
+
+        if (photonEvent.Code == EconomyEventCode)
+        {
+            if (photonEvent.CustomData is object[] ed && ed.Length == 1 && ed[0] is int eid &&
+                PhotonNetwork.MasterClient != null && photonEvent.Sender == PhotonNetwork.MasterClient.ActorNumber)
+                Economy.EconomyEvents.Set(eid);
+            return;
+        }
+
+        if (photonEvent.Code == BatteryDrainEventCode)
+        {
+            if (!PhotonNetwork.IsMasterClient)
+                return;
+            var d = (object[])photonEvent.CustomData;
+            var pv = PhotonView.Find((int)d[0]);
+            var battery = pv != null ? pv.GetComponent<ItemBattery>() : null;
+            if (battery != null)
+                battery.batteryLife = Mathf.Max(0f, battery.batteryLife - (float)d[1]);
+            return;
+        }
+
+        if (photonEvent.Code == RepairEventCode)
+        {
+            var d = (object[])photonEvent.CustomData;
+            var pv = PhotonView.Find((int)d[0]);
+            var v = pv != null ? pv.GetComponent<ValuableObject>() : null;
+            if (v != null)
+                v.dollarValueCurrent = Mathf.Min((float)d[1], v.dollarValueOriginal);
+            return;
+        }
+
+        if (photonEvent.Code == RoundStatsEventCode)
+        {
+            var d = (object[])photonEvent.CustomData;
+            var names = (string[])d[0];
+            var rows = new System.Collections.Generic.List<PlayerRoundStat>();
+            for (int i = 0; i < names.Length; i++)
+                rows.Add(new PlayerRoundStat
+                {
+                    Name = names[i],
+                    BrokenValue = ((int[])d[1])[i],
+                    BrokenCount = ((int[])d[2])[i],
+                    Delivered = ((int[])d[3])[i],
+                    Deaths = ((int[])d[4])[i],
+                    Revives = ((int[])d[5])[i],
+                });
+            if (ModConfig.RoundResultsEnabled.Value)
+                RoundStats.ApplyResults(rows);
         }
 
         if (photonEvent.Code == QuestStateEventCode)

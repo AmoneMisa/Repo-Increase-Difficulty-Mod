@@ -38,6 +38,7 @@ public static class ModifierManager
     private static void SetCurrent(LevelModifiers modifiers, string source)
     {
         Current = modifiers ?? LevelModifiers.Empty;
+        StatModifiers.Recalculate(Current.Stats);
         // Per-level effect state must be cleared exactly when the level changes.
         Patches.Effects.AutoReviveEffect.ResetForNewLevel();
         Patches.Effects.LevelTimerController.ResetForNewLevel();
