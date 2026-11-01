@@ -1,36 +1,36 @@
+using System.Runtime.CompilerServices;
 using HarmonyLib;
 using UnityEngine;
 
 namespace IncreaseHardMod.Patches;
 
-/// <summary>
-/// Shortens how long enemies stay despawned before returning (faster respawns).
-///
-/// EnemyParent holds DespawnedTimeMin/Max — the range the game randomly picks
-/// from to decide how long an enemy waits, gone, before it re-activates. The
-/// actual random pick happens later (in EnemyParent.Setup), so if we shrink
-/// these two fields in a Postfix on Awake, every subsequent respawn wait is
-/// drawn from the reduced range.
-///
-/// We scale by a factor that shrinks with depth (ReduceMultiplier), floored so
-/// enemies never respawn instantly. The despawn/respawn timers are driven by the
-/// host, and the values are deterministic from the synced level count, so this
-/// stays consistent across the lobby.
-/// </summary>
 [HarmonyPatch(typeof(EnemyParent), "Awake")]
 internal static class EnemyRespawnPatch
 {
-    [HarmonyPostfix]
-    private static void Postfix(EnemyParent __instance)
+    private sealed class State { internal float Min, Max, Factor = 1f; }
+    private static readonly ConditionalWeakTable<EnemyParent, State> States = new();
+    internal static void Refresh(EnemyParent parent, bool timer)
     {
-        float mult = Modifiers.StatModifiers.Mult(Modifiers.StatAxis.EnemyRespawn);
-        if (ModConfig.ScaleEnemyRespawn.Value)
-            mult *= Difficulty.ReduceMultiplier(ModConfig.EnemyRespawnFasterPerLevel.Value, ModConfig.EnemyRespawnMinFactor.Value);
-
-        if (Mathf.Approximately(mult, 1f))
-            return;
-
-        __instance.DespawnedTimeMin *= mult;
-        __instance.DespawnedTimeMax *= mult;
+        var state = States.GetValue(parent, p => new State { Min = p.DespawnedTimeMin, Max = p.DespawnedTimeMax });
+        float factor = EnemyBalance.Respawn;
+        parent.DespawnedTimeMin = state.Min * factor;
+        parent.DespawnedTimeMax = state.Max * factor;
+        if (timer && !parent.Spawned && parent.DespawnedTimer > 0f && !Mathf.Approximately(state.Factor, factor))
+            parent.DespawnedTimer *= factor / state.Factor;
+        state.Factor = factor;
+    }
+    [HarmonyPostfix]
+    private static void Postfix(EnemyParent __instance) => Refresh(__instance, false);
+    [HarmonyPatch(typeof(EnemyParent), "Despawn")]
+    private static class Despawn
+    {
+        [HarmonyPrefix]
+        private static void Prefix(EnemyParent __instance) => Refresh(__instance, false);
+    }
+    [HarmonyPatch(typeof(EnemyParent), "Update")]
+    private static class Live
+    {
+        [HarmonyPostfix]
+        private static void Postfix(EnemyParent __instance) => Refresh(__instance, true);
     }
 }

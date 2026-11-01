@@ -1,6 +1,7 @@
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
+using TMPro;
 
 namespace IncreaseHardMod.Patches.Effects;
 
@@ -15,7 +16,8 @@ internal sealed class ServerInfoHud : MonoBehaviour
     private GUIStyle _title;
     private GUIStyle _row;
     private bool _loggedOnce;
-    private bool _loggedUpdate;
+    private NativeHudPanel _surface;
+    private TextMeshProUGUI _nativeText;
 
     private void Awake()
     {
@@ -39,21 +41,43 @@ internal sealed class ServerInfoHud : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (_surface != null) Destroy(_surface.gameObject);
         Plugin.Log.LogInfo("[ServerInfo] OnDestroy — object was destroyed.");
     }
 
     private void Update()
     {
-        if (!_loggedUpdate)
+        if (!ModConfig.ServerInfoEnabled.Value || HUDCanvas.instance == null)
         {
-            _loggedUpdate = true;
-            Plugin.Log.LogInfo("[ServerInfo] Update running — MonoBehaviour ticking.");
+            if (_surface != null) _surface.gameObject.SetActive(false);
+            return;
         }
+        if (_surface == null)
+        {
+            _surface = NativeHudPanel.Create("IHM_ServerInfo", new Vector2(420f, 70f),
+                new Vector2(0f, 1f), new Vector2(16f, -12f), 0f);
+            if (_surface == null) return;
+            _nativeText = _surface.Label("Connection", 18f, TextAlignmentOptions.TopLeft);
+            _nativeText.richText = false;
+            _nativeText.rectTransform.anchorMin = Vector2.zero;
+            _nativeText.rectTransform.anchorMax = Vector2.one;
+            _nativeText.rectTransform.offsetMin = new Vector2(0f, 0f);
+            _nativeText.rectTransform.offsetMax = new Vector2(0f, 0f);
+        }
+        var room=PhotonNetwork.CurrentRoom;
+        string role=room==null ? "" : PhotonNetwork.IsMasterClient ? " | HOST" : " | CLIENT";
+        string region=string.IsNullOrEmpty(PhotonNetwork.CloudRegion)?"-":PhotonNetwork.CloudRegion;
+        string ping=PhotonNetwork.IsConnected ? $" | {PhotonNetwork.GetPing()} ms" : "";
+        string players=room!=null ? $" | {room.PlayerCount}/{room.MaxPlayers} players" : "";
+        _nativeText.text=$"SERVER: {SafeState()}{role}\n{region}{ping}{players}";
+        if(room!=null && !string.IsNullOrEmpty(room.Name)) _nativeText.text+=$"\nROOM: {room.Name}";
+        _surface.gameObject.SetActive(true);
+        _surface.AvoidVitals(HealthUI.instance,EnergyUI.instance);
     }
 
     private void OnGUI()
     {
-        if (!ModConfig.ServerInfoEnabled.Value)
+        if (!ModConfig.ServerInfoEnabled.Value || HUDCanvas.instance != null)
             return;
 
         if (!_loggedOnce)

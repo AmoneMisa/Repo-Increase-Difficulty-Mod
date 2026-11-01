@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 namespace IncreaseHardMod.Patches.Effects;
@@ -22,7 +24,8 @@ internal sealed class ItemUnstuckController : MonoBehaviour
     private const float EnsureInterval = 1f;
     private float _ensureTimer;
 
-    private GUIStyle _flashStyle;
+    private NativeHudPanel _flash;
+    private TextMeshProUGUI _flashText;
 
     // Brief on-screen note when the host relocates a stuck valuable.
     private static string _relocText;
@@ -65,42 +68,32 @@ internal sealed class ItemUnstuckController : MonoBehaviour
         }
     }
 
-    private void OnGUI()
+    private void LateUpdate()
     {
-        if (!ModConfig.ItemUnstuckEnabled.Value)
-            return;
-
-        if (_relocText != null && Time.time < _relocUntil)
-            DrawFlash();
-    }
-
-    private void DrawFlash()
-    {
-        EnsureStyles();
-        var rect = new Rect(0f, Screen.height * 0.66f, Screen.width, 22f);
-        DrawShadowed(rect, _relocText, _flashStyle, new Color(0.5f, 0.9f, 1f));
-    }
-
-    private static void DrawShadowed(Rect rect, string text, GUIStyle style, Color color)
-    {
-        var prev = GUI.color;
-        GUI.color = new Color(0f, 0f, 0f, 0.9f);
-        GUI.Label(new Rect(rect.x + 1f, rect.y + 1f, rect.width, rect.height), text, style);
-        GUI.color = color;
-        GUI.Label(rect, text, style);
-        GUI.color = prev;
-    }
-
-    private void EnsureStyles()
-    {
-        _flashStyle ??= new GUIStyle
+        if (!ModConfig.ItemUnstuckEnabled.Value || _relocText == null || Time.time >= _relocUntil)
         {
-            fontSize = 13,
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.MiddleCenter,
-            richText = false,
-        };
+            if (_flash != null) _flash.gameObject.SetActive(false);
+            return;
+        }
+        if (_flash == null)
+        {
+            _flash = NativeHudPanel.Create("IHM_UnstuckNote", new Vector2(720f, 52f),
+                new Vector2(0.5f, 0f), new Vector2(0f, 180f), 0f);
+            if (_flash == null) return;
+            _flashText = _flash.Label("Message", 22f, TextAlignmentOptions.Center);
+            _flashText.richText = false;
+            _flashText.color = new Color(0.5f, 0.9f, 1f);
+            _flashText.rectTransform.anchorMin = Vector2.zero;
+            _flashText.rectTransform.anchorMax = Vector2.one;
+            _flashText.rectTransform.offsetMin = new Vector2(12f, 4f);
+            _flashText.rectTransform.offsetMax = new Vector2(-12f, -4f);
+        }
+        _flash.gameObject.SetActive(true);
+        _flashText.text = _relocText;
+        _flash.Fit();
     }
+
+    private void OnDestroy() { if (_flash != null) Destroy(_flash.gameObject); }
 
     internal static string Clean(string name)
     {
@@ -147,6 +140,11 @@ internal sealed class ValuableGuard : MonoBehaviour
     private Vector3 _safePos;
     private Quaternion _safeRot;
     private bool _haveSafe;
+    private readonly List<Vector3> _contactNormals = new();
+    private float _contactTime = -10f;
+    private Vector3 _pullAnchor;
+    private Quaternion _pullRotation;
+    private bool _pullPending;
 
     private void Awake()
     {
@@ -157,8 +155,12 @@ internal sealed class ValuableGuard : MonoBehaviour
 
     private void Update()
     {
-        if (_v == null || _pgo == null)
+        if (_v == null || _pgo == null || !ModConfig.ItemUnstuckEnabled.Value)
+        {
+            _stuckTimer = 0f;
+            _pullPending = false;
             return;
+        }
         if (!SemiFunc.IsMasterClientOrSingleplayer())
             return;
 
@@ -184,6 +186,11 @@ internal sealed class ValuableGuard : MonoBehaviour
 
         if (ModConfig.ValuableRelocateStuck.Value)
             StuckLogic(grabbed);
+        else
+        {
+            _stuckTimer = 0f;
+            _pullPending = false;
+        }
     }
 
     private void StuckLogic(bool grabbed)
@@ -196,13 +203,22 @@ internal sealed class ValuableGuard : MonoBehaviour
         if (_relocated)
             return;
 
-        // Don't touch loot that's held, dead/broken, or riding in a cart.
+        // A held object needs a sustained failed pull plus opposing contacts or deep body penetration.
         bool inCart = _pgo.impactDetector != null && _pgo.impactDetector.inCart;
-        if (grabbed || _pgo.dead || inCart)
+        if (_pgo.dead || inCart)
         {
             _stuckTimer = 0f;
+            _pullPending = false;
             return;
         }
+
+        if (grabbed)
+        {
+            CheckFailedPull();
+            return;
+        }
+        if (_pullPending) _stuckTimer = 0f;
+        _pullPending = false;
 
         bool resting = _rb == null || _rb.velocity.sqrMagnitude < RestSpeed * RestSpeed;
         bool embedded = IsEmbedded();
@@ -212,7 +228,7 @@ internal sealed class ValuableGuard : MonoBehaviour
             _stuckTimer += CheckInterval;
             if (_stuckTimer >= Mathf.Max(2f, ModConfig.ValuableStuckSeconds.Value))
             {
-                Relocate();
+                Relocate(Vector3.zero, Vector3.zero, false);
                 _stuckTimer = 0f;
             }
         }
@@ -220,7 +236,7 @@ internal sealed class ValuableGuard : MonoBehaviour
         {
             _stuckTimer = 0f;
             // Remember the last free, settled spot so we can send a stuck one back to it.
-            if (!embedded && resting)
+            if (!embedded && resting && IsClear(transform.position, transform.rotation))
             {
                 _safePos = _pgo.transform.position;
                 _safeRot = _pgo.transform.rotation;
@@ -229,6 +245,99 @@ internal sealed class ValuableGuard : MonoBehaviour
         }
     }
 
+    private bool IsWorld(Collider other) => other != null && !other.isTrigger &&
+        !other.transform.IsChildOf(transform) && other.attachedRigidbody == null &&
+        other.GetComponentInParent<PhysGrabObject>() == null;
+
+    private void OnCollisionStay(Collision collision)
+    {
+        if (_pgo == null || !ModConfig.ItemUnstuckEnabled.Value ||
+            !ModConfig.ValuableRelocateStuck.Value || !SemiFunc.IsMasterClientOrSingleplayer() ||
+            !IsWorld(collision.collider)) return;
+        if (_contactTime != Time.fixedTime)
+        {
+            _contactNormals.Clear();
+            _contactTime = Time.fixedTime;
+        }
+        for (int i = 0; i < collision.contactCount && _contactNormals.Count < 24; i++)
+            _contactNormals.Add(collision.GetContact(i).normal);
+    }
+
+    private void CheckFailedPull()
+    {
+        Vector3 pull = Vector3.zero;
+        Vector3 eye = Vector3.zero;
+        if (_pgo.playerGrabbing != null)
+            foreach (var grabber in _pgo.playerGrabbing)
+            {
+                if (grabber == null || grabber.grabbedPhysGrabObject != _pgo || grabber.physGrabPoint == null) continue;
+                var stretch = grabber.physGrabPointPullerPosition - grabber.physGrabPoint.position;
+                if (stretch.sqrMagnitude <= pull.sqrMagnitude) continue;
+                pull = stretch;
+                eye = grabber.playerAvatar != null && grabber.playerAvatar.localCamera != null
+                    ? grabber.playerAvatar.localCamera.GetOverrideTransform().position
+                    : grabber.transform.position;
+            }
+        bool strained = pull.sqrMagnitude >= 0.25f;
+        bool trapped = strained && ((Time.fixedTime - _contactTime <= 0.75f &&
+            UnstuckGeometry.Opposed(_contactNormals)) || IsEmbedded(false));
+        if (!trapped)
+        {
+            _stuckTimer = 0f;
+            _pullPending = false;
+            return;
+        }
+        if (!_pullPending || Vector3.Distance(transform.position, _pullAnchor) > 0.05f ||
+            Quaternion.Angle(transform.rotation, _pullRotation) > 5f)
+        {
+            _pullPending = true;
+            _pullAnchor = transform.position;
+            _pullRotation = transform.rotation;
+            _stuckTimer = 0f;
+            return;
+        }
+        _stuckTimer += CheckInterval;
+        if (_stuckTimer < Mathf.Max(2f, ModConfig.ValuableStuckSeconds.Value)) return;
+        Relocate(pull.normalized, eye, true);
+        _stuckTimer = 0f;
+    }
+
+    private bool IsClear(Vector3 position, Quaternion rotation) =>
+        UnstuckGeometry.IsClear(transform, GetComponentsInChildren<Collider>(), position, rotation,
+            other => other != null && !other.isTrigger && !other.transform.IsChildOf(transform));
+
+    private bool TryRecoveryPose(Vector3 pull, Vector3 eye, bool held, out Vector3 position, out Quaternion rotation)
+    {
+        position = transform.position;
+        rotation = transform.rotation;
+        if (!held && _haveSafe && Vector3.Distance(position, _safePos) <= 4f && IsClear(_safePos, _safeRot))
+        {
+            position = _safePos;
+            rotation = _safeRot;
+            return true;
+        }
+        var centreOffset = _pgo.centerPoint - transform.position;
+        var directions = held
+            ? new[] { pull, (pull + Vector3.up * 0.35f).normalized,
+                (pull + Vector3.Cross(Vector3.up, pull) * 0.4f).normalized,
+                (pull - Vector3.Cross(Vector3.up, pull) * 0.4f).normalized }
+            : new[] { Vector3.up, Vector3.right, Vector3.left, Vector3.forward, Vector3.back,
+                (Vector3.up + Vector3.right).normalized, (Vector3.up + Vector3.left).normalized,
+                (Vector3.up + Vector3.forward).normalized, (Vector3.up + Vector3.back).normalized };
+        for (float distance = 0.25f; distance <= 2f; distance += 0.25f)
+            foreach (var direction in directions)
+            {
+                var candidate = transform.position + direction * distance;
+                if (!IsClear(candidate, rotation)) continue;
+                if (held && !UnstuckGeometry.Visible(eye, candidate + centreOffset, IsWorld)) continue;
+                position = candidate;
+                return true;
+            }
+        return false;
+    }
+
+    // Idle rescue requires a buried centre. During a failed grab we also permit partial body
+    // embedding, including a small valuable wedged into a shelf with its centre still outside.
     // True only when the item's OWN collider is buried DEEP inside static geometry (a wall/floor),
     // rather than merely touching or resting inside furniture. We measure the actual penetration
     // depth between each of the item's colliders and every overlapping static (non-grabbable,
@@ -237,14 +346,14 @@ internal sealed class ValuableGuard : MonoBehaviour
     // legitimately-placed valuables are (correctly) left alone. An item that has fallen/clipped INTO
     // level geometry overlaps it deeply and crosses the threshold. This is far more reliable than
     // point-sampling, which couldn't distinguish "buried in a wall" from "surrounded by furniture".
-    private bool IsEmbedded()
+    private bool IsEmbedded(bool requireBuriedCentre = true)
     {
         // A resting valuable — even one sitting right against a couch, table, or rug — keeps its
         // collision CENTER in open air above whatever it rests on. Only an item that has fallen or
         // clipped INTO a wall/floor has its center buried inside solid geometry. Requiring the center
         // to be buried is what stops us from "rescuing" loot that's merely on the floor next to
         // furniture (the Mortar Vase Big false positive). We then still confirm a deep penetration.
-        if (!CenterBuried())
+        if (requireBuriedCentre && !CenterBuried())
             return false;
 
         var myCols = GetComponentsInChildren<Collider>();
@@ -257,6 +366,7 @@ internal sealed class ValuableGuard : MonoBehaviour
                 continue;
 
             var b = mine.bounds;
+            float requiredDepth = requireBuriedCentre ? EmbedDepth : UnstuckGeometry.PullEmbedDepth(b.size);
             var overlaps = Physics.OverlapBox(
                 b.center, b.extents, Quaternion.identity, ~0, QueryTriggerInteraction.Ignore);
             foreach (var other in overlaps)
@@ -271,7 +381,7 @@ internal sealed class ValuableGuard : MonoBehaviour
                 if (Physics.ComputePenetration(
                         mine, mine.transform.position, mine.transform.rotation,
                         other, other.transform.position, other.transform.rotation,
-                        out _, out float depth) && depth >= EmbedDepth)
+                        out _, out float depth) && depth >= requiredDepth)
                     return true;
             }
         }
@@ -301,16 +411,25 @@ internal sealed class ValuableGuard : MonoBehaviour
         return false;
     }
 
-    private void Relocate()
+    private void Relocate(Vector3 pull, Vector3 eye, bool held)
     {
-        Vector3 target = _haveSafe ? _safePos : _pgo.transform.position + Vector3.up * 1.5f;
-        Quaternion rot = _haveSafe ? _safeRot : _pgo.transform.rotation;
+        if (!TryRecoveryPose(pull, eye, held, out var target, out var rot)) return;
 
+        // Release through the native network path so the old grab anchor cannot pull it back.
+        if (_pgo.playerGrabbing != null)
+            foreach (var grabber in _pgo.playerGrabbing.ToArray())
+                if (grabber != null)
+                    grabber.OverrideGrabRelease(_pgo.photonView != null ? _pgo.photonView.ViewID : -1, 0.75f);
+        _pgo.OverrideGrabDisable(0.75f);
+        _pgo.OverrideGrabForceZero();
+        _pgo.OverrideIndestructible(2f);
+        _pgo.OverrideBreakEffects(2f);
         _pgo.Teleport(target, rot);
         if (_rb != null)
         {
             _rb.velocity = Vector3.zero;
             _rb.angularVelocity = Vector3.zero;
+            _rb.WakeUp();
         }
         _relocated = true;
         ItemUnstuckController.NotifyRelocated(_v);

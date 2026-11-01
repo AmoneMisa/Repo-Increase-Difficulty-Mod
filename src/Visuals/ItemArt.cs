@@ -23,9 +23,7 @@ internal static class ItemArt
             if (!name.EndsWith("." + key + ".mesh.json", StringComparison.Ordinal)) continue;
             using var stream = asm.GetManifestResourceStream(name);
             using var reader = new StreamReader(stream);
-            model = JsonUtility.FromJson<ArtModel>(reader.ReadToEnd());
-            if (model == null || model.version != 1 || model.parts == null || model.parts.Length == 0 || model.fps <= 0)
-                throw new InvalidDataException("Invalid item art: " + key);
+            model = ArtModelReader.Parse(reader.ReadToEnd(), key);
             Models[key] = model;
             return model;
         }
@@ -86,9 +84,14 @@ internal static class ItemArt
             Material template = null;
             int layer = go.layer;
             foreach (var renderer in renderers)
-                if (renderer.enabled && renderer.sharedMaterial != null)
-                { template = renderer.sharedMaterial; layer = renderer.gameObject.layer; break; }
-            if (template == null) throw new InvalidDataException("No native weapon material");
+            {
+                if (!renderer.enabled) continue;
+                foreach (var material in renderer.sharedMaterials)
+                    if (material != null && (material.HasProperty("_MainTex") || material.HasProperty("_BaseMap")))
+                    { template = material; layer = renderer.gameObject.layer; break; }
+                if (template != null) break;
+            }
+            if (template == null) throw new InvalidDataException("No textured native weapon material");
             var gun = go.GetComponent<ItemGun>();
             if (gun != null && gun.gunMuzzle == null) throw new InvalidDataException("Missing gun muzzle");
             root = new GameObject("IHM Blender Visual");
@@ -132,8 +135,12 @@ internal static class ItemArt
                     material.DisableKeyword("_EMISSION");
                     material.DisableKeyword("_NORMALMAP");
                     material.DisableKeyword("_METALLICGLOSSMAP");
-                    material.mainTextureScale = Vector2.one;
-                    material.mainTextureOffset = Vector2.zero;
+                    foreach (string property in new[] { "_MainTex", "_BaseMap" })
+                        if (material.HasProperty(property))
+                        {
+                            material.SetTextureScale(property, Vector2.one);
+                            material.SetTextureOffset(property, Vector2.zero);
+                        }
                     materialCache[materialKey] = material;
                 }
                 obj.AddComponent<MeshRenderer>().sharedMaterial = material;
@@ -152,6 +159,7 @@ internal static class ItemArt
                     foreach (var renderer in pin.GetComponentsInChildren<MeshRenderer>(true)) renderer.forceRenderingOff = true;
             }
             go.GetComponent<ItemAttributes>().icon = icon;
+            Plugin.Log.LogInfo($"[Art] Loaded {key}: {model.parts.Length} parts, {model.frames} animation frames.");
         }
         catch (Exception e)
         {
@@ -169,30 +177,6 @@ internal static class ItemArt
         target.localScale = pose.scale;
     }
 }
-
-// Public fields are filled by Unity JsonUtility from Blender's checked-in exports.
-#pragma warning disable CS0649
-[Serializable] internal sealed class ArtModel
-{
-    public int version, fps, frames;
-    public ArtPart[] parts;
-}
-[Serializable] internal sealed class ArtPart
-{
-    public string name, texture;
-    public Vector3[] vertices, normals;
-    public Vector2[] uv;
-    public int[] triangles;
-    public Color color;
-    public ArtPose rest;
-    public ArtPose[] samples;
-}
-[Serializable] internal sealed class ArtPose
-{
-    public Vector3 position, scale;
-    public Quaternion rotation;
-}
-#pragma warning restore CS0649
 
 /// <summary>Samples the actual Blender keyframes; runs locally on every client, with no new RPCs.</summary>
 internal sealed class ItemArtMotion : MonoBehaviour

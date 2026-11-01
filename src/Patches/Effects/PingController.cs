@@ -15,28 +15,12 @@ internal enum PingType : byte
     Cart = 4,
     CosmeticBox = 5,
     Scooter = 6,
+    Upgrade = 7,
 }
 
-/// <summary>
-/// Team ping system (overhaul). Pressing the ping key marks whatever you're aiming at. Instead of
-/// drawing a custom IMGUI overlay, each ping now spawns the game's OWN highlight — a
-/// <see cref="ValuableDiscoverGraphic"/> (the animated corner-bracket + fill square used when a
-/// valuable is discovered) — so it matches the in-game style exactly, tracks its target, dims off
-/// screen, and self-destroys after <see cref="ModConfig.PingDurationSeconds"/> (default 4s). We tint
-/// each graphic per <see cref="PingType"/> via <see cref="ColorFor"/>.
-///
-/// The native graphic needs a <see cref="PhysGrabObject"/> target with MeshRenderers so it can frame
-/// its bounds. Object pings (valuable/enemy/item/cart/box/scooter) highlight the real object; the
-/// ping event carries the object's PhotonView ViewID so EVERY client resolves and highlights the SAME
-/// object. Location pings have no object, so we build a tiny invisible proxy PhysGrabObject at the
-/// point (mirroring the "Ping It" mod). Location pings need the "Ping Anywhere"/"Pin" upgrade and are
-/// capped at <see cref="ModConfig.MaxLocationPings"/> per player; a global anti-flood cap of
-/// <see cref="ModConfig.MaxActivePings"/> bounds the total.
-///
-/// The active-ping list is still kept so the map mirror (Map Suite L6, <see cref="Upgrades.MapUpgrade"/>)
-/// can read each ping's <see cref="ActivePing.Pos"/>/<see cref="ActivePing.Type"/>/<see cref="ActivePing.Expire"/>.
-/// RaiseEvent(All) does not echo to the sender, so the sender spawns its own graphic locally.
-/// </summary>
+/// <summary>Team pings with soft silhouette contours and large cyan location markers.
+/// Object IDs and world positions are shared with the team and the Map Suite mirror.
+/// Location pings still require Ping Anywhere or Pin and retain the per-player/global caps.</summary>
 internal static class PingController
 {
     internal sealed class ActivePing
@@ -45,12 +29,11 @@ internal static class PingController
         public Vector3 Pos;                  // updated each Tick so the map marker follows moving targets
         public float Expire;                 // Time.time when it should disappear
         public bool Local;                   // placed by this client (counts toward the local cap)
-        public ValuableDiscoverGraphic Graphic; // the native highlight (null if it couldn't spawn)
-        public GameObject Proxy;             // non-null for Location/fallback pings we anchor ourselves
+        public string Sender;
+        public PingOutline Graphic; // the native highlight (null if it couldn't spawn)
     }
 
     private static readonly List<ActivePing> _pings = new();
-    private static Mesh _cubeMesh;
 
     internal static IReadOnlyList<ActivePing> Active => _pings;
 
@@ -73,7 +56,7 @@ internal static class PingController
             return;
 
         float maxDist = ModConfig.PingMaxDistance.Value;
-        var ray = new Ray(cam.transform.position, cam.transform.forward);
+        var ray = cam.ViewportPointToRay(new Vector3(.5f,.5f,0f));
 
         PingType type;
         Vector3 pos;
@@ -81,14 +64,14 @@ internal static class PingController
         string label;
         bool info = OwnsPingInfo();
 
-        if (Physics.Raycast(ray, out RaycastHit hit, maxDist, ~0, QueryTriggerInteraction.Ignore))
+        if (TryAim(ray, maxDist, out RaycastHit hit))
         {
-            Classify(hit.collider.transform, hit.point, info, out type, out pos, out physGrab, out label);
+            ClassifyHit(hit, info, out type, out pos, out physGrab, out label);
         }
         else
         {
             type = PingType.Location;
-            pos = cam.transform.position + cam.transform.forward * maxDist;
+            pos = ray.GetPoint(maxDist);
             label = "Location";
         }
 
@@ -108,8 +91,8 @@ internal static class PingController
         }
 
         string sender = LocalName();
-        SpawnPing(type, pos, physGrab, local: true);
-        Announce($"{GlyphFor(type)} {label}", ColorFor(type), sender);
+        SpawnPing(type, pos, physGrab, local: true, sender);
+        Announce(label, ColorFor(type), sender);
 
         int viewID = physGrab != null && physGrab.photonView != null ? physGrab.photonView.ViewID : 0;
         ModNetwork.Instance?.BroadcastPing((byte)type, pos, label, sender, viewID);
@@ -117,12 +100,69 @@ internal static class PingController
 
     // Decide what was hit, its label (richer when Ping Info is owned), and the PhysGrabObject the
     // native highlight should frame. Location falls back to a null target (proxy built on spawn).
-    private static void Classify(Transform t, Vector3 hitPoint, bool info,
+    internal static bool TryAim(Ray ray, float maxDistance, out RaycastHit selected)
+    {
+        int mask = (int)SemiFunc.LayerMaskGetVisionObstruct() & ~LayerMask.GetMask("Player", "Ignore Raycast", "UI");
+        var hits = Physics.RaycastAll(ray,maxDistance,mask,QueryTriggerInteraction.Collide);
+        System.Array.Sort(hits,(a,b)=>a.distance.CompareTo(b.distance));
+        selected=default;
+        bool surface=false;
+        foreach(var hit in hits)
+        {
+            if(hit.collider==null) continue;
+            var avatar=hit.collider.GetComponentInParent<PlayerAvatar>();
+            if(avatar!=null && avatar.isLocal) continue;
+            ClassifyHit(hit,false,out var type,out _,out _,out _);
+            if(type!=PingType.Location) {selected=hit;return true;}
+            if(!hit.collider.isTrigger) {selected=hit;surface=true;break;} // A solid wall/shelf blocks targets behind it.
+        }
+        // Small targets may have a narrower collider than their visible wrapper. Allow a tiny
+        // aim tolerance only while the crosshair is inside their projected visible bounds.
+        float limit=surface?Mathf.Min(maxDistance,selected.distance+.02f):maxDistance;
+        var nearby=Physics.SphereCastAll(ray,.035f,limit,mask,QueryTriggerInteraction.Collide);
+        System.Array.Sort(nearby,(a,b)=>a.distance.CompareTo(b.distance));
+        var camera=ActiveCamera();
+        foreach(var hit in nearby)
+        {
+            var avatar=hit.collider.GetComponentInParent<PlayerAvatar>();
+            if(avatar!=null && avatar.isLocal)continue;
+            ClassifyHit(hit,false,out var type,out _,out var physical,out _);
+            if(type==PingType.Location || physical==null || camera==null)continue;
+            bool visible=false;
+            foreach(var renderer in physical.GetComponentsInChildren<Renderer>())
+                if((renderer is MeshRenderer || renderer is SkinnedMeshRenderer) && renderer.enabled && !renderer.forceRenderingOff && PingOutline.ProjectBounds(camera,renderer.bounds,out var bounds) &&
+                    bounds.Contains(HudProjection.DisplayRect(camera).center)) {visible=true;break;}
+            if(!visible)continue;
+            var direction=hit.point-ray.origin;
+            var blockers=Physics.RaycastAll(ray.origin,direction.normalized,direction.magnitude,mask,QueryTriggerInteraction.Ignore);
+            bool blocked=false;
+            foreach(var blocker in blockers)
+            {
+                if(blocker.collider.GetComponentInParent<PlayerAvatar>() is PlayerAvatar self && self.isLocal)continue;
+                if(blocker.collider.GetComponentInParent<PhysGrabObject>()!=physical && blocker.distance+.01f<direction.magnitude) {blocked=true;break;}
+            }
+            if(!blocked){selected=hit;return true;}
+        }
+        return surface;
+    }
+
+    internal static void ClassifyHit(RaycastHit hit, bool info,
         out PingType type, out Vector3 pos, out PhysGrabObject physGrab, out string label)
     {
-        physGrab = t.GetComponentInParent<PhysGrabObject>();
+        var t=hit.collider.transform;
+        var body=hit.collider.attachedRigidbody;
+        physGrab=t.GetComponentInParent<PhysGrabObject>() ?? (body!=null?body.GetComponent<PhysGrabObject>():null);
+        var scope=physGrab!=null?physGrab.transform:body!=null?body.transform:null;
+        Classify(t,scope,hit.point,info,out type,out pos,ref physGrab,out label);
+    }
 
-        var enemy = t.GetComponentInParent<EnemyParent>();
+    private static T Find<T>(Transform hit,Transform physicalRoot) where T:Component =>
+        hit.GetComponentInParent<T>() ?? (physicalRoot!=null?physicalRoot.GetComponentInChildren<T>(true):null);
+
+    private static void Classify(Transform t, Transform scope, Vector3 hitPoint, bool info,
+        out PingType type, out Vector3 pos, ref PhysGrabObject physGrab, out string label)
+    {
+        var enemy = Find<EnemyParent>(t,scope);
         if (enemy != null)
         {
             type = PingType.Enemy;
@@ -134,7 +174,7 @@ internal static class PingController
             return;
         }
 
-        var cart = t.GetComponentInParent<PhysGrabCart>();
+        var cart = Find<PhysGrabCart>(t,scope);
         if (cart != null)
         {
             type = PingType.Cart;
@@ -145,7 +185,7 @@ internal static class PingController
             return;
         }
 
-        var vehicle = t.GetComponentInParent<ItemVehicle>();
+        var vehicle = Find<ItemVehicle>(t,scope);
         if (vehicle != null)
         {
             type = PingType.Scooter;
@@ -154,7 +194,7 @@ internal static class PingController
             return;
         }
 
-        var box = t.GetComponentInParent<CosmeticWorldObject>();
+        var box = Find<CosmeticWorldObject>(t,scope);
         if (box != null)
         {
             type = PingType.CosmeticBox;
@@ -163,7 +203,7 @@ internal static class PingController
             return;
         }
 
-        var valuable = t.GetComponentInParent<ValuableObject>();
+        var valuable = Find<ValuableObject>(t,scope);
         if (valuable != null)
         {
             type = PingType.Valuable;
@@ -174,12 +214,24 @@ internal static class PingController
             return;
         }
 
-        var item = t.GetComponentInParent<ItemAttributes>();
+        var item = Find<ItemAttributes>(t,scope);
         if (item != null)
         {
-            type = PingType.Item;
+            bool upgrade=Find<ItemUpgrade>(t,scope)!=null || (item.item!=null &&
+                (item.item.itemType==SemiFunc.itemType.player_upgrade || item.item.itemType==SemiFunc.itemType.item_upgrade));
+            type = upgrade ? PingType.Upgrade : PingType.Item;
+            physGrab ??= item.GetComponentInParent<PhysGrabObject>() ?? item.GetComponentInChildren<PhysGrabObject>(true);
             pos = physGrab != null ? physGrab.centerPoint : item.transform.position;
-            label = info ? Clean(item.name) : "Item";
+            string name=!string.IsNullOrEmpty(item.itemName)?item.itemName:item.item!=null?item.item.itemName:item.name;
+            label = info ? Clean(name) : upgrade ? "Upgrade" : "Item";
+            return;
+        }
+
+        if(physGrab!=null)
+        {
+            type=Find<ItemUpgrade>(t,scope)!=null?PingType.Upgrade:PingType.Item;
+            pos=physGrab.centerPoint;
+            label=info?Clean(physGrab.name):type==PingType.Upgrade?"Upgrade":"Object";
             return;
         }
 
@@ -203,26 +255,28 @@ internal static class PingController
                            ?? pv.GetComponentInParent<PhysGrabObject>();
         }
 
-        SpawnPing((PingType)type, pos, physGrab, local: false);
-        Announce($"{GlyphFor((PingType)type)} {label}", ColorFor((PingType)type), sender);
+        if(type>(byte)PingType.Upgrade) return;
+        SpawnPing((PingType)type, pos, physGrab, local: false, sender);
+        Announce(label, ColorFor((PingType)type), sender);
     }
 
     // Spawn (and track) the native highlight for a ping. If we have no object to frame (Location, or a
     // remote object that despawned), build a tiny invisible proxy at the position so there's something
     // for the graphic to bound.
-    private static void SpawnPing(PingType type, Vector3 pos, PhysGrabObject physGrab, bool local)
+    private static void SpawnPing(PingType type, Vector3 pos, PhysGrabObject physGrab, bool local, string sender)
     {
+        // Refresh a repeated mark instead of stacking rings/contours at the same place.
+        for(int i=_pings.Count-1;i>=0;i--)
+        {
+            var old=_pings[i];
+            if(old.Sender!=sender || old.Local!=local || old.Type!=type) continue;
+            if((physGrab!=null && old.Graphic!=null && old.Graphic.target==physGrab) ||
+                (type==PingType.Location && Vector3.SqrMagnitude(old.Pos-pos)<.09f)) Remove(old);
+        }
         EnforceGlobalCap();
 
         float duration = ModConfig.PingDurationSeconds.Value;
-        GameObject proxy = null;
-        if (physGrab == null)
-        {
-            proxy = BuildProxy(pos, duration);
-            physGrab = proxy != null ? proxy.GetComponent<PhysGrabObject>() : null;
-        }
-
-        var graphic = physGrab != null ? SpawnGraphic(physGrab, type, duration) : null;
+        var graphic = PingOutline.Create(physGrab, pos, ColorFor(type), duration);
 
         _pings.Add(new ActivePing
         {
@@ -230,86 +284,10 @@ internal static class PingController
             Pos = physGrab != null ? physGrab.centerPoint : pos,
             Expire = Time.time + duration,
             Local = local,
+            Sender = sender,
             Graphic = graphic,
-            Proxy = proxy,
         });
-    }
-
-    // Instantiate the game's own discover-highlight prefab, aim it at the target, set its lifetime,
-    // and tint it to this ping type's colour.
-    private static ValuableDiscoverGraphic SpawnGraphic(PhysGrabObject target, PingType type, float duration)
-    {
-        var vd = ValuableDiscover.instance;
-        if (vd == null || vd.graphicPrefab == null)
-            return null;
-
-        var go = Object.Instantiate(vd.graphicPrefab, vd.transform);
-        go.SetActive(true);
-        var g = go.GetComponent<ValuableDiscoverGraphic>();
-        if (g == null)
-        {
-            Object.Destroy(go);
-            return null;
-        }
-
-        g.target = target;
-        g.waitTime = duration;
-        g.waitTimer = duration;
-        Tint(g, ColorFor(type));
-        return g;
-    }
-
-    // Recolour the native highlight's corner brackets (full colour) and centre fill (translucent).
-    private static void Tint(ValuableDiscoverGraphic g, Color c)
-    {
-        TintPart(g.topLeft, c);
-        TintPart(g.topRight, c);
-        TintPart(g.botLeft, c);
-        TintPart(g.botRight, c);
-        var mid = c;
-        mid.a = 0.18f;
-        TintPart(g.middle, mid);
-    }
-
-    private static void TintPart(RectTransform rt, Color c)
-    {
-        if (rt == null)
-            return;
-        var img = rt.GetComponent<UnityEngine.UI.Image>();
-        if (img != null)
-            img.color = c;
-    }
-
-    // A tiny invisible cube with a disabled PhysGrabObject, so a Location ping (no real object) still
-    // has something the native highlight can frame. Mirrors the "Ping It" location anchor recipe:
-    // PhotonView + kinematic Rigidbody are added first because PhysGrabObject.Awake expects them.
-    private static GameObject BuildProxy(Vector3 pos, float duration)
-    {
-        var go = new GameObject("IHM_PingAnchor");
-        go.transform.position = pos;
-        go.transform.localScale = Vector3.one * 0.3f;
-        go.AddComponent<MeshFilter>().mesh = CubeMesh();
-        go.AddComponent<MeshRenderer>().sharedMaterials = new Material[0]; // invisible, but has bounds
-        go.AddComponent<PhotonView>();
-        go.AddComponent<PhotonTransformView>().enabled = false;
-        var rb = go.AddComponent<Rigidbody>();
-        rb.isKinematic = true;
-        rb.constraints = RigidbodyConstraints.FreezeAll;
-        var pg = go.AddComponent<PhysGrabObject>();
-        pg.centerPoint = pos;
-        pg.enabled = false;
-        Object.Destroy(go, duration + 1f);
-        return go;
-    }
-
-    private static Mesh CubeMesh()
-    {
-        if (_cubeMesh != null)
-            return _cubeMesh;
-        var tmp = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        _cubeMesh = tmp.GetComponent<MeshFilter>().sharedMesh;
-        Object.Destroy(tmp);
-        return _cubeMesh;
+        PingAudio.Play(type);
     }
 
     // Keep at most MaxLocationPings local Location pings alive: drop the oldest to make room.
@@ -358,8 +336,8 @@ internal static class PingController
 
             // The native graphic self-destroys after its wait time; once it (or its target) is gone,
             // the ping is over.
-            bool graphicDead = p.Graphic == null || p.Graphic.target == null;
-            if (now >= p.Expire || (graphicDead && p.Proxy == null && p.Graphic == null))
+            bool graphicDead = p.Graphic == null || (p.Graphic.HadTarget && p.Graphic.target == null);
+            if (now >= p.Expire || graphicDead)
             {
                 Remove(p);
                 continue;
@@ -382,9 +360,7 @@ internal static class PingController
     private static void Remove(ActivePing p)
     {
         if (p.Graphic != null)
-            Object.Destroy(p.Graphic.gameObject);
-        if (p.Proxy != null)
-            Object.Destroy(p.Proxy);
+            p.Graphic.Close();
         _pings.Remove(p);
     }
 
@@ -408,11 +384,12 @@ internal static class PingController
     {
         PingType.Valuable => new Color(0.3f, 0.9f, 0.3f),   // green
         PingType.Item => new Color(0.4f, 0.6f, 1f),         // blue
+        PingType.Upgrade => new Color(.5f,.85f,1f),
         PingType.Enemy => new Color(1f, 0.35f, 0.35f),      // red
         PingType.Cart => new Color(0.3f, 0.9f, 0.95f),      // cyan
         PingType.CosmeticBox => new Color(1f, 0.4f, 0.8f),  // pink
         PingType.Scooter => new Color(0.9f, 0.85f, 0.6f),   // beige
-        _ => Color.white,                                    // location
+        _ => new Color(.45f,.82f,1f),                         // soft cyan location
     };
 
     internal static string GlyphFor(PingType type) => type switch
@@ -420,6 +397,7 @@ internal static class PingController
         PingType.Valuable => "$",
         PingType.Enemy => "\u26A0",
         PingType.Item => "\u25C6",
+        PingType.Upgrade => "\u25C6",
         PingType.Cart => "\u25A1",
         PingType.CosmeticBox => "\u2726",
         PingType.Scooter => "\u25B2",

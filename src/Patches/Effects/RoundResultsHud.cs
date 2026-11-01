@@ -7,8 +7,8 @@ namespace IncreaseHardMod.Patches.Effects;
 
 /// <summary>
 /// End-of-level results board: MVP, OOPS CHAMP and a per-player table (hauled / broken / deaths /
-/// revives), drawn with the game's own TMP pixel font on a dim panel under <see cref="HUDCanvas"/>
-/// (same approach as <see cref="LevelInfoHud"/>; the canvas is rebuilt per scene so we recreate lazily).
+/// revives), drawn with the game's own TMP pixel font on a dim, resolution-scaled overlay.
+/// The canvas is rebuilt per scene, so we recreate lazily with the current HUD's font.
 ///
 /// The data lives in <see cref="RoundStats.Results"/> (host-recorded, broadcast at level end). It is
 /// cleared when the next level generates, so a stale board can never linger into a new run.
@@ -19,8 +19,12 @@ internal sealed class RoundResultsHud : MonoBehaviour
 
     private GameObject _panel;
     private TextMeshProUGUI _label;
+    private NativeHudPanel _surface;
     private bool _dismissed;
     private float _lastShownAt = -1f;
+    private bool _manual;
+    private int _page;
+    private const int PageSize = 8;
 
     private void Update()
     {
@@ -36,21 +40,33 @@ internal sealed class RoundResultsHud : MonoBehaviour
         {
             _lastShownAt = RoundStats.ResultsShownAt;
             _dismissed = false;
+            _manual = false;
+            _page = 0;
         }
+
+        // Keep the results data for F7, but never force a board over shopping/gameplay.
+        bool shop = RunManager.instance != null && RunManager.instance.levelCurrent != null && SemiFunc.RunIsShop();
+        if (shop && !_manual) _dismissed = true;
 
         if (Input.GetKeyDown(ModConfig.RoundResultsKey.Value))
         {
             if (_dismissed || Time.unscaledTime - RoundStats.ResultsShownAt > ModConfig.RoundResultsSeconds.Value)
             {
                 _dismissed = false;
+                _manual = true;
                 RoundStats.ResultsShownAt = Time.unscaledTime; // bring it back for another full window
                 _lastShownAt = RoundStats.ResultsShownAt;
             }
             else
             {
                 _dismissed = true;
+                _manual = false;
             }
         }
+        if (Input.GetKeyDown(KeyCode.Escape)) { _dismissed = true; _manual = false; }
+        int pages = Mathf.Max(1, (rows.Count + PageSize - 1) / PageSize);
+        if (Input.GetKeyDown(KeyCode.PageDown)) _page = (_page + 1) % pages;
+        if (Input.GetKeyDown(KeyCode.PageUp)) _page = (_page + pages - 1) % pages;
 
         if (_dismissed || Time.unscaledTime - RoundStats.ResultsShownAt > ModConfig.RoundResultsSeconds.Value
             || !Ensure())
@@ -59,8 +75,9 @@ internal sealed class RoundResultsHud : MonoBehaviour
             return;
         }
 
-        _label.text = Build(rows);
+        _label.text = Build(rows, _page);
         _panel.SetActive(true);
+        _surface.Fit();
     }
 
     private void Hide()
@@ -73,47 +90,25 @@ internal sealed class RoundResultsHud : MonoBehaviour
     {
         if (_panel != null && _label != null)
             return true;
-        if (HUDCanvas.instance == null)
+        _surface = NativeHudPanel.Fullscreen("IHM_RoundResults");
+        if (_surface == null)
             return false;
-
-        TextMeshProUGUI template = StatsUI.instance != null && StatsUI.instance.Text != null
-            ? StatsUI.instance.Text
-            : HUDCanvas.instance.GetComponentInChildren<TextMeshProUGUI>();
-        if (template == null)
-            return false;
-
-        _panel = new GameObject("IHM_RoundResults", typeof(RectTransform));
-        _panel.transform.SetParent(HUDCanvas.instance.transform, false);
-        var prt = (RectTransform)_panel.transform;
-        prt.anchorMin = prt.anchorMax = prt.pivot = new Vector2(0.5f, 0.5f);
-        prt.sizeDelta = new Vector2(980f, 520f);
-        prt.anchoredPosition = Vector2.zero;
-        var bg = _panel.AddComponent<Image>();
-        bg.color = new Color(0f, 0f, 0f, 0.72f);
-        bg.raycastTarget = false;
-
-        var go = new GameObject("Text", typeof(RectTransform));
-        go.transform.SetParent(_panel.transform, false);
-        _label = go.AddComponent<TextMeshProUGUI>();
-        _label.font = template.font;
-        _label.fontSharedMaterial = template.fontSharedMaterial;
-        _label.fontSize = template.fontSize;
-        _label.color = Color.white;
-        _label.alignment = TextAlignmentOptions.Top;
-        _label.enableWordWrapping = false;
-        _label.raycastTarget = false;
-        _label.richText = true;
+        _panel = _surface.gameObject;
+        _label = _surface.Label("Results", 32f, TextAlignmentOptions.TopLeft);
+        _label.enableAutoSizing = true;
+        _label.fontSizeMin = 22f;
+        _label.fontSizeMax = 32f;
         var rt = _label.rectTransform;
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;
-        rt.offsetMin = new Vector2(24f, 16f);
-        rt.offsetMax = new Vector2(-24f, -16f);
+        rt.offsetMin = new Vector2(96f, 64f);
+        rt.offsetMax = new Vector2(-96f, -64f);
         return true;
     }
 
     private static string Hex(Color c) => ColorUtility.ToHtmlStringRGB(c);
 
-    private static string Build(System.Collections.Generic.List<PlayerRoundStat> rows)
+    private static string Build(System.Collections.Generic.List<PlayerRoundStat> rows, int page)
     {
         var sorted = new System.Collections.Generic.List<PlayerRoundStat>(rows);
         sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
@@ -128,7 +123,15 @@ internal sealed class RoundResultsHud : MonoBehaviour
         }
 
         var sb = new StringBuilder();
-        sb.Append($"<color=#{Hex(Gold)}>LEVEL RESULTS</color>\n\n");
+        sb.Append($"<line-height=115%><size=54><color=#{Hex(Gold)}>LEVEL RESULTS</color></size>\n\n");
+        var summary = RoundStats.ResultsSummary;
+        if (summary != null)
+        {
+            sb.Append($"LEVEL LOOT AT START: ${summary.InitialValue:N0}  ({summary.InitialCount} items)\n");
+            sb.Append($"LEFT UNCOLLECTED: {summary.RemainingCount} items / ${summary.RemainingValue:N0}\n");
+            sb.Append($"  UNFOUND (included above): {summary.UnfoundCount} items / ${summary.UnfoundValue:N0}\n");
+            sb.Append($"SOUL INCOME: ${summary.SoulIncome:N0}  |  Extracted value: ${summary.SoulHaul:N0}\n\n");
+        }
         if (mvp != null)
             sb.Append($"<color=#7CFF7C>MVP: {Clean(mvp.Name)}</color>  score {mvp.Score:N0}\n");
         if (oops != null)
@@ -137,8 +140,10 @@ internal sealed class RoundResultsHud : MonoBehaviour
             sb.Append("Nobody stood out this time.\n");
 
         sb.Append("\n<color=#AAAAAA>PLAYER<pos=38%>HAULED<pos=58%>BROKEN<pos=76%>DIED<pos=88%>REVIVED</color>\n");
-        foreach (var r in sorted)
+        int first = Mathf.Clamp(page * PageSize, 0, Mathf.Max(0, sorted.Count - 1));
+        for (int i = first; i < Mathf.Min(sorted.Count, first + PageSize); i++)
         {
+            var r = sorted[i];
             sb.Append(Clean(r.Name))
               .Append("<pos=38%>$").Append(r.Delivered.ToString("N0"))
               .Append("<pos=58%>$").Append(r.BrokenValue.ToString("N0"))
@@ -155,8 +160,16 @@ internal sealed class RoundResultsHud : MonoBehaviour
             revives += r.Revives;
         }
         sb.Append($"<color=#{Hex(Gold)}>TEAM<pos=38%>${hauled:N0}<pos=58%>${broken:N0}<pos=76%>{deaths}<pos=88%>{revives}</color>\n");
-        sb.Append($"\n<color=#888888>{ModConfig.RoundResultsKey.Value} to dismiss</color>");
+        sb.Append($"\n<color=#BBBBBB>{ModConfig.RoundResultsKey.Value} / ESC  CLOSE");
+        if (rows.Count > PageSize) sb.Append($"   PGUP / PGDN  PAGE {page + 1}/{(rows.Count + PageSize - 1) / PageSize}");
+        sb.Append("</color>");
         return sb.ToString();
+    }
+
+    private void OnDestroy()
+    {
+        if (_surface != null)
+            Destroy(_surface.gameObject);
     }
 
     // Player names go into rich text: neutralise tag openers and keep the column layout short.
@@ -164,7 +177,7 @@ internal sealed class RoundResultsHud : MonoBehaviour
     {
         if (string.IsNullOrEmpty(name))
             return "?";
-        name = name.Replace("<", "").Replace(">", "");
+        name = name.Replace("<", "").Replace(">", "").Replace("\n", " ").Replace("\r", " ");
         return name.Length > 16 ? name.Substring(0, 16) : name;
     }
 }

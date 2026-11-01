@@ -147,8 +147,8 @@ internal static class DroneItems
         item.maxPurchase = false;
         item.minPlayerCount = 1;
         item.value = Object.Instantiate(baseItem.value);
-        item.value.valueMin = priceMin;
-        item.value.valueMax = priceMax;
+        item.value.valueMin = priceMin * CustomItemPrices.Multiplier;
+        item.value.valueMax = priceMax * CustomItemPrices.Multiplier;
         var preset = ScriptableObject.CreateInstance<ColorPresets>();
         preset.colorMain = color;
         preset.colorLight = Color.Lerp(color, Color.white, 0.5f);
@@ -174,6 +174,7 @@ internal static class DroneItems
         drone.targetPlayers = targets.players;
         drone.targetEnemies = targets.enemies;
 
+        go.AddComponent<Gear.ItemHover>();
         var ud = go.AddComponent<UtilityDrone>();
         ud.kind = kind;
         ud.slot = slot;

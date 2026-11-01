@@ -1,20 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 namespace IncreaseHardMod.Patches.Effects;
 
-/// <summary>
-/// In-shop "Shopping List" overlay. While you're on the shop level, this reads
-/// <c>ShopManager.instance.shoppingList</c> (the shared cart — everything you and your
-/// friends have carried into the extraction point) every frame and draws a panel on the
-/// right of the screen: each distinct item on its own row as "{qty}x {name}  ${sum}",
-/// colour-coded by the item's <see cref="SemiFunc.itemType"/>, followed by a total-cost
-/// vs. team-currency footer.
-///
-/// Pure read-only IMGUI: it never mutates the shopping list or touches Photon, so it runs
-/// identically for the host and every client with no networking. Asset-free (uses
-/// Texture2D.whiteTexture for the backdrop). Toggle via <see cref="ModConfig.ShoppingListEnabled"/>.
-/// </summary>
+/// <summary>Shared shop cart, rendered in the native game font on a scaled screen canvas.</summary>
 internal sealed class ShoppingListHud : MonoBehaviour
 {
     private static readonly Color TitleColor = new(1f, 0.85f, 0.4f);
@@ -28,61 +18,77 @@ internal sealed class ShoppingListHud : MonoBehaviour
         public Color Color;
     }
 
-    private GUIStyle _title;
-    private GUIStyle _row;
-    private GUIStyle _footer;
-
-    // Reused per-frame so OnGUI allocates nothing steady-state.
+    private NativeHudPanel _surface;
+    private TextMeshProUGUI _title, _footer;
+    private readonly List<(TextMeshProUGUI name, TextMeshProUGUI price)> _labels = new();
     private readonly List<Row> _rows = new();
     private readonly Dictionary<string, Row> _byName = new();
 
-    private void OnGUI()
+    private void Update()
     {
-        if (!ModConfig.ShoppingListEnabled.Value)
-            return;
-        if (!SafeRunIsShop())
-            return;
-
         var shop = ShopManager.instance;
-        if (shop == null || shop.shoppingList == null || shop.shoppingList.Count == 0)
-            return;
-
-        EnsureStyles();
-        Aggregate(shop);
-
-        const float width = 420f;
-        const float sumW = 90f;
-        float rowH = 26f;
-        // Right-align the panel: the top-left corner is taken by the server/debug HUD, so the
-        // shopping list overlapped it. The shop screen has nothing on the right, so anchor there.
-        float x = Screen.width - width - 24f;
-        float y = 120f;
-
-        float panelH = 40f + _rows.Count * rowH + 32f;
-        GUI.color = new Color(0f, 0f, 0f, 0.6f);
-        GUI.DrawTexture(new Rect(x - 8f, y - 8f, width + 16f, panelH), Texture2D.whiteTexture);
-        GUI.color = Color.white;
-
-        DrawShadowed(new Rect(x, y, width, 30f), "Shopping List", _title, TitleColor);
-        y += 34f;
-
-        int total = 0;
-        foreach (var r in _rows)
+        if (!ModConfig.ShoppingListEnabled.Value || !SafeRunIsShop() || shop == null ||
+            shop.shoppingList == null || shop.shoppingList.Count == 0)
         {
-            string text = $"{r.Count}x {r.Name}";
-            DrawShadowed(new Rect(x, y, width - sumW, rowH), text, _row, r.Color);
-            DrawShadowed(new Rect(x + width - sumW, y, sumW, rowH), $"${r.Sum}", _row, r.Color,
-                TextAnchor.MiddleRight);
-            total += r.Sum;
-            y += rowH;
+            if (_surface != null) _surface.gameObject.SetActive(false);
+            return;
         }
-
-        y += 6f;
+        if (_surface == null)
+        {
+            _surface = NativeHudPanel.Create("IHM_ShoppingList", new Vector2(460f, 200f),
+                new Vector2(1f, 1f), new Vector2(-24f, -100f), 0f);
+            if (_surface == null) return;
+            _labels.Clear();
+            _title = _surface.Label("Title", 26f, TextAlignmentOptions.TopLeft);
+            _title.text = "SHOPPING LIST";
+            _title.color = TitleColor;
+            _footer = _surface.Label("Total", 24f, TextAlignmentOptions.TopLeft);
+        }
+        _surface.gameObject.SetActive(true);
+        Aggregate(shop);
+        const float rowHeight = 30f;
+        int total = 0;
+        for (int i = 0; i < _rows.Count; i++)
+        {
+            if (i == _labels.Count)
+                _labels.Add((_surface.Label("Item", 22f, TextAlignmentOptions.TopLeft),
+                    _surface.Label("Price", 22f, TextAlignmentOptions.TopRight)));
+            var (name, price) = _labels[i];
+            name.gameObject.SetActive(true);
+            price.gameObject.SetActive(true);
+            name.richText = price.richText = false;
+            name.text = $"{_rows[i].Count}x {_rows[i].Name}";
+            price.text = $"${_rows[i].Sum:N0}K";
+            name.color = price.color = _rows[i].Color;
+            Place(name, 16f, 54f + i * rowHeight, 316f, rowHeight);
+            Place(price, 338f, 54f + i * rowHeight, 106f, rowHeight);
+            total += _rows[i].Sum;
+        }
+        for (int i = _rows.Count; i < _labels.Count; i++)
+        {
+            _labels[i].name.gameObject.SetActive(false);
+            _labels[i].price.gameObject.SetActive(false);
+        }
         int currency = SafeCurrency(shop);
-        bool afford = currency < 0 || total <= currency;
-        var totColor = afford ? new Color(0.5f, 1f, 0.5f) : new Color(1f, 0.45f, 0.45f);
-        string footer = currency >= 0 ? $"Total  ${total} / ${currency}" : $"Total  ${total}";
-        DrawShadowed(new Rect(x, y, width, 28f), footer, _footer, totColor);
+        _footer.color = currency < 0 || total <= currency ? new Color(0.5f, 1f, 0.5f) : new Color(1f, 0.45f, 0.45f);
+        _footer.text = currency >= 0 ? $"TOTAL  ${total:N0}K / ${currency:N0}K" : $"TOTAL  ${total:N0}K";
+        Place(_title, 16f, 12f, 428f, 36f);
+        Place(_footer, 16f, 64f + _rows.Count * rowHeight, 428f, 34f);
+        _surface.Panel.sizeDelta = new Vector2(460f, 112f + _rows.Count * rowHeight);
+        _surface.Fit();
+    }
+
+    private static void Place(TextMeshProUGUI label, float x, float y, float width, float height)
+    {
+        var rt = label.rectTransform;
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
+        rt.anchoredPosition = new Vector2(x, -y);
+        rt.sizeDelta = new Vector2(width, height);
+    }
+
+    private void OnDestroy()
+    {
+        if (_surface != null) Destroy(_surface.gameObject);
     }
 
     // Collapse the flat shopping list into distinct-name rows with counts + summed value,
@@ -143,40 +149,6 @@ internal sealed class ShoppingListHud : MonoBehaviour
             SemiFunc.itemType.vehicle => new Color(0.9f, 0.85f, 0.6f),        // beige
             _ => Color.white,
         };
-    }
-
-    private void EnsureStyles()
-    {
-        if (_title != null)
-            return;
-        _title = new GUIStyle
-        {
-            fontSize = 24, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleLeft, richText = false,
-        };
-        _row = new GUIStyle
-        {
-            fontSize = 19, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleLeft, richText = false,
-        };
-        _footer = new GUIStyle
-        {
-            fontSize = 20, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleLeft, richText = false,
-        };
-    }
-
-    private void DrawShadowed(Rect rect, string text, GUIStyle style, Color color,
-        TextAnchor align = TextAnchor.MiddleLeft)
-    {
-        var prevAlign = style.alignment;
-        style.alignment = align;
-
-        var prev = GUI.color;
-        GUI.color = new Color(0f, 0f, 0f, 0.85f);
-        GUI.Label(new Rect(rect.x + 2f, rect.y + 2f, rect.width, rect.height), text, style);
-        GUI.color = color;
-        GUI.Label(rect, text, style);
-        GUI.color = prev;
-
-        style.alignment = prevAlign;
     }
 
     private static string Clean(string name)

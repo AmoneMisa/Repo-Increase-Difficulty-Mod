@@ -29,9 +29,7 @@ internal static class EnemyDamagePatch
         if (enemyIndex < 0 || hurtByHeal || damage <= 0)
             return;
 
-        float mult = Modifiers.StatModifiers.Mult(Modifiers.StatAxis.EnemyDamage);
-        if (ModConfig.ScaleEnemyDamage.Value)
-            mult *= Difficulty.Multiplier(ModConfig.EnemyDamagePerLevel.Value, ModConfig.EnemyDamageMax.Value);
+        float mult = EnemyBalance.Damage;
 
         if (Mathf.Approximately(mult, 1f))
             return;

@@ -1,4 +1,4 @@
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
 using IncreaseHardMod.Networking;
@@ -11,9 +11,10 @@ namespace IncreaseHardMod;
 
 public static class PluginInfo
 {
+    // Keep the identity stable across the rename: existing config and integrations use it.
     public const string PLUGIN_GUID = "com.kubai.increasehardmod";
-    public const string PLUGIN_NAME = "Increase Hard Mod";
-    public const string PLUGIN_VERSION = "0.5.0";
+    public const string PLUGIN_NAME = "IncreaseDifficultyMod";
+    public const string PLUGIN_VERSION = "0.6.2";
 }
 
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -62,6 +63,7 @@ public class Plugin : BaseUnityPlugin
         BatteryLifeUpgrade.Register();
         AutoscanUpgrade.Register();
         MapUpgrade.Register();
+        InventorySlotsUpgrade.Register();
         PingUpgrades.Register();
         TruckUpgrades.Register();
 
@@ -92,6 +94,8 @@ public class Plugin : BaseUnityPlugin
 
         var netObject = new GameObject("IncreaseHardMod_Runtime");
         netObject.AddComponent<ModNetwork>();
+        netObject.AddComponent<InventorySlotsUpgrade.Controller>();
+        netObject.AddComponent<VoiceRecoveryController>();
         // Host-side auto Loot Cash-In for the "Loot Cash-In" truck upgrade (sells leftovers on quota close).
         netObject.AddComponent<Upgrades.TruckUpgrades.SellController>();
         // Main-menu Photon name-server reachability overlay (IMGUI, background TCP probes).
@@ -100,8 +104,8 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<PingHud>();
         // Level info overlay (native TMP: top-centre title + top-right modifier list, toggle with LevelInfoToggleKey).
         netObject.AddComponent<LevelInfoHud>();
-        // Spectator Minimap: while dead on a level, draws the game's own map render in a screen corner.
-        netObject.AddComponent<SpectatorMinimapHud>();
+        // Spectator Map: one overlay for dead players, following the active spectator camera.
+        netObject.AddComponent<SpectatorMapHud>();
         // End-of-level MVP / OOPS CHAMP scoreboard (stats recorded host-side by RoundStats).
         netObject.AddComponent<RoundResultsHud>();
         // Black Market (shop): pay to block unwanted modifiers / economies. Keyboard driven.

@@ -1,4 +1,4 @@
-# Increase Hard Mod
+# IncreaseDifficultyMod
 
 **English** · [Русский](#-русский)
 
@@ -11,11 +11,12 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.5.0`
+- **Version:** `0.6.2`
 
 ### Contents
 
 - [Requirements](#requirements)
+- [Installation and updating](#installation-and-updating)
 - [Features](#features)
 - [Default keys](#default-keys)
 - [Configuration](#configuration)
@@ -31,6 +32,16 @@ a team ping system, a round-results board and a set of quality-of-life features 
   [MenuLib](https://thunderstore.io/c/repo/p/REPOModding/MenuLib/)) for editing settings in-game.
   Both now live under the **REPOModding** author (the old `nickklmao` packages are deprecated).
 - Everyone in the lobby should run the mod to avoid desync (several features are host-authoritative).
+
+### Installation and updating
+
+**Thunderstore Mod Manager / r2modman:** install IncreaseDifficultyMod and its required dependencies, then launch the game with **Start modded**. REPOConfig and MenuLib are optional for changing settings in-game. For a local ZIP, use the manager's **Import local mod** option; install BepInExPack and REPOLib separately if the import does not resolve dependencies.
+
+**Manual installation:** install BepInEx 5 and REPOLib, close the game, and copy the archive's `plugins/IncreaseDifficultyMod` directory into `BepInEx/plugins/` in the game or your active mod-manager profile. The final plugin path is `BepInEx/plugins/IncreaseDifficultyMod/IncreaseDifficultyMod.dll`.
+
+**Updating from Increase Hard Mod:** replace the previous installation. Remove the old `IncreaseHardMod.dll` from the active plugins folder before launching; keep only one active copy of this mod. If the old mod was installed as a separate manager package, uninstall that package and install IncreaseDifficultyMod. Keep `BepInEx/config/com.kubai.increasehardmod.cfg`: the plugin GUID and configuration filename intentionally stay the same, so existing settings and saved upgrade IDs continue to work.
+
+All players in a lobby must use the same mod version and restart the game after updating. Models, textures, icons and audio are embedded in the DLL; no separate asset download is needed. The release ZIP contains the mod only, without personal configs, saves or game assemblies.
 
 ### Features
 
@@ -71,7 +82,7 @@ level is configurable.
 | Player | Change Voices | Player voices get swapped/randomized |
 | Monsters | Souls Explode Harder | Exploding souls deal more damage |
 | Monsters | Monsters Pit-Tanky | Monsters take less death-pit damage |
-| Monsters | Light / Heavy Monsters | All monsters weigh less (easy to shove) or more (hard to shove) |
+| Monsters | Light / Heavy Monsters | Light monsters yield to one player's grab without Strength upgrades; heavy monsters are harder to move. Frozen/mounted restrictions and native hold limits remain. |
 
 #### More surprise modifiers: tiers, conflicts, depth-weighted pool
 
@@ -96,8 +107,9 @@ in the Black Market and switched on/off in the *Surprise Modifiers* config secti
 
 #### Level scaling and economy events
 
-Each of these has its own switch in the `Modules` section and its numbers in the *Level Scaling* and
-*Economy* sections. Everything is host-side; clients get the result through the game's normal sync.
+Scaling switches live in `Modules`, with tuning in *Level Scaling*. Economic surprises use the
+shared `Modules/Surprises` switch and tuning in *Surprises*. Everything is host-side; clients get
+the result through the game's normal sync.
 
 | Module | What it does (defaults) |
 | --- | --- |
@@ -106,7 +118,7 @@ Each of these has its own switch in the `Modules` section and its numbers in the
 | **Level size** | Bigger maps after level 8: +3% modules and grid per level, capped at x1.5. More modules also means more extraction points through the game's own thresholds. |
 | **Extractions** | One extra extraction point every 10 levels, at most 5 per level. |
 | **Moon phases** | Off by default. When on, the moon advances every 15 levels instead of every 5. |
-| **Economy events** | From level 3 on, a level gets a random event with 50% chance: a multiplier on the value of loot, on the quota and/or on the cash an extraction pays. 20 events from *Gold Rush* (+35% loot value) and *Windfall* (+30% pay) to *Tax Audit* (-25% pay, +10% quota) and *Crushing Quota* (+40%). Bad events get likelier with depth, good ones rarer. The active event is shown under the level info HUD. |
+| **Economic surprises** | Part of `Modules/Surprises`. From level 3 on, a level gets a random economic surprise with 50% chance: a multiplier on loot value, quota and/or extraction pay. 20 events from *Gold Rush* (+35% loot value) and *Windfall* (+30% pay) to *Tax Audit* (-25% pay, +10% quota) and *Crushing Quota* (+40%). Bad events get likelier with depth. Tune `Surprises/EconomyEventChancePercent` and `EconomyStartLevel`; 0% disables this category. Old economy settings migrate automatically. Shop price events remain under `Modules/ShopEconomy`. |
 
 #### Shop economy and the Black Market
 
@@ -171,18 +183,18 @@ with this mod's own models, animations and sounds.
 | **Protection Orb** | 11,000-15,000 | Players inside the field take 25% less damage, but the orb burns through its charge about three times faster than a normal orb. |
 | **Poison Crossbow** | 19,000-24,000 | 7 damage per bolt and a poison that deals 125 damage over 15 seconds. Every bolt refreshes the poison to 15 s, it never stacks. A poisoned monster stays actively hostile and hunts players while the poison lasts. A third fewer shots than a normal pistol. |
 | **Decoy Grenade** | 1,000-1,300 | Arm it and throw it: for 5 seconds it lures nearby monsters to itself, then disappears. |
-| **Pulse Ice Pistol** | 11,000-15,000 | Freezes a monster for 4.5 seconds without pushing it. Frozen monsters cannot be picked up, take only 60% of firearm damage, and take 35% more from melee weapons. |
+| **Pulse Ice Pistol** | 11,000-15,000 | Freezes monsters and players for 4.5 seconds with a visible ice coating. Player freeze works in the shop too: pauses movement/jumping without shot damage; repeated hits refresh the timer. The frozen player sees a countdown. Frozen monsters cannot be picked up, take only 60% of firearm damage, and take 35% more from melee weapons. |
 | **Sticky Pistol** | 9,000-10,000 | Pulls a monster or object toward you, as long as you could lift it freely with one strength level less than you have. |
 
 Each drone, orb and gun has its own on/off switch in the `Modules` section of the config.
 
 ### Team ping system
 
-Press the ping key to mark whatever you're aiming at. Pings use the game's own
-`ValuableDiscoverGraphic` highlight (the animated corner-bracket square from valuable discovery),
-tinted per ping type, so they match the in-game style, track their target, dim off-screen and fade
-out on their own. Pings are broadcast over Photon carrying the pinged object's PhotonView ViewID, so
-every client highlights the same object; Location pings anchor to a small proxy at the point.
+Press the ping key to mark what you aim at. Items use a thin 2-pixel contour of their actual
+silhouette and a downward arrow above the target. The interior stays transparent. Location markers
+use a hollow floor ring and an arrow. Projection follows the game's displayed render texture,
+including low-resolution rendering and letterboxing. Photon shares the target ViewID and world
+position; the sender draws once locally and ignores its own network echo.
 
 Gated behind ping upgrades:
 
@@ -202,7 +214,7 @@ only on a successful extraction.
 #### Lobby & quality-of-life
 
 - **Map Vote** — in the truck lobby players vote on the next map among a few random candidates
-  (number keys or on-screen buttons). The leader when the truck departs is used; no votes = vanilla
+  (NumPad 1–6 or on-screen buttons). The leader when the truck departs is used; no votes = vanilla
   random pick.
 - **Late Join** — the host keeps the room joinable during a run/shop/truck and re-syncs mod state
   to anyone who connects mid-game.
@@ -210,13 +222,17 @@ only on a successful extraction.
 - **Shop price scaling** — optionally scale shop prices with player count (host-side).
 - **Shop duplicates** and **Shopping List** HUD — a cart overview in the shop with per-item
   quantities, summed prices and a running total vs. team currency.
-- **Item Unstuck** — relocates valuables embedded in geometry back to a safe spot, and keeps
-  valuables invulnerable until first grabbed (host-side anti-softlock).
-- **Auto Backup Saves** — backs up the run save before REPO deletes it on a level fail/wipe, and
-  can keep the failed save loadable from its last checkpoint.
-- **Dead Map Access** — dead/spectating players can open their map tool.
-- **Spectator Minimap** — while dead, hold a key to show the game's own map render in the centre
-  of the screen.
+- **Item Unstuck** — relocates embedded valuables to a collision-checked safe spot. A sustained
+  failed grab also rescues valuables wedged in window frames or partially embedded in shelves
+  (6 seconds by default). Releases grab anchors and briefly protects the valuable during recovery.
+  Also keeps valuables invulnerable until first grabbed (host-side anti-softlock).
+- **Auto Backup Saves** — always protects the checkpoint from automatic deletion after a wipe
+  or early exit when the game would delete it. Optional backup snapshots are kept indefinitely.
+- **Voice Recovery** — local recovery of failed microphone capture and voice streams after
+  audio-device changes; manual Unity audio reset with Left Ctrl + F9.
+- **Spectator Map** — one module for dead/spectating players. Opens a large map following the
+  current view. Use the normal map key or hold Tab; arrows pan, map zoom keys change scale,
+  and Home restores follow. Toggle `Modules/SpectatorMap`; key and size are in `Spectator Map`.
 
 #### HUD & diagnostics
 
@@ -232,11 +248,43 @@ only on a successful extraction.
 | Action | Key | Config section |
 |---|---|---|
 | Place ping | `Mouse2` (middle mouse) | Ping |
-| Dismiss / recall results board | `F7` | Round Results |
+| Dismiss / recall results board | `F7` / `Esc` to close | Round Results |
+| Hide / show map-vote HUD | `F6` | Map Vote |
 | Hide / show Level Info | `F8` | Level Info |
-| Spectator minimap (hold) | `Tab` | Spectator Minimap |
+| Reset local audio and voice | `Left Ctrl + F9` | Voice Recovery |
+| Spectator map (hold) | `Tab` | Spectator Map |
 | Map zoom in / out (Map Suite L7+) | `-` / `=` | Player Upgrades |
-| Map vote | number keys | Map Vote |
+| Map vote | `NumPad 1–6` or click | Map Vote |
+| Extra inventory slots | `4`–`7` | Inventory Slots |
+
+### Save protection and backups
+
+When the game would automatically delete a failed run, its checkpoint is preserved on the host.
+Return to the main menu and select the existing save to continue from the last saved checkpoint;
+no game restart or manual file copying is needed. The explicit delete-save menu button still works.
+
+`Modules / AutoBackup` controls additional snapshots in `saves_IncreaseHardMod_backups` next to
+the game's `saves` folder. Snapshots are never automatically pruned or overwritten. Turning
+snapshots off, a missing save folder or a copy failure does not disable checkpoint protection.
+Legacy `KeepSaveLoadable` and `MaxBackupsPerSave` settings are ignored.
+
+### Voice and audio recovery
+
+`Modules / VoiceRecovery` (default true) checks local microphone capture every two seconds
+while focused and connected to a voice room. After ten seconds of failed capture it requests
+a recorder restart, with a 30-second cooldown and at most three attempts per local recorder.
+Silence and mute are not failures; mute, voice detection and push-to-talk remain under game control.
+
+After an audio-device change, voice recording and playback restart after a short delay,
+at most once per 15 seconds. **Left Ctrl + F9** requests a local Unity audio reset followed by
+a voice-stream restart, including with automatic recovery disabled. It briefly interrupts sound;
+it does not leave the game. `Voice Recovery / RecoveryKey=None` disables the shortcut.
+These recovery controls can help with audio problems under Proton; a live Proton test has not
+been performed and some silent driver failures require manual recovery.
+
+`Voice Recovery / NetworkDiagnostics=true` logs the Photon room region, RTT, RTT variance and
+cumulative reliable resends once per minute. It does not change transport, region, send rates
+or timeouts, and does not guarantee lower latency.
 
 ### Configuration
 
@@ -245,8 +293,8 @@ REPOConfig. **Every module on/off switch is gathered in the first section, `Modu
 each drone and gear item, each difficulty scaling stat, lobby tools, HUDs...), so you don't have to scroll
 through tuning values to find them; values from the old sections are carried over the first time. Other sections: General, Enemies, Quota, Surprises, Surprise Modifiers, Modifier Tuning,
 Player Upgrades, Truck Upgrades, Ping, Shop, Map Vote, Late Join, Item Unstuck, More Players,
-Dead Map Access, Spectator Minimap, Round Results, Auto Backup Saves, and HUD toggles (Level Info,
-Server Info, Shopping List, Photon HUD), plus Diagnostics.
+Spectator Map, Round Results, Auto Backup Saves, and HUD toggles (Level Info,
+Server Info, Shopping List, Photon HUD), plus Voice Recovery and Diagnostics.
 
 ### Building
 
@@ -263,7 +311,7 @@ Override the game location if it isn't in the default Steam path:
 dotnet build -p:GameDir="D:\Games\REPO"
 ```
 
-The build deploys the compiled plugin into your BepInEx plugins folder for the active profile.
+Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Release`). To build and validate the uploadable Thunderstore ZIP, run `powershell -ExecutionPolicy Bypass -File tools/package-thunderstore.ps1`. Building does not install the mod automatically. Explicit local deployment is available with `-p:DeployToGame=true -p:PluginsDir="YOUR_PROFILE/BepInEx/plugins/IncreaseDifficultyMod"`; this disables a legacy DLL in that same directory.
 
 ### Notes
 
@@ -281,11 +329,12 @@ The build deploys the compiled plugin into your BepInEx plugins folder for the a
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.5.0`
+- **Версия:** `0.6.2`
 
 ### Содержание
 
 - [Требования](#требования)
+- [Установка и обновление](#установка-и-обновление)
 - [Возможности](#возможности)
 - [Клавиши по умолчанию](#клавиши-по-умолчанию)
 - [Настройка](#настройка)
@@ -298,6 +347,16 @@ The build deploys the compiled plugin into your BepInEx plugins folder for the a
 - [REPOLib](https://thunderstore.io/c/repo/p/Zehs/REPOLib/) — нужен для кастомных улучшений в
   магазине. Клиент без REPOLib не увидит эти улучшения.
 - Мод желательно ставить всем в лобби, чтобы избежать рассинхрона (часть функций работает на стороне хоста).
+
+### Установка и обновление
+
+**Thunderstore Mod Manager / r2modman:** установите IncreaseDifficultyMod с обязательными зависимостями и запускайте игру через **Start modded**. Для настройки в игре дополнительно установите REPOConfig и MenuLib. Для локального ZIP используйте **Import local mod**; если импорт не установил зависимости, отдельно установите BepInExPack и REPOLib.
+
+**Ручная установка:** установите BepInEx 5 и REPOLib, закройте игру и скопируйте папку `plugins/IncreaseDifficultyMod` из архива в `BepInEx/plugins/` игры или активного профиля менеджера. Итоговый путь плагина: `BepInEx/plugins/IncreaseDifficultyMod/IncreaseDifficultyMod.dll`.
+
+**Обновление с Increase Hard Mod:** замените прежнюю установку. Перед запуском уберите старый `IncreaseHardMod.dll` из активной папки плагинов; должна остаться одна активная копия мода. Если прежняя версия установлена отдельным пакетом в менеджере, удалите этот пакет и установите IncreaseDifficultyMod. Сохраните файл `BepInEx/config/com.kubai.increasehardmod.cfg`: GUID плагина и название конфига оставлены прежними, поэтому настройки и идентификаторы сохранённых улучшений сохраняют совместимость.
+
+Все участники лобби должны использовать одну версию мода и перезапустить игру после обновления. Модели, текстуры, иконки и звуки встроены в DLL; отдельно скачивать ресурсы не нужно. В релизном ZIP только мод: без личных конфигов, сохранений и сборок игры.
 
 ### Возможности
 
@@ -363,7 +422,8 @@ The build deploys the compiled plugin into your BepInEx plugins folder for the a
 
 #### Масштаб уровня и события экономики
 
-У каждого свой переключатель в секции `Modules`, числа лежат в секциях *Level Scaling* и *Economy*.
+Переключатели роста уровня находятся в `Modules`, параметры — в *Level Scaling*. Экономические
+события входят в общий переключатель `Modules/Surprises`, их параметры находятся в *Surprises*.
 Всё считает хост, клиенты получают результат обычной синхронизацией игры.
 
 | Модуль | Что делает (по умолчанию) |
@@ -373,7 +433,7 @@ The build deploys the compiled plugin into your BepInEx plugins folder for the a
 | **Размер уровня** | Карты крупнее после 8-го уровня: +3% модулей и сетки за уровень, максимум x1,5. Больше модулей — больше точек экстракции по пороговым значениям игры. |
 | **Экстракции** | Одна дополнительная точка экстракции раз в 10 уровней, не больше 5 на уровень. |
 | **Фазы луны** | По умолчанию выключено. Если включить, луна меняется раз в 15 уровней вместо 5. |
-| **События экономики** | Начиная с 3-го уровня уровень с шансом 50% получает случайное событие: множитель стоимости лута, квоты и/или оплаты за экстракцию. 20 событий, от *Gold Rush* (+35% к стоимости лута) и *Windfall* (+30% к оплате) до *Tax Audit* (-25% к оплате, +10% к квоте) и *Crushing Quota* (+40% к квоте). Плохие события с глубиной выпадают чаще, хорошие реже. Активное событие показано под информацией об уровне. |
+| **Экономические сюрпризы** | Входят в общий `Modules/Surprises`. Начиная с 3-го уровня с шансом 50% меняют стоимость лута, квоту и/или оплату за экстракцию. 20 событий, от *Gold Rush* (+35% к стоимости лута) и *Windfall* (+30% к оплате) до *Tax Audit* (-25% к оплате, +10% к квоте) и *Crushing Quota* (+40% к квоте). Плохие события с глубиной выпадают чаще. Параметры — `Surprises/EconomyEventChancePercent` и `EconomyStartLevel`; шанс 0% отключает эту категорию. Прежние значения переносятся автоматически. События цен магазина остаются в `Modules/ShopEconomy`. |
 
 #### Экономика магазина и Чёрный рынок
 
@@ -438,18 +498,18 @@ The build deploys the compiled plugin into your BepInEx plugins folder for the a
 | **Protection Orb** | 11 000-15 000 | Игроки в поле получают на 25% меньше урона, но орб тратит заряд примерно втрое быстрее обычного. |
 | **Poison Crossbow** | 19 000-24 000 | 7 урона за болт и яд, наносящий 125 урона за 15 секунд. Каждый болт обновляет яд до 15 с, не накапливается. Отравленный монстр остаётся активно враждебным и охотится на игроков, пока яд действует. На треть меньше выстрелов, чем у обычного пистолета. |
 | **Decoy Grenade** | 1 000-1 300 | Активируй и брось: 5 секунд приманивает ближайших монстров к себе, затем исчезает. |
-| **Pulse Ice Pistol** | 11 000-15 000 | Замораживает монстра на 4,5 секунды, не отталкивая. Замороженного нельзя поднять, он получает 60% урона от огнестрела и на 35% больше от оружия ближнего боя. |
+| **Pulse Ice Pistol** | 11 000-15 000 | Замораживает монстров и игроков на 4,5 секунды с видимым ледяным покрытием. На игроках работает и в магазине: останавливает движение и прыжки без урона от выстрела. Повторное попадание обновляет таймер; замороженный игрок видит обратный отсчёт. Замороженного монстра нельзя поднять, он получает 60% урона от огнестрела и на 35% больше от ближнего боя. |
 | **Sticky Pistol** | 9 000-10 000 | Притягивает монстра или предмет к тебе, если ты смог бы свободно поднять его с силой на один уровень ниже твоей. |
 
 У каждого дрона, орба и оружия свой переключатель в секции `Modules` конфига.
 
 #### Командные пинги
 
-Нажми клавишу пинга, чтобы отметить то, на что целишься. Пинги используют родную подсветку игры
-`ValuableDiscoverGraphic` (анимированная рамка с уголками из обнаружения ценностей), окрашенную
-под тип пинга, — выглядят как часть игры, следуют за целью, тускнеют вне экрана и сами исчезают.
-Пинги рассылаются через Photon вместе с ViewID PhotonView объекта, поэтому у всех подсвечивается
-один и тот же объект; пинг «Точка» крепится к небольшому прокси в этом месте.
+Нажми клавишу пинга, чтобы отметить цель. Предмет получает тонкий контур 2 пикселя по
+реальному силуэту и стрелку сверху; внутри остаётся прозрачным. Метка на полу — кольцо и стрелка.
+Координаты учитывают фактическое положение игровой render texture, пониженное разрешение и
+чёрные полосы. Photon передаёт другим игрокам ViewID цели и мировую позицию. У отправителя метка
+рисуется один раз локально; собственное сетевое эхо игнорируется.
 
 Зависят от улучшений:
 
@@ -468,7 +528,7 @@ The build deploys the compiled plugin into your BepInEx plugins folder for the a
 #### Лобби и удобства
 
 - **Голосование за карту** — в лобби грузовика игроки выбирают следующую карту из нескольких
-  случайных (цифровые клавиши или кнопки на экране). Побеждает лидер на момент отъезда; нет голосов —
+  случайных (NumPad 1–6 или кнопки на экране). Побеждает лидер на момент отъезда; нет голосов —
   обычный случайный выбор игры.
 - **Поздний вход** — хост оставляет комнату открытой во время забега/магазина/грузовика и
   синхронизирует состояние мода для зашедших посреди игры.
@@ -476,13 +536,19 @@ The build deploys the compiled plugin into your BepInEx plugins folder for the a
 - **Масштаб цен в магазине** — цены могут расти с числом игроков (на стороне хоста).
 - **Дубликаты в магазине** и HUD **Shopping List** — обзор корзины в магазине: количество,
   суммарная цена по каждой позиции и итог относительно общих денег команды.
-- **Item Unstuck** — возвращает ценности, застрявшие в геометрии, на безопасное место и делает
-  их неуязвимыми до первого захвата (защита от софтлока, на стороне хоста).
-- **Auto Backup Saves** — бэкап сохранения перед тем, как REPO удалит его при провале/вайпе, с
-  возможностью оставить провалившееся сохранение загружаемым с последнего чекпоинта.
-- **Карта для мёртвых** — мёртвые/наблюдающие игроки могут открывать карту.
-- **Миникарта наблюдателя** — пока ты мёртв, удерживай клавишу, чтобы показать родную карту игры в
-  центре экрана.
+- **Item Unstuck** — возвращает застрявшие ценности в проверенное свободное место. Если предмет
+  зажат в оконной раме или частично вошёл в полку, удерживайте захват и тяните его: после длительной
+  неудачной попытки (по умолчанию 6 секунд) мод освободит его. Захваты отпускаются, а на время переноса
+  включается краткая защита от повреждений. Также сохраняется неуязвимость до первого захвата.
+  Работает на стороне хоста.
+- **Auto Backup Saves** — всегда защищает чекпоинт, когда игра собирается автоматически удалить
+  сохранение после вайпа или раннего выхода. Дополнительные снимки хранятся без ограничения.
+- **Voice Recovery** — локальное восстановление захвата микрофона и голосовых потоков после
+  смены аудиоустройства; ручной сброс звука Unity через Left Ctrl + F9.
+- **Spectator Map — карта для мёртвых** — единый модуль: крупная карта следует за камерой
+  наблюдения. Обычная клавиша карты или удержание Tab открывает её; стрелки сдвигают область,
+  клавиши масштаба меняют приближение, Home возвращает слежение. Переключатель —
+  `Modules/SpectatorMap`, клавиша и размер — в секции `Spectator Map`.
 
 #### HUD и диагностика
 
@@ -497,19 +563,52 @@ The build deploys the compiled plugin into your BepInEx plugins folder for the a
 | Действие | Клавиша | Секция конфига |
 |---|---|---|
 | Поставить пинг | `Mouse2` (средняя кнопка мыши) | Ping |
-| Скрыть / вернуть таблицу итогов | `F7` | Round Results |
+| Скрыть / вернуть таблицу итогов | `F7` / `Esc` для закрытия | Round Results |
+| Скрыть / показать голосование | `F6` | Map Vote |
 | Скрыть / показать Level Info | `F8` | Level Info |
-| Миникарта наблюдателя (удержание) | `Tab` | Spectator Minimap |
+| Сбросить локальный звук и голос | `Left Ctrl + F9` | Voice Recovery |
+| Карта наблюдателя (удержание) | `Tab` | Spectator Map |
 | Зум карты + / − (Map Suite ур. 7+) | `-` / `=` | Player Upgrades |
-| Голосование за карту | цифровые клавиши | Map Vote |
+| Голосование за карту | `NumPad 1–6` или мышь | Map Vote |
+| Дополнительные слоты | `4`–`7` | Inventory Slots |
+
+### Защита сохранений и бэкапы
+
+Когда игра собирается автоматически удалить проваленный забег, у хоста сохраняется чекпоинт.
+Вернитесь в главное меню и загрузите существующее сохранение, чтобы продолжить с последнего
+сохранённого чекпоинта без перезапуска игры и копирования файлов. Ручное удаление через меню работает.
+
+`Modules / AutoBackup` управляет дополнительными снимками в `saves_IncreaseHardMod_backups`
+рядом с папкой `saves` игры. Снимки не перезаписываются и не удаляются автоматически. Выключение
+снимков, отсутствие папки сохранения или ошибка копирования не отключают защиту чекпоинта.
+Прежние `KeepSaveLoadable` и `MaxBackupsPerSave` игнорируются.
+
+### Восстановление голоса и звука
+
+`Modules / VoiceRecovery` (по умолчанию включено) проверяет захват локального микрофона раз в
+две секунды, пока игра в фокусе и подключена к голосовой комнате. После десяти секунд сбоя
+запрашивается перезапуск записи: пауза 30 секунд, до трёх попыток на экземпляр записи.
+Тишина и выключенный микрофон не считаются сбоем; mute, активация голосом и push-to-talk
+остаются под управлением игры.
+
+После смены аудиоустройства запись и воспроизведение голоса перезапускаются с небольшой
+задержкой, не чаще раза в 15 секунд. **Left Ctrl + F9** запрашивает локальный сброс звука Unity
+и перезапуск голоса, в том числе при выключенном автоматическом восстановлении. Звук ненадолго
+прерывается, выхода из игры нет. `Voice Recovery / RecoveryKey=None` отключает сочетание.
+Это может помочь с проблемами звука под Proton; живой тест на Proton пока не проведён.
+Некоторые сбои драйвера без явной ошибки требуют ручного восстановления.
+
+`Voice Recovery / NetworkDiagnostics=true` включает вывод региона комнаты Photon, RTT,
+разброса RTT и накопленных повторных отправок раз в минуту. Транспорт, регион, частоты отправки
+и тайм-ауты не меняются; снижение пинга не гарантируется.
 
 ### Настройка
 
 Все настройки хранятся в `BepInEx/config/com.kubai.increasehardmod.cfg` и редактируются прямо в
 игре через REPOConfig. **Все переключатели модулей собраны в первой секции `Modules`** (сюрпризы, улучшения, каждый дрон и предмет, каждая характеристика роста сложности, лобби-инструменты, HUD...), чтобы не листать значения настройки; значения из прежних секций переносятся при первом запуске. Остальные секции: General, Enemies, Quota, Surprises, Surprise Modifiers, Modifier
 Tuning, Player Upgrades, Truck Upgrades, Ping, Shop, Map Vote, Late Join, Item Unstuck, More
-Players, Dead Map Access, Spectator Minimap, Round Results, Auto Backup Saves, переключатели HUD
-(Level Info, Server Info, Shopping List, Photon HUD) и Diagnostics.
+Players, Spectator Map, Round Results, Auto Backup Saves, переключатели HUD
+(Level Info, Server Info, Shopping List, Photon HUD), Voice Recovery и Diagnostics.
 
 ### Сборка
 
@@ -526,9 +625,153 @@ dotnet build
 dotnet build -p:GameDir="D:\Games\REPO"
 ```
 
-Сборка кладёт готовый плагин в папку plugins активного профиля BepInEx.
+Release-файл: `bin/Release/IncreaseDifficultyMod.dll` (команда `dotnet build -c Release`). Для сборки и проверки ZIP для Thunderstore запустите `powershell -ExecutionPolicy Bypass -File tools/package-thunderstore.ps1`. Обычная сборка не устанавливает мод автоматически. Для явной установки укажите `-p:DeployToGame=true -p:PluginsDir="ПРОФИЛЬ/BepInEx/plugins/IncreaseDifficultyMod"`; старая DLL в этой же папке будет отключена.
 
 ### Примечания
 
 - `_decompiled/` (код игры) исключён через git-ignore и создаётся локально; он проприетарный и не распространяется.
 - Безопасно для меню: проверки Photon/сокетов выполняются только при `InRoom`, поэтому в главном меню сеть не затрагивается.
+
+
+### Round results loot summary / Сводка лута в итогах
+
+The results board includes the initial value of generated level loot, the count and current value
+left uncollected, the unfound subset of that remainder, and income from souls. Souls are excluded
+from the starting loot baseline. Soul income is the proportional share of actual extraction or
+Loot Cash-In payouts, including currency rounding and economy taxes/bonuses; extracted soul value
+is shown alongside it. The host records and synchronizes the summary. Results remain available
+in the shop/truck with F7 until the next run level starts.
+
+В итогах показаны начальная стоимость лута уровня, количество и текущая стоимость несобранного,
+ненайденная часть этого остатка и доход от душ. Души не входят в начальную стоимость уровня.
+Доход от душ — их доля в фактической выплате при сдаче или автопродаже Loot Cash-In, с учётом
+округления и событий экономики. Рядом указана стоимость сданных душ. Сводку считает хост и
+передаёт остальным. До следующего уровня итоги можно открыть клавишей F7 в магазине/грузовике.
+
+### UI presentation / Оформление интерфейса
+
+Results and Black Market use full-screen overlays with the game's native Teko Light styling. Results
+hide automatically on entering the shop; F7 recalls the saved table and Esc closes it. Large
+lobbies use PgUp/PgDn pages. Server information sits at the top left. The shopping list has no
+backdrop and shows quantity, item name, K-unit price and total. Map voting is compact; F6 hides
+its HUD without cancelling the vote or NumPad voting. The toggle is configurable under
+Map Vote / ToggleHudKey. Unstuck messages have no backdrop and sit above the inventory.
+Shop-event titles use a subdued colour; holding/opening the map (Tab by default) shows the
+explanation of its price changes. Physical upgrade packs use authored atlases on native geometry and
+UVs; custom inventory icons remain, and the Tab list resolves readable names without IHM IDs.
+Sticky Pistol uses a short cable cast and an attached tether while pulling, without the native
+bullet/tracer or muzzle flash, with softer cable/latch sounds and no damage.
+
+Итоги и Black Market занимают весь экран и используют родное начертание Teko Light. Итоги
+автоматически скрываются при входе в магазин; F7 возвращает сохранённую таблицу, Esc закрывает.
+Для больших лобби есть страницы PgUp/PgDn. Статус сервера расположен слева вверху. Список
+корзины без подложки показывает количество, название, цену в K и итог. Голосование компактное:
+F6 скрывает HUD без отмены голосования и выбора на NumPad. Клавиша настраивается в Map Vote /
+ToggleHudKey. Сообщения Unstuck без подложки расположены над инвентарём. Название события
+магазина приглушено; при открытой/удерживаемой карте (по умолчанию Tab) видны изменения цен.
+Упаковки улучшений используют авторские атласы на ванильной геометрии и UV; иконки инвентаря — отдельные прозрачные изображения,
+а в Tab отображаются читаемые названия без IHM. Sticky Pistol выпускает трос и показывает
+связь с притягиваемым предметом, без обычной пули, трассера и вспышки, с мягким звуком и без урона.
+
+
+### 0.6.0 inventory and shared truck upgrades / инвентарь и общие улучшения машины
+
+**Inventory Slot** is sold in the normal shop. Each use adds one real inventory slot, from three
+base slots up to **seven total** (four upgrade levels). Slots include native item icons and battery
+indicators. Extra keys default to **4–7**, configurable under `Inventory Slots`; the module is under
+`Modules / InventorySlots`, and its base price under `Player Upgrades / InventorySlotBasePrice`.
+The authored Inventory wrapper and separate transparent icon are included in the DLL.
+Saved contents of extra slots are restored across truck/level transitions.
+Main-row number keys remain reserved for inventory: vote using **NumPad 1–6 or click**. If an
+inventory action shares a binding with voting, the inventory action takes priority.
+
+Capped custom upgrades cannot be consumed at maximum level. Ping Info, Ping Anywhere and Pin cap
+at one; Map Suite at ten; Inventory Slot at four levels. Other upgrades use their declared/configured
+limits. Death Protection can be purchased/used again after its charge is spent.
+Ping Info alone does **not** unlock floor/wall pings: Ping Anywhere or Pin remains required.
+
+Truck **Heal Power**, **Charge Efficiency** and **Loot Cash-In** are team upgrades. A purchase
+increases the shared team level once, reaches late joiners, and remains after the buyer leaves.
+They use host-synchronized saved levels. This does not make personal inventory slots team upgrades.
+
+**Inventory Slot** продаётся в обычном магазине и даёт **+1 слот** за использование: от трёх
+базовых до **семи всего** (четыре уровня). Это штатные ячейки с иконками предметов и индикаторами
+батареи. Клавиши дополнительных слотов по умолчанию — **4–7**, настраиваются в `Inventory Slots`;
+переключатель модуля — `Modules / InventorySlots`, базовая цена —
+`Player Upgrades / InventorySlotBasePrice`. Готовая обёртка Inventory и отдельная прозрачная иконка
+включены в DLL. Содержимое дополнительных слотов сохраняется при переходах между машиной и уровнем.
+Цифры основного ряда остаются инвентарю; голосование — **NumPad 1–6 или мышь**. При совпадении
+назначений приоритет получает действие инвентаря.
+
+На максимальном уровне предмет улучшения не съедается. Ping Info, Ping Anywhere и Pin имеют
+кап 1, Map Suite — 10, Inventory Slot — 4 уровня. Для остальных действуют их объявленные/настроенные
+лимиты. Death Protection можно использовать повторно после расходования заряда.
+Ping Info сам по себе **не** открывает пинги пола и стен: по-прежнему нужен Ping Anywhere или Pin.
+
+**Heal Power**, **Charge Efficiency** и **Loot Cash-In** машины действуют на всю команду. Покупка
+однократно повышает общий уровень, распространяется на поздно подключившихся и сохраняется после
+выхода покупателя. Уровни сохраняет и синхронизирует хост. Улучшение личных слотов остаётся персональным.
+
+
+### 0.6.1 HUD, pings and item fixes / исправления HUD, пингов и предметов
+
+The server status is compact and avoids the native health/energy indicators. Voting sits below
+the actual money display. Modifier names follow the quota counter, with full economy explanations
+in Tab. The atlas loader matches complete filenames so it cannot use an `Icon_Upgrade_…` render as
+a printed `Upgrade_…` texture. Active custom drones and shield orbs refresh native self-hover
+physics on the host; inactive/stowed devices regain normal physics as overrides expire. Extra
+inventory slots use independent animation anchors, so native HUD animation keeps slots 1–7 in a row.
+
+Статус сервера стал компактным и не перекрывает здоровье/энергию; голосование располагается под
+деньгами. Названия модификаторов следуют за счётчиком целей, объяснение экономики доступно в Tab.
+Загрузчик точно сопоставляет имена: `Icon_Upgrade_…` больше не попадает на упаковку вместо атласа
+`Upgrade_…`. Включённые кастомные дроны и защитные сферы обновляют штатное зависание на хосте;
+после выключения/убирания в инвентарь временные переопределения физики истекают. У новых ячеек
+собственные координаты анимации, поэтому штатный HUD сохраняет слоты 1–7 в одной строке.
+
+
+### Monster balance in 0.6.1 / баланс монстров
+
+The host config controls the lobby's enemy health, attack damage, movement speed, respawn wait,
+per-enemy health caps and Heavy/Light mass tuning. Guests receive it on join and after setting changes.
+Changing settings within a level does not reset the level timer or auto-revive budget.
+
+Difficulty steps are `max(0, (levelsCompleted - RampStartLevel) / RampLevelsPerStep)` with integer division.
+Health, damage and speed depth factors are `min(1 + perStep * steps, cap)`; health uses its per-enemy cap
+when present. Respawn wait uses `max(1 - reductionPerStep * steps, minimumFactor)`.
+The matching level surprise multiplies the depth factor **after** the depth cap/floor.
+Disabling an enemy scaling module disables its depth ramp; level surprises are controlled separately by
+Surprises and their individual switches. Enemy count has its own start/per-level/cap settings under
+Level Scaling and is decided during generation, so count changes apply on the next generated level.
+Late health changes preserve remaining-health percentage and do not revive dead enemies.
+
+Пример: усиление HP ×2 и Frail Monsters ×0,75 дают итог ×1,5. Tough Monsters ×1,4 поверх
+капа глубины ×3 дают ×4,2: кап ограничивает рост от глубины, а не отдельный сюрприз.
+Так же сочетаются урон, скорость и время до респавна. Модули ScaleEnemyHealth / Damage / Speed /
+Respawn отключают соответствующий рост от глубины; сюрпризы имеют независимые выключатели.
+Настройки хоста передаются гостям, включая индивидуальные капы HP и массу Light/Heavy Monsters.
+Изменение количества врагов применяется при следующей генерации уровня. При изменении максимального
+HP сохраняется доля оставшегося здоровья; мёртвые монстры остаются мёртвыми.
+
+
+### 0.6.2 ping and HUD fixes / пинги и HUD
+
+- Voting stays in a stable upper-screen band, independent of animated currency bounds.
+- Photon diagnostics use a separate top-right area and native HUD typography without a backdrop.
+- Pings use the game's interaction layers, ignore local-player/irrelevant trigger volumes and resolve the physical owner of a hit collider. Small visible items get a narrow, occlusion-tested aiming tolerance.
+- Location markers use a larger soft cyan ring and arrow. Item silhouettes retain a transparent centre with a soft halo around the 2-pixel contour.
+- Different ping cues identify locations, valuables, upgrades, items, enemies, carts, vehicles and cosmetic boxes. Sounds follow the game's mixer; **Ping / SoundVolume** controls volume (0 mutes). **Ping / MarkerScale** controls location-marker size.
+- Repeating your ping on the same target/location refreshes the marker instead of stacking contours. Ping Anywhere or Pin is still required for floor/wall marks.
+
+Голосование закреплено в верхней части экрана. Диагностика Photon находится справа сверху,
+не перекрывает статус сервера и использует игровой шрифт без подложки.
+Исправлено распознавание предметов и улучшений по коллайдерам; небольшие видимые цели имеют
+узкий допуск прицеливания с проверкой препятствий. Метка пола стала крупнее, мягкого голубого цвета;
+кольцо, стрелка и обводка предмета получили мягкое свечение без заливки середины.
+Звук зависит от типа цели. Громкость — **Ping / SoundVolume** (0 выключает), размер метки пола —
+**Ping / MarkerScale**. Повторный пинг той же цели обновляет метку вместо наложения контуров.
+Для пола и стен по-прежнему нужен Ping Anywhere или Pin.
+
+Modifier names stay beneath the quota; descriptions are shown separately below the level heading only while Tab is open. Valuable ping prices contain one dollar sign.
+
+Названия модификаторов находятся под квотой; описание выводится отдельно под уровнем только при открытом Tab. В цене пинга лута один знак доллара.

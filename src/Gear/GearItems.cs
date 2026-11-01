@@ -75,10 +75,10 @@ internal static class GearItems
                         "Poison bolts: a little damage plus a 15 second poison that refreshes (never stacks) and keeps the monster hunting players. Fewer shots than a normal gun.");
                 if (ModConfig.IcePistolEnabled.Value)
                     MakeGun(pulseGun ?? gun, "Item Gun Ice Pulse", "Pulse Ice Pistol", GearKind.Ice, 11000f, 15000f, new Color(0.5f, 0.85f, 1f),
-                        "Freezes an enemy for a few seconds. Frozen enemies cannot be lifted, take less firearm damage and 35% more melee damage.");
+                        "Freezes monsters and players with visible ice. Players take no shot damage; works in the shop too. Frozen monsters cannot be lifted, take less firearm damage and 35% more melee damage.");
                 if (ModConfig.StickyPistolEnabled.Value)
                     MakeGun(gun, "Item Gun Sticky", "Sticky Pistol", GearKind.Sticky, 9000f, 10000f, new Color(1f, 0.5f, 0.9f),
-                        "Pulls a monster or object toward you, if you could lift it with one strength level less.");
+                        "Pulls a monster or object toward you without dealing damage, if you could lift it with one strength level less.");
             }
             else
                 Plugin.Log.LogWarning("[Gear] No vanilla gun found to clone; guns disabled.");
@@ -127,8 +127,8 @@ internal static class GearItems
         item.maxPurchase = false;
         item.minPlayerCount = 1;
         item.value = Object.Instantiate(baseItem.value);
-        item.value.valueMin = priceMin;
-        item.value.valueMax = priceMax;
+        item.value.valueMin = priceMin * CustomItemPrices.Multiplier;
+        item.value.valueMax = priceMax * CustomItemPrices.Multiplier;
         var preset = ScriptableObject.CreateInstance<ColorPresets>();
         preset.colorMain = color;
         preset.colorLight = Color.Lerp(color, Color.white, 0.5f);
@@ -177,6 +177,7 @@ internal static class GearItems
     {
         var (_, go, attributes) = Clone(baseItem, name, display, priceMin, priceMax, color, desc,
             mb => mb.GetType().Name.StartsWith("ItemOrb") && mb.GetType().Name != "ItemOrb", tint: false);
+        go.AddComponent<ItemHover>();
         var orb = go.GetComponent<ItemOrb>();
         orb.targetValuables = orb.targetNonValuables = orb.targetEnemies = false;
         orb.targetPlayers = true;
@@ -195,18 +196,27 @@ internal static class GearItems
         var gun = go.GetComponent<ItemGun>();
         gun.numberOfBullets = 1;
         gun.gunRandomSpread = 0f;
+        if (kind == GearKind.Sticky)
+        {
+            gun.gunRecoilForce = 0f;
+            gun.cameraShakeMultiplier = .1f;
+            gun.torqueMultiplier = .15f;
+        }
 
         // The bullet prefab is instantiated locally on every client, so a private clone is enough.
         if (gun.bulletPrefab != null)
         {
             var bullet = Object.Instantiate(gun.bulletPrefab, DroneItems.EnsureHolder().transform);
             bullet.name = name + " Bullet";
-            var hurt = bullet.GetComponentInChildren<HurtCollider>(true);
-            if (hurt != null)
+            foreach (var hurt in bullet.GetComponentsInChildren<HurtCollider>(true))
             {
                 if (kind == GearKind.Ice)
-                    foreach (var h in bullet.GetComponentsInChildren<HurtCollider>(true))
-                        NoKnockback(h);
+                {
+                    NoKnockback(hurt);
+                    hurt.playerLogic = false;
+                    hurt.playerDamage = 0;
+                    hurt.playerKill = false;
+                }
                 if (kind == GearKind.Poison)
                 {
                     hurt.enemyDamage = ModConfig.PoisonHitDamage.Value;
@@ -214,6 +224,10 @@ internal static class GearItems
                 }
                 else if (kind == GearKind.Sticky)
                 {
+                    hurt.playerLogic = hurt.physLogic = hurt.enemyLogic = false;
+                    hurt.playerKill = hurt.physDestroy = hurt.physHingeDestroy = hurt.enemyKill = false;
+                    hurt.playerDamage = 0;
+                    NoKnockback(hurt);
                     hurt.enemyDamage = 0;
                     hurt.enemyStun = false;
                 }

@@ -31,7 +31,7 @@ internal sealed class PingHud : MonoBehaviour
 
         PingController.Tick();
 
-        if (Input.GetKeyDown(ModConfig.PingKey.Value))
+        if (SemiFunc.NoTextInputsActive() && Input.GetKeyDown(ModConfig.PingKey.Value))
             PingController.PingFromAim();
     }
 

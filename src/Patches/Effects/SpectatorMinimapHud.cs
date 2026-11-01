@@ -1,123 +1,199 @@
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace IncreaseHardMod.Patches.Effects;
 
-/// <summary>
-/// "Spectator Minimap" — while the LOCAL player is dead/spectating on a level, HOLDING the minimap
-/// key (default Tab) draws the game's own map render in the CENTRE of the screen so you can watch the
-/// level layout without opening the full map tool.
-///
-/// The map is drawn by a dedicated camera that lives under <see cref="Map"/>.ActiveParent and only
-/// renders while the map is <see cref="Map.Active"/> (the game normally toggles that on/off as the
-/// map tool opens/closes). So this component keeps the map active the whole time you're dead (so its
-/// texture stays warm and appears instantly when you press Tab), grabs that camera's
-/// <see cref="Camera.targetTexture"/>, and blits it centre-screen with IMGUI. That reuses ALL of the
-/// game's map rendering (walls, valuables, the player dot), so it matches the in-game map exactly; we
-/// only place the resulting texture on screen.
-///
-/// Everything here is local/client-side (it reads the local avatar's disabled state and only toggles
-/// the local map render), so it never affects other players and can't desync. It hides itself when
-/// the full map tool is open (Dead Map Access) to avoid drawing the map twice.
-/// </summary>
-internal sealed class SpectatorMinimapHud : MonoBehaviour
+/// <summary>A large spectator map that follows the current view instead of the dead player's body.</summary>
+[DefaultExecutionOrder(10000)]
+internal sealed class SpectatorMapHud : MonoBehaviour
 {
-    private Camera _mapCamera;
-    private bool _forcedMapActive;
+    private Map _map;
+    private DirtFinderMapPlayer _marker;
+    private Transform _previousSource, _previousMapSource, _focus;
+    private Vector3 _previousPosition;
+    private Quaternion _previousRotation;
+    private int _previousLayer;
+    private Camera _nativeCamera, _renderCamera;
+    private RenderTexture _texture;
+    private NativeHudPanel _surface;
+    private RawImage _image;
+    private bool _toggle, _show;
+    private float _zoom = 1.5f;
+    private Vector2 _pan;
 
     private void Update()
     {
-        if (!ModConfig.SpectatorMinimapEnabled.Value || !Spectating())
+        if (!ModConfig.SpectatorMapEnabled.Value || !DeadMapAccessPatch.LocalDeadOnLevel())
         {
-            StopForcing();
+            _toggle = false;
+            _show = false;
+            Release();
             return;
         }
-
-        // Keep the map's render pipeline alive the whole time we're dead so its camera produces a
-        // live texture that's ready the instant the key is pressed. ActiveSet just SetActive()s
-        // ActiveParent, so this is idempotent.
-        var map = Map.Instance;
-        if (map != null && !map.Active)
+        bool nativeToggle = InputManager.instance != null && InputManager.instance.InputToggleGet(InputKey.Map);
+        if (nativeToggle && SemiFunc.InputDown(InputKey.Map) && SemiFunc.NoTextInputsActive())
+            _toggle = !_toggle;
+        if (!nativeToggle) _toggle = false;
+        bool hold = Input.GetKey(ModConfig.SpectatorMapHoldKey.Value);
+        _show = (_toggle || SemiFunc.InputHold(InputKey.Map) || hold) && SemiFunc.NoTextInputsActive();
+        if (!_show)
         {
-            map.ActiveSet(true);
-            _forcedMapActive = true;
+            Release();
+            return;
         }
-
-        if (_mapCamera == null)
-            _mapCamera = FindMapCamera(map);
+        if (Input.GetKeyDown(KeyCode.Home)) { _pan = Vector2.zero; _zoom = 1.5f; }
+        if (Input.GetKeyDown(ModConfig.MapZoomInKey.Value) || Input.GetKeyDown(KeyCode.KeypadMinus))
+            _zoom = Mathf.Max(0.4f, _zoom - 0.2f);
+        if (Input.GetKeyDown(ModConfig.MapZoomOutKey.Value) || Input.GetKeyDown(KeyCode.KeypadPlus))
+            _zoom = Mathf.Min(4f, _zoom + 0.2f);
+        float step = 15f * _zoom * Time.unscaledDeltaTime;
+        var movement = Vector3.zero;
+        var source = DeadMapAccessPatch.ViewSource();
+        if (source != null)
+        {
+            var yaw = Quaternion.Euler(0f, source.eulerAngles.y, 0f);
+            if (Input.GetKey(KeyCode.LeftArrow)) movement -= yaw * Vector3.right * step;
+            if (Input.GetKey(KeyCode.RightArrow)) movement += yaw * Vector3.right * step;
+            if (Input.GetKey(KeyCode.UpArrow)) movement += yaw * Vector3.forward * step;
+            if (Input.GetKey(KeyCode.DownArrow)) movement -= yaw * Vector3.forward * step;
+            _pan += new Vector2(movement.x, movement.z);
+        }
     }
 
-    private void OnGUI()
+    private void LateUpdate()
     {
-        if (!ModConfig.SpectatorMinimapEnabled.Value || !Spectating())
-            return;
-        if (!Input.GetKey(ModConfig.SpectatorMinimapKey.Value)) // hold-to-show
-            return;
-
-        var tex = _mapCamera != null ? _mapCamera.targetTexture : null;
-        if (tex == null)
-            return;
-
-        float size = Screen.height * ModConfig.SpectatorMinimapScale.Value;
-        var rect = new Rect((Screen.width - size) / 2f, (Screen.height - size) / 2f, size, size);
-
-        // Dark backing so the map reads against a bright level, then the map render on top.
-        var prev = GUI.color;
-        GUI.color = new Color(0f, 0f, 0f, 0.55f);
-        GUI.DrawTexture(new Rect(rect.x - 3f, rect.y - 3f, rect.width + 6f, rect.height + 6f),
-            Texture2D.whiteTexture);
-        GUI.color = prev;
-        GUI.DrawTexture(rect, tex, ScaleMode.ScaleToFit, alphaBlend: false);
-    }
-
-    // True for the local dead player, on a real level, when the full map tool isn't already open.
-    private static bool Spectating()
-    {
-        if (SafeMenuLevel() || !SafeRunIsLevel())
-            return false;
-
-        var me = PlayerAvatar.instance;
-        if (me == null || !me.isDisabled)
-            return false;
-
-        var tool = MapToolController.instance;
-        return tool == null || !tool.Active; // don't double-draw over the full map
-    }
-
-    // The map camera renders the DirtFinderMap-layer geometry under ActiveParent to a RenderTexture.
-    private static Camera FindMapCamera(Map map)
-    {
-        if (map == null || map.ActiveParent == null)
-            return null;
-        return map.ActiveParent.GetComponentInChildren<Camera>(true);
-    }
-
-    // Release the forced map-active state we took, unless the real map tool is now holding it open.
-    private void StopForcing()
-    {
-        if (!_forcedMapActive)
-            return;
-        _forcedMapActive = false;
-
+        if (!_show) return;
         var map = Map.Instance;
-        if (map == null)
-            return;
+        if (_map != null && _map != map) Release();
+        if (map == null || DeadMapAccessPatch.ViewSource() == null) return;
+        if (_map == null)
+        {
+            _map = map;
+            _previousMapSource = map.playerTransformSource;
+            _previousLayer = map.PlayerLayer;
+            _focus = new GameObject("IHM_SpectatorMapFocus").transform;
+        }
+        // The hand tool can finish its close animation during Update; enable our pipeline
+        // afterwards, and only for frames where the overlay is actually requested.
+        if (!map.Active) map.ActiveSet(true);
+        if (_marker == null)
+        {
+            _marker = DirtFinderMapPlayer.Instance;
+            if (_marker == null) return;
+            _previousSource = _marker.PlayerTransform;
+            _previousPosition = _marker.transform.position;
+            _previousRotation = _marker.transform.rotation;
+        }
+        var source = DeadMapAccessPatch.ViewSource();
+        _focus.position = source.position + new Vector3(_pan.x, 0f, _pan.y);
+        _focus.rotation = Quaternion.Euler(0f, source.eulerAngles.y, 0f);
+        map.playerTransformSource = _focus;
+        _marker.PlayerTransform = _focus;
+        // The native coroutine only ticks at 10 Hz; update before rendering so the displayed
+        // area follows the spectator camera on the same frame, including teammate switches.
+        _marker.transform.position = _focus.position * map.Scale + map.OverLayerParent.position + _marker.StartOffset;
+        var local = _marker.transform.localPosition;
+        _marker.transform.localPosition = new Vector3(local.x, 0f, local.z);
+        _marker.transform.rotation = _focus.rotation;
+        map.PlayerLayer = map.GetLayerParent(_focus.position.y + 0.01f).layer;
 
-        var tool = MapToolController.instance;
-        if (tool != null && tool.Active)
-            return; // the tool wants the map — leave it on
-
-        map.ActiveSet(false);
+        if (_nativeCamera == null)
+            foreach (var camera in map.ActiveParent.GetComponentsInChildren<Camera>(true))
+                if (camera.targetTexture != null) { _nativeCamera = camera; break; }
+        if (_nativeCamera == null) return;
+        if (_renderCamera == null)
+        {
+            _texture = new RenderTexture(1024, 1024, 16, RenderTextureFormat.ARGB32)
+                { name = "IHM Spectator Map", filterMode = FilterMode.Point };
+            _texture.Create();
+            _renderCamera = new GameObject("IHM_SpectatorMapCamera", typeof(Camera)).GetComponent<Camera>();
+            _renderCamera.CopyFrom(_nativeCamera);
+            _renderCamera.enabled = false;
+            _renderCamera.targetTexture = _texture;
+            _renderCamera.clearFlags = CameraClearFlags.SolidColor;
+            _renderCamera.backgroundColor = new Color(0.025f, 0.03f, 0.035f, 1f);
+            _renderCamera.aspect = 1f;
+            Plugin.Log.LogInfo($"[SpectatorMap] Opened 1024x1024 map, following {source.name}; native camera: {_nativeCamera.name}.");
+        }
+        _renderCamera.transform.SetPositionAndRotation(_nativeCamera.transform.position, _nativeCamera.transform.rotation);
+        if (_renderCamera.orthographic)
+            _renderCamera.orthographicSize = _nativeCamera.orthographicSize * _zoom;
+        else
+            _renderCamera.fieldOfView = Mathf.Clamp(2f * Mathf.Atan(
+                Mathf.Tan(_nativeCamera.fieldOfView * Mathf.Deg2Rad * 0.5f) * _zoom) * Mathf.Rad2Deg, 10f, 140f);
+        _renderCamera.Render();
+        EnsurePanel();
+        if (_surface != null)
+        {
+            float size = 1080f * ModConfig.SpectatorMapScreenFraction.Value;
+            _surface.Panel.sizeDelta = new Vector2(size + 32f, size + 100f);
+            _image.rectTransform.sizeDelta = new Vector2(size, size);
+            _surface.Fit();
+        }
     }
 
-    private static bool SafeMenuLevel()
+    private void EnsurePanel()
     {
-        try { return SemiFunc.MenuLevel(); }
-        catch { return false; }
+        if (_surface != null) return;
+        _surface = NativeHudPanel.Create("IHM_SpectatorMap", new Vector2(896f, 964f),
+            new Vector2(0.5f, 0.5f), Vector2.zero, 0.9f);
+        if (_surface == null) return;
+        var title = _surface.Label("Title", 24f, TextAlignmentOptions.Top);
+        Stretch(title.rectTransform, 12f, 36f, true);
+        title.text = "SPECTATOR MAP";
+        title.color = new Color(1f, 0.85f, 0.4f);
+        var hint = _surface.Label("Controls", 20f, TextAlignmentOptions.Bottom);
+        Stretch(hint.rectTransform, 8f, 40f, false);
+        hint.text = "Arrows: pan   +/-: zoom   Home: follow";
+        var go = new GameObject("Map", typeof(RectTransform), typeof(RawImage));
+        go.transform.SetParent(_surface.Panel, false);
+        _image = go.GetComponent<RawImage>();
+        _image.texture = _texture;
+        _image.raycastTarget = false;
+        _image.rectTransform.anchorMin = _image.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+        _image.rectTransform.pivot = new Vector2(0.5f, 1f);
+        _image.rectTransform.anchoredPosition = new Vector2(0f, -48f);
     }
 
-    private static bool SafeRunIsLevel()
+    private static void Stretch(RectTransform rt, float inset, float height, bool top)
     {
-        try { return SemiFunc.RunIsLevel(); }
-        catch { return false; }
+        rt.anchorMin = new Vector2(0f, top ? 1f : 0f);
+        rt.anchorMax = new Vector2(1f, top ? 1f : 0f);
+        rt.pivot = new Vector2(0.5f, top ? 1f : 0f);
+        rt.sizeDelta = new Vector2(-24f, height);
+        rt.anchoredPosition = new Vector2(0f, top ? -inset : inset);
     }
+
+    private void Release()
+    {
+        if (_marker != null)
+        {
+            _marker.PlayerTransform = _previousSource != null ? _previousSource :
+                PlayerController.instance != null ? PlayerController.instance.transform : null;
+            _marker.transform.SetPositionAndRotation(_previousPosition, _previousRotation);
+        }
+        if (_map != null)
+        {
+            _map.playerTransformSource = _previousMapSource;
+            _map.PlayerLayer = _previousLayer;
+            if (MapToolController.instance == null || !MapToolController.instance.Active)
+                _map.ActiveSet(false);
+        }
+        if (_surface != null) Destroy(_surface.gameObject);
+        if (_renderCamera != null) Destroy(_renderCamera.gameObject);
+        if (_texture != null) { _texture.Release(); Destroy(_texture); }
+        if (_focus != null) Destroy(_focus.gameObject);
+        _surface = null;
+        _image = null;
+        _renderCamera = null;
+        _texture = null;
+        _focus = null;
+        _marker = null;
+        _nativeCamera = null;
+        _map = null;
+    }
+
+    private void OnDisable() { _show = false; _toggle = false; Release(); }
+    private void OnDestroy() => Release();
 }

@@ -73,15 +73,16 @@ internal static class EconomyEvents
     }
 
     /// <summary>The event active on the current level, or null.</summary>
-    public static EconomyEvent Current { get; private set; }
+    private static EconomyEvent _current;
+    public static EconomyEvent Current => ModConfig.SurprisesEnabled.Value ? _current : null;
 
-    public static float LootMult => ModConfig.EconomyEventsEnabled.Value && Current != null ? Current.Loot : 1f;
-    public static float QuotaMult => ModConfig.EconomyEventsEnabled.Value && Current != null ? Current.Quota : 1f;
-    public static float PayMult => ModConfig.EconomyEventsEnabled.Value && Current != null ? Current.Pay : 1f;
+    public static float LootMult => Current != null ? Current.Loot : 1f;
+    public static float QuotaMult => Current != null ? Current.Quota : 1f;
+    public static float PayMult => Current != null ? Current.Pay : 1f;
 
     public static void Set(int id)
     {
-        Current = id > 0 && id <= All.Count ? All[id - 1] : null;
+        _current = id > 0 && id <= All.Count ? All[id - 1] : null;
         if (Current != null)
             Plugin.Log.LogInfo($"[Economy] {Current.Name}: {Current.Description}");
     }
@@ -90,7 +91,7 @@ internal static class EconomyEvents
     public static void RollForNextLevel(int levelsCompleted)
     {
         int id = 0;
-        if (ModConfig.EconomyEventsEnabled.Value &&
+        if (ModConfig.SurprisesEnabled.Value &&
             levelsCompleted >= ModConfig.EconomyStartLevel.Value &&
             Random.Range(0, 100) < ModConfig.EconomyEventChance.Value)
             id = PickWeighted();

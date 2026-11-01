@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading;
 using UnityEngine;
+using TMPro;
 
 namespace IncreaseHardMod.Patches.Effects;
 
@@ -40,14 +41,16 @@ internal sealed class PhotonHud : MonoBehaviour
     private string _parsedFrom;
     private GUIStyle _title;
     private GUIStyle _row;
+    private NativeHudPanel _surface;
+    private TextMeshProUGUI _text;
 
     private void Update()
     {
-        if (!ModConfig.PhotonHudEnabled.Value)
+        if (!ModConfig.PhotonHudEnabled.Value || !SafeMenuLevel())
+        {
+            if(_surface!=null)_surface.gameObject.SetActive(false);
             return;
-        // Only bother while sitting in menus; no point probing mid-run.
-        if (!SafeMenuLevel())
-            return;
+        }
 
         if (_parsedFrom != ModConfig.PhotonHudRegions.Value)
         {
@@ -60,7 +63,31 @@ internal sealed class PhotonHud : MonoBehaviour
             _nextRefresh = Time.realtimeSinceStartup + RefreshInterval;
             StartProbes();
         }
+        RenderNative();
     }
+
+    private void RenderNative()
+    {
+        if(HUDCanvas.instance==null)return;
+        if(_surface==null)
+        {
+            _surface=NativeHudPanel.Create("IHM_PhotonDiagnostics",new Vector2(300,140),new Vector2(1,1),new Vector2(-18,-12),0f);
+            if(_surface==null)return;
+            _text=_surface.Label("Diagnostics",18f,TextAlignmentOptions.TopRight);
+            _text.richText=false;
+            _text.rectTransform.anchorMin=Vector2.zero;_text.rectTransform.anchorMax=Vector2.one;
+            _text.rectTransform.offsetMin=_text.rectTransform.offsetMax=Vector2.zero;
+            _text.color=new Color(.7f,.8f,.85f);
+        }
+        string lines="Photon reachability";
+        lock(_lock)foreach(var probe in _probes)
+            lines+="\n"+probe.Label+": "+(probe.State==1?probe.LatencyMs+" ms":probe.State==2?"unreachable":"checking...");
+        _text.text=lines;
+        _surface.gameObject.SetActive(true);
+        _surface.Fit();
+    }
+
+    private void OnDestroy(){if(_surface!=null)Destroy(_surface.gameObject);}
 
     private void Parse(string spec)
     {
@@ -132,7 +159,7 @@ internal sealed class PhotonHud : MonoBehaviour
 
     private void OnGUI()
     {
-        if (!ModConfig.PhotonHudEnabled.Value || !SafeMenuLevel())
+        if (!ModConfig.PhotonHudEnabled.Value || !SafeMenuLevel() || HUDCanvas.instance!=null)
             return;
 
         Probe[] snapshot;
@@ -152,10 +179,7 @@ internal sealed class PhotonHud : MonoBehaviour
 
         const float w = 210f;
         float h = 24f + snapshot.Length * 18f;
-        var box = new Rect(10f, 10f, w, h);
-        GUI.color = new Color(0f, 0f, 0f, 0.55f);
-        GUI.DrawTexture(box, Texture2D.whiteTexture);
-        GUI.color = Color.white;
+        var box = new Rect(Mathf.Max(10f,Screen.width-w-10f), 10f, w, h);
 
         GUI.Label(new Rect(box.x + 8f, box.y + 4f, w - 16f, 18f), "Photon reachability", _title);
 

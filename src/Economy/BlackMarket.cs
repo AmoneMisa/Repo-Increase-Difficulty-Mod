@@ -187,14 +187,14 @@ internal static class BlackMarket
 internal sealed class BlackMarketHud : MonoBehaviour
 {
     private static readonly BlackMarket.Kind[] Tabs = { BlackMarket.Kind.Modifier, BlackMarket.Kind.Economy, BlackMarket.Kind.ShopEconomy };
-    private static readonly string[] TabNames = { "Level modifiers", "Level economies", "Shop economies" };
+    private static readonly string[] TabNames = { "Surprise modifiers", "Economic surprises", "Shop economies" };
 
     private bool _open;
     private int _tab, _index;
-    private float _flash;
     private string _message = "";
     private GameObject _panel;
     private TextMeshProUGUI _label;
+    private NativeHudPanel _surface;
 
     private void Update()
     {
@@ -210,6 +210,7 @@ internal sealed class BlackMarketHud : MonoBehaviour
 
         if (Input.GetKeyDown(ModConfig.BlackMarketKey.Value))
             _open = !_open;
+        if (Input.GetKeyDown(KeyCode.Escape)) _open = false;
         if (!_open)
         {
             Hide();
@@ -226,13 +227,14 @@ internal sealed class BlackMarketHud : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.PageUp)) _index = Mathf.Max(0, _index - 6);
         _index = Mathf.Clamp(_index, 0, Mathf.Max(0, ids.Count - 1));
 
-        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+        if (ids.Count > 0 && (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
             Buy(Tabs[_tab], ids[_index]);
 
         if (!Ensure())
             return;
         _label.text = Build(ids);
         _panel.SetActive(true);
+        _surface.Fit();
     }
 
     private void Buy(BlackMarket.Kind kind, string id)
@@ -260,7 +262,7 @@ internal sealed class BlackMarketHud : MonoBehaviour
     private string Build(List<string> ids)
     {
         var sb = new StringBuilder();
-        sb.Append("<color=#c0392b>BLACK MARKET</color>   money: $").Append(SemiFunc.StatGetRunCurrency()).Append("K\n");
+        sb.Append("<line-height=130%><size=54><color=#FF7060>BLACK MARKET</color></size>   MONEY: $").Append(SemiFunc.StatGetRunCurrency()).Append("K\n\n");
         for (int i = 0; i < Tabs.Length; i++)
             sb.Append(i == _tab ? "<color=#ffd24a>[" + TabNames[i] + "]</color> " : TabNames[i] + " ");
         sb.Append("\n\n");
@@ -273,7 +275,7 @@ internal sealed class BlackMarketHud : MonoBehaviour
             string cost = banned ? "<color=#7CFF7C>BLOCKED</color>" : "$" + BlackMarket.Price(Tabs[_tab], tier) + "K";
             string color = TierColor(tier);
             sb.Append(i == _index ? "> " : "  ")
-              .Append("<color=").Append(color).Append(">").Append(name).Append("</color><pos=70%>").Append(cost).Append('\n');
+              .Append("<color=").Append(color).Append(">").Append(name.ToUpperInvariant()).Append("</color><pos=78%>").Append(cost).Append('\n');
         }
         sb.Append("\n<color=#888888>Left/Right tab, Up/Down choose, Enter buys a block, ")
           .Append(ModConfig.BlackMarketKey.Value).Append(" closes</color>");
@@ -298,39 +300,23 @@ internal sealed class BlackMarketHud : MonoBehaviour
     {
         if (_panel != null && _label != null)
             return true;
-        if (HUDCanvas.instance == null)
-            return false;
-        TextMeshProUGUI template = StatsUI.instance != null && StatsUI.instance.Text != null
-            ? StatsUI.instance.Text
-            : HUDCanvas.instance.GetComponentInChildren<TextMeshProUGUI>();
-        if (template == null)
-            return false;
-
-        _panel = new GameObject("IHM_BlackMarket", typeof(RectTransform));
-        _panel.transform.SetParent(HUDCanvas.instance.transform, false);
-        var prt = (RectTransform)_panel.transform;
-        prt.anchorMin = prt.anchorMax = prt.pivot = new Vector2(0.5f, 0.5f);
-        prt.sizeDelta = new Vector2(900f, 560f);
-        var bg = _panel.AddComponent<Image>();
-        bg.color = new Color(0.04f, 0f, 0f, 0.82f);
-        bg.raycastTarget = false;
-
-        var go = new GameObject("Text", typeof(RectTransform));
-        go.transform.SetParent(_panel.transform, false);
-        _label = go.AddComponent<TextMeshProUGUI>();
-        _label.font = template.font;
-        _label.fontSharedMaterial = template.fontSharedMaterial;
-        _label.fontSize = template.fontSize;
-        _label.color = Color.white;
-        _label.alignment = TextAlignmentOptions.TopLeft;
-        _label.enableWordWrapping = false;
-        _label.raycastTarget = false;
-        _label.richText = true;
+        _surface = NativeHudPanel.Fullscreen("IHM_BlackMarket");
+        if (_surface == null) return false;
+        _panel = _surface.gameObject;
+        _label = _surface.Label("Market", 32f, TextAlignmentOptions.TopLeft);
+        _label.enableAutoSizing = true;
+        _label.fontSizeMin = 22f;
+        _label.fontSizeMax = 32f;
         var rt = _label.rectTransform;
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;
-        rt.offsetMin = new Vector2(24f, 16f);
-        rt.offsetMax = new Vector2(-24f, -16f);
+        rt.offsetMin = new Vector2(96f, 64f);
+        rt.offsetMax = new Vector2(-96f, -64f);
         return true;
     }
+    private void OnDestroy()
+    {
+        if (_surface != null) Destroy(_surface.gameObject);
+    }
+
 }

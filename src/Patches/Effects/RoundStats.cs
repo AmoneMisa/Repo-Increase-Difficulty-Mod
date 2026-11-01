@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using HarmonyLib;
 using IncreaseHardMod.Networking;
 using UnityEngine;
@@ -37,6 +38,17 @@ internal static class RoundStats
     private static readonly Dictionary<int, string> Carrier = new(); // valuable instanceId -> player key
     private static readonly Dictionary<string, string> HeadCarrier = new(); // dead player key -> who last carried their head
     private static float _scanTimer;
+    private static bool _tracking;
+    private static RoundLootLedger _loot = new();
+    private static readonly HashSet<int> InitialIds = new();
+    private sealed class ExtractionTotals
+    {
+        internal int Total, Souls;
+        internal bool Paid;
+    }
+    private static readonly Dictionary<ExtractionPoint, ExtractionTotals> Extracted = new();
+    private static readonly Dictionary<ItemValuableBox, List<Receipt>> BoxContents = new();
+    public static RoundLootSummary ResultsSummary;
 
     /// <summary>Last results received (host: its own) for the overlay; null until a level finishes.</summary>
     public static List<PlayerRoundStat> Results;
@@ -80,12 +92,13 @@ internal static class RoundStats
     /// <summary>Host tick: remember who last held each valuable.</summary>
     public static void Tick(float dt)
     {
-        if (!SemiFunc.IsMasterClientOrSingleplayer() || ValuableDirector.instance == null)
+        if (!_tracking || !SemiFunc.IsMasterClientOrSingleplayer() || ValuableDirector.instance == null)
             return;
         _scanTimer -= dt;
         if (_scanTimer > 0f)
             return;
         _scanTimer = 0.25f;
+        RefreshLoot();
 
         var players = GameDirector.instance != null ? GameDirector.instance.PlayerList : null;
         if (players != null)
@@ -122,10 +135,16 @@ internal static class RoundStats
         Table.Clear();
         Carrier.Clear();
         HeadCarrier.Clear();
+        InitialIds.Clear();
+        Extracted.Clear();
+        BoxContents.Clear();
+        _loot = new RoundLootLedger();
+        _scanTimer = 0f;
+        _tracking = false;
     }
 
     /// <summary>Host: snapshot the level's table, show it locally and send it to everyone else.</summary>
-    public static void Publish()
+    public static void Publish(RoundLootSummary summary)
     {
         var rows = new List<PlayerRoundStat>();
         foreach (var s in Table.Values)
@@ -135,34 +154,160 @@ internal static class RoundStats
             return;
 
         // Everyone present gets a row, even with zero activity, so quiet players show up too.
-        ApplyResults(rows);
-        ModNetwork.Instance?.BroadcastRoundStats(rows);
+        ApplyResults(rows, summary);
+        ModNetwork.Instance?.BroadcastRoundStats(rows, summary);
     }
 
-    public static void ApplyResults(List<PlayerRoundStat> rows)
+    public static void ApplyResults(List<PlayerRoundStat> rows, RoundLootSummary summary = null)
     {
         Results = rows;
+        ResultsSummary = summary;
         ResultsShownAt = Time.unscaledTime;
     }
 
-    public static void ClearResults() => Results = null;
+    public static void ClearResults() { Results = null; ResultsSummary = null; }
+
+    private static void RegisterValuable(ValuableObject v)
+    {
+        if (!_tracking || v == null || !v.dollarValueSet) return;
+        int id = v.GetInstanceID();
+        bool soul = v.GetComponent<EnemyValuable>() != null;
+        _loot.Register(id, Mathf.RoundToInt(v.dollarValueOriginal), InitialIds.Contains(id), soul);
+    }
+
+    private static void RefreshLoot()
+    {
+        _loot.BeginObservation();
+        var director = ValuableDirector.instance;
+        if (director == null) return;
+        foreach (var v in director.valuableList)
+        {
+            if (v == null || !v.dollarValueSet) continue;
+            RegisterValuable(v);
+            _loot.Observe(v.GetInstanceID(), Mathf.RoundToInt(v.dollarValueCurrent), v.discovered);
+        }
+        foreach (var box in BoxContents.Keys)
+            if (box != null)
+                foreach (var receipt in BoxReceipts(box, box.CurrentValue))
+                    _loot.Observe(receipt.Id, receipt.Value, true);
+    }
+
+    private static IEnumerable<Receipt> BoxReceipts(ItemValuableBox box, float value)
+    {
+        if (!BoxContents.TryGetValue(box, out var contents)) yield break;
+        int total = 0;
+        foreach (var receipt in contents) total += receipt.Value;
+        float scale = total > 0 ? Mathf.Clamp01(value / total) : 0f;
+        foreach (var receipt in contents)
+            yield return new Receipt { Id = receipt.Id, Value = Mathf.RoundToInt(receipt.Value * scale),
+                Object = receipt.Object, Soul = receipt.Soul, Who = receipt.Who };
+    }
+
+    private sealed class Receipt
+    {
+        internal GameObject Object;
+        internal ValuableObject Valuable;
+        internal int Id, Value;
+        internal bool Soul;
+        internal PlayerRoundStat Who;
+    }
+
+    private static Receipt Capture(GameObject go)
+    {
+        if (go == null || go.GetComponent<PhysGrabObject>() == null) return null;
+        var v = go.GetComponent<ValuableObject>();
+        if (v == null || !v.dollarValueSet) return null;
+        RegisterValuable(v);
+        return new Receipt { Object = go, Valuable = v, Id = v.GetInstanceID(),
+            Value = Mathf.Max(0, (int)v.dollarValueCurrent), Soul = v.GetComponent<EnemyValuable>() != null,
+            Who = CarrierStat(v) };
+    }
+
+    private static int Commit(Receipt receipt)
+    {
+        if (receipt == null || !_loot.Collect(receipt.Id, receipt.Value)) return 0;
+        if (receipt.Who != null) receipt.Who.Delivered += receipt.Value;
+        return receipt.Soul ? receipt.Value : 0;
+    }
+
+    private static void AddExtraction(ExtractionPoint point, int total, int souls)
+    {
+        if (total <= 0) return;
+        if (!Extracted.TryGetValue(point, out var entry)) Extracted[point] = entry = new ExtractionTotals();
+        entry.Total += total;
+        entry.Souls += souls;
+    }
 
     // ---------------------------------------------------------------- hooks
 
-    [HarmonyPatch(typeof(LevelGenerator), "GenerateDone")]
+    // Start runs after scene Awake methods and before this generator starts spawning valuables.
+    // Awake can run before RunManager exists on boot; RunIsLevel dereferences that singleton.
+    [HarmonyPatch(typeof(LevelGenerator), "Start")]
+    private static class OnGenerationBegin
+    {
+        [HarmonyPrefix]
+        private static void Prefix()
+        {
+            var run = RunManager.instance;
+            if (run == null || run.levelCurrent == null || !SemiFunc.RunIsLevel()) return;
+            ClearResults();
+            Reset();
+            _tracking = SemiFunc.IsMasterClientOrSingleplayer();
+        }
+    }
+
+    [HarmonyPatch(typeof(ValuableObject), "Start")]
+    private static class OnValuableSpawn
+    {
+        [HarmonyPostfix]
+        private static void Postfix(ValuableObject __instance)
+        {
+            if (_tracking && LevelGenerator.Instance != null && !LevelGenerator.Instance.Generated &&
+                __instance.GetComponent<EnemyValuable>() == null)
+                InitialIds.Add(__instance.GetInstanceID());
+        }
+    }
+
+    [HarmonyPatch(typeof(ValuableObject), "DollarValueSetLogic")]
+    private static class OnValuablePriced
+    {
+        [HarmonyPostfix, HarmonyPriority(Priority.Last)]
+        private static void Postfix(ValuableObject __instance) => RegisterValuable(__instance);
+    }
+
+    [HarmonyPatch(typeof(LevelGenerator), "GenerateDoneApply")]
     private static class OnLevelStart
     {
         [HarmonyPostfix]
         private static void Postfix()
         {
-            ClearResults(); // never keep the previous level's board over a new one
-            if (!SemiFunc.IsMasterClientOrSingleplayer())
-                return;
-            Reset();
+            if (!_tracking) return;
+            RefreshLoot();
+            _loot.SealInitial();
             var list = GameDirector.instance != null ? GameDirector.instance.PlayerList : null;
-            if (list != null)
-                foreach (var p in list)
-                    Get(p);
+            if (list != null) foreach (var p in list) Get(p);
+        }
+    }
+
+    // Absorption destroys the original valuable. Keep its identity and soul classification
+    // until the containing box is extracted; merely packing it is not an extraction/payout.
+    [HarmonyPatch(typeof(ItemValuableBox), "StartAbsorbLocal")]
+    private static class OnBoxAbsorb
+    {
+        [HarmonyPrefix]
+        private static void Prefix(ItemValuableBox __instance, PhysGrabObject target, out (Receipt receipt, int count) __state)
+        {
+            __state = default;
+            if (!_tracking || !SemiFunc.IsMasterClientOrSingleplayer() || target == null) return;
+            __state = (Capture(target.gameObject), __instance.activeAbsorptions.Count);
+        }
+        [HarmonyPostfix]
+        private static void Postfix(ItemValuableBox __instance, (Receipt receipt, int count) __state)
+        {
+            if (__state.receipt == null || __instance.activeAbsorptions.Count <= __state.count) return;
+            if (!BoxContents.TryGetValue(__instance, out var contents))
+                BoxContents[__instance] = contents = new List<Receipt>();
+            contents.Add(__state.receipt);
         }
     }
 
@@ -185,34 +330,28 @@ internal static class RoundStats
         }
     }
 
-    // Deliveries are credited when the loot is actually consumed by a SUCCESSFUL extraction (the
-    // game only destroys haul items then), so a cancelled extraction never awards anything.
+    // Cache values before network destruction; credit only objects the extraction consumed.
     [HarmonyPatch(typeof(ExtractionPoint), "DestroyTheFirstPhysObjectsInHaulList")]
     private static class OnExtractOne
     {
         [HarmonyPrefix]
-        private static void Prefix(out (GameObject go, int value, PlayerRoundStat who) __state)
+        private static void Prefix(out (Receipt receipt, int total) __state)
         {
             __state = default;
-            if (!SemiFunc.IsMasterClientOrSingleplayer())
-                return;
-            var list = RoundDirector.instance.dollarHaulList;
-            if (list.Count == 0 || list[0] == null)
-                return;
-            var v = list[0].GetComponent<ValuableObject>();
-            if (v == null)
-                return;
-            __state = (list[0], (int)v.dollarValueCurrent, CarrierStat(v));
+            if (!_tracking || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+            var round = RoundDirector.instance;
+            __state.total = round.totalHaul;
+            if (round.dollarHaulList.Count > 0) __state.receipt = Capture(round.dollarHaulList[0]);
         }
-
         [HarmonyPostfix]
-        private static void Postfix((GameObject go, int value, PlayerRoundStat who) __state)
+        private static void Postfix(ExtractionPoint __instance, (Receipt receipt, int total) __state)
         {
-            if (__state.go == null || __state.who == null)
-                return;
-            // Only credit if the game really consumed it this call.
-            if (!RoundDirector.instance.dollarHaulList.Contains(__state.go))
-                __state.who.Delivered += __state.value;
+            if (!_tracking || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+            int delta = RoundDirector.instance.totalHaul - __state.total;
+            if (delta <= 0) return;
+            int souls = __state.receipt != null && !RoundDirector.instance.dollarHaulList.Contains(__state.receipt.Object)
+                ? Commit(__state.receipt) : 0;
+            AddExtraction(__instance, delta, souls);
         }
     }
 
@@ -220,30 +359,90 @@ internal static class RoundStats
     private static class OnExtractAll
     {
         [HarmonyPrefix]
-        private static void Prefix(out List<(int value, PlayerRoundStat who)> __state)
+        private static void Prefix(out (List<Receipt> receipts, int total) __state)
         {
-            __state = null;
-            if (!SemiFunc.IsMasterClientOrSingleplayer())
-                return;
-            __state = new List<(int, PlayerRoundStat)>();
+            __state = default;
+            if (!_tracking || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+            __state.receipts = new List<Receipt>();
+            __state.total = RoundDirector.instance.totalHaul;
             foreach (var go in RoundDirector.instance.dollarHaulList)
             {
-                if (go == null || go.GetComponent<PhysGrabObject>() == null)
-                    continue;
-                var v = go.GetComponent<ValuableObject>();
-                if (v != null)
-                    __state.Add(((int)v.dollarValueCurrent, CarrierStat(v)));
+                var receipt = Capture(go);
+                if (receipt != null) __state.receipts.Add(receipt);
             }
+            foreach (var box in RoundDirector.instance.valuableBoxHaulList)
+                if (box != null) __state.receipts.AddRange(BoxReceipts(box, box.ExtractionValue));
         }
-
         [HarmonyPostfix]
-        private static void Postfix(List<(int value, PlayerRoundStat who)> __state)
+        private static void Postfix(ExtractionPoint __instance, (List<Receipt> receipts, int total) __state)
         {
-            if (__state == null)
-                return;
-            foreach (var (value, who) in __state)
-                if (who != null)
-                    who.Delivered += value;
+            if (__state.receipts == null) return;
+            int delta = RoundDirector.instance.totalHaul - __state.total;
+            if (delta <= 0) return;
+            int souls = 0;
+            foreach (var receipt in __state.receipts)
+                if (!RoundDirector.instance.dollarHaulList.Contains(receipt.Object)) souls += Commit(receipt);
+            // The native total also includes valuable boxes; they belong in the payout denominator.
+            AddExtraction(__instance, delta, souls);
+        }
+    }
+
+    [HarmonyPatch]
+    private static class OnExtractionPayout
+    {
+        private static IEnumerable<MethodBase> TargetMethods()
+        {
+            yield return AccessTools.Method(typeof(ExtractionPoint), "StateComplete");
+            yield return AccessTools.Method(typeof(ExtractionPoint), "StateTaxReturn");
+        }
+        [HarmonyPrefix]
+        private static void Prefix(ExtractionPoint __instance, out (ExtractionTotals totals, int currency) __state)
+        {
+            __state = default;
+            if (!_tracking || !SemiFunc.IsMasterClientOrSingleplayer() ||
+                !Extracted.TryGetValue(__instance, out var totals) || totals.Paid) return;
+            __state = (totals, SemiFunc.StatGetRunCurrency());
+        }
+        [HarmonyPostfix]
+        private static void Postfix((ExtractionTotals totals, int currency) __state)
+        {
+            if (__state.totals == null) return;
+            int increase = SemiFunc.StatGetRunCurrency() - __state.currency;
+            if (increase <= 0) return;
+            _loot.CreditSoulShare(__state.totals.Souls, __state.totals.Total, increase);
+            __state.totals.Paid = true;
+        }
+    }
+
+    [HarmonyPatch(typeof(Upgrades.TruckUpgrades), "SellRemainingLoot")]
+    private static class OnAutoSale
+    {
+        [HarmonyPrefix]
+        private static void Prefix(out (List<Receipt> receipts, int currency) __state)
+        {
+            __state = default;
+            if (!_tracking || !Upgrades.TruckUpgrades.CanSellNow()) return;
+            __state.receipts = new List<Receipt>();
+            __state.currency = SemiFunc.StatGetRunCurrency();
+            foreach (var v in UnityEngine.Object.FindObjectsOfType<ValuableObject>())
+                if (v.dollarValueCurrent > 0f)
+                {
+                    var receipt = Capture(v.gameObject);
+                    if (receipt != null) __state.receipts.Add(receipt);
+                }
+        }
+        [HarmonyPostfix]
+        private static void Postfix((List<Receipt> receipts, int currency) __state)
+        {
+            if (__state.receipts == null) return;
+            int total = 0, souls = 0;
+            foreach (var receipt in __state.receipts)
+                if (receipt.Valuable != null && receipt.Valuable.dollarValueCurrent <= 0f)
+                {
+                    total += receipt.Value;
+                    souls += Commit(receipt);
+                }
+            _loot.CreditSoulShare(souls, total, SemiFunc.StatGetRunCurrency() - __state.currency);
         }
     }
 
@@ -287,24 +486,24 @@ internal static class RoundStats
         }
     }
 
-    // Level over: freeze and publish the board. Prefix so RunIsLevel() still describes the level we
-    // are LEAVING (the host's ChangeLevel is the only one that runs past its own early-return).
+    // Snapshot before ChangeLevel starts scene cleanup. Ignore rejected/repeated requests.
     [HarmonyPatch(typeof(RunManager), "ChangeLevel")]
     private static class OnLevelEnd
     {
         [HarmonyPrefix]
-        private static void Prefix(out bool __state)
+        private static void Prefix(RunManager __instance, out RoundLootSummary __state)
         {
-            __state = false;
-            try { __state = SemiFunc.IsMasterClientOrSingleplayer() && SemiFunc.RunIsLevel(); }
-            catch (Exception) { /* menu / early boot */ }
+            __state = null;
+            if (!_tracking || __instance.restarting || !SemiFunc.IsMasterClientOrSingleplayer() || !SemiFunc.RunIsLevel()) return;
+            RefreshLoot();
+            __state = _loot.Snapshot();
         }
-
         [HarmonyPostfix]
-        private static void Postfix(bool __state)
+        private static void Postfix(RoundLootSummary __state)
         {
-            if (__state && ModConfig.RoundResultsEnabled.Value)
-                Publish();
+            if (__state == null) return;
+            if (ModConfig.RoundResultsEnabled.Value) Publish(__state);
+            else Reset();
         }
     }
 }

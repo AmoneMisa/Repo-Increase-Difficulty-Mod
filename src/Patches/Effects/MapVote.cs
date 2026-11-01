@@ -5,6 +5,8 @@ using HarmonyLib;
 using IncreaseHardMod.Networking;
 using Photon.Pun;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 namespace IncreaseHardMod.Patches.Effects;
 
@@ -27,7 +29,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// The three pieces:
 ///   • <see cref="MapVoteState"/> — shared session/tally state, driven by network events.
 ///   • <see cref="MapVoteController"/> — runtime MonoBehaviour: host session lifecycle, local input,
-///     and the on-screen IMGUI panel.
+///     and the native-font vote panel.
 ///   • <see cref="RunManagerSetRunLevelPatch"/> — host-side prefix that applies the winner.
 /// </summary>
 internal static class MapVoteState
@@ -175,9 +177,12 @@ internal sealed class MapVoteController : MonoBehaviour
     private float _voteStartTime;
     private int _sessionCounter;
 
-    private GUIStyle _titleStyle;
-    private GUIStyle _rowStyle;
-    private GUIStyle _hintStyle;
+    private NativeHudPanel _surface;
+    private TextMeshProUGUI _title, _hint;
+    private readonly List<TextMeshProUGUI> _rows = new();
+    private readonly List<Image> _backgrounds = new();
+    private bool _hudHidden;
+    private int _hudSession = -1;
 
     private static readonly FieldInfo PreviousRunLevelField =
         AccessTools.Field(typeof(RunManager), "previousRunLevel");
@@ -303,6 +308,7 @@ internal sealed class MapVoteController : MonoBehaviour
 
     private void HandleVoteInput()
     {
+        if (InventoryInputActive()) return;
         if (!MapVoteState.Active || MapVoteState.Closed)
             return;
         if (!SafeNoTextInputs())
@@ -311,7 +317,7 @@ internal sealed class MapVoteController : MonoBehaviour
         int count = MapVoteState.Names.Length;
         for (int i = 0; i < count; i++)
         {
-            if (Input.GetKeyDown(KeyCode.Alpha1 + i) || Input.GetKeyDown(KeyCode.Keypad1 + i))
+            if (Input.GetKeyDown(KeyCode.Keypad1 + i))
             {
                 CastLocalVote(i);
                 return;
@@ -331,64 +337,89 @@ internal sealed class MapVoteController : MonoBehaviour
         ModNetwork.Instance?.BroadcastMapVoteBallot(MapVoteState.SessionId, actor, choiceIndex, name);
     }
 
-    private void OnGUI()
+    private void LateUpdate()
     {
         if (!ModConfig.MapVoteEnabled.Value || !MapVoteState.Active)
+        {
+            if (_surface != null) _surface.gameObject.SetActive(false);
             return;
-
-        EnsureStyles();
-
+        }
+        if (_hudSession != MapVoteState.SessionId) { _hudSession = MapVoteState.SessionId; _hudHidden = false; }
+        if (SafeNoTextInputs() && !InventoryInputActive() && Input.GetKeyDown(ModConfig.MapVoteHudKey.Value)) _hudHidden = !_hudHidden;
+        if (_hudHidden)
+        {
+            if (_surface != null) _surface.gameObject.SetActive(false);
+            return;
+        }
+        if (_surface == null)
+        {
+            _surface = NativeHudPanel.Create("IHM_MapVote", new Vector2(520f, 240f),
+                new Vector2(0.5f, 1f), new Vector2(0f, -250f), 0f);
+            if (_surface == null) return;
+            _rows.Clear();
+            _backgrounds.Clear();
+            _title = _surface.Label("Title", 26f, TextAlignmentOptions.Center);
+            _title.color = new Color(1f, 0.9f, 0.5f);
+            _hint = _surface.Label("Hint", 18f, TextAlignmentOptions.Center);
+            _hint.color = new Color(0.85f, 0.85f, 0.85f);
+        }
+        _surface.gameObject.SetActive(true);
         int count = MapVoteState.Names.Length;
-        int myChoice = -1;
-        if (MapVoteState.Ballots.TryGetValue(LocalActor(), out var mine))
-            myChoice = mine.Key;
-
-        const float width = 340f;
-        float rowH = 40f;
-        float height = 34f + count * rowH + 24f;
-        float x = (Screen.width - width) * 0.5f;
-        float y = Screen.height * 0.14f;
-
-        GUI.color = new Color(0f, 0f, 0f, 0.55f);
-        GUI.DrawTexture(new Rect(x - 8f, y - 8f, width + 16f, height + 16f), Texture2D.whiteTexture);
-        GUI.color = Color.white;
-
+        int myChoice = MapVoteState.Ballots.TryGetValue(LocalActor(), out var mine) ? mine.Key : -1;
         bool closed = MapVoteState.Closed;
         int lockedWinner = MapVoteState.LockedWinner;
-
-        string title = closed
-            ? "Vote closed"
-            : $"Vote: Next Map   ({Mathf.CeilToInt(MapVoteState.RemainingSeconds)}s)";
-        GUI.Label(new Rect(x, y, width, 28f), title, _titleStyle);
-        y += 34f;
-
+        _title.text = closed ? "VOTE CLOSED" : $"NEXT MAP   ({Mathf.CeilToInt(MapVoteState.RemainingSeconds)}s)";
+        Place(_title.rectTransform, 8f, 4f, 504f, 34f);
         for (int i = 0; i < count; i++)
         {
+            if (i == _rows.Count)
+            {
+                var background = new GameObject("Choice", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+                background.transform.SetParent(_surface.Panel, false);
+                background.raycastTarget = false;
+                _backgrounds.Add(background);
+                var label = _surface.Label("ChoiceText", 22f, TextAlignmentOptions.Center);
+                label.richText = false;
+                _rows.Add(label);
+            }
+            _rows[i].gameObject.SetActive(true);
+            _backgrounds[i].gameObject.SetActive(true);
+            bool winner = closed && i == lockedWinner;
+            _backgrounds[i].color = Color.clear;
+            _rows[i].color = winner ? new Color(0.5f, 1f, 0.5f) : i == myChoice ? new Color(0.5f, 0.85f, 1f) : Color.white;
             int votes = MapVoteState.VotesFor(i);
-            bool isMine = i == myChoice;
-            bool isWinner = closed && i == lockedWinner;
-            var rowRect = new Rect(x, y, width, rowH - 6f);
-
-            var prev = GUI.color;
-            GUI.color = isWinner ? new Color(0.4f, 1f, 0.5f, 0.9f)
-                : isMine ? new Color(0.35f, 0.75f, 1f, 0.9f)
-                : new Color(1f, 1f, 1f, 0.12f);
-            GUI.DrawTexture(rowRect, Texture2D.whiteTexture);
-            GUI.color = prev;
-
-            string prefix = isWinner ? "\u2714 " : $"[{i + 1}] ";
-            string label = $"{prefix}{DisplayName(i)}   —   {votes} vote{(votes == 1 ? "" : "s")}";
-            if (GUI.Button(rowRect, label, _rowStyle) && !closed)
+            _rows[i].text = $"[{i + 1}] {DisplayName(i)}   /   {votes} vote{(votes == 1 ? "" : "s")}";
+            Place(_backgrounds[i].rectTransform, 8f, 42f + i * 34f, 504f, 32f);
+            Place(_rows[i].rectTransform, 8f, 42f + i * 34f, 504f, 32f);
+            if (!closed && SafeNoTextInputs() && !InventoryInputActive() && Input.GetMouseButtonDown(0) &&
+                RectTransformUtility.RectangleContainsScreenPoint(_rows[i].rectTransform, Input.mousePosition, null))
                 CastLocalVote(i);
-
-            y += rowH;
         }
-
-        string hint = closed
-            ? (lockedWinner >= 0 ? "Winner locked in — loads on truck departure." : "No votes — a random map will be used.")
-            : "Press 1-" + count + " (or click) to vote. Closes at 0s or once everyone votes.";
-        GUI.Label(new Rect(x, y, width, 22f), hint, _hintStyle);
+        for (int i = count; i < _rows.Count; i++)
+        {
+            _rows[i].gameObject.SetActive(false);
+            _backgrounds[i].gameObject.SetActive(false);
+        }
+        _hint.text = closed
+            ? (lockedWinner >= 0 ? "Winner locked / loads on truck departure" : "No votes / random map")
+            : $"NUMPAD 1-{count} or click / inventory keys are reserved";
+        _hint.text += $"\n{ModConfig.MapVoteHudKey.Value}  HIDE / SHOW";
+        Place(_hint.rectTransform, 8f, 48f + count * 34f, 504f, 52f);
+        _surface.Panel.sizeDelta = new Vector2(520f, 106f + count * 34f);
+        // Native money text can animate far outside its visible glyph area. Keep the vote
+        // in a stable upper-screen band, independent of those transient bounds.
+        _surface.Panel.anchoredPosition=new Vector2(0f,-250f);
+        _surface.Fit();
     }
+
+    private static void Place(RectTransform rt, float x, float y, float width, float height)
+    {
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
+        rt.anchoredPosition = new Vector2(x, -y);
+        rt.sizeDelta = new Vector2(width, height);
+    }
+
+    private void OnDestroy() { if (_surface != null) Destroy(_surface.gameObject); }
 
     private static string DisplayName(int i)
     {
@@ -397,29 +428,6 @@ internal sealed class MapVoteController : MonoBehaviour
             return lvl.NarrativeName;
         string raw = i < MapVoteState.Names.Length ? MapVoteState.Names[i] : "Map";
         return raw.Replace("Level - ", "").Replace("Level ", "").Trim();
-    }
-
-    private void EnsureStyles()
-    {
-        _titleStyle ??= new GUIStyle
-        {
-            fontSize = 18,
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.MiddleCenter,
-            normal = { textColor = new Color(1f, 0.9f, 0.5f) },
-        };
-        _rowStyle ??= new GUIStyle(GUI.skin.button)
-        {
-            fontSize = 14,
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.MiddleCenter,
-        };
-        _hintStyle ??= new GUIStyle
-        {
-            fontSize = 12,
-            alignment = TextAnchor.MiddleCenter,
-            normal = { textColor = new Color(0.85f, 0.85f, 0.85f) },
-        };
     }
 
     private static int LocalActor()
@@ -447,6 +455,15 @@ internal sealed class MapVoteController : MonoBehaviour
     {
         try { return SemiFunc.NoTextInputsActive(); }
         catch { return true; }
+    }
+
+    private static bool InventoryInputActive()
+    {
+        try
+        {
+            return Upgrades.InventorySlotsUpgrade.InventoryInputActive();
+        }
+        catch { return true; } // If input is not ready, never take a key away from inventory.
     }
 }
 

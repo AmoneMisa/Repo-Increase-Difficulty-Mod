@@ -15,6 +15,8 @@ namespace IncreaseHardMod.Modifiers;
 /// </summary>
 public static class ModifierManager
 {
+    public static int Revision { get; private set; }
+    private static long _receivedRevision = -1;
     /// <summary>Modifiers active on the level being played right now.</summary>
     public static LevelModifiers Current { get; private set; } = LevelModifiers.Empty;
 
@@ -30,13 +32,19 @@ public static class ModifierManager
     }
 
     /// <summary>Called on CLIENTS when the host's broadcast arrives.</summary>
-    public static void ApplyReceived(LevelModifiers modifiers)
+    public static void ApplyReceived(LevelModifiers modifiers, long revision = -1)
     {
+        // A late join snapshot is the same level state, not a new timer/revive budget.
+        if (revision >= 0 && revision == _receivedRevision)
+            return;
         SetCurrent(modifiers, "received from host");
+        _receivedRevision = revision;
     }
 
     private static void SetCurrent(LevelModifiers modifiers, string source)
     {
+        Revision++;
+        _receivedRevision = -1;
         Current = modifiers ?? LevelModifiers.Empty;
         StatModifiers.Recalculate(Current.Stats);
         // Per-level effect state must be cleared exactly when the level changes.

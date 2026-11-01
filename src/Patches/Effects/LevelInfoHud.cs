@@ -24,11 +24,14 @@ internal sealed class LevelInfoHud : MonoBehaviour
 {
     private static readonly Color TimerColor = Color.white;
     private static readonly Color TimerWarn = new(1f, 0.3f, 0.3f);
-    private static readonly Color ModColor = new(1f, 0.55f, 0.9f);
+    private static readonly Color ModColor = new(0.78f, 0.81f, 0.78f);
 
     private TextMeshProUGUI _timerLabel;
     private TextMeshProUGUI _modsLabel;
+    private TextMeshProUGUI _detailsLabel;
     private bool _suppressed;
+    private NativeHudPanel _timerPanel, _modsPanel;
+    private NativeHudPanel _detailsPanel;
 
     private readonly List<string> _parts = new();
 
@@ -86,79 +89,125 @@ internal sealed class LevelInfoHud : MonoBehaviour
             _parts.Clear();
             if (special)
                 BuildParts(mods, _parts);
+            bool details=(Map.Instance != null && Map.Instance.Active) || SemiFunc.InputHold(InputKey.Map);
             if (econ != null)
-                _parts.Add($"Economy: {econ.Name}");
+            {
+                _parts.Add(econ.Name);
+            }
             if (shopEcon != null)
-                _parts.Add($"Shop: {shopEcon.Name}");
+            {
+                _parts.Add(shopEcon.Name);
+            }
             if (market)
                 _parts.Add($"[{ModConfig.BlackMarketKey.Value}] Black Market");
             _modsLabel.text = string.Join("\n", _parts);
             _modsLabel.enabled = true;
             PositionMods();
+            _detailsLabel.enabled=details;
+            if(details)
+            {
+                _parts.Clear();
+                if(special)
+                {
+                    foreach(var (flag,name) in Names)
+                        if(mods.Has(flag))_parts.Add(name+": "+ModConfig.ModifierDescription(flag));
+                    foreach(int id in mods.Stats)
+                    {
+                        var stat=StatModifiers.Get(id);
+                        if(stat!=null)_parts.Add(stat.Name+": "+stat.Description);
+                    }
+                }
+                if(econ!=null)_parts.Add(econ.Name+": "+econ.Description);
+                if(shopEcon!=null)_parts.Add(shopEcon.Name+": "+shopEcon.Description);
+                _detailsLabel.text=string.Join("\n\n",_parts);
+                _detailsLabel.enabled=_parts.Count>0;
+                PositionDetails();
+            }
         }
         else
         {
             _modsLabel.enabled = false;
+            _detailsLabel.enabled=false;
         }
     }
 
-    // Create (or recreate) the two native labels once the HUD canvas and a font template exist.
     private bool EnsureLabels()
     {
-        if (HUDCanvas.instance == null)
-            return false;
-
-        if (_timerLabel != null && _modsLabel != null)
-            return true;
-
-        var template = FindTemplate();
-        if (template == null)
-            return false;
-
-        // Top-centre timer.
-        if (_timerLabel == null)
-            _timerLabel = CreateLabel("IHM_LevelTimer", template, TimerColor,
-                TextAlignmentOptions.Top, new Vector2(0.5f, 1f), new Vector2(0f, -10f), 820f);
-
-        // Top-right modifier list (positioned per-frame under the quota HUD).
-        if (_modsLabel == null)
-            _modsLabel = CreateLabel("IHM_LevelMods", template, ModColor,
-                TextAlignmentOptions.TopRight, new Vector2(1f, 1f), Vector2.zero, 620f);
-
+        if (HUDCanvas.instance == null) return false;
+        if (_timerPanel == null)
+        {
+            _timerPanel = NativeHudPanel.Create("IHM_LevelTimer", new Vector2(180f, 46f),
+                new Vector2(0.5f, 1f), new Vector2(0f, -20f), 0f);
+            if (_timerPanel == null) return false;
+            _timerLabel = Fill(_timerPanel, "Countdown", 32f, TimerColor, TextAlignmentOptions.Top);
+        }
+        if (_modsPanel == null)
+        {
+            _modsPanel = NativeHudPanel.Create("IHM_LevelMods", new Vector2(440f, 420f),
+                new Vector2(1f, 1f), new Vector2(-24f, -300f), 0f);
+            if (_modsPanel == null) return false;
+            _modsLabel = Fill(_modsPanel, "Modifiers", 30f, ModColor, TextAlignmentOptions.TopRight);
+            _modsLabel.enableWordWrapping = true;
+        }
+        if(_detailsPanel==null)
+        {
+            _detailsPanel=NativeHudPanel.Create("IHM_LevelModifierDetails",new Vector2(600f,300f),new Vector2(0f,1f),new Vector2(24f,-300f),0f);
+            if(_detailsPanel==null)return false;
+            _detailsLabel=Fill(_detailsPanel,"Description",24f,ModColor,TextAlignmentOptions.TopLeft);
+            _detailsLabel.enableWordWrapping=true;
+        }
+        _timerPanel.Fit();
+        _modsPanel.Fit();
         return true;
     }
 
-    private static TextMeshProUGUI CreateLabel(string name, TextMeshProUGUI template, Color color,
-        TextAlignmentOptions align, Vector2 anchor, Vector2 offset, float width)
+    private static TextMeshProUGUI Fill(NativeHudPanel panel, string name, float size, Color color,
+        TextAlignmentOptions alignment)
     {
-        var go = new GameObject(name);
-        go.transform.SetParent(HUDCanvas.instance.transform, false);
-
-        var tmp = go.AddComponent<TextMeshProUGUI>();
-        tmp.font = template.font;                       // game's pixel font asset
-        tmp.fontSharedMaterial = template.fontSharedMaterial; // same outline/material as the HUD
-        tmp.fontSize = template.fontSize;
-        tmp.color = color;
-        tmp.alignment = align;
-        tmp.enableWordWrapping = false;
-        tmp.raycastTarget = false;
-        tmp.richText = false;
-
-        var rt = tmp.rectTransform;
-        rt.anchorMin = anchor;
-        rt.anchorMax = anchor;
-        rt.pivot = anchor;
-        rt.sizeDelta = new Vector2(width, 40f);
-        rt.anchoredPosition = offset;
-        return tmp;
+        var text = panel.Label(name, size, alignment);
+        text.color = color;
+        text.richText = false;
+        var rt = text.rectTransform;
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = rt.offsetMax = Vector2.zero;
+        return text;
     }
 
-    // Keep the modifier list just under the quota / extraction readout, scaling with the canvas.
     private void PositionMods()
     {
-        var rect = HUDCanvas.instance.rect;
-        float h = rect != null ? rect.rect.height : 1080f;
-        _modsLabel.rectTransform.anchoredPosition = new Vector2(-24f, -h * 0.28f);
+        float height = _modsLabel.GetPreferredValues(_modsLabel.text, 440f, Mathf.Infinity).y;
+        _modsPanel.Panel.sizeDelta = new Vector2(440f, Mathf.Max(40f, height + 8f));
+        float top=250f;
+        var canvas=((RectTransform)_modsPanel.transform).rect;
+        if(_modsPanel.NativeBounds(GoalUI.instance,out var quota) && quota.center.x>canvas.center.x && quota.center.y>canvas.center.y)
+            top=Mathf.Clamp(canvas.yMax-quota.yMin+14f,180f,canvas.height*.65f);
+        _modsPanel.Panel.anchoredPosition=new Vector2(-24f,-top);
+        _modsPanel.Fit();
+    }
+
+    private void PositionDetails()
+    {
+        var canvas=((RectTransform)_detailsPanel.transform).rect;
+        float width=Mathf.Min(600f,canvas.width-48f);
+        float height=_detailsLabel.GetPreferredValues(_detailsLabel.text,width,Mathf.Infinity).y+12f;
+        _detailsPanel.Panel.sizeDelta=new Vector2(width,Mathf.Max(40f,height));
+        var position=new Vector2(24f,-300f);
+        if(_detailsPanel.NativeBounds(LevelUI.instance,out var level))
+        {
+            position.x=Mathf.Clamp(level.xMin-canvas.xMin,24f,canvas.width-width-24f);
+            position.y=-(canvas.yMax-level.yMin+14f);
+        }
+        position.y=-Mathf.Clamp(-position.y,24f,Mathf.Max(24f,canvas.height-60f));
+        _detailsPanel.Panel.anchoredPosition=position;
+        _detailsPanel.Fit();
+    }
+
+    private void OnDestroy()
+    {
+        if (_timerPanel != null) Destroy(_timerPanel.gameObject);
+        if (_modsPanel != null) Destroy(_modsPanel.gameObject);
+        if (_detailsPanel != null) Destroy(_detailsPanel.gameObject);
     }
 
     private void HideAll()
@@ -167,15 +216,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
             _timerLabel.enabled = false;
         if (_modsLabel != null)
             _modsLabel.enabled = false;
-    }
-
-    // Prefer the quota text's font (it sits right where our modifier list goes, so it matches best);
-    // otherwise borrow any TMP label under the HUD canvas.
-    private static TextMeshProUGUI FindTemplate()
-    {
-        if (StatsUI.instance != null && StatsUI.instance.Text != null)
-            return StatsUI.instance.Text;
-        return HUDCanvas.instance != null ? HUDCanvas.instance.GetComponentInChildren<TextMeshProUGUI>() : null;
+        if(_detailsLabel!=null)_detailsLabel.enabled=false;
     }
 
     // Friendly, readable names for each active modifier TYPE (the raw enum renders as code-y

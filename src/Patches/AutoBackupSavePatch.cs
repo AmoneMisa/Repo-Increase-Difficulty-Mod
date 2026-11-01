@@ -1,21 +1,21 @@
 using System;
 using System.IO;
-using System.Linq;
 using HarmonyLib;
 using UnityEngine;
 
 namespace IncreaseHardMod.Patches;
 
 /// <summary>
-/// Auto-backup the run save before REPO wipes it.
+/// Preserve the run checkpoint when REPO would automatically delete it.
 ///
 /// When you fail/wipe a level, <c>DataDirector.SaveDeleteCheck</c> permanently deletes
 /// the run's save folder (<c>persistentDataPath/saves/&lt;name&gt;</c>) via
 /// <c>StatsManager.SaveFileDelete</c>. This prefix runs first and, using the SAME
 /// decision the game uses, decides whether a delete is about to happen. If so it copies
 /// the save folder to <c>persistentDataPath/saves_IncreaseHardMod_backups/&lt;name&gt;_&lt;timestamp&gt;</c>
-/// (keeping only the newest N per save), and — if configured — SKIPS the deletion
-/// entirely so the save stays in the normal save list and can be reloaded.
+/// when backups are enabled. Deletion is always skipped, even if backups are disabled
+/// or copying fails, so the checkpoint can be loaded from the menu without restarting.
+/// Backup snapshots are retained indefinitely.
 ///
 /// We patch <c>SaveDeleteCheck</c> (the automatic fail/wipe path) rather than the raw
 /// <c>StatsManager.SaveFileDelete</c> so the manual "delete save" menu button keeps
@@ -27,9 +27,6 @@ internal static class AutoBackupSavePatch
     [HarmonyPrefix]
     private static bool Prefix(bool _leaveGame)
     {
-        if (!ModConfig.AutoBackupEnabled.Value)
-            return true; // feature off: let the game do its thing.
-
         // Only the host/singleplayer owns the save, mirroring the game's own guard.
         if (!SemiFunc.IsMasterClientOrSingleplayer())
             return true;
@@ -37,22 +34,20 @@ internal static class AutoBackupSavePatch
         if (!WouldDelete(_leaveGame))
             return true; // no deletion imminent: nothing to back up, run original.
 
-        try
+        if (ModConfig.AutoBackupEnabled.Value)
         {
-            BackupCurrentSave();
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.LogWarning($"[AutoBackup] Backup failed harmlessly: {e.Message}");
-        }
-
-        if (ModConfig.AutoBackupKeepSave.Value)
-        {
-            Plugin.Log.LogInfo("[AutoBackup] Kept the failed save loadable (skipped REPO's delete).");
-            return false; // skip SaveDeleteCheck entirely -> save is NOT deleted.
+            try
+            {
+                BackupCurrentSave();
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogWarning($"[AutoBackup] Backup failed; the original save is still protected: {e.Message}");
+            }
         }
 
-        return true; // backed up, but let REPO delete the original as usual.
+        Plugin.Log.LogInfo("[AutoBackup] Preserved the run checkpoint. Load it from the save menu to continue without restarting.");
+        return false; // Automatic deletion must never depend on backup settings or success.
     }
 
     /// <summary>
@@ -101,44 +96,19 @@ internal static class AutoBackupSavePatch
         string backupsRoot = Path.Combine(Application.persistentDataPath, "saves_IncreaseHardMod_backups");
         Directory.CreateDirectory(backupsRoot);
 
-        string stamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+        // Never overwrite an earlier snapshot, including repeated checks in the same second.
+        string stamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss_fffffff") + "_" + Guid.NewGuid().ToString("N");
         string dest = Path.Combine(backupsRoot, $"{name}_{stamp}");
         CopyDirectory(source, dest);
         Plugin.Log.LogInfo($"[AutoBackup] Backed up save '{name}' -> {dest}");
-
-        Prune(backupsRoot, name);
     }
 
     private static void CopyDirectory(string source, string dest)
     {
         Directory.CreateDirectory(dest);
         foreach (string file in Directory.GetFiles(source))
-            File.Copy(file, Path.Combine(dest, Path.GetFileName(file)), overwrite: true);
+            File.Copy(file, Path.Combine(dest, Path.GetFileName(file)), overwrite: false);
         foreach (string dir in Directory.GetDirectories(source))
             CopyDirectory(dir, Path.Combine(dest, Path.GetFileName(dir)));
-    }
-
-    /// <summary>Keep only the newest MaxBackupsPerSave backups for this save name.</summary>
-    private static void Prune(string backupsRoot, string name)
-    {
-        int max = ModConfig.AutoBackupMaxPerSave.Value;
-        if (max <= 0)
-            return;
-
-        var backups = Directory.GetDirectories(backupsRoot, $"{name}_*")
-            .OrderByDescending(d => Directory.GetCreationTimeUtc(d))
-            .ToList();
-
-        for (int i = max; i < backups.Count; i++)
-        {
-            try
-            {
-                Directory.Delete(backups[i], recursive: true);
-            }
-            catch (Exception e)
-            {
-                Plugin.Log.LogWarning($"[AutoBackup] Failed to prune old backup '{backups[i]}': {e.Message}");
-            }
-        }
     }
 }

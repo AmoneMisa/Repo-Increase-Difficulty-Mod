@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using IncreaseHardMod.Networking;
+using Photon.Pun;
 using UnityEngine;
 
 namespace IncreaseHardMod.Gear;
@@ -32,6 +33,7 @@ internal static class GearEffects
     private sealed class Pull
     {
         public Rigidbody Body;
+        public PhysGrabObject Object;
         public Transform Target;
         public float Until;
     }
@@ -63,11 +65,13 @@ internal static class GearEffects
                 float step = Mathf.Min(dt, p.Remaining);
                 p.Remaining -= step;
                 p.Carry += rate * step;
-                if (p.Carry >= 4f || (p.Remaining <= 0f && p.Carry >= 1f))
+                if (p.Carry >= 4f || (p.Remaining <= 0f && p.Carry > 0f))
                 {
-                    int dmg = Mathf.FloorToInt(p.Carry);
+                    // Round the final fraction so frame-time accumulation cannot lose the last
+                    // point of configured damage (e.g. 124.999 instead of 125).
+                    int dmg = p.Remaining <= 0f ? Mathf.RoundToInt(p.Carry) : Mathf.FloorToInt(p.Carry);
                     p.Carry -= dmg;
-                    p.Health.Hurt(dmg, Vector3.zero);
+                    if (dmg > 0) p.Health.Hurt(dmg, Vector3.zero);
                 }
             }
             if (done != null)
@@ -101,13 +105,17 @@ internal static class GearEffects
                 if (p.Remaining > 0f) ModNetwork.BroadcastEnemyStatus(p.Enemy, 0, p.Remaining);
             foreach (var ice in Frozen)
                 ModNetwork.BroadcastEnemyStatus(ice.Key, 1, ice.Value - Time.time);
+            foreach (var ice in PlayerFreezeEffect.Active)
+                if (ice != null && ice.Remaining > 0f)
+                    ModNetwork.BroadcastPlayerFreeze(ice.Avatar, ice.Remaining);
         }
 
         // Sticky
         for (int i = Pulls.Count - 1; i >= 0; i--)
         {
             var p = Pulls[i];
-            if (p.Body == null || p.Target == null || Time.time > p.Until)
+            if (p.Body == null || p.Object == null || !p.Object.isActiveAndEnabled ||
+                p.Target == null || Time.time > p.Until || p.Body.isKinematic)
             {
                 Pulls.RemoveAt(i);
                 continue;
@@ -120,7 +128,13 @@ internal static class GearEffects
             }
             // (linearVelocity doesn't exist in the Unity version we compile against; velocity at the centre of mass is the same.)
             Vector3 current = p.Body.GetPointVelocity(p.Body.worldCenterOfMass);
-            Vector3 wanted = Vector3.MoveTowards(current, to.normalized * 10f, 40f * dt);
+            // Lift loot off the floor and slow down as it reaches the player. Protect its
+            // value while pulled instead of smashing it with a normal gun impulse.
+            p.Object.OverrideZeroGravity(0.2f);
+            p.Object.OverrideIndestructible(0.3f);
+            p.Body.WakeUp();
+            float speed = Mathf.Min(6f, (to.magnitude - 1.8f) * 5f);
+            Vector3 wanted = Vector3.MoveTowards(current, to.normalized * speed, 30f * dt);
             p.Body.AddForce(wanted - current, ForceMode.VelocityChange);
         }
     }
@@ -173,25 +187,54 @@ internal static class GearEffects
         return best;
     }
 
-    private static Enemy EnemyAt(Vector3 point)
+    private static bool ShotHit(ItemGun gun, Vector3 point, int shooterId, out RaycastHit hit)
     {
-        foreach (var c in Physics.OverlapSphere(point, 0.9f))
+        hit = default;
+        if (gun.gunMuzzle == null) return false;
+        Vector3 origin = gun.gunMuzzle.position;
+        Vector3 direction = point - origin;
+        if (direction.sqrMagnitude < 0.0001f) return false;
+        var shooter = shooterId >= 0 ? SemiFunc.PlayerAvatarGetFromPhotonID(shooterId) : null;
+        float nearest = float.PositiveInfinity;
+        foreach (var candidate in Physics.RaycastAll(origin, direction.normalized, direction.magnitude + 0.05f,
+                     (int)SemiFunc.LayerMaskGetVisionObstruct() | LayerMask.GetMask("Enemy"), QueryTriggerInteraction.UseGlobal))
         {
-            var er = c.GetComponentInParent<EnemyRigidbody>();
-            if (er != null && er.enemy != null)
-                return er.enemy;
+            if (candidate.transform.IsChildOf(gun.transform) ||
+                (shooter != null && candidate.transform.IsChildOf(shooter.transform)) || candidate.distance >= nearest) continue;
+            nearest = candidate.distance;
+            hit = candidate;
         }
-        return null;
+        return !float.IsPositiveInfinity(nearest);
     }
 
     [HarmonyPatch(typeof(ItemGun), "ShootBulletRPC")]
     private static class OnShot
     {
-        [HarmonyPostfix]
-        private static void Postfix(ItemGun __instance, Vector3 _endPosition, bool _hit, int _shooterID)
+        [HarmonyPrefix]
+        private static bool Prefix(ItemGun __instance, Vector3 _endPosition, bool _hit, int _shooterID,
+            bool _surfaceHit, PhotonMessageInfo _info, out RaycastHit? __state)
         {
-            if (!_hit || !SemiFunc.IsMasterClientOrSingleplayer())
+            __state = null;
+            if (!SemiFunc.MasterOnlyRPC(_info)) return false;
+            var gear = __instance.GetComponent<GearGun>();
+            bool sticky = gear != null && gear.kind == GearKind.Sticky;
+            if (sticky && _hit) Visuals.StickyTether.Pulse(__instance, _endPosition);
+            // Resolve before the native method activates the bullet's hit colliders.
+            // A miss still sets _hit in the game, but must never poison/freeze a nearby enemy.
+            if (!_hit || !_surfaceHit || !SemiFunc.IsMasterClientOrSingleplayer() ||
+                gear == null) return !sticky;
+            if (ShotHit(__instance, _endPosition, _shooterID, out var hit)) __state = hit;
+            return !sticky; // No native bullet, tracer, sparks or impact sound for a pulling tool.
+        }
+
+        [HarmonyPostfix]
+        private static void Postfix(ItemGun __instance, int _shooterID, RaycastHit? __state)
+        {
+            if (!__state.HasValue || !SemiFunc.IsMasterClientOrSingleplayer())
                 return;
+            var hit = __state.Value;
+            var enemyBody = hit.collider.GetComponentInParent<EnemyRigidbody>();
+            var enemy = enemyBody != null ? enemyBody.enemy : hit.collider.GetComponentInParent<Enemy>();
             var gear = __instance.GetComponent<GearGun>();
             if (gear == null)
                 return;
@@ -200,7 +243,6 @@ internal static class GearEffects
             {
                 case GearKind.Poison:
                 {
-                    var enemy = EnemyAt(_endPosition);
                     if (enemy != null && enemy.HasHealth)
                     {
                         if (!Poisoned.TryGetValue(enemy.Health, out var p))
@@ -213,7 +255,6 @@ internal static class GearEffects
                 }
                 case GearKind.Ice:
                 {
-                    var enemy = EnemyAt(_endPosition);
                     if (enemy != null)
                     {
                         float t = ModConfig.IceFreezeSeconds.Value;
@@ -221,44 +262,51 @@ internal static class GearEffects
                         Frozen[enemy] = Time.time + t;
                         ModNetwork.BroadcastEnemyStatus(enemy, 1, t);
                     }
+                    else
+                    {
+                        var player = PlayerAtHit(hit.collider);
+                        if (player != null)
+                            ModNetwork.BroadcastPlayerFreeze(player, ModConfig.IceFreezeSeconds.Value);
+                    }
                     break;
                 }
                 case GearKind.Sticky:
-                    TryPull(_endPosition, _shooterID, __instance.GetComponent<PhysGrabObject>());
+                    TryPull(hit, _shooterID, __instance);
                     break;
             }
         }
     }
 
-    private static void TryPull(Vector3 point, int shooterId, PhysGrabObject gun)
+    internal static PlayerAvatar PlayerAtHit(Collider collider)
     {
-        var shooter = SemiFunc.PlayerAvatarGetFromPhotonID(shooterId);
+        var avatar = collider.GetComponentInParent<PlayerAvatar>();
+        if (avatar != null) return avatar;
+        var tumble = collider.GetComponentInParent<PlayerTumble>();
+        if (tumble != null) return tumble.playerAvatar;
+        var controller = collider.GetComponentInParent<PlayerController>();
+        return controller != null ? controller.playerAvatarScript : null;
+    }
+
+    private static void TryPull(RaycastHit hit, int shooterId, ItemGun gun)
+    {
+        var gunObject = gun.GetComponent<PhysGrabObject>();
+        var shooter = shooterId >= 0 ? SemiFunc.PlayerAvatarGetFromPhotonID(shooterId) : null;
+        if (shooter == null && gunObject != null)
+            shooter = gunObject.lastPlayerGrabbing;
+        if (shooter == null && !GameManager.Multiplayer())
+            shooter = PlayerAvatar.instance;
         if (shooter == null)
             return;
 
-        Rigidbody body = null;
-        Enemy enemy = EnemyAt(point);
-        if (enemy != null && enemy.HasRigidbody)
-            body = enemy.Rigidbody.physGrabObject != null ? enemy.Rigidbody.physGrabObject.rb : null;
-
-        if (body == null)
-        {
-            float best = float.MaxValue;
-            foreach (var c in Physics.OverlapSphere(point, 0.8f))
-            {
-                var pgo = c.GetComponentInParent<PhysGrabObject>();
-                if (pgo == null || pgo == gun || pgo.rb == null || c.GetComponentInParent<PlayerAvatar>() != null)
-                    continue;
-                float d = Vector3.Distance(pgo.rb.position, point);
-                if (d < best)
-                {
-                    best = d;
-                    body = pgo.rb;
-                }
-            }
-        }
-
-        if (body == null)
+        var enemyBody = hit.collider.GetComponentInParent<EnemyRigidbody>();
+        Enemy enemy = enemyBody != null ? enemyBody.enemy : hit.collider.GetComponentInParent<Enemy>();
+        var pgo = enemy != null && enemy.HasRigidbody ? enemy.Rigidbody.physGrabObject :
+            hit.collider.GetComponentInParent<PhysGrabObject>();
+        if (pgo == null || pgo == gunObject || pgo.rb == null ||
+            hit.collider.GetComponentInParent<PlayerAvatar>() != null)
+            return;
+        Rigidbody body = pgo.rb;
+        if (body.isKinematic)
             return;
 
         // "Free lift" capacity at one strength level LESS than the shooter has (each level = +0.2 grab strength).
@@ -270,7 +318,20 @@ internal static class GearEffects
         if (enemy != null)
             enemy.Freeze(0.9f); // stop its own movement overriding the pull
         Pulls.RemoveAll(x => x.Body == body);
-        Pulls.Add(new Pull { Body = body, Target = shooter.transform, Until = Time.time + 1.2f });
+        body.WakeUp();
+        Pulls.Add(new Pull { Body = body, Object = pgo, Target = shooter.transform, Until = Time.time + 2f });
+        ModNetwork.BroadcastStickyTether(gun, pgo, pgo.transform.InverseTransformPoint(hit.point), 2f);
+    }
+
+    [HarmonyPatch(typeof(ItemGun), "MuzzleFlash")]
+    private static class StickyMuzzleFlash
+    {
+        [HarmonyPrefix]
+        private static bool Prefix(ItemGun __instance)
+        {
+            var gear = __instance.GetComponent<GearGun>();
+            return gear == null || gear.kind != GearKind.Sticky;
+        }
     }
 
     // Frozen enemies: less damage from firearms, more from melee. Scales the collider's enemy damage for

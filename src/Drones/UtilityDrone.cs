@@ -47,7 +47,8 @@ internal sealed class UtilityDrone : MonoBehaviour
     public PhysGrabObject TargetPgo => Engaged ? Drone.magnetTargetPhysGrabObject : null;
     public PlayerAvatar TargetPlayer => Engaged ? Drone.playerAvatarTarget : null;
 
-    public Rigidbody TargetBody => Engaged ? Drone.magnetTargetRigidbody : null;
+    public Rigidbody TargetBody => !Engaged ? null :
+        TargetPgo != null && TargetPgo.rb != null ? TargetPgo.rb : Drone.magnetTargetRigidbody;
 
     /// <summary>World-space point on the target where the beam is attached.</summary>
     public Vector3 AttachPoint()

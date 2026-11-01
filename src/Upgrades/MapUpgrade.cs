@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text;
 using IncreaseHardMod.Patches.Effects;
 using UnityEngine;
+using TMPro;
 using RepoUpgrades = REPOLib.Modules.Upgrades;
 
 namespace IncreaseHardMod.Upgrades;
@@ -63,7 +64,6 @@ internal static class MapUpgrade
     internal sealed class MapController : MonoBehaviour
     {
         private const float RefreshInterval = 0.25f;
-        private static readonly Color PanelBg = new(0f, 0f, 0f, 0.55f);
         private static readonly Color Gold = new(1f, 0.85f, 0.35f);
 
         private static readonly string[] Arrows =
@@ -72,8 +72,8 @@ internal static class MapUpgrade
         private float _timer;
         private bool _show;
         private string _text = "";
-        private GUIStyle _style;
-        private Texture2D _bgTex;
+        private NativeHudPanel _surface;
+        private TextMeshProUGUI _label;
 
         // Runtime zoom offset (in FOV units) added on top of the level's default, driven by the
         // zoom hotkeys. Persists while the game runs so re-opening the map keeps your chosen zoom.
@@ -284,39 +284,34 @@ internal static class MapUpgrade
             return Arrows[idx];
         }
 
-        private void OnGUI()
+        private void LateUpdate()
         {
             if (!_show || string.IsNullOrEmpty(_text))
-                return;
-
-            EnsureStyle();
-
-            const float w = 220f;
-            float h = _style.CalcHeight(new GUIContent(_text), w - 20f) + 16f;
-            var rect = new Rect(12f, Screen.height * 0.5f - h * 0.5f, w, h);
-
-            GUI.DrawTexture(rect, _bgTex);
-            GUI.Label(new Rect(rect.x + 10f, rect.y + 8f, w - 20f, h - 16f), _text, _style);
-        }
-
-        private void EnsureStyle()
-        {
-            if (_style != null)
-                return;
-
-            _bgTex = new Texture2D(1, 1);
-            _bgTex.SetPixel(0, 0, PanelBg);
-            _bgTex.Apply();
-
-            _style = new GUIStyle
             {
-                fontSize = 14,
-                richText = true,
-                alignment = TextAnchor.UpperLeft,
-                wordWrap = false,
-            };
-            _style.normal.textColor = Gold;
+                if (_surface != null) _surface.gameObject.SetActive(false);
+                return;
+            }
+            if (_surface == null)
+            {
+                _surface = NativeHudPanel.Create("IHM_MapSuite", new Vector2(400f, 270f),
+                    new Vector2(0f, 0.5f), new Vector2(24f, 0f), 0.78f);
+                if (_surface == null) return;
+                _label = _surface.Label("MapInfo", 22f, TextAlignmentOptions.TopLeft);
+                _label.color = Gold;
+                _label.rectTransform.anchorMin = Vector2.zero;
+                _label.rectTransform.anchorMax = Vector2.one;
+                _label.rectTransform.offsetMin = new Vector2(16f, 12f);
+                _label.rectTransform.offsetMax = new Vector2(-16f, -12f);
+            }
+            _surface.gameObject.SetActive(true);
+            _label.text = "<line-height=30>" + _text;
+            int lines = 1;
+            foreach (char c in _text) if (c == '\n') lines++;
+            _surface.Panel.sizeDelta = new Vector2(400f, lines * 30f + 28f);
+            _surface.Fit();
         }
+
+        private void OnDestroy() { if (_surface != null) Destroy(_surface.gameObject); }
     }
 
     /// <summary>Marks a world object we've already given a map marker, so we don't double-add.</summary>

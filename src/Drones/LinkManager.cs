@@ -5,14 +5,14 @@ using UnityEngine;
 namespace IncreaseHardMod.Drones;
 
 /// <summary>
-/// Pairs engaged Link drones and ties their targets together with a physical cable.
+/// Pairs Link drones by slot and ties their engaged targets together with a physical cable.
 ///
 /// Every client derives the same pairs from replicated drone state (A drones and B drones, each
 /// ordered by PhotonView id, paired index by index - so the first-bought A goes with the first B)
 /// and draws the cable. Only the host creates the physics joint, so guests never fight it.
 ///
-/// The joint is a rope (a SpringJoint with minDistance 0): slack when close, a firm pull past
-/// maxDistance. maxDistance starts at the gap when connected (capped by the configured range) and
+/// The joint is a rope (a ConfigurableJoint with a spherical linear limit): slack when close, a firm pull past
+/// the cable length. The limit starts at the gap when connected (capped by the configured range) and
 /// reels in toward a compact length while exactly one end is being held. The joint is dropped on
 /// prolonged over-stretch; toggling either drone off/on re-links.
 /// </summary>
@@ -24,7 +24,7 @@ internal static class LinkManager
     private sealed class Link
     {
         public UtilityDrone A, B;
-        public SpringJoint Joint;
+        public ConfigurableJoint Joint;
         public Rigidbody BodyA, BodyB;
         public LineRenderer Line;
         public float OverstretchTime;
@@ -45,19 +45,26 @@ internal static class LinkManager
     private static int ViewId(UtilityDrone d)
     {
         var pv = d.GetComponent<PhotonView>();
-        return pv != null ? pv.ViewID : d.GetInstanceID();
+        return pv != null && pv.ViewID != 0 ? pv.ViewID : d.GetInstanceID();
     }
 
     public static void Tick(float dt)
     {
         if (!ModConfig.DronesEnabled.Value)
+        {
+            foreach (var link in Links.Values)
+                DestroyLink(link);
+            Links.Clear();
             return;
+        }
 
         ListA.Clear();
         ListB.Clear();
         foreach (var d in UtilityDrone.All)
         {
-            if (d.kind != DroneKind.Link || !d.Engaged || d.TargetBody == null)
+            // Pair the complete deployed inventory before checking engagement. Otherwise turning
+            // one drone off silently pairs all the later A drones with the wrong B drones.
+            if (d == null || !d.isActiveAndEnabled || d.kind != DroneKind.Link)
                 continue;
             (d.slot == 0 ? ListA : ListB).Add(d);
         }
@@ -77,7 +84,7 @@ internal static class LinkManager
             UpdateLink(link, i, dt);
         }
 
-        // Drop links whose drones were switched off, stowed, destroyed or re-paired.
+        // Drop pairs whose drones were disabled, destroyed or re-paired.
         List<long> dead = null;
         foreach (var kv in Links)
             if (!Alive.Contains(kv.Key))
@@ -97,6 +104,7 @@ internal static class LinkManager
         if (rbA == null || rbB == null || rbA == rbB)
         {
             DropJoint(link);
+            link.Broken = false;
             SetLine(link, index, null, null, 0);
             return;
         }
@@ -106,12 +114,20 @@ internal static class LinkManager
         float dist = Vector3.Distance(ptA, ptB);
         float range = ModConfig.LinkMaxDistance.Value;
 
+        if (link.BodyA != rbA || link.BodyB != rbB)
+        {
+            DropJoint(link);
+            link.BodyA = rbA;
+            link.BodyB = rbB;
+            link.Broken = false;
+        }
+
         if (SemiFunc.IsMasterClientOrSingleplayer() && !link.Broken)
             HostJoint(link, rbA, rbB, ptA, ptB, dist, range, dt);
 
         // 0 = connected, 1 = waiting (out of range), 2 = strained / released
         int state = link.Broken || dist > range * 1.5f ? 2 : dist > range && link.Joint == null ? 1 : 0;
-        if (state == 0 && link.Joint != null && dist - link.Joint.maxDistance > 0.5f)
+        if (state == 0 && link.Joint != null && dist - link.Joint.linearLimit.limit > 0.5f)
             state = 2;
         SetLine(link, index, ptA, ptB, state);
     }
@@ -126,17 +142,21 @@ internal static class LinkManager
         {
             if (dist > range)
                 return; // waits for the targets to be brought within range; never teleported together
-            var j = rbA.gameObject.AddComponent<SpringJoint>();
-            j.connectedBody = rbB;
+            // SpringJoint measures displacement from its initial separation; its maxDistance
+            // is not an absolute cable length. Use a spherical linear limit in world metres.
+            var j = rbA.gameObject.AddComponent<ConfigurableJoint>();
             j.autoConfigureConnectedAnchor = false;
+            j.connectedBody = rbB;
             j.anchor = rbA.transform.InverseTransformPoint(ptA);
             j.connectedAnchor = rbB.transform.InverseTransformPoint(ptB);
-            j.spring = 150f;
-            j.damper = 12f;
-            j.minDistance = 0f;
-            j.maxDistance = Mathf.Clamp(dist + 0.25f, 0.75f, range);
-            j.tolerance = 0.02f;
+            j.xMotion = j.yMotion = j.zMotion = ConfigurableJointMotion.Limited;
+            j.angularXMotion = j.angularYMotion = j.angularZMotion = ConfigurableJointMotion.Free;
+            j.linearLimit = new SoftJointLimit { limit = Mathf.Clamp(dist + 0.1f, 0.1f, range), contactDistance = 0.02f };
+            // A hard limit holds heavy loot as well as light loot, using the physics solver.
+            j.linearLimitSpring = new SoftJointLimitSpring { spring = 0f, damper = 0f };
             j.enableCollision = true;
+            rbA.WakeUp();
+            rbB.WakeUp();
             link.Joint = j;
             link.BodyA = rbA;
             link.BodyB = rbB;
@@ -145,9 +165,12 @@ internal static class LinkManager
         }
 
         var joint = link.Joint;
+        // Vanilla may move its beam to another collider on the same target.
+        joint.anchor = rbA.transform.InverseTransformPoint(ptA);
+        joint.connectedAnchor = rbB.transform.InverseTransformPoint(ptB);
 
         // Release on prolonged over-stretch instead of yanking things around forever.
-        if (dist > joint.maxDistance + 4f)
+        if (dist > joint.linearLimit.limit + 4f)
         {
             link.OverstretchTime += dt;
             if (link.OverstretchTime > 3f)
@@ -164,8 +187,15 @@ internal static class LinkManager
         bool grabbedA = link.A.TargetPgo != null && link.A.TargetPgo.grabbed;
         bool grabbedB = link.B.TargetPgo != null && link.B.TargetPgo.grabbed;
         bool enemy = link.A.Drone.targetIsEnemy || link.B.Drone.targetIsEnemy;
-        if (grabbedA != grabbedB && !enemy && dist <= joint.maxDistance + 0.4f)
-            joint.maxDistance = Mathf.Max(CompactLength, joint.maxDistance - ReelSpeed * dt);
+        if (grabbedA != grabbedB && !enemy && dist <= joint.linearLimit.limit + 0.4f)
+        {
+            var limit = joint.linearLimit;
+            // Never lengthen a cable that was initially shorter than CompactLength.
+            limit.limit = Mathf.MoveTowards(limit.limit, Mathf.Min(CompactLength, limit.limit), ReelSpeed * dt);
+            joint.linearLimit = limit;
+            rbA.WakeUp();
+            rbB.WakeUp();
+        }
     }
 
     private static void DropJoint(Link link)

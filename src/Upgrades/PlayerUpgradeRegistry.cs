@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using REPOLib.Modules;
@@ -50,9 +50,7 @@ internal static class PlayerUpgradeRegistry
         // Runs at each player's LateStart (re-apply on load) and when a level is bought.
         public Action<PlayerAvatar, int> StartAction;
         public Action<PlayerAvatar, int> UpgradeAction;
-        // Optional custom shop icon: file name of an embedded PNG (e.g. "Upgrade_Ping.png").
-        // When set, it's assigned to the item's ItemAttributes.icon so the shop shows our art
-        // instead of an auto-generated render. Null = keep the game's default generated icon.
+        // Printed native-layout atlas; Icon_ + filename is the separate transparent inventory render.
         public string IconFile;
         // When true, source the shop icon + physical card art from the vanilla "Map Player Count"
         // upgrade instead of an embedded PNG. Used by Map Suite, which replaces that vanilla upgrade
@@ -76,6 +74,23 @@ internal static class PlayerUpgradeRegistry
 
     /// <summary>Called from ModConfig/Plugin init to declare an upgrade before registration.</summary>
     public static void Define(Definition def) => _definitions.Add(def);
+    internal static Definition FindDefinition(string id) => _definitions.Find(d => d.Id == id);
+
+    // REPOLib 4.3 loads an existing stats dictionary into a local variable during registration.
+    // Rebind the public PlayerDictionary as well so GetLevel, saved levels and effect gates agree.
+    [HarmonyPatch(typeof(RepoUpgrades), "RegisterUpgrades")]
+    private static class BindSavedLevels
+    {
+        [HarmonyPostfix]
+        private static void Postfix()
+        {
+            var stats = StatsManager.instance;
+            if (stats == null) return;
+            foreach (var upgrade in RepoUpgrades.PlayerUpgrades)
+                if (FindDefinition(upgrade.UpgradeId) != null && stats.dictionaryOfDictionaries.TryGetValue("playerUpgrade" + upgrade.UpgradeId, out var saved))
+                    upgrade.PlayerDictionary = saved;
+        }
+    }
 
     /// <summary>
     /// Idempotently clone + register every declared upgrade. Safe to call repeatedly
@@ -210,22 +225,14 @@ internal static class PlayerUpgradeRegistry
         var attributes = clone.GetComponent<ItemAttributes>();
         attributes.item = item;
 
-        // Custom shop icon: pre-assign our sprite so the game skips its auto-generated icon
-        // (this drives the small 2D inventory slot), AND retexture the physical upgrade CARD
-        // mesh so the item you see in the world/shop shows our art too.
+        // Apply the authored UV atlas and its separate transparent shop/inventory render.
         if (def.UseVanillaMapIcon)
         {
             ApplyVanillaMapIcon(clone, def.Id, attributes);
         }
         else if (!string.IsNullOrEmpty(def.IconFile))
         {
-            var sprite = UpgradeIcons.Load(def.IconFile);
-            if (sprite != null)
-                attributes.icon = sprite;
-
-            var tex = UpgradeIcons.LoadTexture(def.IconFile);
-            if (tex != null)
-                ApplyCardArt(clone, def.Id, tex);
+            UpgradeAppearance.Apply(clone, def.Id, def.IconFile);
         }
 
         // 5. Register with REPOLib (sets item.prefab, adds to StatsManager, enables shop roll).
@@ -236,7 +243,12 @@ internal static class PlayerUpgradeRegistry
             return false;
         }
 
-        RepoUpgrades.RegisterUpgrade(def.Id, item, def.StartAction, def.UpgradeAction);
+        RepoUpgrades.RegisterUpgrade(def.Id, item, def.StartAction, (avatar, level) =>
+        {
+            def.UpgradeAction?.Invoke(avatar, level);
+            if (avatar != null && avatar.isLocal && StatsUI.instance != null && PlayerController.instance != null)
+                StatsUI.instance.Fetch();
+        });
 
         // Give the truck's upgrade screen a clean label. That screen (StatsUI.GetUpgradeDisplayName)
         // shows StatsManager.upgradesInfo[key].displayName if present, otherwise it space-splits the
@@ -250,62 +262,23 @@ internal static class PlayerUpgradeRegistry
         return true;
     }
 
-    // Set once we've logged the renderer layout of a card, so we don't spam the log for all 15.
-    private static bool _dumpedCardLayout;
-
-    /// <summary>
-    /// Retexture the physical upgrade-card mesh with our art. Every clone comes from the vanilla
-    /// health-upgrade card, so without this all upgrades look identical in the world. We can't know
-    /// the exact material slot for the card face ahead of time, so we pick the child renderer whose
-    /// current main texture is the largest (the card art is the big face texture; small maps like
-    /// the frame/normal are ignored) and swap its main texture on a private material instance so the
-    /// shared vanilla asset is never mutated. The first card's full renderer layout is logged so the
-    /// choice can be verified/tuned from the BepInEx log.
-    /// </summary>
-    private static void ApplyCardArt(GameObject clone, string id, Texture tex)
+    // Resolve before StatsUI's fallback/cache; REPOLib and StatsManager may rebuild their dictionaries.
+    [HarmonyPatch(typeof(StatsUI), "GetUpgradeDisplayName")]
+    private static class DisplayNamePatch
     {
-        var renderers = clone.GetComponentsInChildren<Renderer>(true);
-        Renderer best = null;
-        long bestArea = -1;
-
-        foreach (var r in renderers)
+        [HarmonyPrefix]
+        private static bool Prefix(string key, ref string __result)
         {
-            var mat = r.sharedMaterial;
-            var main = mat != null ? mat.mainTexture : null;
-            long area = main != null ? (long)main.width * main.height : 0;
-
-            if (!_dumpedCardLayout)
-            {
-                Plugin.Log.LogInfo(
-                    $"[Icons] Card layout '{id}': renderer='{Path(r.transform, clone.transform)}' " +
-                    $"mat='{(mat != null ? mat.name : "<none>")}' shader='{(mat != null && mat.shader != null ? mat.shader.name : "?")}' " +
-                    $"mainTex='{(main != null ? main.name : "<none>")}' size={(main != null ? $"{main.width}x{main.height}" : "-")}");
-            }
-
-            if (main != null && area > bestArea)
-            {
-                bestArea = area;
-                best = r;
-            }
+            if (string.IsNullOrEmpty(key)) return true;
+            string id = key.StartsWith("playerUpgrade", StringComparison.Ordinal) ? key.Substring("playerUpgrade".Length) : key;
+            foreach (var definition in _definitions)
+                if (definition.Id == id)
+                {
+                    __result = definition.DisplayName;
+                    return false;
+                }
+            return true;
         }
-
-        _dumpedCardLayout = true;
-
-        if (best == null)
-        {
-            Plugin.Log.LogWarning($"[Icons] No textured renderer found on card '{id}'; card art unchanged.");
-            return;
-        }
-
-        // Clone the material so we only affect our upgrade, never the shared vanilla card material.
-        var newMat = new Material(best.sharedMaterial) { name = "IHM Card " + id };
-        newMat.mainTexture = tex;
-        if (newMat.HasProperty("_MainTex"))
-            newMat.SetTexture("_MainTex", tex);
-        if (newMat.HasProperty("_BaseMap"))
-            newMat.SetTexture("_BaseMap", tex);
-        best.sharedMaterial = newMat;
-        Plugin.Log.LogInfo($"[Icons] Retextured card '{id}' on renderer '{Path(best.transform, clone.transform)}'.");
     }
 
     /// <summary>
@@ -328,11 +301,12 @@ internal static class PlayerUpgradeRegistry
         if (vanillaAttr != null && vanillaAttr.icon != null)
             attributes.icon = vanillaAttr.icon;
 
-        var tex = LargestMainTexture(vanilla);
-        if (tex != null)
-            ApplyCardArt(clone, id, tex);
-        else
-            Plugin.Log.LogWarning($"[Icons] No card texture on vanilla map upgrade; '{id}' card art unchanged.");
+        foreach (var renderer in clone.GetComponentsInChildren<Renderer>(true))
+        {
+            var original = vanilla.transform.Find(Path(renderer.transform, clone.transform));
+            var native = original != null ? original.GetComponent<Renderer>() : null;
+            if (native != null) renderer.sharedMaterials = native.sharedMaterials;
+        }
     }
 
     /// <summary>Locate the vanilla map-player-count upgrade prefab via its marker component.</summary>
@@ -349,26 +323,6 @@ internal static class PlayerUpgradeRegistry
                 return prefab;
         }
         return null;
-    }
-
-    /// <summary>The largest main texture across a prefab's renderers (its card-face art).</summary>
-    private static Texture LargestMainTexture(GameObject root)
-    {
-        Texture best = null;
-        long bestArea = -1;
-        foreach (var r in root.GetComponentsInChildren<Renderer>(true))
-        {
-            var main = r.sharedMaterial != null ? r.sharedMaterial.mainTexture : null;
-            if (main == null)
-                continue;
-            long area = (long)main.width * main.height;
-            if (area > bestArea)
-            {
-                bestArea = area;
-                best = main;
-            }
-        }
-        return best;
     }
 
     private static string Path(Transform t, Transform root)

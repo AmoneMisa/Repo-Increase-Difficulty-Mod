@@ -2,9 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <AssemblyName>IncreaseHardMod</AssemblyName>
-    <Product>IncreaseHardMod</Product>
-    <Version>0.5.0</Version>
+    <AssemblyName>IncreaseDifficultyMod</AssemblyName>
+    <Product>IncreaseDifficultyMod</Product>
+    <!-- Preserve code/resource identities and saved integrations after the public rename. -->
+    <RootNamespace>IncreaseHardMod</RootNamespace>
+    <Version>0.6.2</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -19,7 +21,7 @@
     <!-- The game is launched via Thunderstore Mod Manager, which loads plugins from the
          active profile folder (NOT the Steam install). Deploy there so builds actually
          take effect in-game. Override with -p:PluginsDir=... to target a different profile. -->
-    <PluginsDir Condition="'$(PluginsDir)' == ''">$(AppData)\Thunderstore Mod Manager\DataFolder\REPO\profiles\Default\BepInEx\plugins\IncreaseHardMod</PluginsDir>
+    <PluginsDir Condition="'$(PluginsDir)' == ''">$(AppData)\Thunderstore Mod Manager\DataFolder\REPO\profiles\Default\BepInEx\plugins\Whiteslove-IncreaseHardMod</PluginsDir>
   </PropertyGroup>
 
   <!-- _decompiled/ is a read-only reference dump of the game code; never compile it. -->
@@ -44,6 +46,18 @@
 
   <!-- Reference the game assemblies directly and publicize them so we can touch private members. -->
   <ItemGroup>
+    <Reference Include="PhotonVoice">
+      <HintPath>$(ManagedDir)\PhotonVoice.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="PhotonVoice.API">
+      <HintPath>$(ManagedDir)\PhotonVoice.API.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="PhotonVoice.PUN">
+      <HintPath>$(ManagedDir)\PhotonVoice.PUN.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>$(ManagedDir)\Assembly-CSharp.dll</HintPath>
       <Private>false</Private>
@@ -61,6 +75,10 @@
       <Private>false</Private>
     </Reference>
     <!-- Needed to recolour the game's native ping highlight (ValuableDiscoverGraphic uses UI.Image). -->
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(ManagedDir)\Newtonsoft.Json.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>$(ManagedDir)\UnityEngine.UI.dll</HintPath>
       <Private>false</Private>
@@ -83,10 +101,13 @@
     <Publicize Include="Assembly-CSharp" />
   </ItemGroup>
 
-  <!-- Copy the built plugin into the game's BepInEx plugins folder after each build. -->
-  <Target Name="DeployToGame" AfterTargets="Build">
+  <!-- Deployment is explicit so packaging/building never adds a second active DLL to a profile. -->
+  <Target Name="DeployToGame" AfterTargets="Build" Condition="'$(DeployToGame)' == 'true'">
     <MakeDir Directories="$(PluginsDir)" />
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PluginsDir)" />
+    <Move SourceFiles="$(PluginsDir)\IncreaseHardMod.dll"
+          DestinationFiles="$(PluginsDir)\IncreaseHardMod.dll.disabled-before-rename"
+          Condition="Exists('$(PluginsDir)\IncreaseHardMod.dll')" />
     <Message Importance="high" Text="Deployed $(AssemblyName).dll -> $(PluginsDir)" />
   </Target>
 

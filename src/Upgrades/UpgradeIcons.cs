@@ -94,9 +94,10 @@ internal static class UpgradeIcons
 
     private static string FindResource(Assembly asm, string fileName)
     {
+        // Match the complete resource filename: Icon_Upgrade_X.png is not Upgrade_X.png.
         foreach (var name in asm.GetManifestResourceNames())
         {
-            if (name.EndsWith(fileName, StringComparison.OrdinalIgnoreCase))
+            if (name.EndsWith("." + fileName, StringComparison.OrdinalIgnoreCase))
                 return name;
         }
         return null;

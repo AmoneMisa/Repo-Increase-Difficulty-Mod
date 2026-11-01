@@ -110,9 +110,16 @@ internal static class ShieldPatches
         // After the difficulty scaling (which runs First) so shields work on the final number.
         [HarmonyPrefix]
         [HarmonyPriority(Priority.Last)]
-        private static void Prefix(PlayerHealth __instance, ref int damage, bool hurtByHeal)
+        private static void Prefix(PlayerHealth __instance, ref int damage, bool hurtByHeal, int enemyIndex)
         {
-            if (hurtByHeal || damage <= 0)
+            var avatar = __instance.playerAvatar;
+            // Match the native Hurt rejection gates before spending a shield's battery.
+            // Prefixes run even when the original would ignore a remote or invincible player.
+            if (hurtByHeal || damage <= 0 || avatar == null || __instance.invincibleTimer > 0f ||
+                (GameManager.Multiplayer() && !__instance.photonView.IsMine) || avatar.deadSet || __instance.godMode ||
+                GameDirector.instance.currentState != GameDirector.gameState.Main ||
+                (enemyIndex >= 0 && avatar.tumble != null && avatar.tumble.CocoonHeld() &&
+                 enemyIndex == SemiFunc.EnemyGetIndex(avatar.tumble.cocoonOwner.enemy)))
                 return;
 
             // Level modifiers (Padded Suits / Thin Skin ...) first, so shields work on the final number.
@@ -122,10 +129,6 @@ internal static class ShieldPatches
 
             if (ShieldItem.All.Count == 0)
                 return;
-            var avatar = __instance.playerAvatar;
-            if (avatar == null)
-                return;
-
             float reduction = ModConfig.ProtectionReductionPercent.Value / 100f;
             bool protectedByOrb = false;
             foreach (var s in ShieldItem.All)
@@ -149,9 +152,10 @@ internal static class ShieldPatches
                     continue;
                 damage -= absorbed;
                 float percent = absorbed / perPercent;
-                if (SemiFunc.IsMasterClientOrSingleplayer())
-                    s.Battery.batteryLife = Mathf.Max(0f, s.Battery.batteryLife - percent);
-                else
+                // Predict the spend locally too, so another hit before the host's next battery
+                // update cannot absorb the same remaining charge for a second time.
+                s.Battery.batteryLife = Mathf.Max(0f, s.Battery.batteryLife - percent);
+                if (!SemiFunc.IsMasterClientOrSingleplayer())
                     ModNetwork.Instance?.BroadcastBatteryDrain(s.Battery.GetComponent<Photon.Pun.PhotonView>().ViewID, percent);
             }
         }

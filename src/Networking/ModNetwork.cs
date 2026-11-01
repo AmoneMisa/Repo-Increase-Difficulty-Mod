@@ -40,10 +40,14 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     public const byte BanListEventCode = 191;
     public const byte BatteryDrainEventCode = 186;
     public const byte EnemyStatusEventCode = 187;
+    public const byte PlayerFreezeEventCode = 192;
+    public const byte StickyTetherEventCode = 193;
 
     public static ModNetwork Instance { get; private set; }
 
     private bool _registered;
+    private float _enemyTuningNext;
+    private string _enemyTuningSignature;
 
     private void Awake()
     {
@@ -81,10 +85,21 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             _registered = false;
         }
 
+        if (inRoom && PhotonNetwork.IsMasterClient && Time.unscaledTime >= _enemyTuningNext)
+        {
+            _enemyTuningNext = Time.unscaledTime + 1f;
+            string signature = PhotonNetwork.CurrentRoom.Name + "|" + PhotonNetwork.MasterClient?.ActorNumber + "|" +
+                PhotonNetwork.CurrentRoom.PlayerCount + "|" + EnemyBalance.Signature();
+            if (signature != _enemyTuningSignature)
+            {
+                _enemyTuningSignature = signature;
+                BroadcastModifiers(ModifierManager.Current);
+            }
+        }
+        if (!inRoom) _enemyTuningSignature = null;
+
         LevelTimerController.Tick(Time.deltaTime);
         RoundStats.Tick(Time.deltaTime);
-        Drones.LinkManager.Tick(Time.deltaTime);
-        Gear.GearEffects.Tick(Time.deltaTime);
         LateJoinController.Tick();
         // Client-side: keep every enemy's per-player dictionaries in sync with mid-run joins
         // (and mid-run enemy spawns) so late joiners don't crash the enemy AI coroutines.
@@ -92,6 +107,12 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         // Client-side: unfreeze a mid-run joiner whose PlayerHealth.Fetch() never completed
         // (health/maxHealth stuck at 100 defaults -> immune to all damage AND healing).
         LateJoinController.EnsureLocalHealthInitialized();
+    }
+
+    private void FixedUpdate()
+    {
+        Drones.LinkManager.Tick(Time.fixedDeltaTime);
+        Gear.GearEffects.Tick(Time.fixedDeltaTime);
     }
 
     /// <summary>Host broadcasts the authoritative timer state to other clients.</summary>
@@ -110,18 +131,24 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 
     /// <summary>
     /// Host broadcasts the rolled modifiers to all other clients. Reliable so it
-    /// can't be dropped. (Late joiners are not covered yet — REPO players join at
-    /// the lobby, not mid-level, so this is an acceptable v1 limitation.)
+    /// can't be dropped. Includes host enemy tuning; also used for late joins and
+    /// same-level tuning updates without resetting per-level effect budgets.
     /// </summary>
     public void BroadcastModifiers(LevelModifiers modifiers)
     {
-        if (!PhotonNetwork.InRoom)
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient)
             return;
 
-        var options = new RaiseEventOptions { Receivers = ReceiverGroup.All };
+        var options = new RaiseEventOptions { Receivers = ReceiverGroup.Others };
+        var payload = modifiers.Serialize();
+        System.Array.Resize(ref payload, 9);
+        payload[5] = ModifierManager.Revision;
+        payload[6] = EnemyBalance.Capture();
+        payload[7] = ModConfig.EnemyHealthMaxPerEnemy.Value;
+        payload[8] = ModConfig.SurprisesEnabled.Value;
         PhotonNetwork.RaiseEvent(
             ModifierEventCode,
-            modifiers.Serialize(),
+            payload,
             options,
             SendOptions.SendReliable);
     }
@@ -136,7 +163,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         if (!PhotonNetwork.InRoom)
             return;
 
-        var options = new RaiseEventOptions { Receivers = ReceiverGroup.All };
+        var options = new RaiseEventOptions { Receivers = ReceiverGroup.Others };
         PhotonNetwork.RaiseEvent(
             PingEventCode,
             new object[] { type, pos.x, pos.y, pos.z, label, sender, viewID },
@@ -181,9 +208,9 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     /// Host broadcasts the finished level scoreboard (parallel arrays, one slot per player) so every
     /// client's results screen shows identical numbers. Reliable; not echoed to the host.
     /// </summary>
-    public void BroadcastRoundStats(System.Collections.Generic.List<PlayerRoundStat> rows)
+    internal void BroadcastRoundStats(System.Collections.Generic.List<PlayerRoundStat> rows, RoundLootSummary summary)
     {
-        if (!PhotonNetwork.InRoom)
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient)
             return;
 
         int n = rows.Count;
@@ -206,7 +233,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         var options = new RaiseEventOptions { Receivers = ReceiverGroup.Others };
         PhotonNetwork.RaiseEvent(
             RoundStatsEventCode,
-            new object[] { names, broken, brokenCount, delivered, deaths, revives },
+            new object[] { names, broken, brokenCount, delivered, deaths, revives, summary?.Serialize() ?? System.Array.Empty<int>() },
             options,
             SendOptions.SendReliable);
     }
@@ -281,9 +308,63 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
     }
 
+    private static string FreezeLevelKey() => RunManager.instance != null && RunManager.instance.levelCurrent != null
+        ? RunManager.instance.levelsCompleted + ":" + RunManager.instance.levelCurrent.name : "";
+
+    internal static void BroadcastPlayerFreeze(PlayerAvatar avatar, float seconds)
+    {
+        if (avatar == null || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+        Gear.PlayerFreezeEffect.Apply(avatar, seconds);
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient) return;
+        var view = avatar.GetComponent<PhotonView>();
+        if (view == null || view.ViewID == 0) return;
+        PhotonNetwork.RaiseEvent(PlayerFreezeEventCode,
+            new object[] { view.ViewID, seconds, PhotonNetwork.Time, FreezeLevelKey() },
+            new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
+    }
+
+    internal static void BroadcastStickyTether(ItemGun gun, PhysGrabObject target, Vector3 point, float seconds)
+    {
+        if (!SemiFunc.IsMasterClientOrSingleplayer() || gun == null || target == null) return;
+        Visuals.StickyTether.Apply(gun, target, point, seconds);
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient) return;
+        var gunView = gun.GetComponent<PhotonView>();
+        var targetView = target.GetComponent<PhotonView>();
+        if (gunView == null || targetView == null || gunView.ViewID <= 0 || targetView.ViewID <= 0) return;
+        PhotonNetwork.RaiseEvent(StickyTetherEventCode,
+            new object[] { gunView.ViewID, targetView.ViewID, point.x, point.y, point.z, seconds, PhotonNetwork.Time, FreezeLevelKey() },
+            new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
+    }
+
     /// <summary>Photon calls this on every client for every raised event.</summary>
     public void OnEvent(EventData photonEvent)
     {
+        if (photonEvent.Code == StickyTetherEventCode)
+        {
+            if (!PhotonNetwork.InRoom || PhotonNetwork.MasterClient == null || photonEvent.Sender != PhotonNetwork.MasterClient.ActorNumber ||
+                photonEvent.CustomData is not object[] data || data.Length != 8 ||
+                data[0] is not int gunId || gunId <= 0 || data[1] is not int targetId || targetId <= 0 ||
+                data[2] is not float x || data[3] is not float y || data[4] is not float z ||
+                data[5] is not float seconds || data[6] is not double sent || data[7] is not string level || level != FreezeLevelKey() ||
+                float.IsNaN(x) || float.IsInfinity(x) || float.IsNaN(y) || float.IsInfinity(y) || float.IsNaN(z) || float.IsInfinity(z) ||
+                float.IsNaN(seconds) || float.IsInfinity(seconds) || seconds <= 0 || seconds > 2f || double.IsNaN(sent) || double.IsInfinity(sent)) return;
+            float remaining = seconds - (float)System.Math.Max(0d, PhotonNetwork.Time-sent);
+            if (remaining <= 0f) return;
+            var gunView = PhotonView.Find(gunId); var targetView = PhotonView.Find(targetId);
+            Visuals.StickyTether.Apply(gunView != null ? gunView.GetComponent<ItemGun>() : null,
+                targetView != null ? targetView.GetComponent<PhysGrabObject>() : null, new Vector3(x,y,z), remaining);
+            return;
+        }
+        if (photonEvent.Code == PlayerFreezeEventCode)
+        {
+            if (!PhotonNetwork.InRoom || PhotonNetwork.MasterClient == null ||
+                photonEvent.Sender != PhotonNetwork.MasterClient.ActorNumber ||
+                !Gear.PlayerFreezeEffect.ReadSnapshot(photonEvent.CustomData, PhotonNetwork.Time, FreezeLevelKey(),
+                    out int id, out float remaining)) return;
+            var view = PhotonView.Find(id);
+            Gear.PlayerFreezeEffect.Apply(view != null ? view.GetComponent<PlayerAvatar>() : null, remaining);
+            return;
+        }
         if (photonEvent.Code == EnemyStatusEventCode)
         {
             if (!PhotonNetwork.InRoom || PhotonNetwork.MasterClient == null ||
@@ -303,9 +384,19 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 
         if (photonEvent.Code == ModifierEventCode)
         {
-            var data = (object[])photonEvent.CustomData;
+            if (!PhotonNetwork.InRoom || PhotonNetwork.IsMasterClient || PhotonNetwork.MasterClient == null ||
+                photonEvent.Sender != PhotonNetwork.MasterClient.ActorNumber ||
+                photonEvent.CustomData is not object[] data || data.Length < 4 ||
+                data[0] is not int || data[1] is not int || data[2] is not int || data[3] is not int)
+                return;
+            // Refresh tuning even when the same-level modifier revision is unchanged;
+            // do not reset timers/revive budgets just because the host edited a setting.
+            if (data.Length >= 9 && data[6] is float[] factors && data[7] is string caps && data[8] is bool surprises)
+                EnemyBalance.Apply(factors, caps, surprises);
             var modifiers = LevelModifiers.Deserialize(data);
-            ModifierManager.ApplyReceived(modifiers);
+            int revision = data.Length > 5 && data[5] is int value ? value : -1;
+            long token = revision >= 0 ? ((long)photonEvent.Sender << 32) | (uint)revision : -1;
+            ModifierManager.ApplyReceived(modifiers, token);
             return;
         }
 
@@ -319,6 +410,8 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 
         if (photonEvent.Code == PingEventCode)
         {
+            // The sender already draws locally; also tolerate older peers broadcasting to All.
+            if (PhotonNetwork.LocalPlayer != null && photonEvent.Sender == PhotonNetwork.LocalPlayer.ActorNumber) return;
             var data = (object[])photonEvent.CustomData;
             var pos = new Vector3((float)data[1], (float)data[2], (float)data[3]);
             int viewID = data.Length > 6 ? (int)data[6] : 0;
@@ -396,21 +489,22 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 
         if (photonEvent.Code == RoundStatsEventCode)
         {
-            var d = (object[])photonEvent.CustomData;
-            var names = (string[])d[0];
+            if (!PhotonNetwork.InRoom || PhotonNetwork.IsMasterClient || PhotonNetwork.MasterClient == null ||
+                photonEvent.Sender != PhotonNetwork.MasterClient.ActorNumber ||
+                photonEvent.CustomData is not object[] d || d.Length < 6 ||
+                d[0] is not string[] names || d[1] is not int[] broken || d[2] is not int[] brokenCount ||
+                d[3] is not int[] delivered || d[4] is not int[] deaths || d[5] is not int[] revives ||
+                broken.Length != names.Length || brokenCount.Length != names.Length || delivered.Length != names.Length ||
+                deaths.Length != names.Length || revives.Length != names.Length) return;
             var rows = new System.Collections.Generic.List<PlayerRoundStat>();
             for (int i = 0; i < names.Length; i++)
                 rows.Add(new PlayerRoundStat
                 {
-                    Name = names[i],
-                    BrokenValue = ((int[])d[1])[i],
-                    BrokenCount = ((int[])d[2])[i],
-                    Delivered = ((int[])d[3])[i],
-                    Deaths = ((int[])d[4])[i],
-                    Revives = ((int[])d[5])[i],
+                    Name = names[i], BrokenValue = Mathf.Max(0, broken[i]), BrokenCount = Mathf.Max(0, brokenCount[i]),
+                    Delivered = Mathf.Max(0, delivered[i]), Deaths = Mathf.Max(0, deaths[i]), Revives = Mathf.Max(0, revives[i]),
                 });
-            if (ModConfig.RoundResultsEnabled.Value)
-                RoundStats.ApplyResults(rows);
+            var summary = d.Length > 6 && d[6] is int[] totals ? RoundLootSummary.Deserialize(totals) : null;
+            if (ModConfig.RoundResultsEnabled.Value) RoundStats.ApplyResults(rows, summary);
         }
     }
 }

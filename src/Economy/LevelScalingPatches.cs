@@ -53,7 +53,7 @@ internal static class LevelScalingPatches
         {
             if (!SemiFunc.IsMasterClientOrSingleplayer())
                 return;
-            float mult = Modifiers.StatModifiers.Mult(Modifiers.StatAxis.EnemyCount);
+            float mult = EnemyBalance.Stat(Modifiers.StatAxis.EnemyCount);
             if (ModConfig.ScaleEnemyCap.Value)
                 mult *= Mathf.Min(ModConfig.EnemyCapMax.Value,
                     1f + ModConfig.EnemyCapPerLevel.Value * Depth(ModConfig.EnemyCapStartLevel.Value));
@@ -66,7 +66,10 @@ internal static class LevelScalingPatches
                 // Fewer monsters: drop picks from the end of the list.
                 int drop = Mathf.Min(-extra, __instance.enemyListCurrent.Count);
                 __instance.enemyListCurrent.RemoveRange(__instance.enemyListCurrent.Count - drop, drop);
-                __instance.totalAmount = Mathf.Max(0, __instance.totalAmount - drop);
+                // GetEnemy consumes enemyList, not enemyListCurrent. Keep the queued tail in sync.
+                int queued = Mathf.Min(drop, Mathf.Max(0, __instance.enemyList.Count - __instance.enemyListIndex));
+                __instance.enemyList.RemoveRange(__instance.enemyList.Count - queued, queued);
+                __instance.totalAmount = __instance.enemyListCurrent.Count;
                 return;
             }
 
@@ -74,9 +77,15 @@ internal static class LevelScalingPatches
             var list = SemiFunc.RunGetDifficultyMultiplier3() > 0f ? __instance.enemiesDifficulty3
                 : SemiFunc.RunGetDifficultyMultiplier2() > 0f ? __instance.enemiesDifficulty2
                 : __instance.enemiesDifficulty1;
-            for (int i = 0; i < extra; i++)
-                __instance.PickEnemies(list);
-            __instance.totalAmount += extra;
+            int runs = DataDirector.instance.SettingValueFetch(DataDirector.Setting.RunsPlayed);
+            bool Eligible(EnemySetup enemy) => enemy != null && runs >= enemy.runsPlayed &&
+                (!enemy.levelsCompletedCondition || (Difficulty.LevelsCompleted >= enemy.levelsCompletedMin &&
+                    (enemy.levelsCompletedMax == 0 || Difficulty.LevelsCompleted <= enemy.levelsCompletedMax)));
+            var eligible = list.FindAll(Eligible);
+            if (eligible.Count == 0) eligible = __instance.enemiesDifficulty2.FindAll(Eligible);
+            if (eligible.Count == 0) eligible = __instance.enemiesDifficulty1.FindAll(Eligible);
+            for (int i = 0; i < extra && eligible.Count > 0; i++) __instance.PickEnemies(eligible);
+            __instance.totalAmount = __instance.enemyListCurrent.Count;
         }
     }
 

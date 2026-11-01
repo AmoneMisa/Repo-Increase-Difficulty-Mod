@@ -19,9 +19,18 @@ namespace IncreaseHardMod.Patches;
 [HarmonyPatch(typeof(RunManager), "ChangeLevel")]
 internal static class ChangeLevelPatch
 {
-    [HarmonyPostfix]
-    private static void Postfix()
+    [HarmonyPrefix]
+    private static void Prefix(RunManager __instance, out bool __state)
     {
+        // Harmony postfixes also run when the original immediately rejects a request.
+        __state = !__instance.restarting && (SemiFunc.MenuLevel() || SemiFunc.IsMasterClientOrSingleplayer());
+    }
+
+    [HarmonyPostfix]
+    private static void Postfix(bool __state)
+    {
+        if (!__state)
+            return;
         if (SemiFunc.IsMasterClientOrSingleplayer())
             Economy.BlackMarket.LoadFromStats();
 

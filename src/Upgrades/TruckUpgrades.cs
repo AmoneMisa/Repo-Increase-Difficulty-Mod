@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using RepoUpgrades = REPOLib.Modules.Upgrades;
 
 namespace IncreaseHardMod.Upgrades;
@@ -11,8 +11,8 @@ namespace IncreaseHardMod.Upgrades;
 ///
 /// Because REPOLib tracks upgrade levels PER player, "team level" is defined as the highest level
 /// owned across every player in the run (<see cref="TeamLevel"/>). That way one buyer lifts the
-/// effect for everyone, matching the old shared-cart behaviour without any custom networking —
-/// REPOLib already syncs and saves each player's level.
+/// effect for everyone. A run-wide record and REPOLib levels are synchronized by the host,
+/// including late joiners and sessions where the original buyer has left.
 ///
 ///   • Heal Power        — leveled: scales ALL healing (truck final-heal, medkits, drones…).
 ///   • Charge Efficiency — leveled: slows the truck charging station's energy drain.
@@ -24,6 +24,31 @@ internal static class TruckUpgrades
     public const string HealId = "IHM_TruckHeal";
     public const string ChargeId = "IHM_TruckCharge";
     public const string SellId = "IHM_TruckSell";
+    internal static bool IsShared(string id) => id == HealId || id == ChargeId || id == SellId;
+    internal static void StoreShared(string id, int level)
+    {
+        if (!IsShared(id) || !SemiFunc.IsMasterClientOrSingleplayer() || StatsManager.instance == null) return;
+        string key = "IHM_Shared_" + id;
+        StatsManager.instance.runStats[key] = level;
+        if (PunManager.instance != null) PunManager.instance.UpdateStat("runStats", key, level);
+        ShareLevels();
+    }
+
+    internal static void ShareLevels()
+    {
+        if (!SemiFunc.IsMasterClientOrSingleplayer() || GameDirector.instance == null || GameDirector.instance.PlayerList == null) return;
+        foreach (string id in new[] { HealId, ChargeId, SellId })
+        {
+            var upgrade = RepoUpgrades.GetUpgrade(id);
+            if (upgrade == null) continue;
+            int level = TeamLevel(id);
+            var definition = PlayerUpgradeRegistry.FindDefinition(id);
+            if (definition != null) level = Mathf.Min(level, definition.MaxLevel);
+            foreach (var avatar in GameDirector.instance.PlayerList)
+                if (avatar != null && !string.IsNullOrEmpty(avatar.steamID) && upgrade.GetLevel(avatar) < level)
+                    upgrade.SetLevel(avatar, level);
+        }
+    }
 
     public static void Register()
     {
@@ -64,26 +89,18 @@ internal static class TruckUpgrades
     /// <summary>Highest level of <paramref name="id"/> owned across all players in the run (0 if none).</summary>
     public static int TeamLevel(string id)
     {
-        if (!ModConfig.PlayerUpgradesEnabled.Value)
+        if (!ModConfig.PlayerUpgradesEnabled.Value || !ModConfig.TruckUpgradesEnabled.Value)
             return 0;
         var up = RepoUpgrades.GetUpgrade(id);
         if (up == null)
             return 0;
 
-        var director = GameDirector.instance;
-        if (director == null || director.PlayerList == null)
-            return 0;
-
         int max = 0;
-        foreach (var p in director.PlayerList)
-        {
-            if (p == null || string.IsNullOrEmpty(p.steamID))
-                continue;
-            int lvl = up.GetLevel(p.steamID);
-            if (lvl > max)
-                max = lvl;
-        }
-        return max;
+        if (StatsManager.instance != null && StatsManager.instance.runStats.TryGetValue("IHM_Shared_" + id, out var shared)) max = shared;
+        // Includes departed players; joining/leaving must never remove a purchased team effect.
+        foreach (int level in up.PlayerDictionary.Values) max = Mathf.Max(max, level);
+        var definition = PlayerUpgradeRegistry.FindDefinition(id);
+        return definition != null ? Mathf.Clamp(max, 0, definition.MaxLevel) : Mathf.Max(0, max);
     }
 
     /// <summary>All-healing multiplier derived from the team's Heal Power level (>= 1).</summary>
@@ -130,7 +147,7 @@ internal static class TruckUpgrades
             }
         }
 
-        int credit = Mathf.RoundToInt(total * fraction);
+        int credit = Mathf.CeilToInt(total * fraction / 1000f); // Native extraction rounds up whole K.
         if (credit > 0)
             SemiFunc.StatSetRunCurrency(SemiFunc.StatGetRunCurrency() + credit);
         Plugin.Log.LogInfo($"[TruckUpgrades] Loot Cash-In sold leftovers worth {total:0} for {credit} currency.");
@@ -147,11 +164,15 @@ internal static class TruckUpgrades
         private const float CheckInterval = 1f;
         private float _timer;
         private bool _soldThisLevel;
+        private float _shareTimer;
 
         private void Update()
         {
             if (!ModConfig.TruckUpgradesEnabled.Value)
                 return;
+            _shareTimer -= Time.unscaledDeltaTime;
+            if (_shareTimer <= 0f) { _shareTimer = 1f; ShareLevels(); }
+            if (RunManager.instance == null || RunManager.instance.levelCurrent == null) return;
 
             // Reset the latch off-level (truck/shop) so the next level can auto-sell again.
             if (!SemiFunc.RunIsLevel())

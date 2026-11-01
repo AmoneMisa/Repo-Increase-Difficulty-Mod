@@ -19,7 +19,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// So we can't just reduce all EnemyHurt damage. Instead we bracket that one chip
 /// branch: a Prefix on EnemyHurt raises a static flag ONLY when the exact chip
 /// condition holds, a Prefix on EnemyHealth.Hurt scales the damage while the flag
-/// is up, and a Postfix on EnemyHurt lowers it again. Unity runs all this on the
+/// is up, and a Finalizer restores the context even after an exception. Unity runs all this on the
 /// single main thread, so the static flag is safe. HurtCollider.EnemyHurt itself
 /// only ever runs host-side (its callers gate on IsMasterClientOrSingleplayer),
 /// and health is host-authoritative, so the reduction applies once and syncs.
@@ -33,11 +33,13 @@ internal static class MonsterPitTankyEffect
     private static class Bracket
     {
         [HarmonyPrefix]
-        private static void Prefix(HurtCollider __instance, Enemy _enemy)
+        private static void Prefix(HurtCollider __instance, Enemy _enemy, out bool __state)
         {
+            __state = _inPitChip;
             _inPitChip = false;
 
-            if (!ModifierManager.Current.Has(ModifierType.MonstersPitTanky))
+            if (!EnemyBalance.Surprises || !ModifierManager.Current.Has(ModifierType.MonstersPitTanky) ||
+                !SemiFunc.IsMasterClientOrSingleplayer() || !__instance.enemyLogic || _enemy == __instance.enemyHost)
                 return;
 
             // Reproduce the game's chip-damage condition exactly (see EnemyHurt):
@@ -54,10 +56,10 @@ internal static class MonsterPitTankyEffect
             _inPitChip = true;
         }
 
-        [HarmonyPostfix]
-        private static void Postfix()
+        [HarmonyFinalizer]
+        private static void Finalizer(bool __state)
         {
-            _inPitChip = false;
+            _inPitChip = __state;
         }
     }
 
@@ -67,11 +69,11 @@ internal static class MonsterPitTankyEffect
         [HarmonyPrefix]
         private static void Prefix(ref int _damage)
         {
-            if (!_inPitChip)
+            if (!_inPitChip || _damage <= 0)
                 return;
 
-            float factor = Mathf.Clamp01(ModConfig.MonsterPitDamageFactor.Value);
-            _damage = Mathf.Max(1, Mathf.RoundToInt(_damage * factor));
+            float factor = Mathf.Clamp(EnemyBalance.PitDamage, 0f, 5f);
+            _damage = Mathf.Max(0, Mathf.RoundToInt(_damage * factor));
         }
     }
 }

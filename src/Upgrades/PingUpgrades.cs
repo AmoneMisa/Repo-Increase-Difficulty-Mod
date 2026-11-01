@@ -1,4 +1,4 @@
-using RepoUpgrades = REPOLib.Modules.Upgrades;
+﻿using RepoUpgrades = REPOLib.Modules.Upgrades;
 
 namespace IncreaseHardMod.Upgrades;
 
@@ -43,7 +43,7 @@ internal static class PingUpgrades
             Description = "Your pings reveal extra detail: valuable value, cosmetic rarity, and exact names.",
             MaxLevel = 1,
             BaseShopPrice = ModConfig.PingInfoBasePrice.Value,
-            IconFile = "Upgrade_Ping.png",
+            IconFile = "Upgrade_Ping_Info.png",
         });
 
         PlayerUpgradeRegistry.Define(new PlayerUpgradeRegistry.Definition
@@ -53,7 +53,7 @@ internal static class PingUpgrades
             Description = "Place location pins without the 'Ping Anywhere' upgrade. One-time unlock — buy once, keep it forever.",
             MaxLevel = 1,
             BaseShopPrice = ModConfig.PinBasePrice.Value,
-            IconFile = "Upgrade_Ping.png",
+            IconFile = "Upgrade_Pin.png",
         });
     }
 

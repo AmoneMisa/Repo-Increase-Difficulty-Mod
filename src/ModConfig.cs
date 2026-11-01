@@ -11,6 +11,9 @@ namespace IncreaseHardMod;
 /// </summary>
 public static class ModConfig
 {
+    public static ConfigEntry<bool> VoiceRecoveryEnabled;
+    public static ConfigEntry<bool> NetworkDiagnosticsEnabled;
+    public static ConfigEntry<UnityEngine.KeyCode> AudioRecoveryKey;
     // When does the difficulty ramp begin?
     // levelsCompleted is how many levels the run has finished so far.
     // With RampStartLevel = 4, the first 4 levels are vanilla and scaling
@@ -114,6 +117,7 @@ public static class ModConfig
     public static ConfigEntry<UnityEngine.KeyCode> PingKey;
     public static ConfigEntry<float> PingMaxDistance;
     public static ConfigEntry<float> PingDurationSeconds;
+    public static ConfigEntry<float> PingMarkerScale, PingSoundVolume;
     // Max live Location pings per player (gated behind the "Ping Anywhere" upgrade).
     public static ConfigEntry<int> MaxLocationPings;
     // Global cap on how many ping markers can be on screen at once (anti-flood).
@@ -132,17 +136,10 @@ public static class ModConfig
     public static ConfigEntry<float> ValuableStuckSeconds;
     public static ConfigEntry<bool> ValuableInvulnerableUntilGrab;
 
-    // --- Dead Map Access ---
-    // Let a dead/spectating player still open their map tool (the map view is re-anchored to
-    // the spectate camera so it stays visible). Client-side; each player controls their own.
-    public static ConfigEntry<bool> DeadMapAccessEnabled;
-
-    // --- Spectator Minimap ---
-    // While dead/spectating on a level, draw the game's own map render in a screen corner so you
-    // can keep watching the level layout without holding the map tool open. Client-side.
-    public static ConfigEntry<bool> SpectatorMinimapEnabled;
-    public static ConfigEntry<UnityEngine.KeyCode> SpectatorMinimapKey;
-    public static ConfigEntry<float> SpectatorMinimapScale;
+    // --- Spectator Map ---
+    public static ConfigEntry<bool> SpectatorMapEnabled;
+    public static ConfigEntry<UnityEngine.KeyCode> SpectatorMapHoldKey;
+    public static ConfigEntry<float> SpectatorMapScreenFraction;
 
     // --- Round Results ---
     // End-of-level MVP / OOPS CHAMP screen with a per-player scoreboard. The host records, everyone
@@ -150,10 +147,14 @@ public static class ModConfig
     public static ConfigEntry<bool> RoundResultsEnabled;
     public static ConfigEntry<float> RoundResultsSeconds;
     public static ConfigEntry<UnityEngine.KeyCode> RoundResultsKey;
+    public static ConfigEntry<UnityEngine.KeyCode> MapVoteHudKey;
+    public static ConfigEntry<bool> InventorySlotsEnabled;
+    public static ConfigEntry<int> InventorySlotBasePrice;
+    public static ConfigEntry<UnityEngine.KeyCode> InventorySlot4Key, InventorySlot5Key, InventorySlot6Key, InventorySlot7Key;
 
     // --- Utility Drones ---
     public static ConfigEntry<bool> DronesEnabled;
-    public static ConfigEntry<bool> EconomyEventsEnabled, ScaleMapValue, ScaleEnemyCap, ScaleLevelSize, ScaleExtractions, ScaleMoon;
+    public static ConfigEntry<bool> ScaleMapValue, ScaleEnemyCap, ScaleLevelSize, ScaleExtractions, ScaleMoon;
     public static ConfigEntry<int> EconomyEventChance, EconomyStartLevel;
     public static ConfigEntry<int> MapValueStartLevel, EnemyCapStartLevel, LevelSizeStartLevel, ExtractionBonusInterval, ExtractionMax, MoonLevelsPerPhase;
     public static ConfigEntry<float> MapValuePerLevel, MapValueMax, EnemyCapPerLevel, EnemyCapMax, LevelSizePerLevel, LevelSizeMax;
@@ -195,11 +196,9 @@ public static class ModConfig
 
     // --- Auto Backup Saves ---
     // REPO deletes the run save when you wipe / fail a level (DataDirector.SaveDeleteCheck).
-    // When enabled, we copy the save folder to a timestamped backup first, and can
-    // optionally skip the deletion entirely so the save stays directly loadable.
+    // Automatic deletion is always blocked. This toggle only controls extra snapshots,
+    // which are kept indefinitely; legacy KeepSaveLoadable/MaxBackupsPerSave are ignored.
     public static ConfigEntry<bool> AutoBackupEnabled;
-    public static ConfigEntry<bool> AutoBackupKeepSave;
-    public static ConfigEntry<int> AutoBackupMaxPerSave;
 
     // --- Truck upgrades ---
     // Team-wide truck upgrades sold in the normal shop like any other upgrade (once anyone owns a
@@ -310,7 +309,7 @@ public static class ModConfig
         cfg.Bind(section, key, def, new ConfigDescription(desc, new AcceptableValueRange<float>(min, max)));
 
     // Short, player-facing explanation of what each surprise modifier actually does.
-    private static string ModifierDescription(Modifiers.ModifierType m) => m switch
+    internal static string ModifierDescription(Modifiers.ModifierType m) => m switch
     {
         Modifiers.ModifierType.FragileLoot        => "Loot breaks and loses value more easily.",
         Modifiers.ModifierType.HeavyLoot          => "Loot weighs more, making it harder to haul.",
@@ -331,7 +330,7 @@ public static class ModConfig
         Modifiers.ModifierType.SoulsExplodeHarder => "Exploding souls deal more damage to players.",
         Modifiers.ModifierType.BiggerSoulDrops    => "Each soul drop is worth more money (value per drop, not count).",
         Modifiers.ModifierType.MonstersPitTanky   => "Monsters take less damage from death pits.",
-        Modifiers.ModifierType.LightMonsters      => "All monsters weigh less, so they're easy to shove around.",
+        Modifiers.ModifierType.LightMonsters      => "Monsters weigh less and yield to a single player's grab without Strength upgrades. Native hold-time, mounted and freeze restrictions still apply.",
         Modifiers.ModifierType.HeavyMonsters      => "All monsters weigh more, so they're hard to shove around.",
         _                                         => $"The '{m}' surprise modifier.",
     };
@@ -341,8 +340,7 @@ public static class ModConfig
     // sections are carried over the first time.
     private static void BindModules(ConfigFile cfg)
     {
-        SurprisesEnabled = Module(cfg, "Surprises", "Enabled", true, "Surprises", "Master switch for the surprise/special-level system.");
-        EconomyEventsEnabled = Module(cfg, "Economy", "Enabled", true, "EconomyEvents", "Per-level economy events (taxes, bonuses, rich or poor loot, harder or lighter quotas, better or worse extraction pay). Host rolls one per level; every player should have it on.");
+        SurprisesEnabled = Module(cfg, "Surprises", "Enabled", true, "Surprises", "Master switch for all level surprises, including economic events affecting loot value, quota and extraction pay. Shop price events have their own ShopEconomy switch.");
         ScaleMapValue = Module(cfg, "Level Scaling", "MapValue", true, "ScaleMapValue", "Valuables are worth more the deeper the run goes.");
         ScaleEnemyCap = Module(cfg, "Level Scaling", "EnemyCount", true, "ScaleEnemyCount", "More monsters spawn per level the deeper the run goes.");
         ScaleLevelSize = Module(cfg, "Level Scaling", "LevelSize", true, "ScaleLevelSize", "Levels get more modules (a bigger map) the deeper the run goes.");
@@ -352,10 +350,10 @@ public static class ModConfig
         BlackMarketEnabled = Module(cfg, "Black Market", "Enabled", true, "BlackMarket", "Black Market: in the shop, pay to keep a surprise modifier, level economy or shop economy from ever being rolled again this run. Keyboard driven.");
         PlayerUpgradesEnabled = Module(cfg, "Player Upgrades", "Enabled", true, "PlayerUpgrades", "Master switch for the mod's custom per-player upgrades that appear in the normal shop. Requires REPOLib. Takes effect on restart.");
         TruckUpgradesEnabled = Module(cfg, "Truck Upgrades", "Enabled", true, "TruckUpgrades", "Enable the team-wide truck upgrades (Heal Power, Charge Efficiency, Loot Cash-In). Bought in the normal shop; effects apply for the whole team.");
-        ScaleEnemyHealth = Module(cfg, "Scaling", "EnemyHealth", true, "ScaleEnemyHealth", "Enemies gain max HP as the run goes deeper. Off = vanilla enemy HP.");
-        ScaleEnemyDamage = Module(cfg, "Scaling", "EnemyDamage", true, "ScaleEnemyDamage", "Enemies deal more damage to players as the run goes deeper. Off = vanilla damage.");
-        ScaleEnemySpeed = Module(cfg, "Scaling", "EnemySpeed", true, "ScaleEnemySpeed", "Enemies move faster as the run goes deeper. Off = vanilla speed.");
-        ScaleEnemyRespawn = Module(cfg, "Scaling", "EnemyRespawn", true, "ScaleEnemyRespawn", "Enemies respawn faster as the run goes deeper. Off = vanilla respawn time.");
+        ScaleEnemyHealth = Module(cfg, "Scaling", "EnemyHealth", true, "ScaleEnemyHealth", "Enemies gain max HP as the run goes deeper. Off disables the depth ramp; level surprises remain independent. Host settings apply to the lobby.");
+        ScaleEnemyDamage = Module(cfg, "Scaling", "EnemyDamage", true, "ScaleEnemyDamage", "Enemies deal more damage to players as the run goes deeper. Off disables the depth ramp; level surprises remain independent. Host settings apply to the lobby.");
+        ScaleEnemySpeed = Module(cfg, "Scaling", "EnemySpeed", true, "ScaleEnemySpeed", "Enemies move faster as the run goes deeper. Off disables the depth ramp; level surprises remain independent. Host settings apply to the lobby.");
+        ScaleEnemyRespawn = Module(cfg, "Scaling", "EnemyRespawn", true, "ScaleEnemyRespawn", "Enemies respawn faster as the run goes deeper. Off disables the depth ramp; level surprises remain independent. Host settings apply to the lobby.");
         ScaleQuota = Module(cfg, "Scaling", "Quota", true, "ScaleQuota", "The extraction quota grows as the run goes deeper. Off = vanilla quota (host setting).");
         DronesEnabled = Module(cfg, "Drones", "Enabled", true, "Drones", "Add the Ghost, Silencer and Link utility drones to the shop. EVERY player must run this mod with the same setting, otherwise shop items and effects will not match. Takes effect on game restart.");
         GhostEnabled = Module(cfg, "Drones", "GhostEnabled", true, "GhostDrone", "Sell the Ghost Drone. Needs Drones/Enabled. Same on every player; applies on game restart.");
@@ -369,8 +367,9 @@ public static class ModConfig
         BlackMarketShopEconomyPrice = BindInt(cfg, "Black Market", "ShopEconomyPrice", 65, 1, 5000, "Base price to block a shop economy.");
         BlackMarketPerLevel = BindFloat(cfg, "Black Market", "PricePerLevel", 0.07f, 0f, 1f, "Price growth per level completed (0.07 = +7% per level).");
         const string Lvl = "Level Scaling";
-        EconomyEventChance = BindInt(cfg, "Economy", "EventChancePercent", 50, 0, 100, "Chance (percent) that an eligible level gets an economy event.");
-        EconomyStartLevel = BindInt(cfg, "Economy", "StartLevel", 2, 0, 30, "Levels completed before economy events can happen. 2 = from the 3rd level.");
+        var economicSurprises = EconomicSurpriseConfig.Bind(cfg);
+        EconomyEventChance = economicSurprises.Chance;
+        EconomyStartLevel = economicSurprises.StartLevel;
         MapValueStartLevel = BindInt(cfg, Lvl, "MapValueStartLevel", 2, 0, 50, "Levels completed before valuables start gaining value.");
         MapValuePerLevel = BindFloat(cfg, Lvl, "MapValuePerLevel", 0.02f, 0f, 0.5f, "Valuable value growth per level (compounding). 0.02 = x1.02 per level.");
         MapValueMax = BindFloat(cfg, Lvl, "MapValueMax", 3f, 1f, 20f, "Cap on the depth multiplier of valuables' value.");
@@ -394,11 +393,15 @@ public static class ModConfig
         LateJoinEnabled = Module(cfg, "Late Join", "Enabled", true, "LateJoin", "Host keeps the room/lobby joinable during a run/shop/truck (REPO normally seals it at run start) and re-syncs mod state to anyone who connects mid-game.");
         PingEnabled = Module(cfg, "Ping", "Enabled", true, "Ping", "Enable the ping system: press the ping key to mark what you're looking at for the whole team.");
         ItemUnstuckEnabled = Module(cfg, "Item Unstuck", "Enabled", true, "ItemUnstuck", "Master switch for the valuable safety-net features (relocate stuck loot, invulnerable-until-grab, undamaged-value HUD). The relocate/invuln parts are HOST-SIDE (computed by the host).");
-        DeadMapAccessEnabled = Module(cfg, "Dead Map Access", "Enabled", true, "DeadMapAccess", "Allow dead/spectating players to open their map tool. The map view is re-anchored to the spectate camera so it stays visible. Client-side — each player controls their own map.");
-        SpectatorMinimapEnabled = Module(cfg, "Spectator Minimap", "Enabled", true, "SpectatorMinimap", "While dead/spectating on a level, HOLD the minimap key to show the game's own map render in the centre of the screen so you can track the level without the full map tool. Hidden automatically if you open the full map tool. Client-side.");
+        var spectatorMap = SpectatorMapConfig.Bind(cfg);
+        SpectatorMapEnabled = spectatorMap.Enabled;
+        SpectatorMapHoldKey = spectatorMap.HoldKey;
+        SpectatorMapScreenFraction = spectatorMap.ScreenFraction;
         RoundResultsEnabled = Module(cfg, "Round Results", "Enabled", true, "RoundResults", "After each level show an MVP / OOPS CHAMP screen with per-player stats: loot broken, loot delivered, deaths and revives. Stats are recorded by the host, so the host must run this mod for the board to appear.");
         MapVoteEnabled = Module(cfg, "Map Vote", "Enabled", true, "MapVote", "While in the truck lobby, let players vote on the next map from a few random candidates. Whatever is leading when the truck departs is used instead of the game's random pick. Vote with the number keys (or the on-screen buttons). If nobody votes, the game's normal random selection is used, so this is harmless when ignored. HOST-SIDE: the host applies the winning map and syncs it to everyone normally.");
-        AutoBackupEnabled = Module(cfg, "Auto Backup Saves", "Enabled", true, "AutoBackup", "Back up the run save before REPO deletes it on a level fail/wipe. Backups go to a 'saves_IncreaseHardMod_backups' folder next to your saves.");
+        AutoBackupEnabled = Module(cfg, "Auto Backup Saves", "Enabled", true, "AutoBackup", "Create extra snapshots when REPO would delete a run. Snapshots are never pruned. The original checkpoint is always protected, even if this module is disabled. Legacy KeepSaveLoadable and MaxBackupsPerSave settings are ignored.");
+        VoiceRecoveryEnabled = Module(cfg, "Voice Recovery", "Enabled", true, "VoiceRecovery", "Retry failed local microphone capture up to three times per voice object. Does not override mute or push-to-talk. Restarts voice streams after audio device changes.");
+        InventorySlotsEnabled = Module(cfg, "Player Upgrades", "InventorySlotsEnabled", true, "InventorySlots", "Sell Inventory Slot upgrades: +1 slot per level, up to seven total slots (four upgrade levels). Requires PlayerUpgrades and REPOLib.");
         MorePlayersEnabled = Module(cfg, "More Players", "Enabled", false, "MorePlayers", "Raise the room's max player count above REPO's default of 6. HOST-SIDE: the host's value defines the room cap; joiners don't need this on. Everyone in the lobby should still run the mod to avoid desync.");
         ShopPriceScaleEnabled = Module(cfg, "Shop", "PriceScaleEnabled", false, "ShopPriceScale", "Scale shop item prices up with the number of players, so bigger lobbies (which earn more) still feel expensive. HOST-SIDE: prices are computed by the host and synced.");
         ShoppingListEnabled = Module(cfg, "Shopping List", "Enabled", false, "ShoppingList", "While in the shop, show a panel listing everything in the cart (yours and your friends'): quantity, name and summed price per item, colour-coded by item type, with a running total vs. your team's currency.");
@@ -437,9 +440,14 @@ public static class ModConfig
             "Diagnostics", "DisableRuntimeObjects", false,
             "DIAGNOSTIC (default off). If true, skip creating the mod's runtime menu/HUD objects (networking, timer, ping, Photon HUD). Used only to isolate whether they interfere with Photon connecting. Leave off for normal play.");
 
+        NetworkDiagnosticsEnabled = cfg.Bind("Voice Recovery", "NetworkDiagnostics", false,
+            "Log actual Photon room RTT, jitter and cumulative reliable resends once per minute. Does not change transport or region.");
+        AudioRecoveryKey = cfg.Bind("Voice Recovery", "RecoveryKey", UnityEngine.KeyCode.F9,
+            "Hold Left Ctrl and press this key to reset Unity audio and restart voice streams locally. Briefly interrupts sound. None disables the shortcut.");
+
         RampStartLevel = BindInt(cfg,
             "General", "RampStartLevel", 4, 0, 30,
-            "Levels completed before difficulty scaling starts. 4 = first 4 levels are vanilla, scaling begins on the 5th.");
+            "Completed-level offset for the difficulty ramp. Steps = max(0, (levelsCompleted - RampStartLevel) / RampLevelsPerStep), using integer division. With start 4 and step 1, the first boost is at 5 completed levels (the sixth playable level).");
 
         RampLevelsPerStep = BindInt(cfg,
             "General", "RampLevelsPerStep", 1, 1, 10,
@@ -451,7 +459,7 @@ public static class ModConfig
             "Extra enemy max HP per level past the ramp start. 0.15 = +15% per level (cumulative, additive).");
         EnemyHealthMax = BindFloat(cfg,
             "Enemies", "HealthMaxMultiplier", 3.0f, 1f, 20f,
-            "Global upper cap on the enemy HP multiplier. 3.0 = at most 3x vanilla HP.");
+            "Global upper cap on the depth HP multiplier, before level surprises. Per-enemy overrides take precedence. 3.0 = at most 3x native HP from the depth ramp.");
         // Free-form string (name:mult list) — REPOConfig can't render this sensibly, so hide it.
         EnemyHealthMaxPerEnemy = cfg.Bind(
             "Enemies", "HealthMaxPerEnemy", "Elsa:1, Loom:1, Cleanup Crew:1.5, Tick:1.5",
@@ -508,7 +516,7 @@ public static class ModConfig
             "LightLoot: multiplies loot mass. <1 = lighter.");
         LightMonsterMaxMass = BindFloat(cfg,
             "Modifier Tuning", "LightMonsterMaxMass", 3.0f, 0.1f, 50f,
-            "LightMonsters: cap every monster's mass at this value (lighter = easier to shove around).");
+            "LightMonsters: cap every monster's mass at this value, including late spawns. A held monster stops fighting the grab so one player without Strength upgrades can lift it. Frozen monsters remain unliftable.");
         HeavyMonsterMinMass = BindFloat(cfg,
             "Modifier Tuning", "HeavyMonsterMinMass", 7.0f, 0.1f, 50f,
             "HeavyMonsters: raise every monster's mass to at least this value (heavier = harder to move).");
@@ -566,6 +574,8 @@ public static class ModConfig
         PingDurationSeconds = BindFloat(cfg,
             "Ping", "DurationSeconds", 4f, 1f, 30f,
             "How long a ping marker stays visible (seconds).");
+        PingMarkerScale = BindFloat(cfg,"Ping","MarkerScale",1f,.5f,2.5f,"Scale of the large cyan location ring and arrow. Object silhouettes retain their actual size.");
+        PingSoundVolume = BindFloat(cfg,"Ping","SoundVolume",.28f,0f,1f,"Volume of distinct target-type ping cues through the game's mixer. 0 mutes ping sounds.");
         MaxLocationPings = BindInt(cfg,
             "Ping", "MaxLocationPings", 3, 1, 20,
             "Maximum live Location pings a single player can have at once (needs the 'Ping Anywhere' upgrade). Placing more drops your oldest.");
@@ -585,23 +595,13 @@ public static class ModConfig
         // --- Item Unstuck ---
                 ValuableRelocateStuck = cfg.Bind(
             "Item Unstuck", "RelocateStuck", true,
-            "Detect valuables that have settled embedded inside world geometry and teleport them back to their last safe resting spot (or lift them out). Anti-softlock; host-side.");
+            "Recover valuables embedded in geometry or wedged in a frame while a player tries to pull them free. Uses a collision-checked nearby position or a validated previous safe spot. Host-side.");
         ValuableStuckSeconds = BindFloat(cfg,
             "Item Unstuck", "StuckSeconds", 6f, 2f, 60f,
-            "How many seconds a valuable must sit embedded in geometry (and at rest, ungrabbed) before it's relocated.");
+            "Seconds an embedded valuable must remain settled, or a wedged valuable must resist a sustained grab, before a recovery is attempted.");
         ValuableInvulnerableUntilGrab = cfg.Bind(
             "Item Unstuck", "InvulnerableUntilGrab", true,
             "Valuables take no damage / lose no value until a player grabs them for the first time (uses the game's own indestructible flag). Host-side.");
-
-        // --- Dead Map Access ---
-        
-        // --- Spectator Minimap ---
-                SpectatorMinimapKey = cfg.Bind(
-            "Spectator Minimap", "HoldKey", UnityEngine.KeyCode.Tab,
-            "Hold this key while dead to show the spectator minimap (default: Tab).");
-        SpectatorMinimapScale = BindFloat(cfg,
-            "Spectator Minimap", "Scale", 0.5f, 0.1f, 0.9f,
-            "Minimap size as a fraction of screen height. 0.5 = half the screen tall.");
 
         // --- Round Results ---
                 RoundResultsSeconds = BindFloat(cfg,
@@ -627,7 +627,7 @@ public static class ModConfig
         PoisonTotalDamage = BindInt(cfg, Gear, "PoisonTotalDamage", 125, 1, 1000, "Total poison damage over the full duration.");
         PoisonSeconds = BindFloat(cfg, Gear, "PoisonSeconds", 15f, 1f, 60f,
             "Poison duration. Each hit refreshes it to this value (it does not stack).");
-        IceFreezeSeconds = BindFloat(cfg, Gear, "IceFreezeSeconds", 4.5f, 0.5f, 30f, "How long the Ice Pistol freezes an enemy.");
+        IceFreezeSeconds = BindFloat(cfg, Gear, "IceFreezeSeconds", 4.5f, 0.5f, 30f, "How long the Ice Pistol freezes a monster or player. Players receive a visible ice coating and movement pause without shot damage, including in the shop. Repeated hits refresh the timer.");
         IceGunDamagePercent = BindInt(cfg, Gear, "IceGunDamagePercent", 60, 10, 100,
             "Firearm damage frozen enemies take, in percent of normal.");
         IceMeleeBonusPercent = BindInt(cfg, Gear, "IceMeleeBonusPercent", 35, 0, 300,
@@ -644,6 +644,13 @@ public static class ModConfig
             "Silencer drone: multiplier applied to the attached target's emitted sound, voice and the radius enemies investigate it from. 0.08 = 8% as loud.");
 
         // --- Map Vote ---
+        InventorySlotBasePrice = BindInt(cfg, "Player Upgrades", "InventorySlotBasePrice", 15000, 1000, 500000, "Approximate first Inventory Slot upgrade price. Four levels, each adds one slot; maximum seven slots total.");
+        InventorySlot4Key = cfg.Bind("Inventory Slots", "Slot4Key", UnityEngine.KeyCode.Alpha4, "Store/retrieve from inventory slot 4.");
+        InventorySlot5Key = cfg.Bind("Inventory Slots", "Slot5Key", UnityEngine.KeyCode.Alpha5, "Store/retrieve from inventory slot 5.");
+        InventorySlot6Key = cfg.Bind("Inventory Slots", "Slot6Key", UnityEngine.KeyCode.Alpha6, "Store/retrieve from inventory slot 6.");
+        InventorySlot7Key = cfg.Bind("Inventory Slots", "Slot7Key", UnityEngine.KeyCode.Alpha7, "Store/retrieve from inventory slot 7.");
+        MapVoteHudKey = cfg.Bind("Map Vote", "ToggleHudKey", UnityEngine.KeyCode.F6,
+            "Hide or show the local map-vote HUD without cancelling the vote. Number-key voting continues while hidden.");
                 MapVoteChoices = BindInt(cfg,
             "Map Vote", "Choices", 3, 2, 6,
             "How many random candidate maps to offer for the vote each lobby.");
@@ -683,14 +690,6 @@ public static class ModConfig
         ShopDuplicatesExtra = BindInt(cfg,
             "Shop", "DuplicatesExtra", 0, 0, 10,
             "Allow the same item (e.g. a gun) to appear more than once in a single shop by adding this many extra copies of each item to the shop pool. 0 = vanilla (usually one of each).");
-
-        // --- Auto Backup Saves ---
-                AutoBackupKeepSave = cfg.Bind(
-            "Auto Backup Saves", "KeepSaveLoadable", true,
-            "Also skip the deletion entirely so the failed save stays in your normal save list and can be reloaded from its last checkpoint (the shop before the failed level).");
-        AutoBackupMaxPerSave = BindInt(cfg,
-            "Auto Backup Saves", "MaxBackupsPerSave", 5, 0, 100,
-            "How many timestamped backups to keep per save file. Oldest are pruned. 0 = keep all.");
 
         // --- Truck upgrades ---
                 TruckHealPercentPerLevel = BindFloat(cfg,
@@ -846,7 +845,8 @@ public static class ModConfig
             if (name.Length == 0)
                 continue;
 
-            if (float.TryParse(valueText, NumberStyles.Float, CultureInfo.InvariantCulture, out float mult))
+            if (float.TryParse(valueText, NumberStyles.Float, CultureInfo.InvariantCulture, out float mult) &&
+                !float.IsNaN(mult) && !float.IsInfinity(mult) && mult >= 1f)
                 map[name] = mult;
         }
         _perEnemyHealthMax = map;
