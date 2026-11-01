@@ -28,6 +28,7 @@
   <ItemGroup>
     <Compile Remove="_decompiled\**\*.cs" />
     <Compile Remove="tests\**\*.cs" />
+    <Compile Remove="unity\**\*.cs" />
     <None Include="_decompiled\**\*.cs" />
   </ItemGroup>
 

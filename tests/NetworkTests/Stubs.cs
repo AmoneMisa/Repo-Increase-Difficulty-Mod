@@ -11,7 +11,7 @@ namespace ExitGames.Client.Photon {public class EventData {public byte Code;publ
 namespace Photon.Realtime {public interface IOnEventCallback {void OnEvent(ExitGames.Client.Photon.EventData e);}public enum ReceiverGroup {All,Others,MasterClient}public class RaiseEventOptions {public ReceiverGroup Receivers;}public class Player {public int ActorNumber;}public class Room {public string Name="room";public int PlayerCount=3;}}
 namespace Photon.Pun {
  public class PhotonView:UnityEngine.Component {public int ViewID,OwnerActorNr;public static Dictionary<int,PhotonView> All=new();public static PhotonView Find(int id)=>All.TryGetValue(id,out var v)?v:null;}
- public static class PhotonNetwork {public static bool InRoom=true,IsMasterClient;public static double Time=10;public static Photon.Realtime.Player MasterClient=new(){ActorNumber=1},LocalPlayer=new(){ActorNumber=2};public static Photon.Realtime.Room CurrentRoom=new();public static void AddCallbackTarget(object o){}public static void RemoveCallbackTarget(object o){}public static void RaiseEvent(byte code,object data,Photon.Realtime.RaiseEventOptions o,ExitGames.Client.Photon.SendOptions s){}}
+ public static class PhotonNetwork {public static bool InRoom=true,IsMasterClient;public static double Time=10;public static Photon.Realtime.Player MasterClient=new(){ActorNumber=1},LocalPlayer=new(){ActorNumber=2};public static Photon.Realtime.Room CurrentRoom=new();public static void AddCallbackTarget(object o){}public static void RemoveCallbackTarget(object o){}public static List<(byte Code,Photon.Realtime.ReceiverGroup Receivers)> Sent=new();public static void RaiseEvent(byte code,object data,Photon.Realtime.RaiseEventOptions o,ExitGames.Client.Photon.SendOptions s){Sent.Add((code,o.Receivers));}}
 }
 public class GameDirector {public static GameDirector instance=new();public List<PlayerAvatar> PlayerList=new();}
 public class PlayerAvatar:UnityEngine.Component {public Photon.Pun.PhotonView photonView;}
@@ -26,7 +26,7 @@ public class RunManager {public static RunManager instance=new();public Level le
 public static class SemiFunc {public static bool IsMasterClientOrSingleplayer()=>Photon.Pun.PhotonNetwork.IsMasterClient;}
 namespace IncreaseHardMod {
  public class Setting<T> {public T Value;public Setting(T v){Value=v;}}
- public static class ModConfig {public static Setting<string> EnemyHealthMaxPerEnemy=new("");public static Setting<bool> SurprisesEnabled=new(true),RoundResultsEnabled=new(true);}
+ public static class ModConfig {public static Setting<string> EnemyHealthMaxPerEnemy=new("");public static Setting<bool> SurprisesEnabled=new(true),RoundResultsEnabled=new(true),QuestsEnabled=new(true);}
  public static class EnemyBalance {public static string Signature()=>"";public static float[] Capture()=>new float[8];public static bool Apply(float[] f,string c,bool s)=>true;}
 }
 namespace IncreaseHardMod.Modifiers {
@@ -57,4 +57,10 @@ namespace IncreaseHardMod.Gear {
 namespace IncreaseHardMod.Visuals {
  public static class EnemyStatusVisual {public static void Apply(Enemy e,byte kind,float seconds){}}
  public static class StickyTether {public static void Apply(ItemGun gun,PhysGrabObject p,UnityEngine.Vector3 v,float t){}}
+}
+
+namespace IncreaseHardMod.Quests {
+ public enum StatKind:byte {Health,Stamina,SprintSpeed,GrabStrength,GrabRange,ThrowStrength,ExtraJump,TumbleLaunch}
+ public static class QuestManager {public static int States,Buffs;public static void Tick(float dt){}public static void ReceiveTeamState(object[] d){States++;}public static void ApplyTempBuff(StatKind stat,int amount){Buffs++;}}
+ public static class QuestRewards {public static int Money;public static void GrantMoney(int amount){Money+=amount;}}
 }

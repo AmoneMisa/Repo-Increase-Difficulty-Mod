@@ -106,6 +106,8 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<LevelInfoHud>();
         // Spectator Map: one overlay for dead players, following the active spectator camera.
         netObject.AddComponent<SpectatorMapHud>();
+        // Quest tracker from remote master.
+        netObject.AddComponent<QuestHud>();
         // End-of-level MVP / OOPS CHAMP scoreboard (stats recorded host-side by RoundStats).
         netObject.AddComponent<RoundResultsHud>();
         // Black Market (shop): pay to block unwanted modifiers / economies. Keyboard driven.

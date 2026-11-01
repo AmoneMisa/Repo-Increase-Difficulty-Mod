@@ -140,6 +140,27 @@ public static class ModConfig
     public static ConfigEntry<UnityEngine.KeyCode> SpectatorMapHoldKey;
     public static ConfigEntry<float> SpectatorMapScreenFraction;
 
+    // --- Quests ---
+    // An extra progression layer: 2-3 team quests per level plus a personal one, scaled by
+    // team size / day / your contract rank (F..SSS). Completing quests advances your rank and
+    // pays out money or upgrade items. Team quests are host-authoritative and synced.
+    public static ConfigEntry<bool> QuestsEnabled;
+    public static ConfigEntry<UnityEngine.KeyCode> QuestPeekKey;
+    public static ConfigEntry<int> QuestsPerLevelMin;
+    public static ConfigEntry<int> QuestsPerLevelMax;
+    public static ConfigEntry<int> QuestCompletionsPerRank;
+    public static ConfigEntry<int> QuestCompletionsAtoS;
+    public static ConfigEntry<int> QuestCompletionsStoSS;
+    public static ConfigEntry<int> QuestCompletionsSStoSSS;
+    public static ConfigEntry<int> QuestMoneyBase;
+    public static ConfigEntry<bool> QuestItemRewardsEnabled;
+    public static ConfigEntry<bool> QuestCosmeticRewardsEnabled;
+    public static ConfigEntry<bool> QuestExactUpgradeRewardsEnabled;
+    public static ConfigEntry<bool> QuestShopItemRewardsEnabled;
+    public static ConfigEntry<bool> QuestHealRewardsEnabled;
+    public static ConfigEntry<bool> QuestTempStatRewardsEnabled;
+    public static ConfigEntry<int> QuestHealAmount;
+
     // --- Round Results ---
     // End-of-level MVP / OOPS CHAMP screen with a per-player scoreboard. The host records, everyone
     // with the mod sees the same board; players without the mod simply don't get a screen.
@@ -452,7 +473,7 @@ public static class ModConfig
             "General", "RampLevelsPerStep", 1, 1, 10,
             "How many levels of depth make up ONE difficulty step. 1 = stats grow every level; 2 = stats step up only every 2nd level past the start (stretches the ramp).");
 
-                                        
+
         EnemyHealthPerLevel = BindFloat(cfg,
             "Enemies", "HealthPerLevel", 0.15f, 0f, 2f,
             "Extra enemy max HP per level past the ramp start. 0.15 = +15% per level (cumulative, additive).");
@@ -562,7 +583,7 @@ public static class ModConfig
             "LevelTimer: seconds added when an extraction point's quota is completed.");
 
         // --- Late Join ---
-        
+
         // --- Ping ---
                 PingKey = cfg.Bind(
             "Ping", "PingKey", UnityEngine.KeyCode.Mouse2,
@@ -598,6 +619,56 @@ public static class ModConfig
         ValuableInvulnerableUntilGrab = cfg.Bind(
             "Item Unstuck", "InvulnerableUntilGrab", true,
             "Valuables take no damage / lose no value until a player grabs them for the first time (uses the game's own indestructible flag). Host-side.");
+
+        // --- Quests ---
+        QuestsEnabled = cfg.Bind(
+            "Quests", "Enabled", true,
+            "Enable the quest progression layer: each run level offers 2-3 team quests plus a personal quest, scaled to team size / day / your contract rank. Completing quests advances your rank (F..SSS) and pays money or upgrade items. Team quests are rolled by the host and synced to everyone.");
+        QuestPeekKey = cfg.Bind(
+            "Quests", "PeekKey", UnityEngine.KeyCode.J,
+            "Hold this key to peek the quest tracker on levels with no map (the tracker also shows automatically whenever the full map tool is open).");
+        QuestsPerLevelMin = BindInt(cfg,
+            "Quests", "QuestsPerLevelMin", 2, 1, 5,
+            "Minimum number of TEAM quests offered per level.");
+        QuestsPerLevelMax = BindInt(cfg,
+            "Quests", "QuestsPerLevelMax", 3, 1, 5,
+            "Maximum number of TEAM quests offered per level.");
+        QuestCompletionsPerRank = BindInt(cfg,
+            "Quests", "CompletionsPerRank", 10, 1, 100,
+            "How many quest completions advance your contract rank by one for the LOWER ranks (F->E->D->C->B->A). 10 = ten quests per step. The top ranks use their own larger requirements below.");
+        QuestCompletionsAtoS = BindInt(cfg,
+            "Quests", "CompletionsAtoS", 40, 1, 500,
+            "How many quest completions are required to advance from rank A to rank S.");
+        QuestCompletionsStoSS = BindInt(cfg,
+            "Quests", "CompletionsStoSS", 42, 1, 500,
+            "How many quest completions are required to advance from rank S to rank SS.");
+        QuestCompletionsSStoSSS = BindInt(cfg,
+            "Quests", "CompletionsSStoSSS", 50, 1, 500,
+            "How many quest completions are required to advance from rank SS to rank SSS.");
+        QuestMoneyBase = BindInt(cfg,
+            "Quests", "MoneyRewardBase", 3000, 0, 1000000,
+            "Base money reward for a quest at rank F / one player. It scales up with team size (+25% per extra player), day, and rank.");
+        QuestItemRewardsEnabled = cfg.Bind(
+            "Quests", "ItemRewardsEnabled", true,
+            "Allow higher-rank quests (rank C and above) to sometimes pay out a random upgrade item on the level instead of money.");
+        QuestCosmeticRewardsEnabled = cfg.Bind(
+            "Quests", "CosmeticRewardsEnabled", true,
+            "Allow higher-rank quests (rank C and above) to sometimes pay out a cosmetic 'gacha' box (a rarity cube to roll a skin) on the level instead of money. Higher ranks bias toward rarer boxes.");
+        QuestExactUpgradeRewardsEnabled = cfg.Bind(
+            "Quests", "ExactUpgradeRewardsEnabled", true,
+            "Allow higher-rank quests (rank C and above) to sometimes pay out a SPECIFIC upgrade item (e.g. a Health or Sprint Speed upgrade) on the level instead of money.");
+        QuestShopItemRewardsEnabled = cfg.Bind(
+            "Quests", "ShopItemRewardsEnabled", true,
+            "Allow higher-rank quests (rank C and above) to sometimes spawn a random general shop item (grenade, health pack, gun, tool, etc.) on the level instead of money.");
+        QuestHealRewardsEnabled = cfg.Bind(
+            "Quests", "HealRewardsEnabled", true,
+            "Allow higher-rank quests (rank C and above) to sometimes heal the whole squad instead of paying money.");
+        QuestTempStatRewardsEnabled = cfg.Bind(
+            "Quests", "TempStatRewardsEnabled", true,
+            "Allow higher-rank quests (rank C and above) to sometimes grant every player a TEMPORARY stat buff (stamina/sprint speed/extra jump/grab strength) that lasts only for the current level.");
+        QuestHealAmount = BindInt(cfg,
+            "Quests", "HealRewardAmount", 100, 1, 100,
+            "How much HP a squad-heal quest reward restores to each player (capped at each player's max health).");
 
         // --- Round Results ---
                 RoundResultsSeconds = BindFloat(cfg,
@@ -668,9 +739,9 @@ public static class ModConfig
             "Key to hide/show the level info announcement.");
 
         // --- Server Info panel ---
-        
+
         // --- Shopping List panel ---
-        
+
         // --- More Players ---
                 MorePlayersMax = BindInt(cfg,
             "More Players", "MaxPlayers", 6, 2, 20,

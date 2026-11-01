@@ -285,7 +285,39 @@ been performed and some silent driver failures require manual recovery.
 cumulative reliable resends once per minute. It does not change transport, region, send rates
 or timeouts, and does not guarantee lower latency.
 
+### Save protection and backups
+
+Failed runs and early exits never automatically delete the run's save. Return to the main menu
+and select the existing save to continue from its last saved checkpoint without restarting the
+game or copying files. The menu's explicit delete-save button still works.
+
+`Modules / AutoBackup` controls additional snapshots in `saves_IncreaseHardMod_backups`
+next to the game's `saves` folder. Snapshots are never automatically pruned or overwritten.
+Disabling snapshots or a backup error does not disable save protection. The old
+`KeepSaveLoadable` and `MaxBackupsPerSave` settings are ignored.
+
 ### Configuration
+
+### Voice and audio recovery
+
+`Voice Recovery / Enabled` (default true) checks local microphone capture every two
+seconds while focused and connected to a voice room. After ten seconds of failed
+capture it requests a recorder restart, with a 30-second cooldown and at most three
+attempts per local recorder. Silence is not a failure. Mute, voice detection and
+push-to-talk settings remain under the game's control.
+
+After an audio device change, voice recording and playback restart after a short
+delay (at most once per 15 seconds). For lost game audio, **Left Ctrl + F9** requests
+a local Unity audio reset followed by a voice-stream restart. This briefly interrupts
+sound; it does not reconnect or leave the game. `RecoveryKey=None` disables the shortcut.
+The shortcut also works with automatic recovery disabled.
+
+`Voice Recovery / NetworkDiagnostics=true` logs the actual Photon room region, RTT,
+RTT variance and cumulative reliable resends once per minute. It does not change the
+server region, transport, send rate or connection timeouts. These diagnostics cannot
+repair an ISP route or guarantee a lower ping. Automatic recovery cannot detect every
+silent audio driver failure; use the manual shortcut and retain logs for those cases.
+
 
 All settings live in `BepInEx/config/com.kubai.increasehardmod.cfg` and are editable in-game via
 REPOConfig. **Every module on/off switch is gathered in the first section, `Modules`** (surprises, upgrades,
@@ -797,3 +829,9 @@ Death Protection respects shield reduction and native hit rejection. Regeneratio
 Исправлены расход зарядов Death Protection, дробная регенерация и её кап, полный расход спринта с доплатой за скорость и накоплением дробей, обновление работающей зарядной станции, эффективные капы батарей, проверка сетевых сообщений и некорректных покупок Black Market. Версия — 0.6.3, ID сохранений и имя конфига сохранены.
 
 Validation uses controlled Unity/game/Photon fixtures and current-game assembly metadata; it does not certify live multiplayer or Proton. HUD labels inherit game font settings, but independent overlay canvases currently do not reproduce the native blur/chromatic processing consistently, and their helper clears the glow colour. Diagnostic fallbacks still use Unity GUI fonts. This remains an open visual issue.
+
+### 0.6.3 master reconciliation / объединение master
+
+Retains the quest-system work already on remote master. Quest network events are separate from the ice pistol and Sticky Pistol; host state/buffs validate sender and payload. The merged build passes 93 controlled network checks and resolves 131 current-game Harmony targets. Quest progression/rewards still require in-game verification.
+
+Сохранена система квестов из remote master. Сетевые события квестов отделены от ледяного пистолета и Sticky Pistol; состояние и бонусы проверяют хоста и формат сообщения. После объединения проходят 93 сетевые проверки и разрешаются 131 точки патчей текущей игры. Прохождение квестов и награды ещё требуют проверки в игре.

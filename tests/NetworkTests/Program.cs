@@ -48,4 +48,31 @@ shield.mode=ShieldMode.ProtectionOrb;Send(ModNetwork.BatteryDrainEventCode,new o
 PhotonNetwork.IsMasterClient=false;shield.mode=ShieldMode.DefenceDrone;Send(ModNetwork.BatteryDrainEventCode,new object[]{20,10f},3);Check(battery.batteryLife==90,"Only host applies requested drain");
 PhotonNetwork.InRoom=false;Send(ModNetwork.PingEventCode,new object[]{(byte)0,1f,2f,3f,"place","player",0},3);Check(PingController.Applied==1,"Disconnected callback cannot create stale markers");
 network.OnEvent(null);Check(true,"Null callback tolerated");
+PhotonNetwork.InRoom=true;
+var codes=typeof(ModNetwork).GetFields(System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.Static).Where(f=>f.IsLiteral&&f.FieldType==typeof(byte)).Select(f=>(byte)f.GetRawConstantValue()).ToArray();
+Check(codes.Distinct().Count()==codes.Length,"Quest event IDs do not collide with weapon or other events");
+foreach(byte code in new[]{ModNetwork.QuestStateEventCode,ModNetwork.QuestBuffEventCode,ModNetwork.QuestMoneyRequestEventCode})
+ foreach(var raw in new object[]{null,42,"wrong",Array.Empty<object>(),new object[]{-1},new object[]{"bad",null}})
+ {Send(code,raw);Check(true,"Malformed quest payload ignored, event "+code);}
+object[] quest={1,10,(byte)0,(byte)0,(byte)0,10,1,"",(byte)0,3000,(byte)0,(byte)0,"Quest",(byte)0};
+Send(ModNetwork.QuestStateEventCode,quest,3);Check(IncreaseHardMod.Quests.QuestManager.States==0,"Peer cannot replace authoritative quest state");
+Send(ModNetwork.QuestStateEventCode,quest);Check(IncreaseHardMod.Quests.QuestManager.States==1,"Valid host quest snapshot remains supported");
+Send(ModNetwork.QuestStateEventCode,new object[]{1});Check(IncreaseHardMod.Quests.QuestManager.States==1,"Truncated quest row rejected before deserialization");
+Send(ModNetwork.QuestBuffEventCode,new object[]{(byte)1,2},3);Check(IncreaseHardMod.Quests.QuestManager.Buffs==0,"Peer cannot grant team quest buffs");
+Send(ModNetwork.QuestBuffEventCode,new object[]{(byte)1,2});Check(IncreaseHardMod.Quests.QuestManager.Buffs==1,"Valid host quest buff accepted");
+Send(ModNetwork.QuestBuffEventCode,new object[]{(byte)255,2});Check(IncreaseHardMod.Quests.QuestManager.Buffs==1,"Unknown quest buff kind rejected");
+IncreaseHardMod.ModConfig.QuestsEnabled.Value=false;
+Send(ModNetwork.QuestStateEventCode,quest);Send(ModNetwork.QuestBuffEventCode,new object[]{(byte)1,2});
+Check(IncreaseHardMod.Quests.QuestManager.States==1&&IncreaseHardMod.Quests.QuestManager.Buffs==1,"Disabled quests ignore incoming state and buffs");
+PhotonNetwork.IsMasterClient=true;Send(ModNetwork.QuestMoneyRequestEventCode,new object[]{1000},3);
+Check(IncreaseHardMod.Quests.QuestRewards.Money==0,"Disabled quests do not accept payout requests");
+IncreaseHardMod.ModConfig.QuestsEnabled.Value=true;
+Send(ModNetwork.QuestMoneyRequestEventCode,new object[]{-1000},3);Check(IncreaseHardMod.Quests.QuestRewards.Money==0,"Negative quest payout rejected");
+Send(ModNetwork.QuestMoneyRequestEventCode,new object[]{1000},3);Check(IncreaseHardMod.Quests.QuestRewards.Money==1000,"Host retains personal quest payout routing");
+PhotonNetwork.IsMasterClient=false;Send(ModNetwork.QuestMoneyRequestEventCode,new object[]{1000},3);
+Check(IncreaseHardMod.Quests.QuestRewards.Money==1000,"Non-host does not apply personal quest payout");
+PhotonNetwork.Sent.Clear();network.BroadcastQuestState(quest);network.BroadcastQuestBuff(1,2);
+Check(PhotonNetwork.Sent.Count==0,"Non-host cannot broadcast authoritative quest state or buffs");
+PhotonNetwork.IsMasterClient=true;network.BroadcastQuestState(quest);network.BroadcastQuestBuff(1,2);
+Check(PhotonNetwork.Sent.Count==2&&PhotonNetwork.Sent.All(e=>e.Receivers==Photon.Realtime.ReceiverGroup.Others),"Locally applied quest broadcasts do not echo back to the host");
 Console.WriteLine("NETWORK_AUDIT_PASS: "+checks);

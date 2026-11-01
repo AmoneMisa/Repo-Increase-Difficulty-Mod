@@ -42,6 +42,11 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     public const byte PlayerFreezeEventCode = 192;
     public const byte StickyTetherEventCode = 193;
 
+    // Host broadcasts the authoritative team-quest set; any client asks the host to pay a personal reward.
+    public const byte QuestStateEventCode = 194;
+    public const byte QuestMoneyRequestEventCode = 195;
+    public const byte QuestBuffEventCode = 196;
+
     public static ModNetwork Instance { get; private set; }
 
     private bool _registered;
@@ -98,6 +103,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         if (!inRoom) _enemyTuningSignature = null;
 
         LevelTimerController.Tick(Time.deltaTime);
+        Quests.QuestManager.Tick(Time.deltaTime);
         RoundStats.Tick(Time.deltaTime);
         LateJoinController.Tick();
         // Client-side: keep every enemy's per-player dictionaries in sync with mid-run joins
@@ -335,6 +341,51 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
     }
 
+    /// <summary>Host broadcasts the authoritative team-quest set to all clients.</summary>
+    public void BroadcastQuestState(object[] data)
+    {
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient || !NetworkPayload.QuestState(data, out _))
+            return;
+
+        var options = new RaiseEventOptions { Receivers = ReceiverGroup.Others };
+        PhotonNetwork.RaiseEvent(
+            QuestStateEventCode,
+            data,
+            options,
+            SendOptions.SendReliable);
+    }
+
+    /// <summary>
+    /// Host tells every other client to apply a temporary stat buff to their own local player
+    /// (the host applies its own buff directly before broadcasting to the others).
+    /// </summary>
+    public void BroadcastQuestBuff(byte stat, int amount)
+    {
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient || !NetworkPayload.QuestBuff(new object[] { stat, amount }, out _))
+            return;
+
+        var options = new RaiseEventOptions { Receivers = ReceiverGroup.Others };
+        PhotonNetwork.RaiseEvent(
+            QuestBuffEventCode,
+            new object[] { stat, amount },
+            options,
+            SendOptions.SendReliable);
+    }
+
+    /// <summary>A non-host client asks the host to pay out a completed personal-quest reward.</summary>
+    public void RequestQuestMoney(int amount)
+    {
+        if (!PhotonNetwork.InRoom || amount <= 0)
+            return;
+
+        var options = new RaiseEventOptions { Receivers = ReceiverGroup.MasterClient };
+        PhotonNetwork.RaiseEvent(
+            QuestMoneyRequestEventCode,
+            new object[] { amount },
+            options,
+            SendOptions.SendReliable);
+    }
+
     /// <summary>Photon calls this on every client for every raised event.</summary>
     private static bool HostSender(EventData message) => NetworkPayload.Host(message.Sender,
         PhotonNetwork.MasterClient != null ? PhotonNetwork.MasterClient.ActorNumber : -1, PhotonNetwork.InRoom);
@@ -513,6 +564,30 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
                 });
             var summary = d.Length > 6 && d[6] is int[] totals ? RoundLootSummary.Deserialize(totals) : null;
             if (ModConfig.RoundResultsEnabled.Value) RoundStats.ApplyResults(rows, summary);
+        }
+
+        if (photonEvent.Code == QuestStateEventCode)
+        {
+            if (ModConfig.QuestsEnabled.Value && HostSender(photonEvent) &&
+                NetworkPayload.QuestState(photonEvent.CustomData, out var data))
+                Quests.QuestManager.ReceiveTeamState(data);
+            return;
+        }
+
+        if (photonEvent.Code == QuestMoneyRequestEventCode)
+        {
+            // Only the host honours the payout request.
+            if (ModConfig.QuestsEnabled.Value && PhotonNetwork.IsMasterClient && photonEvent.Sender > 0 &&
+                photonEvent.CustomData is object[] data && data.Length == 1 && data[0] is int amount && amount > 0)
+                Quests.QuestRewards.GrantMoney(amount);
+            return;
+        }
+
+        if (photonEvent.Code == QuestBuffEventCode)
+        {
+            if (ModConfig.QuestsEnabled.Value && HostSender(photonEvent) &&
+                NetworkPayload.QuestBuff(photonEvent.CustomData, out var data))
+                Quests.QuestManager.ApplyTempBuff((Quests.StatKind)(byte)data[0], (int)data[1]);
         }
     }
 }

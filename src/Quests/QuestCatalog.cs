@@ -1,0 +1,316 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace IncreaseHardMod.Quests;
+
+/// <summary>
+/// A snapshot of the level's context, gathered once at generation time, that the
+/// generator uses to pick sensible + eligible quests (only offer a monster-type hunt
+/// if that monster is actually present, only offer a pit quest if the level has pits, etc).
+/// </summary>
+public sealed class QuestContext
+{
+    public int Players = 1;
+    public int Day;                       // levelsCompleted, drives late-run difficulty
+    public QuestRank Rank = QuestRank.F;   // the run owner's contract rank
+    public bool HasPits;
+    public int HaulGoal;                   // RoundDirector.haulGoal for extraction quests
+    public int ValuableCount;              // how many ValuableObjects are on the level (intact-extract gating)
+    public readonly List<string> EnemyNames = new();
+    public readonly List<int> EnemyTiers = new();  // distinct EnemyParent.Difficulty indices present
+}
+
+/// <summary>
+/// Builds the live quest set for a level from a <see cref="QuestContext"/>, applying the
+/// user's scaling rules (kills grow with team size, money grows with team size, targets
+/// grow with rank/day) and eligibility gating (no pit/monster quests when they don't apply),
+/// while avoiding handing out a signature that was already completed earlier in the run.
+/// </summary>
+public static class QuestCatalog
+{
+    // kills target multiplier: 0.8 + 0.4 * players (1p=1.2, 4p=2.4, 6p=3.2).
+    private static float KillFactor(int players) => 0.8f + 0.4f * players;
+
+    // money multiplier from team size: +25% per extra player past the first.
+    private static float MoneyFactor(int players) => 1f + 0.25f * Mathf.Max(0, players - 1);
+
+    // small extra push on later days so deep runs ask for a bit more.
+    private static float DayFactor(int day) => 1f + 0.03f * Mathf.Max(0, day);
+
+    private static int MoneyReward(QuestContext ctx)
+    {
+        float baseMoney = Mathf.Max(0, ModConfig.QuestMoneyBase.Value);
+        float amount = baseMoney * MoneyFactor(ctx.Players) * QuestRankInfo.Scale(ctx.Rank) * DayFactor(ctx.Day);
+        // round to a tidy 100.
+        return Mathf.Max(100, Mathf.RoundToInt(amount / 100f) * 100);
+    }
+
+    // Stats we hand out as temporary (this-level) buffs — mobility/handling boosts that revert cleanly.
+    private static readonly StatKind[] TempStatPool =
+        { StatKind.Stamina, StatKind.SprintSpeed, StatKind.ExtraJump, StatKind.GrabStrength };
+
+    private static void AssignReward(ActiveQuest q, QuestContext ctx)
+    {
+        // Easy quests (below rank C) always pay cash. From C upward a "special" reward becomes
+        // possible, with tighter gates on the fancier payouts:
+        //   - upgrade items (random + tiered): rank C+
+        //   - cosmetic gacha boxes:            rank A+
+        // The tier of an upgrade is gated further inside QuestUpgradePool (Mid from C, Useful from
+        // A, Power from SS).
+        if (q.Rank >= QuestRank.C)
+        {
+            var pool = new List<RewardType>();
+            if (ModConfig.QuestItemRewardsEnabled.Value) pool.Add(RewardType.Item);
+            if (ModConfig.QuestExactUpgradeRewardsEnabled.Value) pool.Add(RewardType.ExactUpgrade);
+            if (ModConfig.QuestShopItemRewardsEnabled.Value) pool.Add(RewardType.ShopItem);
+            if (ModConfig.QuestHealRewardsEnabled.Value) pool.Add(RewardType.Heal);
+            if (ModConfig.QuestTempStatRewardsEnabled.Value) pool.Add(RewardType.TempStat);
+            if (q.Rank >= QuestRank.A && ModConfig.QuestCosmeticRewardsEnabled.Value)
+                pool.Add(RewardType.Cosmetic);
+
+            if (pool.Count > 0 && Random.value < 0.5f)
+            {
+                ApplySpecialReward(q, pool[Random.Range(0, pool.Count)]);
+                return;
+            }
+        }
+
+        q.RewardType = RewardType.Money;
+        q.RewardAmount = MoneyReward(ctx);
+    }
+
+    private static void ApplySpecialReward(ActiveQuest q, RewardType type)
+    {
+        q.RewardType = type;
+        switch (type)
+        {
+            case RewardType.Heal:
+                q.RewardAmount = Mathf.Max(1, ModConfig.QuestHealAmount.Value);
+                break;
+            case RewardType.TempStat:
+                q.RewardStat = TempStatPool[Random.Range(0, TempStatPool.Length)];
+                // A bit stronger on higher ranks (2..4 tiers for the level).
+                q.RewardAmount = 2 + Mathf.Clamp((int)q.Rank - (int)QuestRank.C, 0, 2);
+                break;
+            case RewardType.ExactUpgrade:
+                // Roll a quality band weighted by rank (Power is the rare jackpot at high ranks).
+                q.RewardTier = QuestUpgradePool.PickTierByRank(q.Rank);
+                q.RewardAmount = 1;
+                break;
+            default:  // Item / Cosmetic / ShopItem
+                q.RewardAmount = 1;
+                break;
+        }
+    }
+
+    /// <summary>Generate the team quest set (2..3) plus a personal quest for the local player.</summary>
+    public static List<ActiveQuest> GenerateTeam(QuestContext ctx, HashSet<string> usedSignatures)
+    {
+        var result = new List<ActiveQuest>();
+        var builders = new List<System.Func<ActiveQuest>>();
+
+        builders.Add(() => BuildKillAny(ctx));
+        builders.Add(() => BuildMeleeKill(ctx));
+        builders.Add(() => BuildNoGunKills(ctx));
+
+        if (ctx.EnemyNames.Count > 0)
+            builders.Add(() => BuildKillType(ctx));
+        if (ctx.EnemyTiers.Count > 0)
+            builders.Add(() => BuildKillTier(ctx));
+        if (ctx.HasPits)
+            builders.Add(() => BuildPitKill(ctx));
+        if (ctx.HaulGoal > 0)
+            builders.Add(() => BuildReachHaul(ctx));
+        if (ctx.ValuableCount > 0)
+            builders.Add(() => BuildIntactExtract(ctx));
+        builders.Add(() => BuildNoDeaths(ctx));
+
+        int want = Random.Range(
+            Mathf.Max(1, ModConfig.QuestsPerLevelMin.Value),
+            Mathf.Max(1, ModConfig.QuestsPerLevelMax.Value) + 1);
+
+        int guard = 0;
+        while (result.Count < want && guard++ < 40 && builders.Count > 0)
+        {
+            var q = builders[Random.Range(0, builders.Count)].Invoke();
+            if (q == null)
+                continue;
+            string sig = q.Signature();
+            if (usedSignatures.Contains(sig))
+                continue;
+            if (result.Exists(existing => existing.Signature() == sig))
+                continue;
+
+            AssignReward(q, ctx);
+            q.Id = result.Count + 1;
+            result.Add(q);
+        }
+
+        return result;
+    }
+
+    public static ActiveQuest BuildPersonal(QuestContext ctx)
+    {
+        // The one cleanly client-trackable personal quest we ship this phase: take no damage.
+        var q = new ActiveQuest
+        {
+            Scope = QuestScope.Personal,
+            Category = QuestCategory.Survival,
+            Objective = ObjectiveType.NoDamage,
+            Rank = ctx.Rank,
+            Target = 1,               // 1 = "still clean"; flips to Failed on any damage
+            Param = "",
+            Title = "Take no damage this level",
+        };
+        q.RewardType = RewardType.Money;
+        q.RewardAmount = MoneyReward(ctx);
+        q.Id = 100;
+        return q;
+    }
+
+    private static int ScaleKills(QuestContext ctx, float baseCount)
+    {
+        float v = baseCount * KillFactor(ctx.Players) * QuestRankInfo.Scale(ctx.Rank) * DayFactor(ctx.Day);
+        return Mathf.Max(1, Mathf.RoundToInt(v));
+    }
+
+    private static ActiveQuest BuildKillAny(QuestContext ctx)
+    {
+        int target = ScaleKills(ctx, 5f);
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team,
+            Category = QuestCategory.Combat,
+            Objective = ObjectiveType.KillAny,
+            Rank = ctx.Rank,
+            Target = target,
+            Title = $"Kill {target} enemies",
+        };
+    }
+
+    private static ActiveQuest BuildMeleeKill(QuestContext ctx)
+    {
+        int target = ScaleKills(ctx, 3f);
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team,
+            Category = QuestCategory.Combat,
+            Objective = ObjectiveType.MeleeKill,
+            Rank = ctx.Rank,
+            Target = target,
+            Title = $"Kill {target} enemies with melee",
+        };
+    }
+
+    private static ActiveQuest BuildNoGunKills(QuestContext ctx)
+    {
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team,
+            Category = QuestCategory.Combat,
+            Objective = ObjectiveType.NoGunKills,
+            Rank = ctx.Rank,
+            Target = 1,   // survival-style: succeeds at level end if never failed
+            Title = "Complete the level with no gun kills",
+        };
+    }
+
+    private static ActiveQuest BuildKillType(QuestContext ctx)
+    {
+        string name = ctx.EnemyNames[Random.Range(0, ctx.EnemyNames.Count)];
+        int target = ScaleKills(ctx, 3f);
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team,
+            Category = QuestCategory.Combat,
+            Objective = ObjectiveType.KillType,
+            Rank = ctx.Rank,
+            Target = target,
+            Param = name,
+            Title = $"Kill {target}x {name}",
+        };
+    }
+
+    private static readonly string[] TierNames = { "weak", "medium", "strong" };
+
+    private static ActiveQuest BuildKillTier(QuestContext ctx)
+    {
+        int tier = ctx.EnemyTiers[Random.Range(0, ctx.EnemyTiers.Count)];
+        int target = ScaleKills(ctx, 3f);
+        string tierName = tier >= 0 && tier < TierNames.Length ? TierNames[tier] : $"tier {tier + 1}";
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team,
+            Category = QuestCategory.Combat,
+            Objective = ObjectiveType.KillTier,
+            Rank = ctx.Rank,
+            Target = target,
+            Param = tier.ToString(),
+            Title = $"Kill {target} {tierName} enemies",
+        };
+    }
+
+    private static ActiveQuest BuildPitKill(QuestContext ctx)
+    {
+        int target = Mathf.Max(1, ScaleKills(ctx, 1.5f));
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team,
+            Category = QuestCategory.Environment,
+            Objective = ObjectiveType.PitKill,
+            Rank = ctx.Rank,
+            Target = target,
+            Title = $"Shove {target} enemies into a pit",
+        };
+    }
+
+    private static ActiveQuest BuildReachHaul(QuestContext ctx)
+    {
+        // Bank a bit more than the vanilla quota; grows with rank.
+        float over = 1f + 0.15f * (int)ctx.Rank;
+        int target = Mathf.Max(1, Mathf.RoundToInt(ctx.HaulGoal * over));
+        int display = Mathf.RoundToInt(target / 1000f);
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team,
+            Category = QuestCategory.Extraction,
+            Objective = ObjectiveType.ReachHaul,
+            Rank = ctx.Rank,
+            Target = target,
+            Title = $"Extract ${display}K of value",
+        };
+    }
+
+    private static ActiveQuest BuildIntactExtract(QuestContext ctx)
+    {
+        // Ask for a modest count that can't exceed the valuables actually on the level (some will
+        // inevitably break, so we never demand the whole spawn). Grows with team size, rank and day.
+        int scaled = ScaleKills(ctx, 2f);
+        int target = Mathf.Clamp(scaled, 1, Mathf.Max(1, ctx.ValuableCount));
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team,
+            Category = QuestCategory.Extraction,
+            Objective = ObjectiveType.IntactExtract,
+            Rank = ctx.Rank,
+            Target = target,
+            Title = $"Extract {target} valuables undamaged",
+        };
+    }
+
+    private static ActiveQuest BuildNoDeaths(QuestContext ctx)
+    {
+        // Target is the death threshold; higher rank allows fewer deaths (F..D allow 1, above = 0).
+        int allowed = ctx.Rank <= QuestRank.D ? 1 : 0;
+        string text = allowed == 0 ? "with no deaths" : $"with at most {allowed} death";
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team,
+            Category = QuestCategory.Survival,
+            Objective = ObjectiveType.NoDeaths,
+            Rank = ctx.Rank,
+            Target = allowed,
+            Title = $"Complete the level {text}",
+        };
+    }
+}

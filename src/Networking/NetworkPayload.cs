@@ -40,4 +40,20 @@ internal static class NetworkPayload
 
     internal static bool Repair(object raw, out object[] data) => Envelope(raw, 2, 2, out data) &&
         data[0] is int id && id > 0 && data[1] is float value && Finite(value) && value >= 0f;
+
+    internal static bool QuestBuff(object raw, out object[] data) => Envelope(raw, 2, 2, out data) &&
+        data[0] is byte stat && Enum.IsDefined(typeof(Quests.StatKind), stat) && data[1] is int amount && amount > 0;
+
+    internal static bool QuestState(object raw, out object[] data)
+    {
+        if (!Envelope(raw, 1, 66, out data) || data[0] is not int count || count < 0 || count > 5 ||
+            data.Length != 1 + count * 13) return false;
+        for (int i = 1; i < data.Length; i += 13)
+            if (data[i] is not int || data[i + 1] is not byte || data[i + 2] is not byte ||
+                data[i + 3] is not byte || data[i + 4] is not int || data[i + 5] is not int ||
+                !Text(data[i + 6], 256) || data[i + 7] is not byte || data[i + 8] is not int ||
+                data[i + 9] is not byte || data[i + 10] is not byte || !Text(data[i + 11], 512) ||
+                data[i + 12] is not byte flags || flags > 3) return false;
+        return true;
+    }
 }
