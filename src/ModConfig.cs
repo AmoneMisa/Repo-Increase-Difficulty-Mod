@@ -731,8 +731,8 @@ public static class ModConfig
             "Player Upgrades", "RegenPercentPerLevel", 0.002f, 0.0005f, 0.05f,
             "HP Regen: fraction of MAX HP healed per SECOND, per level. 0.002 = 0.2%/s per level (very slow — ~1 HP every 5s at level 1 for a 100 HP player).");
         RegenMaxHpFraction = BindFloat(cfg,
-            "Player Upgrades", "RegenMaxHpFraction", 0.30f, 0.05f, 1f,
-            "HP Regen: stops once current HP reaches this fraction of max HP. 0.30 = regen only fills up to 30% of max HP.");
+            "Player Upgrades", "RegenMaxHpFraction", 0.50f, 0.05f, 1f,
+            "HP Regen: stops once current HP reaches this fraction of max HP. 0.50 = regen only fills up to 50% of max HP.");
         RegenMaxLevel = BindInt(cfg,
             "Player Upgrades", "RegenMaxLevel", 3, 1, 20,
             "HP Regen: maximum purchasable level.");

@@ -45,7 +45,11 @@ internal sealed class UtilityDrone : MonoBehaviour
         (Drone.magnetTargetPhysGrabObject != null || Drone.playerAvatarTarget != null || Drone.magnetTargetRigidbody != null);
 
     public PhysGrabObject TargetPgo => Engaged ? Drone.magnetTargetPhysGrabObject : null;
-    public PlayerAvatar TargetPlayer => Engaged ? Drone.playerAvatarTarget : null;
+    // The native drone clears playerAvatarTarget while its player is tumbling (monster hits cause this) and
+    // holds the tumble instead, so the held player is still the tumble's player during that time.
+    public PlayerAvatar TargetPlayer => !Engaged ? null :
+        Drone.playerAvatarTarget != null ? Drone.playerAvatarTarget :
+        Drone.playerTumbleTarget != null ? Drone.playerTumbleTarget.playerAvatar : null;
 
     public Rigidbody TargetBody => !Engaged ? null :
         TargetPgo != null && TargetPgo.rb != null ? TargetPgo.rb : Drone.magnetTargetRigidbody;

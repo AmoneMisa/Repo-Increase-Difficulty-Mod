@@ -140,7 +140,7 @@ count) and, like every number below, are configurable.
 | Upgrade | Levels | What it does |
 | --- | --- | --- |
 | **Slower Stamina Use** | 5 | Sprinting drains 10% less stamina per level. ~4,000 |
-| **HP Regeneration** | 3 | Heals 0.2% of max HP per second per level, but only until you are back to 30% of max HP - it is an emergency trickle, not a full heal. ~20,000 |
+| **HP Regeneration** | 3 | Heals 0.2% of max HP per second per level, but only until you are back to 50% of max HP - it is an emergency trickle, not a full heal. ~20,000 |
 | **Death Protection** | 1 charge | Survive one lethal hit with 1 HP. The charge is spent when it saves you; re-buy to restore it. ~50,000 |
 | **Drone Battery Life** | 20 | Your drones' batteries last 5% longer per level (up to +100%). ~6,000 |
 | **Gun Battery Life** (one per gun type: bullet / laser / tranq) | 20 each | That gun's battery lasts 5% longer per level (up to +100%). ~6,000 |
@@ -455,7 +455,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 | Улучшение | Уровни | Что делает |
 | --- | --- | --- |
 | **Slower Stamina Use** | 5 | Бег тратит на 10% меньше выносливости за уровень. ~4 000 |
-| **HP Regeneration** | 3 | Лечит 0,2% максимума здоровья в секунду за уровень, но только пока здоровье не поднимется до 30% от максимума - это аварийная струйка, а не полное лечение. ~20 000 |
+| **HP Regeneration** | 3 | Лечит 0,2% максимума здоровья в секунду за уровень, но только пока здоровье не поднимется до 50% от максимума - это аварийная струйка, а не полное лечение. ~20 000 |
 | **Death Protection** | 1 заряд | Переживаешь один смертельный удар с 1 HP. Заряд тратится, когда он тебя спас; купи снова, чтобы восстановить. ~50 000 |
 | **Drone Battery Life** | 20 | Батареи твоих дронов служат на 5% дольше за уровень (до +100%). ~6 000 |
 | **Gun Battery Life** (своё на каждый тип оружия: пули / лазер / транквилизатор) | по 20 | Батарея этого оружия служит на 5% дольше за уровень (до +100%). ~6 000 |

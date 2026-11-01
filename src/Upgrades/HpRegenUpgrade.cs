@@ -5,7 +5,7 @@ namespace IncreaseHardMod.Upgrades;
 
 /// <summary>
 /// "HP Regeneration" — a per-player upgrade granting very slow passive healing that only
-/// tops you back up to a fraction of max HP (default 30%) and then stops.
+/// tops you back up to a fraction of max HP (default 50%) and then stops.
 ///
 /// Unlike stamina (a one-shot field tweak applied via start/upgrade actions), regen is a
 /// CONTINUOUS effect, so it lives in a ticking MonoBehaviour (<see cref="RegenController"/>)

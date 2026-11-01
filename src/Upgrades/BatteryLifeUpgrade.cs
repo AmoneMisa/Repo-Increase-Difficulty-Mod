@@ -108,6 +108,23 @@ internal static class BatteryLifeUpgrade
         c == Category.Drone ? ModConfig.DroneBatteryPercentPerLevel.Value
                             : ModConfig.GunBatteryPercentPerLevel.Value;
 
+    // Who is using this item. PhysGrabObject.lastPlayerGrabbing only tracks physical grabs and clears ~3 s after
+    // release, so it misses equipped guns and deployed drones. Equipped items name their owner; drones name
+    // the player who switched them on.
+    private static PlayerAvatar UserOf(ItemBattery battery)
+    {
+        var equippable = battery.GetComponent<ItemEquippable>();
+        if (equippable != null && equippable.isEquipped)
+            return equippable.GetOwnerPlayerAvatar();
+
+        var pgo = battery.physGrabObject != null ? battery.physGrabObject : battery.GetComponentInChildren<PhysGrabObject>();
+        if (pgo != null && pgo.lastPlayerGrabbing != null)
+            return pgo.lastPlayerGrabbing;
+
+        var toggle = battery.GetComponent<ItemToggle>();
+        return toggle != null ? SemiFunc.PlayerAvatarGetFromPhotonID(toggle.playerTogglePhotonID) : null;
+    }
+
     [HarmonyPatch(typeof(ItemBattery), "Update")]
     private static class RefundPatch
     {
@@ -147,10 +164,7 @@ internal static class BatteryLifeUpgrade
                 return;
             }
 
-            var pgo = __instance.physGrabObject != null
-                ? __instance.physGrabObject
-                : __instance.GetComponentInChildren<PhysGrabObject>();
-            var user = pgo != null ? pgo.lastPlayerGrabbing : null;
+            var user = UserOf(__instance);
             if (user == null)
             {
                 state.PrevLife = life;
