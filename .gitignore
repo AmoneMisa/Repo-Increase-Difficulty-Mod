@@ -13,3 +13,15 @@ _decompiled/
 # OS
 Thumbs.db
 .DS_Store
+
+# Unity authoring project (source assets and .meta files remain tracked)
+unity/**/Library/
+unity/**/Temp/
+unity/**/Logs/
+unity/**/UserSettings/
+unity/**/Obj/
+unity/**/Builds/
+unity/**/Assets/REPO/
+unity/**/*.csproj
+unity/**/*.sln
+.fable-validation/

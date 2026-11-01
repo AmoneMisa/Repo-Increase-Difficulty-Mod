@@ -82,6 +82,7 @@ public class Plugin : BaseUnityPlugin
 
         var netObject = new GameObject("IncreaseHardMod_Runtime");
         netObject.AddComponent<ModNetwork>();
+        netObject.AddComponent<VoiceRecoveryController>();
         // Host-side auto Loot Cash-In for the "Loot Cash-In" truck upgrade (sells leftovers on quota close).
         netObject.AddComponent<Upgrades.TruckUpgrades.SellController>();
         // Main-menu Photon name-server reachability overlay (IMGUI, background TCP probes).
@@ -92,6 +93,8 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<LevelInfoHud>();
         // Spectator Minimap: while dead on a level, draws the game's own map render in a screen corner.
         netObject.AddComponent<SpectatorMinimapHud>();
+        // Quest tracker (native TMP): team + personal quests, shown in the open map or via the peek hotkey.
+        netObject.AddComponent<QuestHud>();
         // Item Unstuck: host-side valuable safety net (relocate stuck loot, invuln-until-grab)
         // plus a client-side undamaged-value HUD.
         netObject.AddComponent<ItemUnstuckController>();

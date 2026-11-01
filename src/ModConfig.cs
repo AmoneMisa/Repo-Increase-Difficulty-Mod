@@ -11,6 +11,9 @@ namespace IncreaseHardMod;
 /// </summary>
 public static class ModConfig
 {
+    public static ConfigEntry<bool> VoiceRecoveryEnabled;
+    public static ConfigEntry<bool> NetworkDiagnosticsEnabled;
+    public static ConfigEntry<UnityEngine.KeyCode> AudioRecoveryKey;
     // When does the difficulty ramp begin?
     // levelsCompleted is how many levels the run has finished so far.
     // With RampStartLevel = 4, the first 4 levels are vanilla and scaling
@@ -135,6 +138,27 @@ public static class ModConfig
     public static ConfigEntry<UnityEngine.KeyCode> SpectatorMinimapKey;
     public static ConfigEntry<float> SpectatorMinimapScale;
 
+    // --- Quests ---
+    // An extra progression layer: 2-3 team quests per level plus a personal one, scaled by
+    // team size / day / your contract rank (F..SSS). Completing quests advances your rank and
+    // pays out money or upgrade items. Team quests are host-authoritative and synced.
+    public static ConfigEntry<bool> QuestsEnabled;
+    public static ConfigEntry<UnityEngine.KeyCode> QuestPeekKey;
+    public static ConfigEntry<int> QuestsPerLevelMin;
+    public static ConfigEntry<int> QuestsPerLevelMax;
+    public static ConfigEntry<int> QuestCompletionsPerRank;
+    public static ConfigEntry<int> QuestCompletionsAtoS;
+    public static ConfigEntry<int> QuestCompletionsStoSS;
+    public static ConfigEntry<int> QuestCompletionsSStoSSS;
+    public static ConfigEntry<int> QuestMoneyBase;
+    public static ConfigEntry<bool> QuestItemRewardsEnabled;
+    public static ConfigEntry<bool> QuestCosmeticRewardsEnabled;
+    public static ConfigEntry<bool> QuestExactUpgradeRewardsEnabled;
+    public static ConfigEntry<bool> QuestShopItemRewardsEnabled;
+    public static ConfigEntry<bool> QuestHealRewardsEnabled;
+    public static ConfigEntry<bool> QuestTempStatRewardsEnabled;
+    public static ConfigEntry<int> QuestHealAmount;
+
     // --- Map Vote ---
     // While in the truck lobby, players vote on which map to run next (a small set of random
     // candidates). Whatever is leading when the truck departs is used instead of the game's
@@ -151,11 +175,9 @@ public static class ModConfig
 
     // --- Auto Backup Saves ---
     // REPO deletes the run save when you wipe / fail a level (DataDirector.SaveDeleteCheck).
-    // When enabled, we copy the save folder to a timestamped backup first, and can
-    // optionally skip the deletion entirely so the save stays directly loadable.
+    // Automatic deletion is always blocked. This toggle only controls extra snapshots,
+    // which are kept indefinitely; legacy KeepSaveLoadable/MaxBackupsPerSave are ignored.
     public static ConfigEntry<bool> AutoBackupEnabled;
-    public static ConfigEntry<bool> AutoBackupKeepSave;
-    public static ConfigEntry<int> AutoBackupMaxPerSave;
 
     // --- Truck upgrades ---
     // Team-wide truck upgrades sold in the normal shop like any other upgrade (once anyone owns a
@@ -300,6 +322,13 @@ public static class ModConfig
         DiagnosticDisableRuntimeObjects = cfg.Bind(
             "Diagnostics", "DisableRuntimeObjects", false,
             "DIAGNOSTIC (default off). If true, skip creating the mod's runtime menu/HUD objects (networking, timer, ping, Photon HUD). Used only to isolate whether they interfere with Photon connecting. Leave off for normal play.");
+
+        VoiceRecoveryEnabled = cfg.Bind("Voice Recovery", "Enabled", true,
+            "Retry failed local microphone capture up to three times per voice object. Does not override mute or push-to-talk. Restarts voice streams after audio device changes.");
+        NetworkDiagnosticsEnabled = cfg.Bind("Voice Recovery", "NetworkDiagnostics", false,
+            "Log actual Photon room RTT, jitter and cumulative reliable resends once per minute. Does not change transport or region.");
+        AudioRecoveryKey = cfg.Bind("Voice Recovery", "RecoveryKey", UnityEngine.KeyCode.F9,
+            "Hold Left Ctrl and press this key to reset Unity audio and restart voice streams locally. Briefly interrupts sound. None disables the shortcut.");
 
         RampStartLevel = BindInt(cfg,
             "General", "RampStartLevel", 4, 0, 30,
@@ -481,6 +510,56 @@ public static class ModConfig
             "Spectator Minimap", "Scale", 0.5f, 0.1f, 0.9f,
             "Minimap size as a fraction of screen height. 0.5 = half the screen tall.");
 
+        // --- Quests ---
+        QuestsEnabled = cfg.Bind(
+            "Quests", "Enabled", true,
+            "Enable the quest progression layer: each run level offers 2-3 team quests plus a personal quest, scaled to team size / day / your contract rank. Completing quests advances your rank (F..SSS) and pays money or upgrade items. Team quests are rolled by the host and synced to everyone.");
+        QuestPeekKey = cfg.Bind(
+            "Quests", "PeekKey", UnityEngine.KeyCode.J,
+            "Hold this key to peek the quest tracker on levels with no map (the tracker also shows automatically whenever the full map tool is open).");
+        QuestsPerLevelMin = BindInt(cfg,
+            "Quests", "QuestsPerLevelMin", 2, 1, 5,
+            "Minimum number of TEAM quests offered per level.");
+        QuestsPerLevelMax = BindInt(cfg,
+            "Quests", "QuestsPerLevelMax", 3, 1, 5,
+            "Maximum number of TEAM quests offered per level.");
+        QuestCompletionsPerRank = BindInt(cfg,
+            "Quests", "CompletionsPerRank", 10, 1, 100,
+            "How many quest completions advance your contract rank by one for the LOWER ranks (F->E->D->C->B->A). 10 = ten quests per step. The top ranks use their own larger requirements below.");
+        QuestCompletionsAtoS = BindInt(cfg,
+            "Quests", "CompletionsAtoS", 40, 1, 500,
+            "How many quest completions are required to advance from rank A to rank S.");
+        QuestCompletionsStoSS = BindInt(cfg,
+            "Quests", "CompletionsStoSS", 42, 1, 500,
+            "How many quest completions are required to advance from rank S to rank SS.");
+        QuestCompletionsSStoSSS = BindInt(cfg,
+            "Quests", "CompletionsSStoSSS", 50, 1, 500,
+            "How many quest completions are required to advance from rank SS to rank SSS.");
+        QuestMoneyBase = BindInt(cfg,
+            "Quests", "MoneyRewardBase", 3000, 0, 1000000,
+            "Base money reward for a quest at rank F / one player. It scales up with team size (+25% per extra player), day, and rank.");
+        QuestItemRewardsEnabled = cfg.Bind(
+            "Quests", "ItemRewardsEnabled", true,
+            "Allow higher-rank quests (rank C and above) to sometimes pay out a random upgrade item on the level instead of money.");
+        QuestCosmeticRewardsEnabled = cfg.Bind(
+            "Quests", "CosmeticRewardsEnabled", true,
+            "Allow higher-rank quests (rank C and above) to sometimes pay out a cosmetic 'gacha' box (a rarity cube to roll a skin) on the level instead of money. Higher ranks bias toward rarer boxes.");
+        QuestExactUpgradeRewardsEnabled = cfg.Bind(
+            "Quests", "ExactUpgradeRewardsEnabled", true,
+            "Allow higher-rank quests (rank C and above) to sometimes pay out a SPECIFIC upgrade item (e.g. a Health or Sprint Speed upgrade) on the level instead of money.");
+        QuestShopItemRewardsEnabled = cfg.Bind(
+            "Quests", "ShopItemRewardsEnabled", true,
+            "Allow higher-rank quests (rank C and above) to sometimes spawn a random general shop item (grenade, health pack, gun, tool, etc.) on the level instead of money.");
+        QuestHealRewardsEnabled = cfg.Bind(
+            "Quests", "HealRewardsEnabled", true,
+            "Allow higher-rank quests (rank C and above) to sometimes heal the whole squad instead of paying money.");
+        QuestTempStatRewardsEnabled = cfg.Bind(
+            "Quests", "TempStatRewardsEnabled", true,
+            "Allow higher-rank quests (rank C and above) to sometimes grant every player a TEMPORARY stat buff (stamina/sprint speed/extra jump/grab strength) that lasts only for the current level.");
+        QuestHealAmount = BindInt(cfg,
+            "Quests", "HealRewardAmount", 100, 1, 100,
+            "How much HP a squad-heal quest reward restores to each player (capped at each player's max health).");
+
         // --- Map Vote ---
         MapVoteEnabled = cfg.Bind(
             "Map Vote", "Enabled", true,
@@ -547,13 +626,7 @@ public static class ModConfig
         // --- Auto Backup Saves ---
         AutoBackupEnabled = cfg.Bind(
             "Auto Backup Saves", "Enabled", true,
-            "Back up the run save before REPO deletes it on a level fail/wipe. Backups go to a 'saves_IncreaseHardMod_backups' folder next to your saves.");
-        AutoBackupKeepSave = cfg.Bind(
-            "Auto Backup Saves", "KeepSaveLoadable", true,
-            "Also skip the deletion entirely so the failed save stays in your normal save list and can be reloaded from its last checkpoint (the shop before the failed level).");
-        AutoBackupMaxPerSave = BindInt(cfg,
-            "Auto Backup Saves", "MaxBackupsPerSave", 5, 0, 100,
-            "How many timestamped backups to keep per save file. Oldest are pruned. 0 = keep all.");
+            "Create extra snapshots when REPO would delete a run after a fail/wipe or early exit. Backups go to 'saves_IncreaseHardMod_backups' and are never pruned. The original checkpoint is always kept loadable, even when this option is disabled. Legacy KeepSaveLoadable and MaxBackupsPerSave settings no longer apply.");
 
         // --- Truck upgrades ---
         TruckUpgradesEnabled = cfg.Bind(

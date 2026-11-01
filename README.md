@@ -52,7 +52,38 @@ Gated behind ping upgrades:
 
 A global anti-flood cap limits how many pings can be on screen at once.
 
+### Save protection and backups
+
+Failed runs and early exits never automatically delete the run's save. Return to the main menu
+and select the existing save to continue from its last saved checkpoint without restarting the
+game or copying files. The menu's explicit delete-save button still works.
+
+`Auto Backup Saves / Enabled` controls additional snapshots in `saves_IncreaseHardMod_backups`
+next to the game's `saves` folder. Snapshots are never automatically pruned or overwritten.
+Disabling snapshots or a backup error does not disable save protection. The old
+`KeepSaveLoadable` and `MaxBackupsPerSave` settings are ignored.
+
 ## Configuration
+
+### Voice and audio recovery
+
+`Voice Recovery / Enabled` (default true) checks local microphone capture every two
+seconds while focused and connected to a voice room. After ten seconds of failed
+capture it requests a recorder restart, with a 30-second cooldown and at most three
+attempts per local recorder. Silence is not a failure. Mute, voice detection and
+push-to-talk settings remain under the game's control.
+
+After an audio device change, voice recording and playback restart after a short
+delay (at most once per 15 seconds). For lost game audio, **Left Ctrl + F9** requests
+a local Unity audio reset followed by a voice-stream restart. This briefly interrupts
+sound; it does not reconnect or leave the game. `RecoveryKey=None` disables the shortcut.
+The shortcut also works with automatic recovery disabled.
+
+`Voice Recovery / NetworkDiagnostics=true` logs the actual Photon room region, RTT,
+RTT variance and cumulative reliable resends once per minute. It does not change the
+server region, transport, send rate or connection timeouts. These diagnostics cannot
+repair an ISP route or guarantee a lower ping. Automatic recovery cannot detect every
+silent audio driver failure; use the manual shortcut and retain logs for those cases.
 
 All settings live in `BepInEx/config/com.kubai.increasehardmod.cfg` and are editable in-game via
 REPOConfig. Sections include: General, Enemies, Quota, Surprises, Modifier Tuning, Player Upgrades,

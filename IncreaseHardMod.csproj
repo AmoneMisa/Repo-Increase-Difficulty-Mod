@@ -25,6 +25,7 @@
   <!-- _decompiled/ is a read-only reference dump of the game code; never compile it. -->
   <ItemGroup>
     <Compile Remove="_decompiled\**\*.cs" />
+    <Compile Remove="unity\**\*.cs" />
     <None Include="_decompiled\**\*.cs" />
   </ItemGroup>
 
@@ -41,6 +42,18 @@
 
   <!-- Reference the game assemblies directly and publicize them so we can touch private members. -->
   <ItemGroup>
+    <Reference Include="PhotonVoice">
+      <HintPath>$(ManagedDir)\PhotonVoice.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="PhotonVoice.API">
+      <HintPath>$(ManagedDir)\PhotonVoice.API.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="PhotonVoice.PUN">
+      <HintPath>$(ManagedDir)\PhotonVoice.PUN.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>$(ManagedDir)\Assembly-CSharp.dll</HintPath>
       <Private>false</Private>

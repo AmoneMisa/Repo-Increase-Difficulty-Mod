@@ -20,12 +20,21 @@ namespace IncreaseHardMod.Patches.Effects;
 [HarmonyPatch(typeof(ChargingStation), "Start")]
 internal static class ChargeEfficiencyEffect
 {
+    // REPO 0.5 renamed the cost field; retain support for the older game as well.
+    private static readonly System.Reflection.FieldInfo RateField =
+        AccessTools.Field(typeof(ChargingStation), "batteryChargeCost") ??
+        AccessTools.Field(typeof(ChargingStation), "chargeRate");
     private static float _baseRate = -1f;
 
     [HarmonyPostfix]
     private static void Postfix(ChargingStation __instance)
     {
-        _baseRate = __instance.chargeRate;
+        if (RateField == null)
+        {
+            Plugin.Log.LogWarning("[ChargeEfficiency] No compatible charging cost field found; upgrade not applied.");
+            return;
+        }
+        _baseRate = (float)RateField.GetValue(__instance);
         Apply(__instance);
     }
 
@@ -41,9 +50,9 @@ internal static class ChargeEfficiencyEffect
     {
         if (!ModConfig.TruckUpgradesEnabled.Value)
         {
-            station.chargeRate = _baseRate;
+            RateField.SetValue(station, _baseRate);
             return;
         }
-        station.chargeRate = _baseRate * TruckUpgrades.ChargeDrainMultiplier;
+        RateField.SetValue(station, _baseRate * TruckUpgrades.ChargeDrainMultiplier);
     }
 }
