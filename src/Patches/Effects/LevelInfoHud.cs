@@ -32,6 +32,8 @@ internal sealed class LevelInfoHud : MonoBehaviour
     private bool _suppressed;
     private NativeHudPanel _timerPanel, _modsPanel;
     private NativeHudPanel _detailsPanel;
+    private Rect _levelBounds;
+    private bool _hasLevelBounds;
 
     private readonly List<string> _parts = new();
 
@@ -182,6 +184,9 @@ internal sealed class LevelInfoHud : MonoBehaviour
         var canvas=((RectTransform)_modsPanel.transform).rect;
         if(_modsPanel.NativeBounds(GoalUI.instance,out var quota) && quota.center.x>canvas.center.x && quota.center.y>canvas.center.y)
             top=Mathf.Clamp(canvas.yMax-quota.yMin+14f,180f,canvas.height*.65f);
+        // The shopping cart sits in the same column; never draw the modifier names over it.
+        if(ShoppingListHud.PanelBottom>0f)
+            top=Mathf.Max(top,ShoppingListHud.PanelBottom+14f);
         _modsPanel.Panel.anchoredPosition=new Vector2(-24f,-top);
         _modsPanel.Fit();
     }
@@ -193,10 +198,17 @@ internal sealed class LevelInfoHud : MonoBehaviour
         float height=_detailsLabel.GetPreferredValues(_detailsLabel.text,width,Mathf.Infinity).y+12f;
         _detailsPanel.Panel.sizeDelta=new Vector2(width,Mathf.Max(40f,height));
         var position=new Vector2(24f,-300f);
+        // LevelUI is hidden most of the time (Tab and the map do not show it), so remember where the
+        // level heading last was and keep the description under it instead of the fallback spot.
         if(_detailsPanel.NativeBounds(LevelUI.instance,out var level))
         {
-            position.x=Mathf.Clamp(level.xMin-canvas.xMin,24f,canvas.width-width-24f);
-            position.y=-(canvas.yMax-level.yMin+14f);
+            _levelBounds=level;
+            _hasLevelBounds=true;
+        }
+        if(_hasLevelBounds)
+        {
+            position.x=Mathf.Clamp(_levelBounds.xMin-canvas.xMin,24f,canvas.width-width-24f);
+            position.y=-(canvas.yMax-_levelBounds.yMin+14f);
         }
         position.y=-Mathf.Clamp(-position.y,24f,Mathf.Max(24f,canvas.height-60f));
         _detailsPanel.Panel.anchoredPosition=position;

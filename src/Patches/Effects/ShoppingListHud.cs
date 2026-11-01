@@ -18,6 +18,9 @@ internal sealed class ShoppingListHud : MonoBehaviour
         public Color Color;
     }
 
+    // Canvas distance from the top to the cart's bottom edge, or 0 while hidden. Other top-right HUD uses this to stack below it.
+    internal static float PanelBottom;
+
     private NativeHudPanel _surface;
     private TextMeshProUGUI _title, _footer;
     private readonly List<(TextMeshProUGUI name, TextMeshProUGUI price)> _labels = new();
@@ -31,6 +34,7 @@ internal sealed class ShoppingListHud : MonoBehaviour
             shop.shoppingList == null || shop.shoppingList.Count == 0)
         {
             if (_surface != null) _surface.gameObject.SetActive(false);
+            PanelBottom = 0f;
             return;
         }
         if (_surface == null)
@@ -76,6 +80,7 @@ internal sealed class ShoppingListHud : MonoBehaviour
         Place(_footer, 16f, 64f + _rows.Count * rowHeight, 428f, 34f);
         _surface.Panel.sizeDelta = new Vector2(460f, 112f + _rows.Count * rowHeight);
         _surface.Fit();
+        PanelBottom = 100f + 112f + _rows.Count * rowHeight;
     }
 
     private static void Place(TextMeshProUGUI label, float x, float y, float width, float height)
