@@ -44,22 +44,27 @@ internal static class DeathProtectionUpgrade
     private static class HurtPatch
     {
         // __instance fields (health, playerAvatar) are accessible via Publicizer.
-        // Run LAST among our Hurt prefixes so we clamp the FINAL (already-scaled) damage;
+        // Run AFTER our shield and damage prefixes so we clamp the FINAL (already-scaled) damage;
         // otherwise EnemyDamagePatch could multiply our "leave 1 HP" value back up and kill
         // the player anyway, wasting a charge.
         [HarmonyPrefix]
-        [HarmonyPriority(Priority.Last)]
-        private static void Prefix(PlayerHealth __instance, ref int damage)
+        [HarmonyPriority(Priority.Last - 100)]
+        private static void Prefix(PlayerHealth __instance, ref int damage, bool savingGrace, int enemyIndex)
         {
-            if (!ModConfig.PlayerUpgradesEnabled.Value || damage <= 0)
+            // Prefixes also run for calls the original Hurt would reject. Do not spend charges there.
+            var avatar = __instance.playerAvatar;
+            if (!ModConfig.PlayerUpgradesEnabled.Value || damage <= 0 || __instance.health <= 0 ||
+                avatar == null || avatar.deadSet || __instance.godMode || __instance.invincibleTimer > 0f ||
+                GameDirector.instance == null || GameDirector.instance.currentState != GameDirector.gameState.Main ||
+                (GameManager.Multiplayer() && (__instance.photonView == null || !__instance.photonView.IsMine)) ||
+                (enemyIndex >= 0 && avatar.tumble != null && avatar.tumble.CocoonHeld() &&
+                 avatar.tumble.cocoonOwner != null && enemyIndex == SemiFunc.EnemyGetIndex(avatar.tumble.cocoonOwner.enemy)))
                 return;
+            // The native small-hit saving grace already guarantees survival in this exact HP band.
+            if (savingGrace && damage <= 25 && __instance.health > 5 && __instance.health <= 20) return;
 
             // Not a lethal hit — nothing to protect against.
             if (__instance.health - damage > 0)
-                return;
-
-            var avatar = __instance.playerAvatar;
-            if (avatar == null)
                 return;
 
             var upgrade = RepoUpgrades.GetUpgrade(Id);

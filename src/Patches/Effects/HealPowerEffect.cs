@@ -17,16 +17,29 @@ namespace IncreaseHardMod.Patches.Effects;
 [HarmonyPatch(typeof(PlayerHealth), "Heal")]
 internal static class HealPowerEffect
 {
-    [HarmonyPrefix]
-    private static void Prefix(ref int healAmount)
+    private static PlayerHealth _regenerationTarget;
+
+    internal static float Multiplier => Mathf.Max(0f, Modifiers.StatModifiers.Mult(Modifiers.StatAxis.Healing) *
+        (ModConfig.TruckUpgradesEnabled.Value ? TruckUpgrades.HealMultiplier : 1f));
+
+    internal static void HealRegeneration(PlayerHealth target, int amount)
     {
-        if (healAmount <= 0)
+        // Regen applies the multiplier to its fractional rate, then caps the final whole-HP chunk.
+        // Scaling that chunk again would overshoot the cap (or round all weak regen ticks to zero).
+        var previous = _regenerationTarget;
+        _regenerationTarget = target;
+        try { target.Heal(amount, effect: false); }
+        finally { _regenerationTarget = previous; }
+    }
+
+    [HarmonyPrefix]
+    private static void Prefix(PlayerHealth __instance, ref int healAmount)
+    {
+        if (healAmount <= 0 || __instance == _regenerationTarget)
             return;
 
         // Level modifiers (Stimulants / Poor Medicine) times the truck's Heal Power upgrade.
-        float m = Modifiers.StatModifiers.Mult(Modifiers.StatAxis.Healing);
-        if (ModConfig.TruckUpgradesEnabled.Value)
-            m *= TruckUpgrades.HealMultiplier;
+        float m = Multiplier;
         if (Mathf.Approximately(m, 1f))
             return;
 

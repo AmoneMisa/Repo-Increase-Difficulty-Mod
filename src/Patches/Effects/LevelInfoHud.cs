@@ -32,8 +32,6 @@ internal sealed class LevelInfoHud : MonoBehaviour
     private bool _suppressed;
     private NativeHudPanel _timerPanel, _modsPanel;
     private NativeHudPanel _detailsPanel;
-    private Rect _levelBounds;
-    private bool _hasLevelBounds;
 
     private readonly List<string> _parts = new();
 
@@ -155,8 +153,12 @@ internal sealed class LevelInfoHud : MonoBehaviour
         {
             _detailsPanel=NativeHudPanel.Create("IHM_LevelModifierDetails",new Vector2(600f,300f),new Vector2(0f,1f),new Vector2(24f,-300f),0f);
             if(_detailsPanel==null)return false;
-            _detailsLabel=Fill(_detailsPanel,"Description",24f,ModColor,TextAlignmentOptions.TopLeft);
+        }
+        if (_detailsLabel == null)
+        {
+            _detailsLabel=Fill(_detailsPanel,"Description",24f,ModColor,TextAlignmentOptions.TopRight);
             _detailsLabel.enableWordWrapping=true;
+            _detailsLabel.maskable=false;
         }
         _timerPanel.Fit();
         _modsPanel.Fit();
@@ -193,32 +195,41 @@ internal sealed class LevelInfoHud : MonoBehaviour
 
     private void PositionDetails()
     {
-        var canvas=((RectTransform)_detailsPanel.transform).rect;
-        float width=Mathf.Min(600f,canvas.width-48f);
-        float height=_detailsLabel.GetPreferredValues(_detailsLabel.text,width,Mathf.Infinity).y+12f;
-        _detailsPanel.Panel.sizeDelta=new Vector2(width,Mathf.Max(40f,height));
-        var position=new Vector2(24f,-300f);
-        // LevelUI is hidden most of the time (Tab and the map do not show it), so remember where the
-        // level heading last was and keep the description under it instead of the fallback spot.
-        if(_detailsPanel.NativeBounds(LevelUI.instance,out var level))
+        // Attach to the exact level NUMBER, in its native canvas and coordinate system.
+        // Projecting the LevelUI group included unrelated map text and followed its hidden animation.
+        var heading = LevelUI.instance != null ? LevelUI.instance.textNumber : null;
+        if (heading == null || !heading.isActiveAndEnabled)
         {
-            _levelBounds=level;
-            _hasLevelBounds=true;
+            _detailsLabel.enabled=false;
+            return;
         }
-        if(_hasLevelBounds)
+        heading.ForceMeshUpdate();
+        var ink = heading.textBounds;
+        if (ink.size.y <= 0f)
         {
-            position.x=Mathf.Clamp(_levelBounds.xMin-canvas.xMin,24f,canvas.width-width-24f);
-            position.y=-(canvas.yMax-_levelBounds.yMin+14f);
+            _detailsLabel.enabled=false;
+            return;
         }
-        position.y=-Mathf.Clamp(-position.y,24f,Mathf.Max(24f,canvas.height-60f));
-        _detailsPanel.Panel.anchoredPosition=position;
-        _detailsPanel.Fit();
+        var rt = _detailsLabel.rectTransform;
+        if (rt.parent != heading.rectTransform) rt.SetParent(heading.rectTransform, false);
+        rt.localScale=Vector3.one;
+        rt.localRotation=Quaternion.identity;
+        rt.anchorMin=rt.anchorMax=heading.rectTransform.pivot;
+        rt.pivot=new Vector2(1f,1f);
+        _detailsLabel.enableAutoSizing=false;
+        _detailsLabel.fontSize=heading.fontSize*.38f;
+        float width=ink.size.y*7f;
+        float height=_detailsLabel.GetPreferredValues(_detailsLabel.text,width,Mathf.Infinity).y;
+        rt.sizeDelta=new Vector2(width,Mathf.Max(ink.size.y*.5f,height+ink.size.y*.1f));
+        rt.anchoredPosition3D=new Vector3(ink.max.x,ink.min.y-ink.size.y*.2f,0f);
     }
 
     private void OnDestroy()
     {
         if (_timerPanel != null) Destroy(_timerPanel.gameObject);
         if (_modsPanel != null) Destroy(_modsPanel.gameObject);
+        // The description follows LevelUI, so its lifetime is independent of the style owner.
+        if (_detailsLabel != null) Destroy(_detailsLabel.gameObject);
         if (_detailsPanel != null) Destroy(_detailsPanel.gameObject);
     }
 

@@ -11,7 +11,7 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.6.2`
+- **Version:** `0.6.3`
 
 ### Contents
 
@@ -139,8 +139,8 @@ count) and, like every number below, are configurable.
 
 | Upgrade | Levels | What it does |
 | --- | --- | --- |
-| **Slower Stamina Use** | 5 | Sprinting drains 10% less stamina per level. ~4,000 |
-| **HP Regeneration** | 3 | Heals 0.2% of max HP per second per level, but only until you are back to 50% of max HP - it is an emergency trickle, not a full heal. ~20,000 |
+| **Slower Stamina Use** | 5 | Each level multiplies sprint stamina drain by 0.95 (compounding), so it approaches zero but never reaches it. ~4,000 |
+| **HP Regeneration** | 3 | Heals about 0.07% of max HP per second per level, but only until you are back to 30% of max HP - it is an emergency trickle, not a full heal. ~20,000 |
 | **Death Protection** | 1 charge | Survive one lethal hit with 1 HP. The charge is spent when it saves you; re-buy to restore it. ~50,000 |
 | **Drone Battery Life** | 20 | Your drones' batteries last 5% longer per level (up to +100%). ~6,000 |
 | **Gun Battery Life** (one per gun type: bullet / laser / tranq) | 20 each | That gun's battery lasts 5% longer per level (up to +100%). ~6,000 |
@@ -148,7 +148,6 @@ count) and, like every number below, are configurable.
 | **Map Suite** | 10 | One upgrade, ten map features: L1 alive-player count, L2 dead-player count, L3 active monsters, L4 respawning monsters, L5 quota heading and valuable tracker (found/total, haul), L6 team pings on the map, L7-L8 zoom the map out (zoom keys `-` / `=`), L9 cosmetic-box tracker, L10 monsters as dots. Replaces the vanilla *Map Player Count* upgrade by default. ~15,000 for the first level |
 | **Ping Info** | 1 | Your pings show the valuable's value, cosmetic rarity and exact name. ~6,000 |
 | **Ping Anywhere** | 1 | Place location pings on any surface, visible through walls (limited live pings per player). ~6,000 |
-| **Pin** | 1 | The permanent version of Ping Anywhere: buy once, keep it forever. ~30,000 |
 
 **Truck upgrades** - bought once, they apply to the whole team:
 
@@ -199,7 +198,7 @@ position; the sender draws once locally and ignores its own network echo.
 Gated behind ping upgrades:
 
 - **Ping Info** — enriches ping labels (value, rarity, name).
-- **Ping Anywhere** / **Pin** — unlocks Location pings (anywhere you aim, visible through walls),
+- **Ping Anywhere** — unlocks Location pings (anywhere you aim, visible through walls),
   capped per player.
 
 A global anti-flood cap limits how many pings can be on screen at once.
@@ -329,7 +328,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.6.2`
+- **Версия:** `0.6.3`
 
 ### Содержание
 
@@ -454,8 +453,8 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 
 | Улучшение | Уровни | Что делает |
 | --- | --- | --- |
-| **Slower Stamina Use** | 5 | Бег тратит на 10% меньше выносливости за уровень. ~4 000 |
-| **HP Regeneration** | 3 | Лечит 0,2% максимума здоровья в секунду за уровень, но только пока здоровье не поднимется до 50% от максимума - это аварийная струйка, а не полное лечение. ~20 000 |
+| **Slower Stamina Use** | 5 | Каждый уровень умножает расход выносливости на бег на 0,95 (с накоплением): расход стремится к нулю, но не достигает его. ~4 000 |
+| **HP Regeneration** | 3 | Лечит около 0,07% максимума здоровья в секунду за уровень, но только пока здоровье не поднимется до 30% от максимума - это аварийная струйка, а не полное лечение. ~20 000 |
 | **Death Protection** | 1 заряд | Переживаешь один смертельный удар с 1 HP. Заряд тратится, когда он тебя спас; купи снова, чтобы восстановить. ~50 000 |
 | **Drone Battery Life** | 20 | Батареи твоих дронов служат на 5% дольше за уровень (до +100%). ~6 000 |
 | **Gun Battery Life** (своё на каждый тип оружия: пули / лазер / транквилизатор) | по 20 | Батарея этого оружия служит на 5% дольше за уровень (до +100%). ~6 000 |
@@ -463,7 +462,6 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 | **Map Suite** | 10 | Одно улучшение, десять функций карты: L1 число живых игроков, L2 число мёртвых, L3 активные монстры, L4 возрождающиеся монстры, L5 направление к квоте и трекер ценностей (найдено/всего, добыча), L6 командные пинги на карте, L7-L8 отдаление карты (клавиши `-` / `=`), L9 трекер косметических ящиков, L10 монстры точками. По умолчанию заменяет ванильное *Map Player Count*. ~15 000 за первый уровень |
 | **Ping Info** | 1 | Твои пинги показывают стоимость ценности, редкость косметики и точное название. ~6 000 |
 | **Ping Anywhere** | 1 | Ставь пинги-метки на любой поверхности, видимые сквозь стены (число живых пингов на игрока ограничено). ~6 000 |
-| **Pin** | 1 | Постоянная версия Ping Anywhere: купил один раз - навсегда. ~30 000 |
 
 **Улучшения грузовика** - покупаются один раз и действуют на всю команду:
 
@@ -514,7 +512,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 Зависят от улучшений:
 
 - **Ping Info** — расширяет подписи пингов (стоимость, редкость, название).
-- **Ping Anywhere** / **Pin** — открывают пинги-точки (куда угодно, видны сквозь стены), с лимитом на игрока.
+- **Ping Anywhere** — открывают пинги-точки (куда угодно, видны сквозь стены), с лимитом на игрока.
 
 Глобальный анти-флуд ограничивает число пингов на экране одновременно.
 
@@ -685,10 +683,10 @@ Saved contents of extra slots are restored across truck/level transitions.
 Main-row number keys remain reserved for inventory: vote using **NumPad 1–6 or click**. If an
 inventory action shares a binding with voting, the inventory action takes priority.
 
-Capped custom upgrades cannot be consumed at maximum level. Ping Info, Ping Anywhere and Pin cap
+Capped custom upgrades cannot be consumed at maximum level. Ping Info and Ping Anywhere cap
 at one; Map Suite at ten; Inventory Slot at four levels. Other upgrades use their declared/configured
 limits. Death Protection can be purchased/used again after its charge is spent.
-Ping Info alone does **not** unlock floor/wall pings: Ping Anywhere or Pin remains required.
+Ping Info alone does **not** unlock floor/wall pings: Ping Anywhere remains required.
 
 Truck **Heal Power**, **Charge Efficiency** and **Loot Cash-In** are team upgrades. A purchase
 increases the shared team level once, reaches late joiners, and remains after the buyer leaves.
@@ -703,10 +701,10 @@ They use host-synchronized saved levels. This does not make personal inventory s
 Цифры основного ряда остаются инвентарю; голосование — **NumPad 1–6 или мышь**. При совпадении
 назначений приоритет получает действие инвентаря.
 
-На максимальном уровне предмет улучшения не съедается. Ping Info, Ping Anywhere и Pin имеют
+На максимальном уровне предмет улучшения не съедается. Ping Info и Ping Anywhere имеют
 кап 1, Map Suite — 10, Inventory Slot — 4 уровня. Для остальных действуют их объявленные/настроенные
 лимиты. Death Protection можно использовать повторно после расходования заряда.
-Ping Info сам по себе **не** открывает пинги пола и стен: по-прежнему нужен Ping Anywhere или Pin.
+Ping Info сам по себе **не** открывает пинги пола и стен: нужен Ping Anywhere (прежняя покупка Pin переносится автоматически).
 
 **Heal Power**, **Charge Efficiency** и **Loot Cash-In** машины действуют на всю команду. Покупка
 однократно повышает общий уровень, распространяется на поздно подключившихся и сохраняется после
@@ -770,8 +768,32 @@ HP сохраняется доля оставшегося здоровья; мё
 кольцо, стрелка и обводка предмета получили мягкое свечение без заливки середины.
 Звук зависит от типа цели. Громкость — **Ping / SoundVolume** (0 выключает), размер метки пола —
 **Ping / MarkerScale**. Повторный пинг той же цели обновляет метку вместо наложения контуров.
-Для пола и стен по-прежнему нужен Ping Anywhere или Pin.
+Для пола и стен нужен Ping Anywhere (прежняя покупка Pin переносится автоматически).
 
 Modifier names stay beneath the quota; descriptions are shown separately below the level heading only while Tab is open. Valuable ping prices contain one dollar sign.
 
 Названия модификаторов находятся под квотой; описание выводится отдельно под уровнем только при открытом Tab. В цене пинга лута один знак доллара.
+
+### 0.6.3 inventory, Tab and stamina / инвентарь, Tab и выносливость
+
+Extra slots initialize correctly when copied from a hidden HUD and after a level transition. Modifier descriptions follow the native level number in Tab. Sprint drain uses `base × (1 − p)^level`; at the default 5% and level 5, 77.38% of the base drain remains (22.62% reduction). Supported saved levels are bounded to the configured cap, at most 20.
+
+Дополнительные слоты корректно инициализируются при копировании скрытого HUD и после перехода уровня. Описание модификатора следует за штатным числом уровня в Tab. Расход спринта: `база × (1 − p)^уровень`; при стандартных 5% и уровне 5 остаётся 77,38% базового расхода (снижение на 22,62%). Уровень из сохранения ограничен настроенным пределом, максимум 20.
+
+### 0.6.3 ping merge, Autoscan and battery upgrades / пинги, Autoscan и батареи
+
+- **Ping Anywhere** now includes the former **Pin** upgrade. Only one surface-marker upgrade is sold. Saved Pin purchases migrate per player without granting an extra level; the legacy Tab entry is cleared. **Ping Info** only adds value, rarity and exact names. Markers still expire after **Ping / DurationSeconds** and obey the existing caps.
+- **Autoscan** uses the complete native valuable registry, including crowded rooms and loot with unusual colliders. Native discoverable items are scanned too, with native team discovery. It waits for generation/discovery/map readiness, skips dead players and shops, and keeps the configured interval and radius per level.
+- Bullet, laser and tranquilizer battery upgrades have distinct wrapper illustrations and matching transparent icons. Battery drain is corrected for the first shot and whole-bar weapons, with no second watchdog refund. Deployed drones use their activator's upgrade, even if somebody else grabbed them.
+
+- **Pin** объединён с **Ping Anywhere**: в продаже одно улучшение меток поверхностей. Купленный Pin переносится по игрокам без лишнего уровня; дублирующая запись в Tab очищается. **Ping Info** добавляет сведения. Время метки — **Ping / DurationSeconds**, лимиты сохранены.
+- **Autoscan** сканирует полный игровой список ценностей и предметы со штатным обнаружением, включая переполненные комнаты и необычные коллайдеры. Радиус и интервал настраиваются как раньше; сканирование ждёт загрузки уровня и не работает в магазине или после смерти.
+- Для Bullet, Laser и Tranq подключены разные упаковки и прозрачные иконки. Исправлены первый выстрел, дробный расход целых делений батареи и повторный возврат расхода. Развёрнутый дрон использует улучшение активировавшего его игрока.
+
+### 0.6.3 code audit / аудит кода
+
+Death Protection respects shield reduction and native hit rejection. Regeneration keeps fractional healing and its configured cap. Sprint reduction scales the whole native sprint cost, including speed upgrades, and carries sub-float deductions. Live charging stations refresh team bonuses. Battery purchases stop at their effective cap. Network events validate types, finite values and sender authority; Black Market rejects invalid modifier IDs. Version, saved upgrade IDs and configuration filename remain 0.6.3-compatible.
+
+Исправлены расход зарядов Death Protection, дробная регенерация и её кап, полный расход спринта с доплатой за скорость и накоплением дробей, обновление работающей зарядной станции, эффективные капы батарей, проверка сетевых сообщений и некорректных покупок Black Market. Версия — 0.6.3, ID сохранений и имя конфига сохранены.
+
+Validation uses controlled Unity/game/Photon fixtures and current-game assembly metadata; it does not certify live multiplayer or Proton. HUD labels inherit game font settings, but independent overlay canvases currently do not reproduce the native blur/chromatic processing consistently, and their helper clears the glow colour. Diagnostic fallbacks still use Unity GUI fonts. This remains an open visual issue.

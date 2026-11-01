@@ -1,6 +1,6 @@
 {
   "name": "IncreaseDifficultyMod",
-  "version_number": "0.6.2",
+  "version_number": "0.6.3",
   "website_url": "https://github.com/AmoneMisa/Repo-Increase-Difficulty-Mod",
   "description": "Configurable difficulty scaling, level surprises, custom weapons and drones, player and truck upgrades, Black Market, spectator map, team pings and detailed round statistics. English / Russian.",
   "dependencies": [

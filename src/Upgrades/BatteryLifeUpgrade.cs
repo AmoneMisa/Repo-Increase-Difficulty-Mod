@@ -11,9 +11,9 @@ namespace IncreaseHardMod.Upgrades;
 /// longer, up to +100% (double the usage).
 ///
 /// Guns drain their battery from one place (ItemGun.ShootRPC), but drones drain from ~5
-/// different components with no shared choke point. Rather than patch every drain site, we
-/// use ONE uniform host-side watchdog: a postfix on <c>ItemBattery.Update</c> that watches
-/// each battery's <c>batteryLife</c> and, whenever it drops (real drain, not charging),
+/// different components with no shared choke point. Shot/full-bar hooks settle exact fractional
+/// costs immediately; a host-side watchdog on <c>ItemBattery.Update</c> watches other
+/// changes in each battery's <c>batteryLife</c> and, whenever it drops (real drain, not charging),
 /// refunds a fraction back based on the USING player's upgrade level for that battery's
 /// category. This covers every current and future drain source automatically.
 ///
@@ -50,17 +50,17 @@ internal static class BatteryLifeUpgrade
         if (!ModConfig.PlayerUpgradesEnabled.Value)
             return;
 
-        // All gun batteries share the "common gun" icon (bullet/laser/tranq use one texture).
+        // Distinct front artwork and matching inventory renders for each weapon category.
         DefineGun(BulletId, "Bullet Gun Battery Life", "Upgrade_Gun-Bullet-Count.png");
-        DefineGun(LaserId, "Laser Gun Battery Life", "Upgrade_Gun-Bullet-Count.png");
-        DefineGun(TranqId, "Tranq Gun Battery Life", "Upgrade_Gun-Bullet-Count.png");
+        DefineGun(LaserId, "Laser Gun Battery Life", "Upgrade_Gun-Laser-Capacity.png");
+        DefineGun(TranqId, "Tranq Gun Battery Life", "Upgrade_Gun-Tranq-Capacity.png");
 
         PlayerUpgradeRegistry.Define(new PlayerUpgradeRegistry.Definition
         {
             Id = DroneId,
             DisplayName = "Drone Battery Life",
             Description = "Your drones' batteries last longer. Stacks per level (up to +100%).",
-            MaxLevel = ModConfig.DroneBatteryMaxLevel.Value,
+            MaxLevel = EffectiveMaxLevel(true),
             BaseShopPrice = ModConfig.DroneBatteryBasePrice.Value,
             IconFile = "Upgrade_Drone-Charge-Capacity.png",
         });
@@ -73,10 +73,17 @@ internal static class BatteryLifeUpgrade
             Id = id,
             DisplayName = name,
             Description = "This gun's battery lasts longer. Stacks per level (up to +100%).",
-            MaxLevel = ModConfig.GunBatteryMaxLevel.Value,
+            MaxLevel = EffectiveMaxLevel(false),
             BaseShopPrice = ModConfig.GunBatteryBasePrice.Value,
             IconFile = iconFile,
         });
+    }
+
+    internal static int EffectiveMaxLevel(bool drone)
+    {
+        float percent = Mathf.Clamp(drone ? ModConfig.DroneBatteryPercentPerLevel.Value : ModConfig.GunBatteryPercentPerLevel.Value, .01f, .5f);
+        int configured = drone ? ModConfig.DroneBatteryMaxLevel.Value : ModConfig.GunBatteryMaxLevel.Value;
+        return Mathf.Clamp(configured, 1, Mathf.CeilToInt(1f / percent));
     }
 
     private static Category Resolve(ItemBattery battery)
@@ -117,26 +124,93 @@ internal static class BatteryLifeUpgrade
         if (equippable != null && equippable.isEquipped)
             return equippable.GetOwnerPlayerAvatar();
 
-        var pgo = battery.physGrabObject != null ? battery.physGrabObject : battery.GetComponentInChildren<PhysGrabObject>();
-        if (pgo != null && pgo.lastPlayerGrabbing != null)
-            return pgo.lastPlayerGrabbing;
-
+        // A deployed drone belongs to the player who activated it, not the last passer-by who grabbed it.
+        var drone = battery.GetComponent<ItemDrone>();
         var toggle = battery.GetComponent<ItemToggle>();
+        if (drone != null)
+        {
+            var owner = drone.droneOwner != null ? drone.droneOwner :
+                toggle != null ? SemiFunc.PlayerAvatarGetFromPhotonID(toggle.playerTogglePhotonID) : null;
+            if (owner != null) return owner;
+        }
+        var pgo = battery.physGrabObject != null ? battery.physGrabObject : battery.GetComponentInChildren<PhysGrabObject>();
+        if (pgo != null && pgo.lastPlayerGrabbing != null) return pgo.lastPlayerGrabbing;
         return toggle != null ? SemiFunc.PlayerAvatarGetFromPhotonID(toggle.playerTogglePhotonID) : null;
+    }
+
+    private static float DrainMultiplier(ItemBattery battery)
+    {
+        if (!ModConfig.PlayerUpgradesEnabled.Value || !SemiFunc.IsMasterClientOrSingleplayer() || battery == null) return 1f;
+        var category = Resolve(battery);
+        if (category == Category.None) return 1f;
+        var user = UserOf(battery);
+        if (user == null || string.IsNullOrEmpty(user.steamID)) return 1f;
+        int cap = EffectiveMaxLevel(category == Category.Drone);
+        int level = Mathf.Clamp(RepoUpgrades.GetUpgrade(UpgradeIdFor(category))?.GetLevel(user.steamID) ?? 0, 0, Mathf.Max(0, cap));
+        float bonus = Mathf.Clamp01(PercentPerLevelFor(category) * level);
+        return 1f / (1f + bonus);
+    }
+
+    private static void SetDrainResult(ItemBattery battery, float before, float rawCost)
+    {
+        float multiplier = DrainMultiplier(battery);
+        if (battery.batteryLife >= before) return;
+        if (multiplier < 1f)
+        {
+            battery.batteryLife = Mathf.Clamp(before - Mathf.Max(0f, rawCost) * multiplier, 0f, 100f);
+            battery.batteryLifeInt = battery.BatteryBarsGet();
+            // Native full-bar consumption may already have saved/broadcast the rounded raw charge.
+            // Publish the corrected fractional snapshot without playing a second deduction sound.
+            battery.BatteryFullPercentChange(battery.batteryLifeInt, false, false);
+        }
+        // The periodic watchdog must not refund the same shot a second time.
+        _states.GetOrCreateValue(battery).PrevLife = battery.batteryLife;
+    }
+
+    [HarmonyPatch(typeof(ItemGun), "ShootRPC")]
+    private static class ShotDrain
+    {
+        [HarmonyPrefix]
+        private static void Prefix(ItemGun __instance, out float __state) => __state = __instance.itemBattery != null ? __instance.itemBattery.batteryLife : 0f;
+        [HarmonyPostfix]
+        private static void Postfix(ItemGun __instance, float __state)
+        {
+            if (__instance.itemBattery != null && !__instance.batteryDrainFullBar)
+                SetDrainResult(__instance.itemBattery, __state, __instance.batteryDrain);
+        }
+    }
+
+    [HarmonyPatch(typeof(ItemBattery), "RemoveFullBar")]
+    private static class FullBarDrain
+    {
+        [HarmonyPrefix]
+        private static void Prefix(ItemBattery __instance, out float __state) => __state = __instance.batteryLife;
+        [HarmonyPostfix]
+        private static void Postfix(ItemBattery __instance, int _bars, float __state)
+        {
+            if (_bars > 0 && __instance.batteryBars > 0)
+                SetDrainResult(__instance, __state, _bars * (100f / __instance.batteryBars));
+        }
     }
 
     [HarmonyPatch(typeof(ItemBattery), "Update")]
     private static class RefundPatch
     {
+        [HarmonyPrefix]
+        private static void Prefix(ItemBattery __instance)
+        {
+            var state = _states.GetOrCreateValue(__instance);
+            if (float.IsNaN(state.PrevLife)) state.PrevLife = __instance.batteryLife;
+        }
+
         [HarmonyPostfix]
         private static void Postfix(ItemBattery __instance)
         {
-            if (!ModConfig.PlayerUpgradesEnabled.Value)
+            if (!ModConfig.PlayerUpgradesEnabled.Value || !SemiFunc.IsMasterClientOrSingleplayer())
+            {
+                _states.GetOrCreateValue(__instance).PrevLife = __instance.batteryLife;
                 return;
-
-            // Battery drain is authoritative on the host; only refund there.
-            if (!SemiFunc.IsMasterClientOrSingleplayer())
-                return;
+            }
 
             var state = _states.GetOrCreateValue(__instance);
 
@@ -164,26 +238,8 @@ internal static class BatteryLifeUpgrade
                 return;
             }
 
-            var user = UserOf(__instance);
-            if (user == null)
-            {
-                state.PrevLife = life;
-                return;
-            }
-
-            var upgrade = RepoUpgrades.GetUpgrade(UpgradeIdFor(state.Category));
-            int level = upgrade != null ? upgrade.GetLevel(user.steamID) : 0;
-            if (level <= 0)
-            {
-                state.PrevLife = life;
-                return;
-            }
-
-            // bonus = +X% battery life (capped at +100%). Refund the drain the extra life
-            // "should" have absorbed: with drain multiplier 1/(1+bonus), the refunded
-            // portion of this frame's drain is bonus/(1+bonus).
-            float bonus = Mathf.Clamp01(PercentPerLevelFor(state.Category) * level);
-            float refund = drained * (bonus / (1f + bonus));
+            float multiplier = DrainMultiplier(__instance);
+            float refund = drained * (1f - multiplier);
 
             __instance.batteryLife = Mathf.Clamp(life + refund, 0f, 100f);
             state.PrevLife = __instance.batteryLife;

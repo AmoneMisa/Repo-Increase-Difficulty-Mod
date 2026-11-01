@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using REPOLib.Modules;
@@ -84,6 +84,7 @@ internal static class PlayerUpgradeRegistry
         [HarmonyPostfix]
         private static void Postfix()
         {
+            PingUpgrades.MigrateLegacyPins();
             var stats = StatsManager.instance;
             if (stats == null) return;
             foreach (var upgrade in RepoUpgrades.PlayerUpgrades)
@@ -98,6 +99,7 @@ internal static class PlayerUpgradeRegistry
     /// </summary>
     public static void EnsureRegistered()
     {
+        PingUpgrades.MigrateLegacyPins();
         if (_registered)
             return;
 

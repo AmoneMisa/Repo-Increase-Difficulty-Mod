@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <ProductionNetworkSource Condition="'$(ProductionNetworkSource)' == ''">../../src/Networking/ModNetwork.cs</ProductionNetworkSource>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(ProductionNetworkSource)" Link="Production/ModNetwork.cs" />
+    <Compile Include="../../src/Networking/NetworkPayload.cs" Link="Production/NetworkPayload.cs" />
+  </ItemGroup>
+</Project>

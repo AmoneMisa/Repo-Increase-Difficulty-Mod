@@ -1,0 +1,43 @@
+using System;
+
+namespace IncreaseHardMod.Networking;
+
+/// <summary>Validate message shapes before Photon callbacks read or mutate gameplay state.</summary>
+internal static class NetworkPayload
+{
+    internal static bool Finite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
+    internal static bool Host(int sender, int host, bool inRoom) => inRoom && host > 0 && sender == host;
+    private static bool Envelope(object raw, int min, int max, out object[] data)
+    {
+        data = raw as object[];
+        return data != null && data.Length >= min && data.Length <= max;
+    }
+    private static bool Text(object value, int limit) => value is string text && text.Length <= limit;
+
+    internal static bool Timer(object raw, out object[] data) => Envelope(raw, 2, 2, out data) &&
+        data[0] is float seconds && Finite(seconds) && seconds >= 0f && data[1] is bool;
+
+    internal static bool Ping(object raw, out object[] data) => Envelope(raw, 6, 7, out data) &&
+        data[0] is byte kind && kind <= 7 && data[1] is float x && Finite(x) &&
+        data[2] is float y && Finite(y) && data[3] is float z && Finite(z) &&
+        Text(data[4], 512) && Text(data[5], 128) && (data.Length == 6 || data[6] is int id && id >= 0);
+
+    internal static bool Candidates(object raw, out object[] data)
+    {
+        if (!Envelope(raw, 5, 5, out data) || data[0] is not int || data[1] is not string[] names ||
+            names.Length == 0 || names.Length > 6 || data[2] is not float seconds || !Finite(seconds) || seconds < 0f ||
+            data[3] is not bool || data[4] is not int winner || winner < -1 || winner >= names.Length) return false;
+        foreach (var name in names) if (string.IsNullOrEmpty(name) || name.Length > 256) return false;
+        return true;
+    }
+
+    internal static bool Ballot(object raw, int sender, out object[] data) => Envelope(raw, 4, 4, out data) &&
+        data[0] is int && data[1] is int actor && actor == sender && sender > 0 &&
+        data[2] is int choice && choice >= 0 && choice < 6 && Text(data[3], 128);
+
+    internal static bool BatteryDrain(object raw, out object[] data) => Envelope(raw, 2, 2, out data) &&
+        data[0] is int id && id > 0 && data[1] is float percent && Finite(percent) && percent > 0f && percent <= 100f;
+
+    internal static bool Repair(object raw, out object[] data) => Envelope(raw, 2, 2, out data) &&
+        data[0] is int id && id > 0 && data[1] is float value && Finite(value) && value >= 0f;
+}

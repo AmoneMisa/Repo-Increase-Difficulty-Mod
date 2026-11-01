@@ -20,7 +20,7 @@ internal enum PingType : byte
 
 /// <summary>Team pings with soft silhouette contours and large cyan location markers.
 /// Object IDs and world positions are shared with the team and the Map Suite mirror.
-/// Location pings still require Ping Anywhere or Pin and retain the per-player/global caps.</summary>
+/// Location pings still require Ping Anywhere and retain the per-player/global caps.</summary>
 internal static class PingController
 {
     internal sealed class ActivePing
@@ -44,10 +44,10 @@ internal static class PingController
             return;
 
         // The whole ping system is a purchase: without ANY ping upgrade you can't ping at all.
-        // (Location pings additionally require Ping Anywhere / Pin, checked below.)
+        // (Location pings additionally require Ping Anywhere, checked below.)
         if (!OwnsAnyPing())
         {
-            Announce("Requires a ping upgrade (Ping Info / Ping Anywhere / Pin)", Color.gray, "");
+            Announce("Requires a ping upgrade (Ping Info / Ping Anywhere)", Color.gray, "");
             return;
         }
 
@@ -75,17 +75,17 @@ internal static class PingController
             label = "Location";
         }
 
-        // Location pings need the "Ping Anywhere" or "Pin" upgrade (both permanent unlocks),
+        // Location pings need the "Ping Anywhere" upgrade,
         // and are capped per player.
         if (type == PingType.Location)
         {
-            if (OwnsPingAnywhere() || PingUpgrades.OwnsPin())
+            if (OwnsPingAnywhere())
             {
                 EnforceLocationCap();
             }
             else
             {
-                Announce("Requires 'Ping Anywhere' or 'Pin' upgrade", Color.gray, "");
+                Announce("Requires 'Ping Anywhere' upgrade", Color.gray, "");
                 return;
             }
         }
@@ -245,6 +245,7 @@ internal static class PingController
     /// <summary>Called from ModNetwork.OnEvent when a remote player pings.</summary>
     public static void AddNetworkPing(byte type, Vector3 pos, string label, string sender, int viewID)
     {
+        if (!ModConfig.PingEnabled.Value) return;
         PhysGrabObject physGrab = null;
         if (viewID != 0)
         {
@@ -426,7 +427,7 @@ internal static class PingController
     private static bool OwnsPingInfo() => PingUpgrades.OwnsPingInfo();
     // True when the local player owns at least one ping upgrade (the gate for pinging at all).
     private static bool OwnsAnyPing() =>
-        PingUpgrades.OwnsPingInfo() || PingUpgrades.OwnsPingAnywhere() || PingUpgrades.OwnsPin();
+        PingUpgrades.OwnsPingInfo() || PingUpgrades.OwnsPingAnywhere();
 
     private static string LocalName()
     {

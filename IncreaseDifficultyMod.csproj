@@ -6,7 +6,7 @@
     <Product>IncreaseDifficultyMod</Product>
     <!-- Preserve code/resource identities and saved integrations after the public rename. -->
     <RootNamespace>IncreaseHardMod</RootNamespace>
-    <Version>0.6.2</Version>
+    <Version>0.6.3</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -27,6 +27,7 @@
   <!-- _decompiled/ is a read-only reference dump of the game code; never compile it. -->
   <ItemGroup>
     <Compile Remove="_decompiled\**\*.cs" />
+    <Compile Remove="tests\**\*.cs" />
     <None Include="_decompiled\**\*.cs" />
   </ItemGroup>
 

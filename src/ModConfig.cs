@@ -126,7 +126,6 @@ public static class ModConfig
     public static ConfigEntry<int> PingAnywhereBasePrice;
     public static ConfigEntry<int> PingInfoBasePrice;
     // "Pin": a one-time permanent unlock (like Ping Anywhere) letting you place Location pins.
-    public static ConfigEntry<int> PinBasePrice;
 
     // --- Item Unstuck (valuable safety net) ---
     // Host-authoritative safeguards for valuables: relocate ones trapped in geometry
@@ -588,9 +587,6 @@ public static class ModConfig
         PingInfoBasePrice = BindInt(cfg,
             "Ping", "PingInfoBasePrice", 6000, 0, 1000000,
             "Ping Info upgrade: approximate shop price (your pings reveal value / rarity / exact names).");
-        PinBasePrice = BindInt(cfg,
-            "Ping", "PinBasePrice", 30000, 0, 1000000,
-            "Pin: approximate shop price for the one-time permanent unlock (buy once, place Location pins forever — like 'Ping Anywhere').");
 
         // --- Item Unstuck ---
                 ValuableRelocateStuck = cfg.Bind(
@@ -719,8 +715,8 @@ public static class ModConfig
 
         // --- Player Upgrades (custom, sold in the default shop via REPOLib) ---
                 StaminaPercentPerLevel = BindFloat(cfg,
-            "Player Upgrades", "StaminaPercentPerLevel", 0.10f, 0.01f, 0.5f,
-            "Slower Stamina Use: sprint energy drain reduction per level. 0.10 = -10% drain per level (per player).");
+            "Player Upgrades", "StaminaPercentPerLevel", 0.05f, 0.01f, 0.5f,
+            "Slower Stamina Use: sprint energy drain multiplier per level, compounding: each level multiplies the drain by (1 - value). 0.05 = each level keeps 95% of the drain; it approaches zero but never reaches it.");
         StaminaMaxLevel = BindInt(cfg,
             "Player Upgrades", "StaminaMaxLevel", 5, 1, 20,
             "Slower Stamina Use: maximum purchasable level.");
@@ -728,11 +724,11 @@ public static class ModConfig
             "Player Upgrades", "StaminaBasePrice", 4000, 0, 1000000,
             "Slower Stamina Use: approximate shop price (at one player, before the game's own scaling).");
         RegenPercentPerLevel = BindFloat(cfg,
-            "Player Upgrades", "RegenPercentPerLevel", 0.002f, 0.0005f, 0.05f,
-            "HP Regen: fraction of MAX HP healed per SECOND, per level. 0.002 = 0.2%/s per level (very slow — ~1 HP every 5s at level 1 for a 100 HP player).");
+            "Player Upgrades", "RegenPercentPerLevel", 0.000667f, 0.0005f, 0.05f,
+            "HP Regen: fraction of MAX HP healed per SECOND, per level. 0.000667 = about 0.07%/s per level (~1 HP every 15s at level 1 for a 100 HP player).");
         RegenMaxHpFraction = BindFloat(cfg,
-            "Player Upgrades", "RegenMaxHpFraction", 0.50f, 0.05f, 1f,
-            "HP Regen: stops once current HP reaches this fraction of max HP. 0.50 = regen only fills up to 50% of max HP.");
+            "Player Upgrades", "RegenMaxHpFraction", 0.30f, 0.05f, 1f,
+            "HP Regen: stops once current HP reaches this fraction of max HP. 0.30 = regen only fills up to 30% of max HP.");
         RegenMaxLevel = BindInt(cfg,
             "Player Upgrades", "RegenMaxLevel", 3, 1, 20,
             "HP Regen: maximum purchasable level.");
@@ -765,7 +761,7 @@ public static class ModConfig
             "Drone Battery Life: approximate shop price of the first level.");
         AutoscanRangePerLevel = BindFloat(cfg,
             "Player Upgrades", "AutoscanRangePerLevel", 5f, 1f, 30f,
-            "Autoscan: scan radius added per level, in metres. 5 = level 1 discovers valuables within 5m, level 2 within 10m, etc.");
+            "Autoscan: scan radius added per level, in metres. Discovers valuables and native discoverable items for the team. 5 = level 1 scans 5m, level 2 scans 10m.");
         AutoscanMaxLevel = BindInt(cfg,
             "Player Upgrades", "AutoscanMaxLevel", 5, 1, 20,
             "Autoscan: maximum purchasable level.");

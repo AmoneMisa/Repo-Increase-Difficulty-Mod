@@ -1,82 +1,88 @@
+using System.Collections.Generic;
+using HarmonyLib;
 using UnityEngine;
 using RepoUpgrades = REPOLib.Modules.Upgrades;
 
 namespace IncreaseHardMod.Upgrades;
 
-/// <summary>
-/// "Autoscan" — a per-player upgrade that passively discovers valuables around you. Each
-/// level widens the scan radius. Discovering a valuable reveals its value and puts it on
-/// the map, exactly like the handheld tracker does.
-///
-/// Like HP regen, this is a continuous effect, so it runs from a ticking controller rather
-/// than REPOLib start/upgrade actions. The REPOLib upgrade is registered only for shop
-/// presence + per-player level tracking; the controller reads the LOCAL player's level.
-///
-/// Discovery is inherently team-wide (ValuableObject.Discover RPCs to everyone and adds to
-/// the shared map), so a scanning player benefits the whole squad — acceptable and matches
-/// how the vanilla tracker already works.
-/// </summary>
+/// <summary>Periodically discovers nearby loot through the native, team-synchronized discovery API.</summary>
 internal static class AutoscanUpgrade
 {
     public const string Id = "IHM_Autoscan";
+    private static readonly HashSet<ValuableDiscoverCustom> CustomTargets = new();
 
     public static void Register()
     {
-        if (!ModConfig.PlayerUpgradesEnabled.Value)
-            return;
-
+        if (!ModConfig.PlayerUpgradesEnabled.Value) return;
         PlayerUpgradeRegistry.Define(new PlayerUpgradeRegistry.Definition
         {
-            Id = Id,
-            DisplayName = "Autoscan",
-            Description = "Automatically discovers nearby valuables. Higher levels scan farther.",
+            Id = Id, DisplayName = "Autoscan",
+            Description = "Automatically discovers nearby valuables and native discoverable items. Higher levels scan farther; discoveries are shared with the team.",
             MaxLevel = ModConfig.AutoscanMaxLevel.Value,
             BaseShopPrice = ModConfig.AutoscanBasePrice.Value,
             IconFile = "Upgrade_Autoscan.png",
         });
     }
 
-    /// <summary>Runs the local player's periodic scan. Added to the mod's runtime object.</summary>
+    [HarmonyPatch(typeof(ValuableDiscoverCustom), "Awake")]
+    private static class TrackCustomTarget
+    {
+        [HarmonyPostfix]
+        private static void Postfix(ValuableDiscoverCustom __instance) => CustomTargets.Add(__instance);
+    }
+
     internal sealed class ScanController : MonoBehaviour
     {
         private float _timer;
-        // Reused to avoid per-scan allocation of the overlap buffer's managed wrapper.
-        private static readonly Collider[] _hits = new Collider[128];
+        private ValuableDirector _director;
 
         private void Update()
         {
-            if (!ModConfig.PlayerUpgradesEnabled.Value || !SemiFunc.RunIsLevel())
-                return;
+            // RunIsLevel and native Discover depend on singletons absent while loading.
+            if (!ModConfig.PlayerUpgradesEnabled.Value || RunManager.instance == null || RunManager.instance.levelCurrent == null ||
+                !SemiFunc.RunIsLevel() || LevelGenerator.Instance == null || !LevelGenerator.Instance.Generated ||
+                ValuableDirector.instance == null || ValuableDiscover.instance == null || Map.Instance == null) return;
+            var avatar = SemiFunc.PlayerAvatarLocal();
+            if (avatar == null || avatar.isDisabled || string.IsNullOrEmpty(avatar.steamID)) return;
+            var upgrade = RepoUpgrades.GetUpgrade(Id);
+            int level = Mathf.Clamp(upgrade != null ? upgrade.GetLevel(avatar.steamID) : 0, 0, Mathf.Clamp(ModConfig.AutoscanMaxLevel.Value, 1, 20));
+            if (level == 0) return;
 
             _timer -= Time.deltaTime;
-            if (_timer > 0f)
-                return;
-            _timer = Mathf.Max(0.1f, ModConfig.AutoscanInterval.Value);
-
-            var avatar = SemiFunc.PlayerAvatarLocal();
-            if (avatar == null || avatar.isDisabled)
-                return;
-
-            var upgrade = RepoUpgrades.GetUpgrade(Id);
-            int level = upgrade != null ? upgrade.GetLevel(avatar.steamID) : 0;
-            if (level <= 0)
-                return;
-
-            float radius = level * ModConfig.AutoscanRangePerLevel.Value;
-            Scan(avatar.transform.position, radius);
+            if (_timer > 0f) return;
+            _timer = Mathf.Max(.1f, ModConfig.AutoscanInterval.Value);
+            if (_director != ValuableDirector.instance)
+            {
+                _director = ValuableDirector.instance;
+                // Include objects whose Awake happened before this controller/patch existed.
+                CustomTargets.Clear();
+                foreach (var target in Object.FindObjectsOfType<ValuableDiscoverCustom>(true)) CustomTargets.Add(target);
+            }
+            Scan(avatar.transform.position, level * Mathf.Clamp(ModConfig.AutoscanRangePerLevel.Value, 1f, 30f));
         }
 
-        private static void Scan(Vector3 center, float radius)
+        internal static void Scan(Vector3 center, float radius)
         {
-            int count = Physics.OverlapSphereNonAlloc(
-                center, radius, _hits, SemiFunc.LayerMaskGetPhysGrabObject());
-
-            for (int i = 0; i < count; i++)
+            if (ValuableDirector.instance == null || ValuableDiscover.instance == null || Map.Instance == null || radius <= 0f) return;
+            float radiusSquared = radius * radius;
+            // The full registry handles disabled/trigger/sibling colliders and crowded rooms.
+            foreach (var valuable in ValuableDirector.instance.valuableList)
             {
-                var valuable = _hits[i].GetComponentInParent<ValuableObject>();
-                if (valuable != null && !valuable.discovered)
-                    valuable.Discover(ValuableDiscoverGraphic.State.Discover);
+                if (valuable == null || !valuable.isActiveAndEnabled || valuable.discovered || !valuable.dollarValueSet ||
+                    !InRange(valuable.physGrabObject, center, radiusSquared)) continue;
+                valuable.Discover(ValuableDiscoverGraphic.State.Discover);
+            }
+            CustomTargets.RemoveWhere(target => target == null);
+            foreach (var target in CustomTargets)
+            {
+                if (!target.isActiveAndEnabled || target.discovered || !InRange(target.physGrabObject, center, radiusSquared)) continue;
+                target.Discover(); // Native custom sound/map rules and DiscoverRPC team sync.
             }
         }
+
+        private static bool InRange(PhysGrabObject physical, Vector3 center, float radiusSquared) =>
+            physical != null && physical.spawned && physical.isActiveAndEnabled &&
+            (!GameManager.Multiplayer() || (physical.photonView != null && physical.photonView.ViewID != 0)) &&
+            (physical.centerPoint - center).sqrMagnitude <= radiusSquared;
     }
 }

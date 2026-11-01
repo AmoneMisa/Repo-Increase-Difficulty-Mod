@@ -332,7 +332,7 @@ internal sealed class MapVoteController : MonoBehaviour
 
         int actor = LocalActor();
         string name = LocalName();
-        // Apply locally first (RaiseEvent to All does not echo to the sender).
+        // Apply locally first, then broadcast to the other peers.
         MapVoteState.ReceiveBallot(MapVoteState.SessionId, actor, choiceIndex, name);
         ModNetwork.Instance?.BroadcastMapVoteBallot(MapVoteState.SessionId, actor, choiceIndex, name);
     }

@@ -18,9 +18,8 @@ namespace IncreaseHardMod.Networking;
 /// with PhotonNetwork.AddCallbackTarget — that's how Photon delivers raised
 /// events to us via OnEvent().
 ///
-/// IMPORTANT: RaiseEvent to ReceiverGroup.All does NOT echo back to the sender.
-/// So the host must apply its rolled state locally itself (ModifierManager does
-/// that) and only RaiseEvent to inform the OTHER clients.
+/// Authoritative state is applied locally, then sent to ReceiverGroup.Others.
+/// This avoids depending on sender-echo behavior or applying local effects twice.
 /// </summary>
 public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 {
@@ -118,10 +117,10 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     /// <summary>Host broadcasts the authoritative timer state to other clients.</summary>
     public void BroadcastLevelTimer(float remaining, bool running)
     {
-        if (!PhotonNetwork.InRoom)
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient)
             return;
 
-        var options = new RaiseEventOptions { Receivers = ReceiverGroup.All };
+        var options = new RaiseEventOptions { Receivers = ReceiverGroup.Others };
         PhotonNetwork.RaiseEvent(
             LevelTimerEventCode,
             new object[] { remaining, running },
@@ -179,10 +178,10 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     /// </summary>
     public void BroadcastMapVoteCandidates(int sessionId, string[] levelNames, float remainingSeconds, bool closed, int lockedWinner)
     {
-        if (!PhotonNetwork.InRoom)
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient)
             return;
 
-        var options = new RaiseEventOptions { Receivers = ReceiverGroup.All };
+        var options = new RaiseEventOptions { Receivers = ReceiverGroup.Others };
         PhotonNetwork.RaiseEvent(
             MapVoteCandidatesEventCode,
             new object[] { sessionId, levelNames, remainingSeconds, closed, lockedWinner },
@@ -196,7 +195,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         if (!PhotonNetwork.InRoom)
             return;
 
-        var options = new RaiseEventOptions { Receivers = ReceiverGroup.All };
+        var options = new RaiseEventOptions { Receivers = ReceiverGroup.Others };
         PhotonNetwork.RaiseEvent(
             MapVoteBallotEventCode,
             new object[] { sessionId, actorNumber, choiceIndex, voterName },
@@ -287,7 +286,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     public void BroadcastRepair(ValuableObject valuable, float value)
     {
         var pv = valuable != null ? valuable.GetComponent<PhotonView>() : null;
-        if (!PhotonNetwork.InRoom || pv == null)
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient || pv == null)
             return;
         PhotonNetwork.RaiseEvent(RepairEventCode, new object[] { pv.ViewID, value },
             new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
@@ -337,8 +336,12 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     }
 
     /// <summary>Photon calls this on every client for every raised event.</summary>
+    private static bool HostSender(EventData message) => NetworkPayload.Host(message.Sender,
+        PhotonNetwork.MasterClient != null ? PhotonNetwork.MasterClient.ActorNumber : -1, PhotonNetwork.InRoom);
+
     public void OnEvent(EventData photonEvent)
     {
+        if (photonEvent == null || !PhotonNetwork.InRoom) return;
         if (photonEvent.Code == StickyTetherEventCode)
         {
             if (!PhotonNetwork.InRoom || PhotonNetwork.MasterClient == null || photonEvent.Sender != PhotonNetwork.MasterClient.ActorNumber ||
@@ -402,8 +405,8 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 
         if (photonEvent.Code == LevelTimerEventCode)
         {
-            var data = (object[])photonEvent.CustomData;
-            LevelTimerController.ApplyNetworkState((float)data[0], (bool)data[1]);
+            if (HostSender(photonEvent) && NetworkPayload.Timer(photonEvent.CustomData, out var data))
+                LevelTimerController.ApplyNetworkState((float)data[0], (bool)data[1]);
             return;
         }
 
@@ -412,7 +415,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         {
             // The sender already draws locally; also tolerate older peers broadcasting to All.
             if (PhotonNetwork.LocalPlayer != null && photonEvent.Sender == PhotonNetwork.LocalPlayer.ActorNumber) return;
-            var data = (object[])photonEvent.CustomData;
+            if (!NetworkPayload.Ping(photonEvent.CustomData, out var data)) return;
             var pos = new Vector3((float)data[1], (float)data[2], (float)data[3]);
             int viewID = data.Length > 6 ? (int)data[6] : 0;
             PingController.AddNetworkPing((byte)data[0], pos, (string)data[4], (string)data[5], viewID);
@@ -421,15 +424,15 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 
         if (photonEvent.Code == MapVoteCandidatesEventCode)
         {
-            var data = (object[])photonEvent.CustomData;
+            if (!HostSender(photonEvent) || !NetworkPayload.Candidates(photonEvent.CustomData, out var data)) return;
             MapVoteState.ReceiveCandidates((int)data[0], (string[])data[1], (float)data[2], (bool)data[3], (int)data[4]);
             return;
         }
 
         if (photonEvent.Code == MapVoteBallotEventCode)
         {
-            var data = (object[])photonEvent.CustomData;
-            MapVoteState.ReceiveBallot((int)data[0], (int)data[1], (int)data[2], (string)data[3]);
+            if (!NetworkPayload.Ballot(photonEvent.CustomData, photonEvent.Sender, out var data)) return;
+            MapVoteState.ReceiveBallot((int)data[0], photonEvent.Sender, (int)data[2], (string)data[3]);
             return;
         }
 
@@ -467,23 +470,28 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 
         if (photonEvent.Code == BatteryDrainEventCode)
         {
-            if (!PhotonNetwork.IsMasterClient)
-                return;
-            var d = (object[])photonEvent.CustomData;
-            var pv = PhotonView.Find((int)d[0]);
-            var battery = pv != null ? pv.GetComponent<ItemBattery>() : null;
-            if (battery != null)
-                battery.batteryLife = Mathf.Max(0f, battery.batteryLife - (float)d[1]);
+            if (!PhotonNetwork.IsMasterClient || !NetworkPayload.BatteryDrain(photonEvent.CustomData, out var data)) return;
+            var view = PhotonView.Find((int)data[0]);
+            var shield = view != null ? view.GetComponent<Gear.ShieldItem>() : null;
+            var battery = view != null ? view.GetComponent<ItemBattery>() : null;
+            if (shield == null || battery == null || shield.mode != Gear.ShieldMode.DefenceDrone) return;
+            var players = GameDirector.instance != null ? GameDirector.instance.PlayerList : null;
+            if (players == null) return;
+            foreach (var player in players)
+                if (player != null && player.photonView != null && player.photonView.OwnerActorNr == photonEvent.Sender && shield.Covers(player))
+                {
+                    battery.batteryLife = Mathf.Clamp(battery.batteryLife - (float)data[1], 0f, 100f);
+                    return;
+                }
             return;
         }
 
         if (photonEvent.Code == RepairEventCode)
         {
-            var d = (object[])photonEvent.CustomData;
-            var pv = PhotonView.Find((int)d[0]);
-            var v = pv != null ? pv.GetComponent<ValuableObject>() : null;
-            if (v != null)
-                v.dollarValueCurrent = Mathf.Min((float)d[1], v.dollarValueOriginal);
+            if (!HostSender(photonEvent) || !NetworkPayload.Repair(photonEvent.CustomData, out var data)) return;
+            var view = PhotonView.Find((int)data[0]);
+            var valuable = view != null ? view.GetComponent<ValuableObject>() : null;
+            if (valuable != null) valuable.dollarValueCurrent = Mathf.Clamp((float)data[1], 0f, valuable.dollarValueOriginal);
             return;
         }
 
@@ -492,7 +500,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             if (!PhotonNetwork.InRoom || PhotonNetwork.IsMasterClient || PhotonNetwork.MasterClient == null ||
                 photonEvent.Sender != PhotonNetwork.MasterClient.ActorNumber ||
                 photonEvent.CustomData is not object[] d || d.Length < 6 ||
-                d[0] is not string[] names || d[1] is not int[] broken || d[2] is not int[] brokenCount ||
+                d[0] is not string[] names || names.Length > 128 || d[1] is not int[] broken || d[2] is not int[] brokenCount ||
                 d[3] is not int[] delivered || d[4] is not int[] deaths || d[5] is not int[] revives ||
                 broken.Length != names.Length || brokenCount.Length != names.Length || delivered.Length != names.Length ||
                 deaths.Length != names.Length || revives.Length != names.Length) return;

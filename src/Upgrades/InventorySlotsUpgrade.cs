@@ -3,6 +3,7 @@ using HarmonyLib;
 using Photon.Pun;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using RepoUpgrades = REPOLib.Modules.Upgrades;
 
 namespace IncreaseHardMod.Upgrades;
@@ -56,6 +57,8 @@ internal static class InventorySlotsUpgrade
         var spots = inventory.inventorySpots;
         if (spots.Count < BaseSlots) return false;
         for (int i=0;i<BaseSlots;i++) if (spots[i] == null) return false;
+        // A live donor may have hidden its children. Wait until its native Start has completed.
+        if (spots[0].inventoryIcon == null || spots[0].batteryVisualLogic == null || AssetManager.instance == null) return false;
         int wanted = SlotCount(avatar);
         bool changed = false;
         while (spots.Count < wanted)
@@ -66,9 +69,20 @@ internal static class InventorySlotsUpgrade
             var clone = Object.Instantiate(spots[0].gameObject, holder.transform);
             foreach (var view in clone.GetComponentsInChildren<PhotonView>(true)) Object.DestroyImmediate(view);
             var spot = clone.GetComponent<InventorySpot>();
-            // The donor's Start already hid its battery child. Native Start searches active children.
-            var battery = clone.GetComponentInChildren<BatteryVisualLogic>(true);
-            if (battery != null) battery.gameObject.SetActive(true);
+            // Native Start searches ACTIVE children, then initializes SemiUI's animation curves.
+            // Cloning a hidden live slot leaves its icon/label/battery (or their parents) inactive;
+            // UpdateUI would throw before base.Start, leaving a permanently broken widget.
+            var icon = CloneChild(spots[0].inventoryIcon.transform, spots[0].transform, clone.transform)?.GetComponent<Image>();
+            var battery = CloneChild(spots[0].batteryVisualLogic.transform, spots[0].transform, clone.transform)?.GetComponent<BatteryVisualLogic>();
+            if (spot == null || icon == null || spot.noItem == null || battery == null)
+            {
+                DestroyTemporary(holder);
+                return false;
+            }
+            ActivatePath(icon.transform, clone.transform);
+            ActivatePath(spot.noItem.transform, clone.transform);
+            ActivatePath(battery.transform, clone.transform);
+            spot.doNotDisable ??= new List<GameObject>();
             spot.inventorySpotIndex = index;
             spot.currentState = InventorySpot.SpotState.Empty;
             spot.CurrentItem = null;
@@ -82,12 +96,8 @@ internal static class InventorySlotsUpgrade
             if (spot.noItem != null) spot.noItem.text = (index+1).ToString();
             spots.Add(spot); // Never leave null entries for native inventory loops.
             clone.name = "Inventory Slot " + (index+1);
+            clone.SetActive(false);
             clone.transform.SetParent(ui.transform, false);
-            // SemiUI.Start loads these curves from AssetManager. A clone that has not started yet would
-            // leave them null, and SemiUI.ScootPositionLogic throws every frame. Copy the donor's, which are set.
-            spot.animationCurveWooshAway = spots[0].animationCurveWooshAway;
-            spot.animationCurveWooshIn = spots[0].animationCurveWooshIn;
-            spot.animationCurveInOut = spots[0].animationCurveInOut;
             var position = spots[0].transform.localPosition;
             position.x = ui.slotCenterX;
             // SemiUI.Start adds showPosition to hidePosition, and its Update restores these
@@ -96,6 +106,7 @@ internal static class InventorySlotsUpgrade
             spot.showPosition = new Vector2(position.x,spots[0].showPosition.y);
             clone.transform.localPosition = new Vector3(position.x,spot.showPosition.y,position.z);
             if(spots[0].originalScale.sqrMagnitude>.001f) clone.transform.localScale=spots[0].originalScale;
+            clone.SetActive(true);
             DestroyTemporary(holder);
             changed = true;
         }
@@ -122,6 +133,24 @@ internal static class InventorySlotsUpgrade
                 if(label!=null) label.text=BindingName(index);
             }
         return spots.Count >= wanted;
+    }
+
+    private static void ActivatePath(Transform child, Transform root)
+    {
+        for (var current = child; current != null; current = current.parent)
+        {
+            current.gameObject.SetActive(true);
+            if (current == root) break;
+        }
+    }
+
+    private static Transform CloneChild(Transform original, Transform donor, Transform clone)
+    {
+        if (original == donor) return clone;
+        if (original == null || original.parent == null) return null;
+        var parent = CloneChild(original.parent, donor, clone);
+        return parent != null && original.GetSiblingIndex() < parent.childCount
+            ? parent.GetChild(original.GetSiblingIndex()) : null;
     }
 
     private static string BindingName(int index)

@@ -5,9 +5,9 @@ namespace IncreaseHardMod.Upgrades;
 
 /// <summary>
 /// "HP Regeneration" — a per-player upgrade granting very slow passive healing that only
-/// tops you back up to a fraction of max HP (default 50%) and then stops.
+/// tops you back up to a fraction of max HP (default 30%) and then stops.
 ///
-/// Unlike stamina (a one-shot field tweak applied via start/upgrade actions), regen is a
+/// Regen is a
 /// CONTINUOUS effect, so it lives in a ticking MonoBehaviour (<see cref="RegenController"/>)
 /// rather than REPOLib's start/upgrade callbacks. The REPOLib upgrade is still registered
 /// (null actions) purely so it appears in the shop and its per-player level is tracked,
@@ -46,20 +46,27 @@ internal static class HpRegenUpgrade
     internal sealed class RegenController : MonoBehaviour
     {
         private float _accumulated;
+        private PlayerAvatar _avatar;
 
-        private void Update()
+        private void Update() => Tick(Time.deltaTime);
+
+        internal void Tick(float dt)
         {
             if (!ModConfig.PlayerUpgradesEnabled.Value)
+            {
+                _accumulated = 0f;
                 return;
+            }
 
             // Only regenerate during actual gameplay (not shop/lobby/menu).
-            if (!SemiFunc.RunIsLevel())
+            if (RunManager.instance == null || RunManager.instance.levelCurrent == null || !SemiFunc.RunIsLevel())
             {
                 _accumulated = 0f;
                 return;
             }
 
             var avatar = SemiFunc.PlayerAvatarLocal();
+            if (_avatar != avatar) { _avatar = avatar; _accumulated = 0f; }
             if (avatar == null || avatar.isDisabled)
             {
                 _accumulated = 0f;
@@ -70,7 +77,7 @@ internal static class HpRegenUpgrade
             if (upgrade == null)
                 return;
 
-            int level = upgrade.GetLevel(avatar.steamID);
+            int level = Mathf.Clamp(upgrade.GetLevel(avatar.steamID), 0, ModConfig.RegenMaxLevel.Value);
             if (level <= 0)
             {
                 _accumulated = 0f;
@@ -78,7 +85,7 @@ internal static class HpRegenUpgrade
             }
 
             var ph = avatar.playerHealth;
-            if (ph == null || ph.health <= 0)
+            if (ph == null || !ph.healthSet || ph.health <= 0)
             {
                 _accumulated = 0f;
                 return;
@@ -93,8 +100,8 @@ internal static class HpRegenUpgrade
             }
 
             // Rate = level * percent-of-maxHP per second. Accumulate until >= 1 HP.
-            float perSecond = level * ModConfig.RegenPercentPerLevel.Value * ph.maxHealth;
-            _accumulated += perSecond * Time.deltaTime;
+            float perSecond = level * ModConfig.RegenPercentPerLevel.Value * ph.maxHealth * Patches.Effects.HealPowerEffect.Multiplier;
+            _accumulated += perSecond * Mathf.Max(0f, dt);
 
             if (_accumulated < 1f)
                 return;
@@ -105,7 +112,7 @@ internal static class HpRegenUpgrade
             // Never overshoot the regen cap this tick.
             healChunk = Mathf.Min(healChunk, cap - ph.health);
             if (healChunk > 0)
-                ph.Heal(healChunk, effect: false);
+                Patches.Effects.HealPowerEffect.HealRegeneration(ph, healChunk);
         }
     }
 }

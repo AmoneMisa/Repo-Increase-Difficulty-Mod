@@ -122,6 +122,7 @@ internal static class BlackMarket
     {
         name = id;
         tier = EconomyTier.Mixed;
+        if (string.IsNullOrEmpty(id) || kind < Kind.Modifier || kind > Kind.ShopEconomy) return false;
         switch (kind)
         {
             case Kind.Modifier:
@@ -134,7 +135,7 @@ internal static class BlackMarket
                     tier = sm.Tier;
                     return true;
                 }
-                if (!Enum.TryParse(id, out ModifierType m) || m == ModifierType.None)
+                if (!Enum.TryParse(id, out ModifierType m) || m == ModifierType.None || !Enum.IsDefined(typeof(ModifierType), m))
                     return false;
                 name = LevelInfoHud.NameOf(m);
                 tier = TierOfModifier(m);
