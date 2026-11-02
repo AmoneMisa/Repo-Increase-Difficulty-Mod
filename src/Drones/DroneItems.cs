@@ -93,7 +93,7 @@ internal static class DroneItems
                 "Attach to a valuable, item, cart, player or enemy to make its noise (and the noise enemies investigate) much quieter.",
                 targets: (true, true, true, true));
             if (ModConfig.RepairEnabled.Value)
-                Make(baseItem, RepairName, "Repair Drone", DroneKind.Repair, 0, 30000f, 36000f, shop: 1,
+                Make(baseItem, RepairName, "Repair Drone", DroneKind.Repair, 0, 15000f, 18000f, shop: 1,
                 new Color(0.4f, 1f, 0.5f),
                 "Attach to a damaged valuable to restore its lost value (up to its original value). Destroyed valuables cannot be repaired.",
                 targets: (true, false, false, false));

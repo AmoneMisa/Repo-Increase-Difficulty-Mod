@@ -168,7 +168,7 @@ player must run the mod, with the same module toggles.
 | **Ghost Drone** | 11,000-15,000 | Attach it to a valuable: players walk straight through that valuable and it is left out of extraction counting and suction while the drone is on. Weight, price and durability are unchanged. Anyone still inside it when the drone goes off stays pass-through until they step out. |
 | **Silencer Drone** | 7,000-9,000 | Attach it to a valuable, item, cart, player or monster: the noise it makes (collisions, sounds, voice chat/TTS, and the radius monsters investigate it from) drops to 8% by default. It does not make the target deaf. |
 | **Link Drone Set (A + B)** | 19,000-24,000 | One purchase gives both halves. Attach A to one object and B to another within 6 m: a physical cable ties them together (the cable is straight, colour-coded; faint amber while waiting, red under strain). Grab one end and the other is slowly reeled in, 0.75 m/s down to 1.25 m. It lets go if over-stretched for too long; switch a half off and on to relink. |
-| **Repair Drone** | 30,000-36,000 | Attach it to a damaged valuable to restore its lost value, up to its original value, at up to 500 per second. A full battery repairs 25,000 - more than the 20,000 power crystal it takes to recharge. A valuable that was fully destroyed cannot be repaired. |
+| **Repair Drone** | 15,000-18,000 base (7,500-9,000 after the custom-item discount) | Attach it to a damaged valuable to restore its lost value, up to its original value, at up to 500 per second. A full battery repairs 25,000 - more than the 20,000 power crystal it takes to recharge. A valuable that was fully destroyed cannot be repaired. |
 
 #### Extra gear (shop)
 
@@ -514,7 +514,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 | **Ghost Drone** | 11 000-15 000 | Прикрепи к ценности: игроки проходят сквозь неё, а при экстракции она не считается и не засасывается, пока дрон включён. Вес, цена и прочность не меняются. Кто остался внутри при выключении дрона, проходит сквозь, пока не выйдет. |
 | **Silencer Drone** | 7 000-9 000 | Прикрепи к ценности, предмету, тележке, игроку или монстру: шум от него (столкновения, звуки, голос и TTS, радиус, с которого монстры идут на шум) падает до 8% по умолчанию. Цель не глохнет. |
 | **Link Drone Set (A + B)** | 19 000-24 000 | Одна покупка даёт обе половины. Прикрепи A к одному объекту, B к другому в радиусе 6 м: физический трос стягивает их (трос прямой, цветной; бледно-жёлтый в ожидании, красный при натяжении). Если держать один конец, второй медленно подтягивается, 0,75 м/с до 1,25 м. При долгом перенапряжении трос отпускает; выключи и включи половину, чтобы связать снова. |
-| **Repair Drone** | 30 000-36 000 | Прикрепи к повреждённой ценности: возвращает потерянную стоимость до оригинальной, до 500 в секунду. Полной батареи хватает на 25 000 - больше, чем стоит кристалл в 20 000 для перезарядки. Полностью разрушенную ценность починить нельзя. |
+| **Repair Drone** | 15 000-18 000 база (7 500-9 000 после скидки на наши предметы) | Прикрепи к повреждённой ценности: возвращает потерянную стоимость до оригинальной, до 500 в секунду. Полной батареи хватает на 25 000 - больше, чем стоит кристалл в 20 000 для перезарядки. Полностью разрушенную ценность починить нельзя. |
 
 #### Дополнительное снаряжение (магазин)
 
