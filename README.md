@@ -11,7 +11,7 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.6.3`
+- **Version:** `0.6.4`
 
 ### Contents
 
@@ -360,7 +360,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.6.3`
+- **Версия:** `0.6.4`
 
 ### Содержание
 
@@ -837,7 +837,7 @@ Retains the quest-system work already on remote master. Quest network events are
 Сохранена система квестов из remote master. Сетевые события квестов отделены от ледяного пистолета и Sticky Pistol; состояние и бонусы проверяют хоста и формат сообщения. После объединения проходят 93 сетевые проверки и разрешаются 131 точки патчей текущей игры. Прохождение квестов и награды ещё требуют проверки в игре.
 
 
-### 0.6.3 HUD, quests and balance corrections / исправления HUD, квестов и баланса
+### 0.6.4 HUD, quests and balance corrections / исправления HUD, квестов и баланса
 
 - **J** toggles quests, closed by default; Tab no longer opens quests automatically. Change `Quests / PeekKey` in config to rebind it. PgUp/PgDn page crowded lists. Keys are ignored while typing.
 - Map Suite statistics stay on Tab in the same bounded sidebar renderer. No black text backplates. Modifier names clear the quota; explanations follow the level number in a narrow wrapped column.
@@ -848,5 +848,5 @@ Retains the quest-system work already on remote master. Quest network events are
 
 **RU:** J открывает/закрывает квесты; по умолчанию они скрыты и не открываются через Tab. Клавиша меняется в `Quests / PeekKey`, страницы — PgUp/PgDn. Статистика Map Suite остаётся в Tab без чёрной подложки, в ограниченной колонке. Модификаторы расположены под квотой, описания — под номером уровня. Ping Anywhere открывает все пинги, Ping Info только добавляет сведения. Набор Link Drone даёт два отдельных предмета A/B с постоянной сохранённой парой. Денежные награды квестов переводятся в тысячи один раз, экономические множители применяются к выдаче денег за эвакуацию. Уже завышенный баланс сохранения автоматически не меняется. Улучшения грузовика действуют на команду с убывающей эффективностью по формулам выше; изученные уровни сохраняются.
 
-Replace the previous 0.6.3 DLL with the new package and restart every client. Controlled fixtures do not certify live multiplayer delivery or the game's final blur/chromatic post-processing.
-Замените предыдущую DLL 0.6.3 новой и перезапустите игру у всех участников. Проверки на стенде не заменяют проверку сетевой доставки предметов и итогового размытия HUD в самой игре.
+Replace the previous DLL with the 0.6.4 package and restart every client. Controlled fixtures do not certify live multiplayer delivery or the game's final blur/chromatic post-processing.
+Замените предыдущую DLL новой 0.6.4 и перезапустите игру у всех участников. Проверки на стенде не заменяют проверку сетевой доставки предметов и итогового размытия HUD в самой игре.
