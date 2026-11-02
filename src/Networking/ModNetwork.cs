@@ -392,6 +392,11 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 
     public void OnEvent(EventData photonEvent)
     {
+        if (photonEvent != null && photonEvent.Code == LevelInfoHud.StateEventCode)
+        {
+            LevelInfoHud.HandleStateEvent(photonEvent);
+            return;
+        }
         if (photonEvent == null || !PhotonNetwork.InRoom) return;
         if (photonEvent.Code == StickyTetherEventCode)
         {

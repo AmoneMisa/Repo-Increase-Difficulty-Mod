@@ -64,3 +64,4 @@ namespace IncreaseHardMod.Quests {
  public static class QuestManager {public static int States,Buffs;public static void Tick(float dt){}public static void ReceiveTeamState(object[] d){States++;}public static void ApplyTempBuff(StatKind stat,int amount){Buffs++;}}
  public static class QuestRewards {public static int Money;public static void GrantMoney(int amount){Money+=amount;}}
 }
+namespace IncreaseHardMod.Patches.Effects { public static class LevelInfoHud { public const byte StateEventCode=197; public static int Calls; public static void HandleStateEvent(ExitGames.Client.Photon.EventData e){Calls++;} } }

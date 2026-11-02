@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
 using IncreaseHardMod.Quests;
-using IncreaseHardMod.Upgrades;
 using TMPro;
 using UnityEngine;
 
@@ -17,19 +16,18 @@ internal sealed class QuestHud : MonoBehaviour
     private bool _questsVisible;
     internal void ToggleQuests() { _questsVisible = !_questsVisible; _page = 0; }
     private bool ShowQuests => ModConfig.QuestsEnabled.Value && _questsVisible;
-    private static string MapInfo => VisibleMap() ? MapUpgrade.MapController.VisibleInfo : "";
     private const float Margin = 24f;
 
     private void LateUpdate()
     {
-        if (SafeMenuLevel() || !SafeRunIsLevel())
+        if (!LevelInfoHud.InfoReady || SafeMenuLevel() || !SafeRunIsLevel())
         {
             _questsVisible = false;
             Hide();
             return;
         }
         if (ModConfig.QuestsEnabled.Value && SemiFunc.NoTextInputsActive() && Input.GetKeyDown(ModConfig.QuestPeekKey.Value)) ToggleQuests();
-        if (!ShowQuests && string.IsNullOrEmpty(MapInfo))
+        if (!ShowQuests)
         {
             Hide();
             return;
@@ -48,10 +46,6 @@ internal sealed class QuestHud : MonoBehaviour
         _label.text = Header() + _pages[_page] + (_pages.Count > 1 ? $"\n<size=80%>PGUP / PGDN  {_page + 1}/{_pages.Count}</size>" : "");
         _label.enabled = true;
     }
-
-    private static bool VisibleMap() =>
-        (MapToolController.instance != null && MapToolController.instance.Active) ||
-        (Map.Instance != null && Map.Instance.Active);
 
     private bool EnsureLabel()
     {
@@ -105,20 +99,16 @@ internal sealed class QuestHud : MonoBehaviour
         _surface.Fit();
     }
 
-    private string Header() => "<color=#FFD24D><b>" +
-        (!string.IsNullOrEmpty(MapInfo) ? "MAP SUITE" : "QUESTS") + "</b></color>\n";
+    private string Header() => "<color=#FFD24D><b>QUESTS</b></color>\n";
 
     private void BuildText()
     {
         _pages.Clear();
         var body = new StringBuilder();
         var entries = new List<string>();
-        string mapInfo = MapInfo;
-        if (!string.IsNullOrEmpty(mapInfo))
-            foreach (string line in mapInfo.Split('\n')) entries.Add(Clean(line) + "\n");
         if (ShowQuests)
         {
-            entries.Add($"<color=#FFD24D><b>{(string.IsNullOrEmpty(mapInfo) ? "" : "QUESTS / ")}RANK {QuestRankInfo.Label(QuestManager.LocalRank())}  {QuestManager.LocalRankProgress()}/{Mathf.Max(1, QuestManager.LocalRankRequirement())}</b></color>\n");
+            entries.Add($"<color=#FFD24D><b>RANK {QuestRankInfo.Label(QuestManager.LocalRank())}  {QuestManager.LocalRankProgress()}/{Mathf.Max(1, QuestManager.LocalRankRequirement())}</b></color>\n");
             foreach (var q in QuestManager.TeamQuests) if (q != null) entries.Add(Entry(q, ""));
             if (QuestManager.PersonalQuest != null) entries.Add(Entry(QuestManager.PersonalQuest, "YOU: "));
         }

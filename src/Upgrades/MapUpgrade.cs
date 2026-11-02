@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Text;
 using IncreaseHardMod.Patches.Effects;
 using UnityEngine;
-using TMPro;
 using RepoUpgrades = REPOLib.Modules.Upgrades;
 
 namespace IncreaseHardMod.Upgrades;
@@ -20,13 +19,16 @@ namespace IncreaseHardMod.Upgrades;
 ///   L5  quota heading + valuable       L10 monsters shown as dots (3D markers, Phase 3d)
 ///       tracker (found/total + haul)
 ///
-/// L1-L5 render as an on-screen info panel while the map tool is open. L7-L8 hijack the map
+/// L1-L5 render in the shared right-hand details section inside the map Tab. L7-L8 hijack the map
 /// view's camera zoom. L6/L9/L10 need the map's 3D marker system and are added separately.
 /// Everything here is read-only/local — no networking, so it stays per-player and desync-free.
 /// </summary>
 internal static class MapUpgrade
 {
     public const string Id = "IHM_Map";
+
+    // Published by the local controller; the shared native HUD owns layout and pagination.
+    internal static string HudInfo { get; private set; } = "";
 
     // Fixed feature ladder — do not expose as config; each level maps to a specific feature.
     public const int Levels = 10;
@@ -59,18 +61,18 @@ internal static class MapUpgrade
 
     /// <summary>
     /// Reads the local Map Suite level and, while the map tool is open, shows the unlocked
-    /// info lines (L1-5) and applies the zoom-out (L7-8). Added to the mod's runtime object.
+    /// info lines (L1-5) in Tab and applies the zoom-out (L7-8). Added to the mod's runtime object.
     /// </summary>
     internal sealed class MapController : MonoBehaviour
     {
         private const float RefreshInterval = 0.25f;
 
-        private static readonly string[] Arrows =
-            { "\u2191", "\u2197", "\u2192", "\u2198", "\u2193", "\u2199", "\u2190", "\u2196" };
+        private static readonly string[] Headings =
+            { "Ahead", "Ahead right", "Right", "Behind right", "Behind", "Behind left", "Left", "Ahead left" };
 
         private float _timer;
         private bool _show;
-        private string _text = "";
+        private LevelGenerator _generation;
 
         // Runtime zoom offset (in FOV units) added on top of the level's default, driven by the
         // zoom hotkeys. Persists while the game runs so re-opening the map keeps your chosen zoom.
@@ -80,22 +82,37 @@ internal static class MapUpgrade
 
         private void Update()
         {
+            if (_generation != LevelGenerator.Instance)
+            {
+                _generation = LevelGenerator.Instance;
+                _show = false;
+                _timer = 0f;
+                HudInfo = "";
+            }
             if (!ModConfig.PlayerUpgradesEnabled.Value)
             {
                 _show = false;
-                VisibleInfo = "";
+                HudInfo = "";
                 return;
             }
 
-            bool mapOpen = Map.Instance != null && Map.Instance.Active && SemiFunc.RunIsLevel();
+            bool mapOpen = LevelInfoHud.InfoReady && LevelInfoHud.TabOpen && SemiFunc.RunIsLevel();
             int level = mapOpen ? LocalLevel() : 0;
 
+            bool wasShowing = _show;
             _show = mapOpen && level > 0;
-            if (!_show) { VisibleInfo = ""; return; }
+            if (!_show)
+            {
+                HudInfo = "";
+                _timer = 0f;
+                return;
+            }
+            if (!wasShowing)
+                _timer = 0f;
 
             // Only hijack the camera FOV while the local player is ALIVE. When dead/spectating the
             // map + camera are driven by the spectate system, and forcing our zoom onto that view
-            // makes the map open wrong. The info panel below is a harmless overlay, so it stays.
+            // makes the map open wrong. The statistics remain available in the Tab details section.
             if (LocalAlive())
             {
                 HandleZoomKeys(level);
@@ -106,9 +123,8 @@ internal static class MapUpgrade
             if (_timer <= 0f)
             {
                 _timer = RefreshInterval;
-                _text = BuildInfo(level);
+                HudInfo = BuildInfo(level);
             }
-            PublishInfo();
         }
 
         // True only while the local avatar exists and is not disabled (dead/spectating). Used to
@@ -174,7 +190,7 @@ internal static class MapUpgrade
                 if (level >= 1)
                     sb.Append("Players alive: ").Append(alive).Append('\n');
                 if (level >= 2)
-                    sb.Append("Players dead: ").Append(dead).Append('\n');
+                    sb.Append("Players dead: ").Append(dead > 0 ? $"<color=#FF4545>{dead}</color>" : "0").Append('\n');
             }
 
             var enemyDir = EnemyDirector.instance;
@@ -279,16 +295,10 @@ internal static class MapUpgrade
             float ang = Vector3.SignedAngle(facing, toTarget, Vector3.up); // + = target to the right
             float a = (ang + 360f) % 360f;
             int idx = Mathf.RoundToInt(a / 45f) % 8;
-            return Arrows[idx];
+            return Headings[idx];
         }
 
-        // The shared sidebar renders map statistics and quests in one measured, paginated
-        // region. A separate map panel would overlap both upgrades and the quest tracker.
-        internal static string VisibleInfo { get; private set; } = "";
-        private void LateUpdate() => PublishInfo();
-        internal void PublishInfo() => VisibleInfo = _show ? _text : "";
-        private void OnDestroy() => VisibleInfo = "";
-
+        private void OnDisable() => HudInfo = "";
     }
 
     /// <summary>Marks a world object we've already given a map marker, so we don't double-add.</summary>
@@ -330,7 +340,7 @@ internal static class MapUpgrade
             }
 
             // Markers only matter (and only position correctly) while the map is open on a level.
-            if (Map.Instance == null || !Map.Instance.Active || !SemiFunc.RunIsLevel())
+            if (!LevelInfoHud.InfoReady || !LevelInfoHud.TabOpen || !SemiFunc.RunIsLevel())
             {
                 ClearPingMarkers();
                 return;
