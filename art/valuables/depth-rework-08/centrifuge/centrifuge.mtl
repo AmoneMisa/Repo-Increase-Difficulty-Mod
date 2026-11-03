@@ -1,0 +1,22 @@
+# Blender 5.2.1 LTS MTL File: 'bomb.blend'
+# www.blender.org
+
+newmtl Loot_|_glass
+Ns 592.899963
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd loot_glass.png
+
+newmtl Painted_atlas_centrifuge
+Ns 144.399994
+Ka 0.080000 0.080000 0.080000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.460000
+d 1.000000
+illum 3
+map_Kd v08_centrifuge_atlas.png

@@ -31,6 +31,7 @@ internal static class ChangeLevelPatch
     {
         if (!__state)
             return;
+        Effects.LateJoinSceneState.Publish();
         if (SemiFunc.IsMasterClientOrSingleplayer())
             Economy.BlackMarket.LoadFromStats();
 

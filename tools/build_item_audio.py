@@ -22,6 +22,8 @@ def make(name,seconds,kind,freq=400):
             value=.5*(noise-low)*(math.exp(-t*8)+pulse*.3)*math.exp(-t*3)+.13*math.sin(t*2*math.pi*1300)*math.exp(-t*6)
         elif kind=='poison':
             value=.6*low*math.exp(-t*5)+.15*math.sin(2*math.pi*(220*t+9*math.sin(t*14)))*math.exp(-t*7)
+        elif kind=='spritz':
+            value=.25*(noise-low)*math.sin(math.pi*t/seconds)**2+.12*math.sin(2*math.pi*1800*t)*math.exp(-t*75)
         else:
             envelope=math.sin(math.pi*min(1,t/seconds))**2
             value=(.26*math.sin(2*math.pi*(freq*t+70*t*t))+.08*math.sin(2*math.pi*freq*1.49*t)+.08*low)*envelope
@@ -38,4 +40,5 @@ make('sticky_hit',.18,'latch')
 for i,name in enumerate(('ghost','silencer','link_a','link_b','repair','defence','protection','decoy')):
     make(name+'_activate',.28 if name!='decoy' else .4,'chirp',220+i*63)
 make('power_down',.22,'chirp',140)
-print('Created 14 original item cues')
+make('spritz_shot',.26,'spritz')
+print('Created 16 original item cues')

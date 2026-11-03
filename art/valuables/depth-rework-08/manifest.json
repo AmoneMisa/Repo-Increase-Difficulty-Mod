@@ -1,0 +1,337 @@
+[
+  {
+    "asset": "cannon",
+    "triangles": 5048,
+    "mesh_parts": 3,
+    "bounds_m_xyz": [
+      1.543999969959259,
+      2.1243510246276855,
+      1.3006031513214111
+    ],
+    "atlas": true,
+    "runtime_parts": 3,
+    "blend_reopen": "PASS",
+    "checks": {
+      "glb": {
+        "status": "PASS",
+        "triangles": 5048,
+        "parts": 3,
+        "materials_uvs_scale_topology": "PASS"
+      },
+      "obj": {
+        "status": "PASS",
+        "triangles": 5048,
+        "parts": 3,
+        "materials_uvs_scale_topology": "PASS"
+      },
+      "wheel_pivots": "PASS"
+    }
+  },
+  {
+    "asset": "bomb",
+    "triangles": 5688,
+    "mesh_parts": 1,
+    "bounds_m_xyz": [
+      2.8669999837875366,
+      1.6799999475479126,
+      1.6800000667572021
+    ],
+    "atlas": true,
+    "runtime_parts": 1,
+    "blend_reopen": "PASS",
+    "checks": {
+      "glb": {
+        "status": "PASS",
+        "triangles": 5688,
+        "parts": 1,
+        "materials_uvs_scale_topology": "PASS"
+      },
+      "obj": {
+        "status": "PASS",
+        "triangles": 5688,
+        "parts": 1,
+        "materials_uvs_scale_topology": "PASS"
+      }
+    }
+  },
+  {
+    "asset": "centrifuge",
+    "triangles": 4432,
+    "mesh_parts": 2,
+    "bounds_m_xyz": [
+      0.4699999988079071,
+      0.608196496963501,
+      0.6361606121063232
+    ],
+    "atlas": true,
+    "runtime_parts": 2,
+    "blend_reopen": "PASS",
+    "checks": {
+      "glb": {
+        "status": "PASS",
+        "triangles": 4432,
+        "parts": 2,
+        "materials_uvs_scale_topology": "PASS"
+      },
+      "obj": {
+        "status": "PASS",
+        "triangles": 4432,
+        "parts": 2,
+        "materials_uvs_scale_topology": "PASS"
+      }
+    }
+  },
+  {
+    "asset": "spritz",
+    "triangles": 1152,
+    "mesh_parts": 17,
+    "bounds_m_xyz": [
+      0.1469999998807907,
+      0.5259999930858612,
+      0.06199999898672104
+    ],
+    "atlas": true,
+    "runtime_parts": 17,
+    "blend_reopen": "PASS",
+    "checks": {
+      "glb": {
+        "status": "PASS",
+        "triangles": 1152,
+        "parts": 17,
+        "materials_uvs_scale_topology": "PASS"
+      },
+      "obj": {
+        "status": "PASS",
+        "triangles": 1152,
+        "parts": 17,
+        "materials_uvs_scale_topology": "PASS"
+      },
+      "muzzle_and_plunger": "PASS"
+    }
+  },
+  {
+    "asset": "graphics_card",
+    "triangles": 4716,
+    "mesh_parts": 1,
+    "bounds_m_xyz": [
+      0.3540000021457672,
+      0.16849999874830246,
+      0.08099999278783798
+    ],
+    "atlas": true,
+    "runtime_parts": 1,
+    "blend_reopen": "PASS",
+    "checks": {
+      "glb": {
+        "status": "PASS",
+        "triangles": 4716,
+        "parts": 1,
+        "materials_uvs_scale_topology": "PASS"
+      },
+      "obj": {
+        "status": "PASS",
+        "triangles": 4716,
+        "parts": 1,
+        "materials_uvs_scale_topology": "PASS"
+      }
+    }
+  },
+  {
+    "asset": "ram_pair",
+    "triangles": 1304,
+    "mesh_parts": 1,
+    "bounds_m_xyz": [
+      0.14400000125169754,
+      0.057999998331069946,
+      0.05299999937415123
+    ],
+    "atlas": true,
+    "runtime_parts": 1,
+    "blend_reopen": "PASS",
+    "checks": {
+      "glb": {
+        "status": "PASS",
+        "triangles": 1304,
+        "parts": 1,
+        "materials_uvs_scale_topology": "PASS"
+      },
+      "obj": {
+        "status": "PASS",
+        "triangles": 1304,
+        "parts": 1,
+        "materials_uvs_scale_topology": "PASS"
+      }
+    }
+  },
+  {
+    "asset": "robot_vacuum",
+    "triangles": 2636,
+    "mesh_parts": 1,
+    "bounds_m_xyz": [
+      0.35199999809265137,
+      0.35199999809265137,
+      0.1380000114440918
+    ],
+    "atlas": true,
+    "runtime_parts": 1,
+    "blend_reopen": "PASS",
+    "checks": {
+      "glb": {
+        "status": "PASS",
+        "triangles": 2636,
+        "parts": 1,
+        "materials_uvs_scale_topology": "PASS"
+      },
+      "obj": {
+        "status": "PASS",
+        "triangles": 2636,
+        "parts": 1,
+        "materials_uvs_scale_topology": "PASS"
+      }
+    }
+  },
+  {
+    "asset": "bath_gift_set",
+    "triangles": 2068,
+    "mesh_parts": 1,
+    "bounds_m_xyz": [
+      0.2770000100135803,
+      0.10649999976158142,
+      0.2785000205039978
+    ],
+    "atlas": true,
+    "runtime_parts": 1,
+    "blend_reopen": "PASS",
+    "checks": {
+      "glb": {
+        "status": "PASS",
+        "triangles": 2068,
+        "parts": 1,
+        "materials_uvs_scale_topology": "PASS"
+      },
+      "obj": {
+        "status": "PASS",
+        "triangles": 2068,
+        "parts": 1,
+        "materials_uvs_scale_topology": "PASS"
+      }
+    }
+  },
+  {
+    "asset": "skeleton",
+    "triangles": 14678,
+    "mesh_parts": 1,
+    "bounds_m_xyz": [
+      0.5641499757766724,
+      0.5255282372236252,
+      1.6905012130737305
+    ],
+    "atlas": true,
+    "runtime_parts": 1,
+    "blend_reopen": "PASS",
+    "checks": {
+      "glb": {
+        "status": "PASS",
+        "triangles": 14678,
+        "parts": 1,
+        "materials_uvs_scale_topology": "PASS"
+      },
+      "obj": {
+        "status": "PASS",
+        "triangles": 14678,
+        "parts": 1,
+        "materials_uvs_scale_topology": "PASS"
+      }
+    }
+  },
+  {
+    "asset": "monoblock_pc",
+    "triangles": 1452,
+    "mesh_parts": 2,
+    "bounds_m_xyz": [
+      0.5879999995231628,
+      0.1940000057220459,
+      0.5135000348091125
+    ],
+    "atlas": true,
+    "runtime_parts": 2,
+    "blend_reopen": "PASS",
+    "checks": {
+      "glb": {
+        "status": "PASS",
+        "triangles": 1452,
+        "parts": 2,
+        "materials_uvs_scale_topology": "PASS"
+      },
+      "obj": {
+        "status": "PASS",
+        "triangles": 1452,
+        "parts": 2,
+        "materials_uvs_scale_topology": "PASS"
+      }
+    }
+  },
+  {
+    "asset": "crystal_skull",
+    "triangles": 5540,
+    "mesh_parts": 1,
+    "bounds_m_xyz": [
+      0.20575644820928574,
+      0.23487059026956558,
+      0.31034576892852783
+    ],
+    "atlas": false,
+    "runtime_parts": 1,
+    "blend_reopen": "PASS",
+    "checks": {
+      "glb": {
+        "status": "PASS",
+        "triangles": 5540,
+        "parts": 1,
+        "materials_uvs_scale_topology": "PASS"
+      },
+      "obj": {
+        "status": "PASS",
+        "triangles": 5540,
+        "parts": 1,
+        "materials_uvs_scale_topology": "PASS"
+      }
+    }
+  },
+  {
+    "asset": "water_timer",
+    "triangles": 2258,
+    "mesh_parts": 9,
+    "bounds_m_xyz": [
+      0.10400000214576721,
+      0.03930000029504299,
+      0.25999999046325684
+    ],
+    "atlas": false,
+    "runtime_parts": 9,
+    "blend_reopen": "PASS",
+    "checks": {
+      "glb": {
+        "status": "PASS",
+        "triangles": 2258,
+        "parts": 9,
+        "materials_uvs_scale_topology": "PASS"
+      },
+      "obj": {
+        "status": "PASS",
+        "triangles": 2258,
+        "parts": 9,
+        "materials_uvs_scale_topology": "PASS"
+      },
+      "glow_glass_and_moving_parts": "PASS"
+    },
+    "glb_animation": {
+      "status": "PASS",
+      "duration_seconds": 18.0,
+      "changing_transform_channels": 10,
+      "changing_material_channels": 15,
+      "material_extension": "KHR_animation_pointer",
+      "loop_seam": "PASS"
+    }
+  }
+]

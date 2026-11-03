@@ -6,8 +6,10 @@
     <Product>IncreaseDifficultyMod</Product>
     <!-- Preserve code/resource identities and saved integrations after the public rename. -->
     <RootNamespace>IncreaseHardMod</RootNamespace>
-    <Version>0.6.4</Version>
+    <Version>0.7.2</Version>
     <LangVersion>latest</LangVersion>
+    <!-- Unity fixture DLLs must never become candidates for resolving the game's Assembly-CSharp. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);tests\UnityCloneRegression\Library\**;tests\UnityCloneRegression\Temp\**;tests\UnityCloneRegression\Logs\**;tests\UnityCloneRegression\UserSettings\**</DefaultItemExcludes>
     <Nullable>disable</Nullable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <RestoreAdditionalProjectSources>https://api.nuget.org/v3/index.json;https://nuget.bepinex.dev/v3/index.json</RestoreAdditionalProjectSources>
@@ -21,14 +23,19 @@
     <!-- The game is launched via Thunderstore Mod Manager, which loads plugins from the
          active profile folder (NOT the Steam install). Deploy there so builds actually
          take effect in-game. Override with -p:PluginsDir=... to target a different profile. -->
-    <PluginsDir Condition="'$(PluginsDir)' == ''">$(AppData)\Thunderstore Mod Manager\DataFolder\REPO\profiles\Default\BepInEx\plugins\Whiteslove-IncreaseHardMod</PluginsDir>
+    <PluginsDir Condition="'$(PluginsDir)' == ''">$(AppData)\Thunderstore Mod Manager\DataFolder\REPO\profiles\Default\BepInEx\plugins\WhitesLove-IncreaseDifficultyMod\IncreaseDifficultyMod</PluginsDir>
   </PropertyGroup>
 
   <!-- _decompiled/ is a read-only reference dump of the game code; never compile it. -->
   <ItemGroup>
     <Compile Remove="_decompiled\**\*.cs" />
     <Compile Remove="tests\**\*.cs" />
+    <Compile Remove="work\**\*.cs" />
     <Compile Remove="unity\**\*.cs" />
+    <!-- The standalone motion-rule fixture must not contribute generated assembly metadata. -->
+    <Compile Remove="tools\ValuableMotionChecks\**\*.cs" />
+    <!-- Export packages contain review copies, not additional plugin compilation units. -->
+    <Compile Remove="art\valuables\**\runtime-source\**\*.cs" />
     <None Include="_decompiled\**\*.cs" />
   </ItemGroup>
 

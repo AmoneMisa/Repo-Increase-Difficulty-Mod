@@ -25,3 +25,24 @@ unity/**/Assets/REPO/
 unity/**/*.csproj
 unity/**/*.sln
 .fable-validation/
+
+# Isolated Unity clone/rolling regression fixture caches.
+tests/UnityCloneRegression/Library/
+tests/UnityCloneRegression/Temp/
+tests/UnityCloneRegression/Logs/
+tests/UnityCloneRegression/UserSettings/
+tests/UnityCloneRegression/Obj/
+tests/UnityCloneRegression/*.csproj
+tests/UnityCloneRegression/*.sln
+
+# Local vanilla upgrade references, used only for art review.
+art/upgrade-reference/
+art/upgrade_wrappers.blend1
+
+# Local backups, generated review archives and tool caches.
+work/
+.codex-remote-attachments/
+__pycache__/
+*.pyc
+*.blend1
+art/valuables/*.zip

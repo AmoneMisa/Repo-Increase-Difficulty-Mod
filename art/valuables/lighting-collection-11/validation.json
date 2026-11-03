@@ -1,0 +1,44 @@
+[
+  {
+    "asset": "gold_ingot",
+    "triangles": 1584,
+    "runtime_normals_winding_uv_textures": "PASS",
+    "glb_obj_reimport": "PASS",
+    "animation": "not applicable"
+  },
+  {
+    "asset": "maneki_neko",
+    "triangles": 21226,
+    "runtime_normals_winding_uv_textures": "PASS",
+    "glb_obj_reimport": "PASS",
+    "animation": "PASS"
+  },
+  {
+    "asset": "bomb",
+    "triangles": 5400,
+    "runtime_normals_winding_uv_textures": "PASS",
+    "glb_obj_reimport": "PASS",
+    "animation": "not applicable"
+  },
+  {
+    "asset": "cannon",
+    "triangles": 5048,
+    "runtime_normals_winding_uv_textures": "PASS",
+    "glb_obj_reimport": "PASS",
+    "animation": "not applicable"
+  },
+  {
+    "asset": "graphics_card",
+    "triangles": 4804,
+    "runtime_normals_winding_uv_textures": "PASS",
+    "glb_obj_reimport": "PASS",
+    "animation": "not applicable"
+  },
+  {
+    "asset": "robot_vacuum",
+    "triangles": 3212,
+    "runtime_normals_winding_uv_textures": "PASS",
+    "glb_obj_reimport": "PASS",
+    "animation": "not applicable"
+  }
+]

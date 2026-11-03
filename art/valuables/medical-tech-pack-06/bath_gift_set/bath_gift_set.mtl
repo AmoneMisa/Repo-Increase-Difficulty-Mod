@@ -1,0 +1,92 @@
+# Blender 5.2.1 LTS MTL File: 'robot_vacuum.blend'
+# www.blender.org
+
+newmtl Loot_|_fairy_0
+Ns 25.600010
+Ka 0.040000 0.040000 0.040000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd ../textures/loot_fairy_0.png
+
+newmtl Loot_|_fairy_1
+Ns 25.600010
+Ka 0.040000 0.040000 0.040000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd ../textures/loot_fairy_1.png
+
+newmtl Loot_|_fairy_2
+Ns 25.600010
+Ka 0.040000 0.040000 0.040000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd ../textures/loot_fairy_2.png
+
+newmtl Loot_|_gold
+Ns 25.600010
+Ka 0.040000 0.040000 0.040000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd ../textures/loot_gold.png
+
+newmtl Loot_|_orange
+Ns 25.600010
+Ka 0.040000 0.040000 0.040000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd ../textures/loot_orange.png
+
+newmtl Loot_|_pink
+Ns 25.600010
+Ka 0.040000 0.040000 0.040000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd ../textures/loot_pink.png
+
+newmtl Loot_|_purple
+Ns 25.600010
+Ka 0.040000 0.040000 0.040000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd ../textures/loot_purple.png
+
+newmtl Loot_|_red
+Ns 25.600010
+Ka 0.040000 0.040000 0.040000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd ../textures/loot_red.png
+
+newmtl Loot_|_yellow
+Ns 25.600010
+Ka 0.040000 0.040000 0.040000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd ../textures/loot_yellow.png

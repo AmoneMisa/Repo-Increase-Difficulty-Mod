@@ -1,0 +1,84 @@
+[
+  {
+    "asset": "cannon",
+    "role": "valuable",
+    "triangles": 5048,
+    "mesh_parts": 5,
+    "bounds_m_xyz": [
+      1.543999969959259,
+      2.1243510246276855,
+      1.3006031513214111
+    ],
+    "animated": false,
+    "source_checks": "PASS",
+    "checks": {
+      "glb": {
+        "status": "PASS",
+        "triangles": 5048,
+        "mesh_parts": 5,
+        "geometry_uv_materials_scale": "PASS"
+      },
+      "obj": {
+        "status": "PASS",
+        "triangles": 5048,
+        "mesh_parts": 5,
+        "geometry_uv_materials_scale": "PASS"
+      }
+    },
+    "blend_reopen": "PASS"
+  },
+  {
+    "asset": "water_timer",
+    "role": "valuable",
+    "triangles": 1736,
+    "mesh_parts": 21,
+    "bounds_m_xyz": [
+      0.10400000214576721,
+      0.03799999877810478,
+      0.25999999046325684
+    ],
+    "animated": true,
+    "source_checks": "PASS",
+    "fps": 24,
+    "frames": 145,
+    "duration_seconds": 6,
+    "animated_droplets": 6,
+    "checks": {
+      "glb": {
+        "status": "PASS",
+        "triangles": 1736,
+        "mesh_parts": 21,
+        "geometry_uv_materials_scale": "PASS"
+      },
+      "obj": {
+        "status": "PASS",
+        "triangles": 1736,
+        "mesh_parts": 21,
+        "geometry_uv_materials_scale": "PASS"
+      },
+      "source_animation": {
+        "status": "PASS",
+        "droplets": 6,
+        "loop_seam": "PASS",
+        "sampled_casing_containment": "PASS"
+      }
+    },
+    "blend_reopen": "PASS",
+    "glb_animation": {
+      "status": "PASS",
+      "clips": 1,
+      "duration_seconds": 6.0,
+      "animated_nodes": 6,
+      "changing_channels": 12,
+      "endpoint_match": true,
+      "reimport_motion": "PASS"
+    },
+    "gif_preview": {
+      "status": "PASS",
+      "frames": 144,
+      "duration_ms": 6000,
+      "loop": "infinite",
+      "distinct_images": 16
+    }
+  }
+]

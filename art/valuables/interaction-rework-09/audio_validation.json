@@ -1,0 +1,52 @@
+{
+  "valuable_bone.wav": {
+    "seconds": 0.28997732426303857,
+    "peak": 20316,
+    "rms": 2515.35
+  },
+  "valuable_drip.wav": {
+    "seconds": 0.28,
+    "peak": 20316,
+    "rms": 4315.53
+  },
+  "valuable_flip.wav": {
+    "seconds": 0.34,
+    "peak": 20316,
+    "rms": 2519.87
+  },
+  "valuable_glass.wav": {
+    "seconds": 0.6499773242630386,
+    "peak": 20316,
+    "rms": 1983.93
+  },
+  "valuable_metal.wav": {
+    "seconds": 0.38,
+    "peak": 20316,
+    "rms": 2537.34
+  },
+  "valuable_motor.wav": {
+    "seconds": 0.72,
+    "peak": 20316,
+    "rms": 7548.66
+  },
+  "valuable_paper.wav": {
+    "seconds": 0.22,
+    "peak": 20316,
+    "rms": 5866.31
+  },
+  "valuable_plastic.wav": {
+    "seconds": 0.2,
+    "peak": 20316,
+    "rms": 3792.63
+  },
+  "valuable_roll.wav": {
+    "seconds": 0.38,
+    "peak": 20316,
+    "rms": 4332.3
+  },
+  "valuable_tube.wav": {
+    "seconds": 0.34997732426303857,
+    "peak": 20316,
+    "rms": 2365.21
+  }
+}

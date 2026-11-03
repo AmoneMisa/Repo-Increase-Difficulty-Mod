@@ -1,0 +1,42 @@
+# Blender 5.2.1 LTS MTL File: 'None'
+# www.blender.org
+
+newmtl Loot_|_dark
+Ns 25.600010
+Ka 0.040000 0.040000 0.040000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd ../textures/loot_dark.png
+
+newmtl Loot_|_gold
+Ns 25.600010
+Ka 0.040000 0.040000 0.040000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd ../textures/loot_gold.png
+
+newmtl Loot_|_green
+Ns 25.600010
+Ka 0.040000 0.040000 0.040000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd ../textures/loot_green.png
+
+newmtl Loot_|_steel
+Ns 25.600010
+Ka 0.040000 0.040000 0.040000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd ../textures/loot_steel.png

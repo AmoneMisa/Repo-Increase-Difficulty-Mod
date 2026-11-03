@@ -34,6 +34,7 @@ public class GameDirector {public static GameDirector instance;public enum gameS
 public class LoadingUI:UnityEngine.MonoBehaviour {public static LoadingUI instance;}
 public class HUDCanvas:UnityEngine.MonoBehaviour {public static HUDCanvas instance;public UnityEngine.RectTransform rect=>(UnityEngine.RectTransform)transform;}
 public class Map {public static Map Instance;public bool Active;}
+public class MapToolController {public static MapToolController instance;public bool Active;}
 public class LevelUI{public static LevelUI instance;public TMPro.TextMeshProUGUI uiText,textNumber;}
 public class GoalUI{public static GoalUI instance;public TMPro.TextMeshProUGUI uiText;public bool isHidden;}
 public class StatsUI{public static StatsUI instance;public TMPro.TextMeshProUGUI Text,upgradesHeader;}

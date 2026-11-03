@@ -14,7 +14,9 @@ from mathutils import Vector
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--root', type=Path, required=True)
-root = parser.parse_args(sys.argv[sys.argv.index('--') + 1:]).root.resolve()
+parser.add_argument('--atlas', help='Render only this atlas and save its own preview/scene.')
+args = parser.parse_args(sys.argv[sys.argv.index('--') + 1:])
+root = args.root.resolve()
 textures = root / 'src' / 'Textures'
 art = root / 'art'
 bpy.ops.object.select_all(action='SELECT')
@@ -74,7 +76,7 @@ light_data.size = 1.2
 aim(light, (0, 0, h / 2))
 
 packs = []
-for atlas in sorted(textures.glob('Upgrade_*.png')):
+for atlas in sorted(textures.glob(args.atlas or 'Upgrade_*.png')):
     material = bpy.data.materials.new(atlas.stem)
     material.use_nodes = True
     shader = material.node_tree.nodes.get('Principled BSDF')
@@ -102,6 +104,15 @@ for atlas in sorted(textures.glob('Upgrade_*.png')):
     scene.render.resolution_percentage = 100
     scene.render.filepath = str(textures / ('Icon_' + atlas.name))
     bpy.ops.render.render(write_still=True)
+
+if args.atlas:
+    if not packs:
+        raise RuntimeError('No matching atlas: ' + args.atlas)
+    scene.render.resolution_x = scene.render.resolution_y = 768
+    scene.render.filepath = str(art / (Path(args.atlas).stem + '_preview.png'))
+    bpy.ops.render.render(write_still=True)
+    bpy.ops.wm.save_as_mainfile(filepath=str(art / (Path(args.atlas).stem + '.blend')))
+    sys.exit(0)
 
 # Review scene: all wrappers, including the reserved inventory pack, use the same scale.
 rows = math.ceil(len(packs) / 4)

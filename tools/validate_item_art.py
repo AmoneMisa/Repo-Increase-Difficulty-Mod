@@ -42,14 +42,17 @@ for key in ('ghost','silencer','link_a','link_b','repair','defence','protection'
 for key in ('poison','ice','sticky','decoy'): assert (assets/f'{key}_inventory.png').is_file()
 for png in assets.glob('*.png'):
     data=png.read_bytes(); assert data[:8]==b'\x89PNG\r\n\x1a\n'
-    assert struct.unpack('>II',data[16:24]) in ((128,128),(256,256))
+    expected_sizes=((256,16),) if png.name=='v09_rgb_gradient.png' else ((1024,1024),) if png.name.startswith(('v08_','v09_')) else ((128,128),(256,256))
+    assert struct.unpack('>II',data[16:24]) in expected_sizes
 assert (root/'art/ihm_items.blend').is_file()
 for name in ('workshop_wear','poison_puff','ice_frost'):
     assert (assets/(name+'.png')).is_file()
 audio=root/'src/Audio'
-expected={'poison_shot','ice_shot','sticky_shot','ice_hit','poison_hit','power_down'}
+expected={'poison_shot','ice_shot','sticky_shot','sticky_hit','ice_hit','poison_hit','power_down','spritz_shot'}
 expected.update(k+'_activate' for k in ('ghost','silencer','link_a','link_b','repair','defence','protection','decoy'))
-assert {p.stem for p in audio.glob('*.wav')}==expected
+# Other modules (for example ping feedback) share this embedded Audio folder.
+# Validate every known item cue without rejecting those unrelated resources.
+assert expected <= {p.stem for p in audio.glob('*.wav')}
 for name in sorted(expected):
     with wave.open(str(audio/(name+'.wav')),'rb') as sound:
         assert sound.getnchannels()==1 and sound.getsampwidth()==2 and sound.getframerate()==22050
@@ -58,5 +61,5 @@ for name in sorted(expected):
         assert max(abs(s) for s in samples)<30000, (name,'clipping')
         assert math.sqrt(sum(s*s for s in samples)/len(samples))>300, (name,'silent')
         assert abs(samples[0])<10 and abs(samples[-1])<100, (name,'edge click')
-print('PASS: 14 mono audio cues; sample formats, duration, no clipping or silent files.')
+print(f'PASS: {len(expected)} mono audio cues; sample formats, duration, no clipping or silent files.')
 print(f'PASS: {total} triangles; texture coverage, finite transforms, winding, idle resets, animation tracks.')

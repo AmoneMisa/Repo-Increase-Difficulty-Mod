@@ -69,6 +69,7 @@ internal static class LateJoinController
 
     public static void Tick()
     {
+        LateJoinSceneState.Publish();
         if (!ModConfig.LateJoinEnabled.Value)
             return;
 

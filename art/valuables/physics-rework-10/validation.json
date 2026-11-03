@@ -1,0 +1,34 @@
+[
+  {
+    "key": "bomb",
+    "runtime_winding_normals_textures": "PASS",
+    "reimport": {
+      "glb": {
+        "parts": 19,
+        "triangles": 5400,
+        "status": "PASS"
+      },
+      "obj": {
+        "parts": 19,
+        "triangles": 5400,
+        "status": "PASS"
+      }
+    }
+  },
+  {
+    "key": "centrifuge",
+    "runtime_winding_normals_textures": "PASS",
+    "reimport": {
+      "glb": {
+        "parts": 82,
+        "triangles": 12064,
+        "status": "PASS"
+      },
+      "obj": {
+        "parts": 82,
+        "triangles": 12064,
+        "status": "PASS"
+      }
+    }
+  }
+]

@@ -1,0 +1,32 @@
+# Blender 5.2.1 LTS MTL File: 'crystal_skull.blend'
+# www.blender.org
+
+newmtl Continuous_RGB_diffuser_0
+Ns 490.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ni 1.460000
+d 1.000000
+illum 2
+map_Kd v09_rgb_gradient.png
+map_Ke ../../../../../../../../v09_rgb_gradient.png
+
+newmtl Continuous_RGB_diffuser_1
+Ns 490.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ni 1.460000
+d 1.000000
+illum 2
+map_Kd v09_rgb_gradient.png
+map_Ke ../../../../../../../../v09_rgb_gradient.png
+
+newmtl Painted_atlas_ram_pair
+Ns 144.399994
+Ka 0.080000 0.080000 0.080000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.460000
+d 1.000000
+illum 3
+map_Kd v08_ram_pair_atlas.png

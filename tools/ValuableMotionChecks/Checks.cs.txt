@@ -1,0 +1,35 @@
+using System;
+using IncreaseHardMod.Valuables;
+static class Checks
+{
+    static int count;
+    static void Near(float actual,float expected,string name){count++;if(Math.Abs(actual-expected)>.002f)throw new Exception(name+": "+actual+" != "+expected);}
+    static void True(bool condition,string name){count++;if(!condition)throw new Exception(name);}
+    static void Main()
+    {
+        float radius=.545f;
+        Near(ValuableDynamics.WheelDegrees(2*(float)Math.PI*radius,radius,true,true,false),360,"One circumference makes one revolution");
+        Near(ValuableDynamics.WheelDegrees(-(float)Math.PI*radius,radius,true,true,false),-180,"Dragging backward reverses the wheel");
+        Near(ValuableDynamics.WheelDegrees(1,radius,true,false,false),0,"Airborne grabbing cannot spin a wheel");
+        Near(ValuableDynamics.WheelDegrees(1,radius,false,true,false),0,"Ungrabbed floor motion cannot spin a wheel");
+        Near(ValuableDynamics.WheelDegrees(10,radius,true,true,true),0,"Teleportation cannot add fake rolling");
+        Near(ValuableDynamics.WheelDegrees(0,radius,true,true,false),0,"Holding still remains still");
+        Near(ValuableDynamics.WheelDegrees(float.NaN,radius,true,true,false),0,"Invalid network position cannot corrupt wheel pose");
+        Near(ValuableDynamics.WheelDegrees(1,0,true,true,false),0,"Invalid radius cannot divide by zero");
+        Near(ValuableDynamics.WheelDegrees(1,2*radius,true,true,false),ValuableDynamics.WheelDegrees(1,radius,true,true,false)/2,"Uniform scale changes rolling radius");
+        Near(ValuableDynamics.Progress(115,100,30),.5f,"Liquid transfer uses elapsed time");
+        Near(ValuableDynamics.Progress(95,100,30),0,"Flip transition delays liquid transfer");
+        Near(ValuableDynamics.Progress(999,100,30),1,"Finished watch stays finished until flipped");
+        Near(ValuableDynamics.Progress(double.NaN,100,30),0,"Malformed clock rejected");
+        Near(ValuableDynamics.Progress(115,100,60),.25f,"Slower config changes progress");
+        True(!ValuableDynamics.AcceptFlip(false,200,0,1.5f),"Non-holder cannot flip the watch");
+        True(!ValuableDynamics.AcceptFlip(true,201,200,1.5f),"Repeated input is rate limited");
+        True(ValuableDynamics.AcceptFlip(true,202,200,1.5f),"Holder can flip again after cooldown");
+        True(!ValuableDynamics.AcceptFlip(true,double.PositiveInfinity,200,1.5f),"Nonfinite network time rejected");
+        True(ValuableDynamics.ShouldSpill(-1),"Upside-down centrifuge releases sample tubes");
+        True(!ValuableDynamics.ShouldSpill(1),"Upright samples remain seated");
+        True(!ValuableDynamics.ShouldSpill(0),"Sideways samples do not fall through their sockets");
+        True(!ValuableDynamics.ShouldSpill(float.NaN),"Invalid orientation does not release samples");
+        Console.WriteLine("PASS: "+count+" valuable motion/flip rules. Physics contact and live multiplayer remain game tests.");
+    }
+}

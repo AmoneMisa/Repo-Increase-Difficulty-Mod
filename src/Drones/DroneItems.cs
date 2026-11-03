@@ -24,7 +24,7 @@ internal enum DroneKind
 /// so everything about aiming/attaching behaves exactly like the game's own drones; we only add
 /// the effect that runs on the attached target.
 ///
-/// The Link kit is two items: "Link Drone Set (A + B)" is the only one sold in the shop
+/// The Link kit is two items: "2 Drones: Link Set (A + B)" is the only one sold in the shop
 /// (<c>maxAmountInShop</c> = 0 on B hides it); buying A also buys B, so both are delivered by the
 /// game's normal truck item system.
 ///
@@ -99,9 +99,9 @@ internal static class DroneItems
                 targets: (true, false, false, false));
             if (ModConfig.LinkEnabled.Value)
             {
-                Make(baseItem, LinkAName, "Link Drone Set (A + B)", DroneKind.Link, 0, 19000f, 24000f, shop: 1,
+                Make(baseItem, LinkAName, "2 Drones: Link Set (A + B)", DroneKind.Link, 0, 19000f, 24000f, shop: 1,
                 new Color(1f, 0.6f, 0.2f),
-                "Two drones (A + B). Attach one to each of two objects to tie them together with a physical cable; grab one to reel the other in.",
+                "One purchase delivers TWO separate drones: A and B. The price is for the whole pair. Attach one to each of two objects to tie them together with a physical cable; grab one to reel the other in.",
                 targets: (true, true, false, true));
             Make(baseItem, LinkBName, "Link Drone B", DroneKind.Link, 1, 0f, 0f, shop: 0,
                 new Color(0.2f, 0.8f, 1f),

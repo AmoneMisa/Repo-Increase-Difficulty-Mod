@@ -59,3 +59,36 @@ Additional game checks: poison/freeze hits and misses; refresh before expiry; bo
 Verified: Blender renders, geometry/UV/index validation, handedness and triangle winding, sampled track lengths, finite normalized transforms, return-to-idle poses, PNG coverage, PCM format/duration/peak/RMS/edge samples, and .NET build. Game prefab hierarchy was inspected read-only against the installed game. The installed shader inventory includes `Particles/Standard Unlit`, the primary poison-cloud shader.
 
 Not yet play-tested. In a disposable profile, check each item in the shop and inventory; grab/equip/drop it; fire hits, misses, and repeated shots; activate the decoy; open/close drones and orbs. Repeat as host and client. Check shader appearance, muzzle alignment, outlines, and collider fit: colliders intentionally retain the donor shape, so crossbow limbs and the wider decoy casing are cosmetic. Check unloaded batteries and scene changes. No compiled plugin was deployed into the active game profile.
+
+
+Weapon material compatibility: the installed stun grenade uses `Fresnel Opaque` with
+`_BaseTexture` / `_BaseColor`. `ItemArt` recognizes this native albedo property alongside
+`_BaseMap` and `_MainTex`, inspects all material slots (including disabled prefab renderers),
+and borrows a native gun body material only when the item's own body has no compatible
+preset. Custom atlas UVs use explicit texture scale/offset and Fresnel UV controls; donor
+normal/emission maps are cleared on private copies. Original grenade materials and scripts
+remain available for native ticking, pin and activation behavior. Verified by read-only
+inspection of the installed grenade's shader properties and a .NET build; live decoy
+appearance and activation still require an in-game check after replacing the plugin DLL.
+
+## Valuable collection revision 08
+
+The latest collection is [revision 09](valuables/interaction-rework-09/README.md),
+with a revised skull, continuous RAM diffusers, Winx packaging, loose centrifuge
+samples, floor-guided vacuum motion, articulated skeleton physics and original
+material/motion audio. All eleven valuables now have runtime registration; Spritz
+retains its separate shop implementation. Export/data checks and compilation pass.
+Live native appearance and multiplayer physics still require game validation.
+
+See [the collection notes](valuables/depth-rework-08/README.md) and
+[preview sheet](valuables/depth-rework-08/collection_preview.jpg).
+The pack includes twelve GLB/OBJ/Blender models with revised edge shading, unique baked
+atlases and physical detail. Cannon and water watch additionally have loot registration
+and interactive components in `src/Valuables`; the other collection valuables remain
+exported assets. Spritz retains its separate shop implementation.
+
+Hold the water watch and press R to flip it; the key and 32-second flow time are
+configurable under `Valuable Collection`. Cannon wheels respond to floor dragging
+while grabbed and stop in the air. The GIFs are authored previews, not live game footage.
+Mesh reimport checks, 18 deterministic motion tests and compilation pass; native
+appearance, collisions, spawning and multiplayer still require in-game validation.

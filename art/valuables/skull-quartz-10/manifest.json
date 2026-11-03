@@ -1,0 +1,36 @@
+[
+  {
+    "asset": "crystal_skull",
+    "triangles": 6226,
+    "mesh_parts": 1,
+    "runtime_parts": 1,
+    "bounds_m_xyz": [
+      0.20575644820928574,
+      0.23487059026956558,
+      0.30634576082229614
+    ],
+    "groups": [
+      "static"
+    ],
+    "revision": "quartz-10-cheek-refinement",
+    "material": "Approved colorless cut quartz; IOR 1.46, transmission 1, roughness 0.055",
+    "shape": "Slim, recessed cheek arches; flush orbital rims; nearly closed jaw; user-supplied shape reference",
+    "blend_reopen": "PASS",
+    "checks": {
+      "glb": {
+        "status": "PASS",
+        "triangles": 6226,
+        "parts": 1,
+        "materials_uvs_scale_topology": "PASS"
+      },
+      "obj": {
+        "status": "PASS",
+        "triangles": 6226,
+        "parts": 1,
+        "materials_uvs_scale_topology": "PASS"
+      },
+      "cleared_brow_band": "PASS",
+      "original_quartz_parameters": "PASS"
+    }
+  }
+]

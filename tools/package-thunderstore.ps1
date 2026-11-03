@@ -31,7 +31,7 @@ try {
     }
 } finally { $icon.Dispose() }
 
-& dotnet build $project -c Release -p:DeployToGame=false
+& dotnet build $project -c Release -p:DeployToGame=false -p:NuGetAudit=false
 if ($LASTEXITCODE -ne 0) { throw 'Release build failed.' }
 $dll = Join-Path $repo 'bin\Release\IncreaseDifficultyMod.dll'
 $assembly = [Reflection.AssemblyName]::GetAssemblyName($dll)
@@ -42,6 +42,7 @@ if ($assembly.Name -cne $manifest.name -or $assembly.Version.ToString(3) -ne $ma
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
 $zipPath = Join-Path $OutputDirectory "$($manifest.name)-$($manifest.version_number).zip"
 # Create explicitly named ZIP entries: required metadata must be at the archive root.
+Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $stream = [IO.File]::Open($zipPath, [IO.FileMode]::Create, [IO.FileAccess]::ReadWrite)
 $zip = [IO.Compression.ZipArchive]::new($stream, [IO.Compression.ZipArchiveMode]::Create)
@@ -51,6 +52,7 @@ try {
         'README.md' = (Join-Path $repo 'README.md')
         'icon.png' = (Join-Path $repo 'icon.png')
         'CHANGELOG.md' = (Join-Path $repo "release-notes\v$($manifest.version_number).md")
+        'COLLECTION.md' = (Join-Path $repo 'art\valuables\COLLECTION_IN_GAME.md')
         'plugins/IncreaseDifficultyMod/IncreaseDifficultyMod.dll' = $dll
     }
     foreach ($entry in $files.GetEnumerator()) {

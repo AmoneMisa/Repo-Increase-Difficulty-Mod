@@ -14,10 +14,11 @@ public static class PluginInfo
     // Keep the identity stable across the rename: existing config and integrations use it.
     public const string PLUGIN_GUID = "com.kubai.increasehardmod";
     public const string PLUGIN_NAME = "IncreaseDifficultyMod";
-    public const string PLUGIN_VERSION = "0.6.4";
+    public const string PLUGIN_VERSION = "0.7.2";
 }
 
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+[BepInDependency("REPOLib", BepInDependency.DependencyFlags.HardDependency)]
 public class Plugin : BaseUnityPlugin
 {
     public static Plugin Instance { get; private set; }
@@ -35,6 +36,7 @@ public class Plugin : BaseUnityPlugin
     {
         Instance = this;
         Log = Logger;
+        Log.LogInfo($"[Build] DLL={typeof(Plugin).Assembly.Location}; MVID={typeof(Plugin).Module.ModuleVersionId}");
 
         // Bind config entries first so patches can read them.
         ModConfig.Init(Config);

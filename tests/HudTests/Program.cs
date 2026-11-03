@@ -50,7 +50,10 @@ void Reply(string n,string k,int sender=1)=>LevelInfoHud.HandleStateEvent(new(){
 Reply(nonce,key,2);Check(!LevelInfoHud.InfoReady,"Peer cannot supply HUD state");
 Reply(new string('a',32),key);Check(!LevelInfoHud.InfoReady,"Old nonce rejected");
 Reply(nonce,"previous level");Check(!LevelInfoHud.InfoReady,"Wrong level rejected");
-Reply(nonce,key);Check(LevelInfoHud.InfoReady,"Matching host snapshot unlocks client HUD");
+LoadingUI.instance.gameObject.activeInHierarchy=true;Tick();
+Reply(nonce,key);
+LoadingUI.instance.gameObject.activeInHierarchy=false;
+Check(LevelInfoHud.InfoReady,"Host snapshot received while HUD is temporarily hidden remains valid");
 Tick();Check(PhotonNetwork.Sent.Count==1,"No polling or timer-based repeated requests");
 GameDirector.instance.currentState=GameDirector.gameState.Outro;Tick();Check(!LevelInfoHud.InfoReady,"Outro invalidates prior snapshot");
 GameDirector.instance.currentState=GameDirector.gameState.Main;LevelGenerator.Instance=new(){Generated=true};Tick();
@@ -78,5 +81,16 @@ Check(PhotonNetwork.Sent.Count==before+1 && (string)PhotonNetwork.Sent.Last()[0]
 Tick();Check(PhotonNetwork.Sent.Count==before+1,"Unchanged host state is not repeatedly sent");
 ModifierManager.Revision++;Tick();
 Check(PhotonNetwork.Sent.Count==before+2,"Changed authoritative revision refreshes the existing HUD snapshot");
+
+SemiFunc.IsLevel=false;SemiFunc.Shop=true;Map.Instance.Active=false;MapToolController.instance=new(){Active=true};
+ShopEconomy.Current=new(){Id=1,Name="SHOP SALE",Description="Shop items cost less."};GoalUI.instance.isHidden=true;Tick();
+Check(LevelInfoHud.TabOpen&&Field<TextMeshProUGUI>("_descriptionLabel").enabled,"Native shop Tab works without an active map or visible quota");
+Check(Field<TextMeshProUGUI>("_descriptionLabel").text.Contains("Shop items cost less"),"Shop modifier description is visible in shop Tab");
+MapToolController.instance.Active=false;Tick();
+Check(!Field<TextMeshProUGUI>("_descriptionLabel").enabled,"Closing shop Tab hides descriptions");
+SemiFunc.Shop=false;SemiFunc.IsLevel=true;GoalUI.instance.isHidden=false;
+EconomyEvents.Current=EconomyEvents.All[0];RunManager.instance.restarting=true;Tick();
+RunManager.instance.restarting=false;LevelGenerator.Instance=new(){Generated=true};Tick();
+Check(Field<TextMeshProUGUI>("_modsLabel").enabled,"Modifier HUD returns after timer-style scene retry without level count advance");
 
 Console.WriteLine($"HUD_CHECKS_PASSED: {checks}");

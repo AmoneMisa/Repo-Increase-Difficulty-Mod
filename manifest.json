@@ -1,8 +1,8 @@
 {
   "name": "IncreaseDifficultyMod",
-  "version_number": "0.6.4",
+  "version_number": "0.7.2",
   "website_url": "https://github.com/AmoneMisa/Repo-Increase-Difficulty-Mod",
-  "description": "Configurable difficulty scaling, level surprises, custom weapons and drones, player and truck upgrades, Black Market, spectator map, team pings and detailed round statistics. English / Russian.",
+  "description": "Configurable difficulty, Spritz tranquilizer, map-specific valuables with physics and explosions, custom weapons and drones, upgrades, Black Market and round statistics. English / Russian.",
   "dependencies": [
     "BepInEx-BepInExPack-5.4.2305",
     "Zehs-REPOLib-4.3.0"

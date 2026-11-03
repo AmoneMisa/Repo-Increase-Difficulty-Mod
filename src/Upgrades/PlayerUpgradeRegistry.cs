@@ -55,7 +55,7 @@ internal static class PlayerUpgradeRegistry
         // When true, source the shop icon + physical card art from the vanilla "Map Player Count"
         // upgrade instead of an embedded PNG. Used by Map Suite, which replaces that vanilla upgrade
         // and reuses its map-themed art. Takes precedence over IconFile.
-        public bool UseVanillaMapIcon;
+        public bool UseVanillaMapIcon = false;
     }
 
     // REPO shop costs are in THOUSANDS-of-dollars units: ShopCostUI shows the total as

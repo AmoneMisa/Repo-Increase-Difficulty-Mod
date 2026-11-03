@@ -50,7 +50,8 @@ internal sealed class LevelInfoHud : MonoBehaviour
          GameDirector.instance.currentState == GameDirector.gameState.Death) &&
         (LoadingUI.instance == null || !LoadingUI.instance.gameObject.activeInHierarchy) &&
         HUDCanvas.instance != null && HUDCanvas.instance.gameObject.activeInHierarchy;
-    internal static bool TabOpen => Map.Instance != null && Map.Instance.Active;
+    internal static bool TabOpen => (MapToolController.instance != null && MapToolController.instance.Active) ||
+        (Map.Instance != null && Map.Instance.Active);
     internal static bool InfoReady => GameplayReady &&
         (SemiFunc.IsMasterClientOrSingleplayer() || (_instance != null && _instance.SnapshotReady));
     private static string LevelKey => RunManager.instance.levelCurrent.name + "|" +
@@ -77,7 +78,8 @@ internal sealed class LevelInfoHud : MonoBehaviour
         }
         if (PhotonNetwork.IsMasterClient || PhotonNetwork.MasterClient == null ||
             ev.Sender != PhotonNetwork.MasterClient.ActorNumber || data.Length != 5 ||
-            !GameplayReady || nonce != _instance._request || key != LevelKey ||
+            RunManager.instance==null || RunManager.instance.restarting ||
+            nonce != _instance._request || key != LevelKey ||
             _instance._generation != LevelGenerator.Instance || _instance._owner != OwnerKey ||
             _instance._room != PhotonNetwork.CurrentRoom ||
             data[2] is not object[] mods || mods.Length < 4 ||
@@ -146,8 +148,8 @@ internal sealed class LevelInfoHud : MonoBehaviour
         _instance = this;
         if (!GameplayReady)
         {
-            _request = null;
-            _snapshotModifiers = null;
+            // Hiding/loading the native HUD is not a new scene or a new snapshot request.
+            // RefreshState invalidates by generation instance, room and host on return.
             _mapSection = false;
             if (!PhotonNetwork.InRoom) _readers.Clear();
             HideAll();
@@ -408,9 +410,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
         var canvas = HUDCanvas.instance.rect;
         var level = LevelUI.instance;
         // Wait for native anchors rather than drawing over the quota during HUD initialization.
-        if (canvas == null || level == null || level.uiText == null || level.textNumber == null ||
-            GoalUI.instance == null || GoalUI.instance.uiText == null ||
-            !GoalUI.instance.uiText.isActiveAndEnabled || GoalUI.instance.isHidden)
+        if (canvas == null)
         {
             _modsLabel.enabled = _descriptionLabel.enabled = false;
             return;
@@ -418,9 +418,12 @@ internal sealed class LevelInfoHud : MonoBehaviour
 
         _layoutReady = true;
         Rect area = canvas.rect;
-        Rect heading = Bounds(level.uiText.rectTransform);
-        Rect number = Bounds(level.textNumber.rectTransform);
-        Rect quota = Bounds(GoalUI.instance.uiText.rectTransform);
+        bool quotaVisible=GoalUI.instance!=null&&GoalUI.instance.uiText!=null&&
+            GoalUI.instance.uiText.isActiveAndEnabled&&!GoalUI.instance.isHidden;
+        Rect heading = level!=null&&level.uiText!=null ? Bounds(level.uiText.rectTransform) : new Rect();
+        Rect number = level!=null&&level.textNumber!=null ? Bounds(level.textNumber.rectTransform) : new Rect();
+        Rect quota = quotaVisible ? Bounds(GoalUI.instance.uiText.rectTransform) :
+            new Rect(area.xMax-_modsLabel.fontSizeMax,area.yMax-_modsLabel.fontSizeMax*3f,0,0);
         float gap = _modsLabel.fontSizeMax * 0.4f;
         float right = quota.xMax;
         float width = Mathf.Min(area.width * 0.23f, 360f);

@@ -11,7 +11,17 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.6.4`
+- **Version:** `0.7.2`
+
+Version 0.7.2 corrects custom mesh centres and full-footprint spawn checks, reduces bomb
+mass to 30 kg, adds orientation-driven liquid flow and independent centrifuge tubes,
+and fixes shop/retry HUD state and mid-run joining. The updated build adds local item
+lighting, dark cast-metal bomb/cannon finishes, a 3 kg gold ingot and a beckoning porcelain
+Maneki-neko (13 valuables total). [Fix details](release-notes/v0.7.2.md).
+
+Version 0.7.0 adds Spritz and eleven map-restricted valuables, stronger mechanical props,
+destruction-triggered heavy-bomb explosions and one-time centrifuge sample-kit value loss.
+See [release notes](release-notes/v0.7.0.md).
 
 ### Contents
 
@@ -360,7 +370,17 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.6.4`
+- **Версия:** `0.7.2`
+
+В 0.7.2 исправлены центры моделей и проверка полного места для спавна, масса бомбы снижена
+до 30 кг. Добавлены физическая анимация жидкости часов, отдельное выпадение пробирок,
+исправления HUD и позднего входа. В обновлённой сборке — подсветка предметов, тёмный металл
+бомбы и пушки, золотой слиток и фарфоровый неко с движущейся лапой (всего 13 ценностей).
+[Описание исправлений](release-notes/v0.7.2.md).
+
+В 0.7.0 добавлены Spritz и 11 ценностей с ограничениями по картам, усиленная прочность
+механических предметов, взрыв тяжёлой бомбы при уничтожении и одноразовое списание
+стоимости потерянного комплекта пробирок. [Описание изменений](release-notes/v0.7.0.md).
 
 ### Содержание
 

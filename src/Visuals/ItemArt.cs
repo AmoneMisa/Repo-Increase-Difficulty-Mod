@@ -81,17 +81,14 @@ internal static class ItemArt
             var native = go.transform.Find("Mesh");
             if (native == null) throw new InvalidDataException("Unknown weapon mesh hierarchy");
             var renderers = native.GetComponentsInChildren<MeshRenderer>(true);
-            Material template = null;
-            int layer = go.layer;
-            foreach (var renderer in renderers)
-            {
-                if (!renderer.enabled) continue;
-                foreach (var material in renderer.sharedMaterials)
-                    if (material != null && (material.HasProperty("_MainTex") || material.HasProperty("_BaseMap")))
-                    { template = material; layer = renderer.gameObject.layer; break; }
-                if (template != null) break;
-            }
-            if (template == null) throw new InvalidDataException("No textured native weapon material");
+            int layer = renderers.Length > 0 ? renderers[0].gameObject.layer : go.layer;
+            var template = FindTexturedMaterial(native);
+            // REPO's Fresnel Opaque shader exposes _BaseTexture, not _MainTex/_BaseMap.
+            // Prefer the item's own body preset, then a native gun preset if no body supports albedo.
+            if (template == null)
+                template = FindWeaponMaterialDonor();
+            if (template == null)
+                throw new InvalidDataException("No albedo-capable native item material (including weapon donors)");
             var gun = go.GetComponent<ItemGun>();
             if (gun != null && gun.gunMuzzle == null) throw new InvalidDataException("Missing gun muzzle");
             root = new GameObject("IHM Blender Visual");
@@ -126,8 +123,10 @@ internal static class ItemArt
                     // Do not inherit the donor weapon's texture atlas or emission map.
                     foreach (string property in material.GetTexturePropertyNames()) material.SetTexture(property, null);
                     var texture = string.IsNullOrEmpty(part.texture) ? Texture2D.whiteTexture : Texture(part.texture);
-                    if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", texture);
-                    if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", texture);
+                    string albedo = BaseTextureProperty(material);
+                    material.SetTexture(albedo, texture);
+                    material.SetTextureScale(albedo, Vector2.one);
+                    material.SetTextureOffset(albedo, Vector2.zero);
                     if (material.HasProperty("_Color")) material.SetColor("_Color", part.color);
                     if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", part.color);
                     if (material.HasProperty("_EmissionColor")) material.SetColor("_EmissionColor", Color.black);
@@ -135,12 +134,14 @@ internal static class ItemArt
                     material.DisableKeyword("_EMISSION");
                     material.DisableKeyword("_NORMALMAP");
                     material.DisableKeyword("_METALLICGLOSSMAP");
-                    foreach (string property in new[] { "_MainTex", "_BaseMap" })
-                        if (material.HasProperty(property))
-                        {
-                            material.SetTextureScale(property, Vector2.one);
-                            material.SetTextureOffset(property, Vector2.zero);
-                        }
+                    if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", 0.15f);
+                    if (material.HasProperty("_Metallic")) material.SetFloat("_Metallic", 0f);
+                    if (material.HasProperty("_NormalStrength")) material.SetFloat("_NormalStrength", 0f);
+                    // Fresnel Opaque uses explicit UV controls in addition to texture scale/offset.
+                    if (material.HasProperty("_TilingX")) material.SetFloat("_TilingX", 1f);
+                    if (material.HasProperty("_TilingY")) material.SetFloat("_TilingY", 1f);
+                    if (material.HasProperty("_OffsetX")) material.SetFloat("_OffsetX", 0f);
+                    if (material.HasProperty("_OffsetY")) material.SetFloat("_OffsetY", 0f);
                     materialCache[materialKey] = material;
                 }
                 obj.AddComponent<MeshRenderer>().sharedMaterial = material;
@@ -151,7 +152,7 @@ internal static class ItemArt
             motion.assetKey = key;
             motion.visualRoot = root.transform;
             // Hide only the donor body, never disable transforms used by native scripts or colliders.
-            foreach (var renderer in renderers) renderer.forceRenderingOff = true;
+            DonorVisuals.RemoveGeometry(renderers);
             if (gun == null)
             {
                 var pin = go.transform.Find("Splinter");
@@ -168,6 +169,51 @@ internal static class ItemArt
             foreach (var material in createdMaterials) Object.DestroyImmediate(material);
             Plugin.Log.LogWarning($"[Art] Keeping native appearance for {go.name}: {e.Message}");
         }
+    }
+
+    private static string BaseTextureProperty(Material material)
+    {
+        if (material.HasProperty("_BaseTexture")) return "_BaseTexture";
+        if (material.HasProperty("_BaseMap")) return "_BaseMap";
+        if (material.HasProperty("_MainTex")) return "_MainTex";
+        return null;
+    }
+
+    private static Material FindTexturedMaterial(Transform body)
+    {
+        if (body == null) return null;
+        foreach (var renderer in body.GetComponentsInChildren<MeshRenderer>(true))
+        {
+            // Prefabs are inspected before activation; disabled renderers still carry valid presets.
+            // Inspect every slot rather than assuming the first material is the body albedo.
+            foreach (var material in renderer.sharedMaterials)
+                if (material != null && material.shader != null &&
+                    BaseTextureProperty(material) != null)
+                    return material;
+        }
+        return null;
+    }
+
+    private static Material FindWeaponMaterialDonor()
+    {
+        var items = StatsManager.instance != null ? StatsManager.instance.itemDictionary : null;
+        if (items == null) return null;
+        // Stable known body presets first, followed by other registered vanilla gun prefabs.
+        foreach (string name in new[] { "Item Gun Handgun", "Item Gun Shotgun", "Item Gun Shockwave" })
+        {
+            if (!items.TryGetValue(name, out var item)) continue;
+            var prefab = item != null && item.prefab != null ? item.prefab.Prefab : null;
+            var material = prefab != null ? FindTexturedMaterial(prefab.transform.Find("Mesh")) : null;
+            if (material != null) return material;
+        }
+        foreach (var item in items.Values)
+        {
+            var prefab = item != null && item.prefab != null ? item.prefab.Prefab : null;
+            if (prefab == null || prefab.GetComponent<ItemGun>() == null) continue;
+            var material = FindTexturedMaterial(prefab.transform.Find("Mesh"));
+            if (material != null) return material;
+        }
+        return null;
     }
 
     internal static void ApplyPose(Transform target, ArtPose pose)
