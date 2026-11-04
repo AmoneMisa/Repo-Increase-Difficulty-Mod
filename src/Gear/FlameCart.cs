@@ -78,6 +78,9 @@ internal static class FlameCartItem
             item.maxPurchase = false;
             item.minPlayerCount = 1;
             item.value = Object.Instantiate(donor.value);
+            // Shop pads are matched by size class: take the Hauler's (vehicle pad), not the cannon's.
+            var haulerItem = hauler.GetComponent<ItemAttributes>()?.item;
+            item.itemVolume = haulerItem != null ? haulerItem.itemVolume : SemiFunc.itemVolume.vehicle;
             // Shop price in K = value * itemValueMultiplier(4) / 1000, so value = K * 250.
             int minK = Mathf.Max(1, ModConfig.FlameCartPriceMinK.Value);
             int maxK = Mathf.Max(minK, ModConfig.FlameCartPriceMaxK.Value);
@@ -101,10 +104,12 @@ internal static class FlameCartItem
             if (template == null) throw new InvalidOperationException("No albedo-capable material for the model");
             int visualLayer = VisualLayer(go);
             RemoveDonorChildren(go, battery);
+            foreach (var volume in go.GetComponentsInChildren<ItemVolume>(true)) volume.itemVolume = item.itemVolume;
 
             var (turret, head) = BuildModel(go, template, visualLayer);
             AddColliders(go, colliderLayer);
             var box = AddStorage(go, hauler);
+            MakeBoxGrabbable(box);
             GrabMarker.AttachToBoxBack(box.transform, visualLayer);
             AddHandle(go);
             AddIconCamera(go, hauler);
@@ -285,6 +290,24 @@ internal static class FlameCartItem
         obj.AddComponent<BoxCollider>().size = size;
         obj.AddComponent<PhysGrabObjectBoxCollider>().drawGizmos = false;
         obj.AddComponent<PhysGrabObjectCollider>();
+        // PhysGrabber only starts a grab on colliders with this tag; untagged ones are ignored.
+        obj.tag = GrabTag;
+    }
+
+    private const string GrabTag = "Phys Grab Object";
+
+    // The copied Hauler box brings its own solid colliders. Any that are not grab surfaces would stop the
+    // grab ray in front of ours, so make every solid one a grab surface of this item.
+    private static void MakeBoxGrabbable(ItemValuableBox box)
+    {
+        int fixedCount = 0;
+        foreach (var c in box.GetComponentsInChildren<Collider>(true))
+        {
+            if (c.isTrigger) continue;
+            if (!c.CompareTag(GrabTag)) { c.gameObject.tag = GrabTag; fixedCount++; }
+            if (c.GetComponent<PhysGrabObjectCollider>() == null) c.gameObject.AddComponent<PhysGrabObjectCollider>();
+        }
+        if (fixedCount > 0) Plugin.Log.LogInfo($"[Flame] Storage box: {fixedCount} solid collider(s) made grab surfaces.");
     }
 
     private static ItemValuableBox AddStorage(GameObject go, ItemVehicle hauler)

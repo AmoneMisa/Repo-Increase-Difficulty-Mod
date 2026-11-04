@@ -95,9 +95,33 @@ internal sealed class FlameCartHandle : MonoBehaviour
         }
     }
 
+    private float _tippedTimer;
+    private bool _righting;
+
+    // Host: a cart left lying on its side or roof stands itself back up (hop + rotate to its own yaw).
+    private void SelfRight()
+    {
+        float tilt = Vector3.Angle(transform.up, Vector3.up);
+        if (_righting)
+        {
+            var upright = Quaternion.Euler(0f, _rb.rotation.eulerAngles.y, 0f);
+            _rb.MoveRotation(Quaternion.RotateTowards(_rb.rotation, upright, 220f * Time.fixedDeltaTime));
+            _rb.angularVelocity = Vector3.zero;
+            if (tilt < 4f) { _righting = false; _tippedTimer = 0f; }
+            return;
+        }
+        bool resting = _rb.velocity.sqrMagnitude < .09f && _rb.angularVelocity.sqrMagnitude < .25f;
+        _tippedTimer = tilt > 50f && resting && _pgo.playerGrabbing.Count == 0 ? _tippedTimer + Time.fixedDeltaTime : 0f;
+        if (_tippedTimer < 1.2f) return;
+        _righting = true;
+        _rb.velocity = Vector3.up * 2.2f; // clear the floor before turning
+    }
+
     private void FixedUpdate()
     {
-        if (_grabbers.Count == 0 || _rb == null || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+        if (_rb == null || _pgo == null || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+        if (_grabbers.Count == 0) { SelfRight(); return; }
+        _righting = false;
         var g = _grabbers[0];
         if (g == null || g.playerAvatar == null) return;
         var avatar = g.playerAvatar;
