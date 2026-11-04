@@ -1,0 +1,23 @@
+{
+  "date": "2026-11-04",
+  "project_version": "0.7.4",
+  "deployment": false,
+  "dotnet_build": "PASS; 0 warnings, 0 errors; DeployToGame=false",
+  "unity": "PASS: 21325 real Unity clone checks; Unity 6000.2.9f1; forceRenderingOff serialized=False",
+  "art_roundtrip": "PASS",
+  "maneki_roundtrip": "PASS",
+  "spawn_bounds": "PASS; 13 actual shipped models, updated scales and complete paw sweep",
+  "native_light_reference": "Valuable Wizard Time Glass; Point intensity2, range5 metres",
+  "maneki_mass_kg": 6,
+  "live_game_run": "NOT PERFORMED",
+  "remaining_live_checks": [
+    "Cannon spawn in actual map volumes",
+    "Rolling effort and slopes/thresholds versus airborne carry",
+    "Bloom and ambient light against native Time Glass at same exposure",
+    "Host/client and late-join pose/clock sync",
+    "Porcelain impact/break audio and durability"
+  ],
+  "maneki_height_m": 1.7,
+  "maneki_height_basis": "Standing native Player Avatar Controller / Collision capsule",
+  "maneki_paw": "161 geometric phases: no head intersections, continuous shoulder overlap; 81 Unity collision phases fit reserved spawn bounds; render-frame and physics shared clock"
+}

@@ -9,6 +9,9 @@ C=Matrix(((1,0,0),(0,0,1),(0,1,0)))
 def vector(v):return Vector(tuple(v[c] for c in 'xyz'))
 def bounds(points):return [min(p[k] for p in points) for k in range(3)]+[max(p[k] for p in points) for k in range(3)]
 pivot=vector(data['beckonPivot']);count=0
+height_ref=json.loads((OUT/'player-height-reference.json').read_text())
+ys=[v['y'] for p in data['parts'] for v in p['vertices']]
+assert abs((max(ys)-min(ys))*2-height_ref['height_m'])<.00001
 for part in data['parts']:
     assert len(part['vertices'])==len(part['normals'])==len(part['uv'])
     count+=len(part['triangles'])//3
@@ -65,5 +68,5 @@ for cue in ['porcelain','porcelain_break']:
         assert (f.getnchannels(),f.getsampwidth(),f.getframerate())==(1,2,22050)
         values=struct.unpack('<'+'h'*f.getnframes(),f.readframes(f.getnframes()))
         assert max(map(abs,values))<30000 and abs(values[0])<10 and abs(values[-1])<100
-report={'status':'PASS','triangles':count,'glb_obj_reimport':'PASS','cycle_seconds':8/3,'max_glb_runtime_bounds_error_m':max(errors),'collider_sweep':'PASS','audio_format_and_peaks':'PASS','live_game_validation':'pending'}
+report={'status':'PASS','triangles':count,'height_m':height_ref['height_m'],'mass_kg':height_ref['mass_kg'],'glb_obj_reimport':'PASS','cycle_seconds':8/3,'max_glb_runtime_bounds_error_m':max(errors),'collider_sweep':'PASS','audio_format_and_peaks':'PASS','live_game_validation':'pending'}
 (OUT/'final-validation.json').write_text(json.dumps(report,indent=2));print(json.dumps(report,indent=2))

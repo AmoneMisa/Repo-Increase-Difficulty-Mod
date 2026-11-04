@@ -9,6 +9,16 @@ namespace IncreaseHardMod.Valuables;
 [HarmonyPatch(typeof(ValuableDirector),"SpawnValuable")]
 internal static class CollectionSpawnSafety
 {
+    // Instantiate receives the volume's rotation, not the prefab rotation. Apply
+    // the same upright pose used by the clearance query before native Start runs.
+    [HarmonyPostfix]
+    private static void Postfix(ValuableObject __result)
+    {
+        if(__result==null||!SemiFunc.IsMasterClientOrSingleplayer())return;
+        var art=__result.GetComponent<ValuableArtInstance>();
+        if(art==null||(art.assetKey!="cannon"&&art.assetKey!="skeleton"&&art.assetKey!="robot_vacuum"))return;
+        WheeledPropPhysics.AlignAtSpawn(__result.GetComponent<Rigidbody>());
+    }
     [HarmonyPrefix]
     private static bool Prefix(ValuableDirector __instance,ref PrefabRef _valuable,ValuableVolume _volume,ref ValuableObject __result)
     {

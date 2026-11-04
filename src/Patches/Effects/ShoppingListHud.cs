@@ -108,7 +108,7 @@ internal sealed class ShoppingListHud : MonoBehaviour
             if (attr == null)
                 continue;
 
-            string name = DisplayName(attr);
+            string name = ItemDisplayName.Get(attr);
             if (!_byName.TryGetValue(name, out var row))
             {
                 row = new Row { Name = name, Color = ColorFor(attr) };
@@ -118,15 +118,6 @@ internal sealed class ShoppingListHud : MonoBehaviour
             row.Count++;
             row.Sum += attr.value;
         }
-    }
-
-    private static string DisplayName(ItemAttributes attr)
-    {
-        if (attr.item != null && !string.IsNullOrEmpty(attr.item.itemName) && attr.item.itemName != "N/A")
-            return attr.item.itemName;
-        if (!string.IsNullOrEmpty(attr.itemName))
-            return Clean(attr.itemName);
-        return Clean(attr.name);
     }
 
     // Colour by item category so groups are visually distinct, mirroring the reference mod.
@@ -154,16 +145,6 @@ internal sealed class ShoppingListHud : MonoBehaviour
             SemiFunc.itemType.vehicle => new Color(0.9f, 0.85f, 0.6f),        // beige
             _ => Color.white,
         };
-    }
-
-    private static string Clean(string name)
-    {
-        if (string.IsNullOrEmpty(name))
-            return "Item";
-        int clone = name.IndexOf("(Clone)", System.StringComparison.Ordinal);
-        if (clone >= 0)
-            name = name.Substring(0, clone);
-        return name.Replace("Item ", "").Trim();
     }
 
     private static int SafeCurrency(ShopManager shop)

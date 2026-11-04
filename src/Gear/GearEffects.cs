@@ -231,6 +231,13 @@ internal static class GearEffects
             __state = null;
             if (!SemiFunc.MasterOnlyRPC(_info)) return false;
             var gear = __instance.GetComponent<GearGun>();
+            if (gear != null && gear.kind == GearKind.Lightning)
+            {
+                // No native bullet: the host resolves the chain and broadcasts the bolt to everyone.
+                if (SemiFunc.IsMasterClientOrSingleplayer())
+                    __instance.GetComponent<WizardStaff>()?.HostFire(_endPosition, _shooterID);
+                return false;
+            }
             bool sticky = gear != null && gear.kind == GearKind.Sticky;
             if (sticky && _hit) Visuals.StickyTether.Pulse(__instance, _endPosition);
             // Resolve before the native method activates the bullet's hit colliders.
@@ -344,7 +351,7 @@ internal static class GearEffects
         private static bool Prefix(ItemGun __instance)
         {
             var gear = __instance.GetComponent<GearGun>();
-            return gear == null || gear.kind != GearKind.Sticky;
+            return gear == null || (gear.kind != GearKind.Sticky && gear.kind != GearKind.Lightning);
         }
     }
 

@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Rendering;
 using System.Collections.Generic;
+using IncreaseHardMod.Upgrades;
 
 namespace IncreaseHardMod.Patches.Effects;
 
@@ -28,6 +29,9 @@ internal sealed class PingOutline : MaskableGraphic
     private RenderTexture _mask;
     private Texture2D _readback;
     private static Material _maskMaterial;
+    private PingBeacon _beacon;          // world-space winged beacon (area pings)
+    private RawImage _reticleOuter, _reticleInner; // red targeting reticle (enemy pings)
+    private float _born;
 
     private static readonly int[] Edges = { 0,1, 0,2, 0,4, 1,3, 1,5, 2,3, 2,6, 3,7, 4,5, 4,6, 5,7, 6,7 };
 
@@ -48,6 +52,7 @@ internal sealed class PingOutline : MaskableGraphic
         frame._point = point;
         frame._tint = tint;
         frame._until = Time.time + duration;
+        frame._born = Time.time;
         frame.raycastTarget = false;
         frame.maskable = false;
         frame.rectTransform.anchorMin = frame.rectTransform.anchorMax = frame.rectTransform.pivot = Vector2.zero;
@@ -66,13 +71,70 @@ internal sealed class PingOutline : MaskableGraphic
         return frame;
     }
 
-    internal void Close() { if (_root != null) {_root.SetActive(false);Destroy(_root);} }
+    internal void Close()
+    {
+        if (_beacon != null) _beacon.Close();
+        if (_root != null) {_root.SetActive(false);Destroy(_root);}
+    }
+
+    /// <summary>Area pings: add the world-space beacon; the screen marker keeps only its locator arrow.</summary>
+    internal void AttachBeacon(float duration) => _beacon = PingBeacon.Create(_point, duration);
+
+    /// <summary>Enemy pings: frame the target with a rotating red reticle instead of a silhouette.</summary>
+    internal void UseReticle()
+    {
+        _reticleOuter = ReticleImage("ping_reticle_outer.png");
+        _reticleInner = ReticleImage("ping_reticle_inner.png");
+    }
+
+    private bool HasReticle => _reticleOuter != null;
+
+    private RawImage ReticleImage(string texture)
+    {
+        var go = new GameObject("Reticle", typeof(RectTransform), typeof(CanvasRenderer));
+        go.transform.SetParent(_root.transform, false);
+        var image = go.AddComponent<RawImage>();
+        image.texture = UpgradeIcons.LoadTexture(texture);
+        image.raycastTarget = false;
+        image.maskable = false;
+        image.rectTransform.anchorMin = image.rectTransform.anchorMax = Vector2.zero;
+        image.rectTransform.pivot = new Vector2(.5f, .5f);
+        if (image.texture == null) { Destroy(go); return null; }
+        return image;
+    }
+
+    private void Hide()
+    {
+        canvasRenderer.SetAlpha(0f);
+        if (_reticleOuter != null) _reticleOuter.canvasRenderer.SetAlpha(0f);
+        if (_reticleInner != null) _reticleInner.canvasRenderer.SetAlpha(0f);
+    }
+
+    private void PlaceReticle(Rect rectangle, float alpha)
+    {
+        float age = Time.time - _born;
+        float intro = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(age / .25f));
+        float minimum = 90f * Mathf.Clamp(Screen.height / 1080f, .8f, 2.5f) * ModConfig.PingMarkerScale.Value;
+        float side = Mathf.Max(minimum, Mathf.Max(rectangle.width, rectangle.height) * 1.2f);
+        // Snaps in from slightly larger, like a lock-on.
+        side *= Mathf.Lerp(1.45f, 1f, intro);
+        float pulse = 1f + Mathf.Sin(age * 4f) * .015f;
+        foreach (var image in new[] { _reticleOuter, _reticleInner })
+        {
+            if (image == null) continue;
+            image.rectTransform.anchoredPosition = rectangle.center;
+            image.rectTransform.sizeDelta = Vector2.one * side * (image == _reticleInner ? .68f * pulse : 1f);
+            image.color = Color.white;
+            image.canvasRenderer.SetAlpha(alpha * intro);
+        }
+        if (_reticleOuter != null) _reticleOuter.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -age * 40f);
+    }
 
     private void LateUpdate()
     {
         if (Time.time >= _until || TargetGone) { Close(); return; }
         var camera = PingController.ActiveCamera();
-        if (camera == null) { canvasRenderer.SetAlpha(0f); return; }
+        if (camera == null) { Hide();return; }
         Rect rectangle;
         bool found = false;
         Bounds bounds = default;
@@ -87,8 +149,8 @@ internal sealed class PingOutline : MaskableGraphic
         _pointMarker=!found;
         if (found)
         {
-            if (!ProjectBounds(camera,bounds,out rectangle)) {canvasRenderer.SetAlpha(0f);return;}
-            if (!_pending && Time.unscaledTime>=_refreshAt)
+            if (!ProjectBounds(camera,bounds,out rectangle)) {Hide();return;}
+            if (!HasReticle && !_pending && Time.unscaledTime>=_refreshAt)
             {
                 _refreshAt=Time.unscaledTime+.1f;
                 CaptureMask(camera,rectangle);
@@ -97,7 +159,7 @@ internal sealed class PingOutline : MaskableGraphic
         else
         {
             var screen=HudProjection.WorldToScreen(camera,target!=null?target.centerPoint:PlayerTarget!=null?PlayerTarget.transform.position+Vector3.up*.8f:_point);
-            if(screen.z<=camera.nearClipPlane || !HudProjection.DisplayRect(camera).Contains(screen)) {canvasRenderer.SetAlpha(0f);return;}
+            if(screen.z<=camera.nearClipPlane || !HudProjection.DisplayRect(camera).Contains(screen)) {Hide();return;}
             _markerScale=Mathf.Clamp(Screen.height/1080f,.8f,2.5f)*ModConfig.PingMarkerScale.Value;
             var size=new Vector2(96f,44f)*_markerScale;
             rectangle=new Rect((Vector2)screen-size*.5f,size);
@@ -106,7 +168,9 @@ internal sealed class PingOutline : MaskableGraphic
         rectTransform.anchoredPosition=rectangle.min;
         rectTransform.sizeDelta=rectangle.size+new Vector2(0f,44f*(_pointMarker?_markerScale:1f));
         color=_tint;
-        canvasRenderer.SetAlpha(Mathf.Clamp01((_until-Time.time)/.35f));
+        float fade=Mathf.Clamp01((_until-Time.time)/.35f);
+        canvasRenderer.SetAlpha(fade);
+        if (HasReticle) PlaceReticle(rectangle, fade);
         SetVerticesDirty();
     }
 
@@ -242,6 +306,8 @@ internal sealed class PingOutline : MaskableGraphic
     protected override void OnPopulateMesh(VertexHelper vh)
     {
         vh.Clear();
+        if (HasReticle) return;                    // the reticle images replace the outline and arrow
+        bool arrowOnly = _pointMarker && _beacon != null; // the world beacon replaces the ellipse
         // Wide low-alpha strokes form a soft halo; the transparent centre is never filled.
         var widths=new[]{16f,11f,7f,4f,2f};
         var alphas=new[]{.025f,.045f,.09f,.19f,.95f};
@@ -249,7 +315,8 @@ internal sealed class PingOutline : MaskableGraphic
         {
             var tint=color;tint.a*=alphas[layer]*(_pointMarker?1f:.8f);
             float width=widths[layer]*(_pointMarker?_markerScale:1f);
-            if(_pointMarker)
+            if(arrowOnly){}
+            else if(_pointMarker)
             {
                 var centre=_objectSize*.5f;const int steps=96;
                 var radii=_objectSize*.5f-new Vector2(6f,6f)*_markerScale;

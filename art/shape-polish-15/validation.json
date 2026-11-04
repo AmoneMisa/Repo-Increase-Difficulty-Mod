@@ -90,7 +90,7 @@
     {
       "asset": "graphics_card",
       "triangles": 20164,
-      "bounds_change_m": 0.0,
+      "bounds_change_m": 3.725290298461914e-09,
       "part_bindings_and_rest_poses": "unchanged",
       "imports": {
         "glb": "PASS",
@@ -150,7 +150,7 @@
     {
       "asset": "water_timer",
       "triangles": 3154,
-      "bounds_change_m": 0.0,
+      "bounds_change_m": 9.313225746154785e-10,
       "part_bindings_and_rest_poses": "unchanged",
       "imports": {
         "glb": "PASS",

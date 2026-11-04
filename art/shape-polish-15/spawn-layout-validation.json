@@ -1,0 +1,340 @@
+[
+  {
+    "key": "crystal_skull",
+    "size_m": [
+      0.20575645565986633,
+      0.30634576082229614,
+      0.23487058281898499
+    ],
+    "local_grab_center": [
+      0.0,
+      0.16517288041114808,
+      0.1294352914094925
+    ],
+    "local_mass_center": [
+      0.0,
+      0.16517288041114808,
+      0.1294352914094925
+    ],
+    "visual_and_collider_offset": [
+      3.5610049962997437e-05,
+      0.012,
+      0.12606054720282556
+    ],
+    "native_volume": "small",
+    "oversize_requires_scene_overlap_check": false,
+    "status": "PASS"
+  },
+  {
+    "key": "bomb",
+    "size_m": [
+      2.293599987030029,
+      1.344000053405762,
+      1.3439999580383302
+    ],
+    "local_grab_center": [
+      0.0,
+      0.8520000333786011,
+      0.8519999737739563
+    ],
+    "local_mass_center": [
+      0.0,
+      0.8520000333786011,
+      0.8519999737739563
+    ],
+    "visual_and_collider_offset": [
+      0.3264999985694885,
+      0.012,
+      0.8519999737739563
+    ],
+    "native_volume": "wide",
+    "oversize_requires_scene_overlap_check": true,
+    "status": "PASS"
+  },
+  {
+    "key": "bath_gift_set",
+    "size_m": [
+      0.2770000100135803,
+      0.2784999907016754,
+      0.10649999976158142
+    ],
+    "local_grab_center": [
+      0.0,
+      0.15124999535083772,
+      0.06524999988079071
+    ],
+    "local_mass_center": [
+      0.0,
+      0.15124999535083772,
+      0.06524999988079071
+    ],
+    "visual_and_collider_offset": [
+      -0.0,
+      0.012,
+      0.06649999868869781
+    ],
+    "native_volume": "small",
+    "oversize_requires_scene_overlap_check": false,
+    "status": "PASS"
+  },
+  {
+    "key": "cannon",
+    "size_m": [
+      1.31239997446537,
+      1.1055126786231995,
+      1.8023958921432495
+    ],
+    "local_grab_center": [
+      0.0,
+      0.6623015756607056,
+      1.0722328777313233
+    ],
+    "local_mass_center": [
+      0.0,
+      0.6623015756607056,
+      1.0722328777313233
+    ],
+    "visual_and_collider_offset": [
+      -2.9802322387695312e-08,
+      0.012,
+      0.8474657888412476
+    ],
+    "native_volume": "wide",
+    "oversize_requires_scene_overlap_check": true,
+    "status": "PASS"
+  },
+  {
+    "key": "water_timer",
+    "size_m": [
+      0.10400000214576721,
+      0.25999999046325684,
+      0.03930000215768814
+    ],
+    "local_grab_center": [
+      0.0,
+      0.14199999523162843,
+      0.03165000107884407
+    ],
+    "local_mass_center": [
+      0.0,
+      0.14199999523162843,
+      0.03165000107884407
+    ],
+    "visual_and_collider_offset": [
+      -0.0,
+      0.012,
+      0.03230000183731317
+    ],
+    "native_volume": "small",
+    "oversize_requires_scene_overlap_check": false,
+    "status": "PASS"
+  },
+  {
+    "key": "centrifuge",
+    "size_m": [
+      0.5166089683771133,
+      0.698620458226651,
+      0.6688923105597496
+    ],
+    "local_grab_center": [
+      0.0,
+      0.3295547537393868,
+      0.31604195934534074
+    ],
+    "local_mass_center": [
+      0.0,
+      0.3295547537393868,
+      0.31604195934534074
+    ],
+    "visual_and_collider_offset": [
+      -0.0,
+      0.011499999918043614,
+      0.2544999922513962
+    ],
+    "native_volume": "medium",
+    "oversize_requires_scene_overlap_check": false,
+    "status": "PASS"
+  },
+  {
+    "key": "skeleton",
+    "size_m": [
+      0.5641499757766724,
+      1.6875831857323647,
+      0.5247535556554794
+    ],
+    "local_grab_center": [
+      0.0,
+      0.8557915928661823,
+      0.2743767778277397
+    ],
+    "local_mass_center": [
+      0.0,
+      0.8557915928661823,
+      0.2743767778277397
+    ],
+    "visual_and_collider_offset": [
+      -0.0,
+      0.01077641350030899,
+      0.16437678587436677
+    ],
+    "native_volume": "veryTall",
+    "oversize_requires_scene_overlap_check": false,
+    "status": "PASS"
+  },
+  {
+    "key": "robot_vacuum",
+    "size_m": [
+      0.7736853361129762,
+      0.30272944755852227,
+      0.773827087879181
+    ],
+    "local_grab_center": [
+      0.0,
+      0.08080214717239143,
+      0.18786979269981385
+    ],
+    "local_mass_center": [
+      0.0,
+      0.08080214717239143,
+      0.18786979269981385
+    ],
+    "visual_and_collider_offset": [
+      -0.0,
+      0.022604290291666985,
+      0.18790200901031495
+    ],
+    "native_volume": "medium",
+    "oversize_requires_scene_overlap_check": false,
+    "status": "PASS"
+  },
+  {
+    "key": "graphics_card",
+    "size_m": [
+      0.4248000025749206,
+      0.09719999134540558,
+      0.20220000743865965
+    ],
+    "local_grab_center": [
+      0.0,
+      0.05249999639391899,
+      0.09625000309944154
+    ],
+    "local_mass_center": [
+      0.0,
+      0.05249999639391899,
+      0.09625000309944154
+    ],
+    "visual_and_collider_offset": [
+      0.01000000536441803,
+      0.012,
+      0.10000000324845314
+    ],
+    "native_volume": "small",
+    "oversize_requires_scene_overlap_check": false,
+    "status": "PASS"
+  },
+  {
+    "key": "ram_pair",
+    "size_m": [
+      0.17279999256134032,
+      0.06659999638795852,
+      0.07019999697804451
+    ],
+    "local_grab_center": [
+      0.0,
+      0.039749998494982716,
+      0.041249998740851876
+    ],
+    "local_mass_center": [
+      0.0,
+      0.039749998494982716,
+      0.041249998740851876
+    ],
+    "visual_and_collider_offset": [
+      -0.0,
+      0.011499998986721039,
+      0.04399999779462814
+    ],
+    "native_volume": "tiny",
+    "oversize_requires_scene_overlap_check": false,
+    "status": "PASS"
+  },
+  {
+    "key": "monoblock_pc",
+    "size_m": [
+      0.5879999995231628,
+      0.5135000348091125,
+      0.1940000057220459
+    ],
+    "local_grab_center": [
+      0.0,
+      0.2687500174045563,
+      0.10900000286102296
+    ],
+    "local_mass_center": [
+      0.0,
+      0.2687500174045563,
+      0.10900000286102296
+    ],
+    "visual_and_collider_offset": [
+      -0.0,
+      0.012,
+      0.09099999618530273
+    ],
+    "native_volume": "medium",
+    "oversize_requires_scene_overlap_check": false,
+    "status": "PASS"
+  },
+  {
+    "key": "gold_ingot",
+    "size_m": [
+      0.06319542974233627,
+      0.020230000838637352,
+      0.14879390597343445
+    ],
+    "local_grab_center": [
+      0.0,
+      0.022115000419318673,
+      0.08639695298671723
+    ],
+    "local_mass_center": [
+      0.0,
+      0.022115000419318673,
+      0.08639695298671723
+    ],
+    "visual_and_collider_offset": [
+      -0.0,
+      0.012,
+      0.08639695298671722
+    ],
+    "native_volume": "tiny",
+    "oversize_requires_scene_overlap_check": false,
+    "status": "PASS"
+  },
+  {
+    "key": "maneki_neko",
+    "size_m": [
+      1.1733705401420593,
+      1.7159999450668693,
+      0.7401096820831299
+    ],
+    "local_grab_center": [
+      0.0,
+      0.4409999862667173,
+      0.19702742052078248
+    ],
+    "local_mass_center": [
+      -0.01278469804674387,
+      0.4125660335533321,
+      0.19605477836495266
+    ],
+    "visual_and_collider_offset": [
+      -0.003253743052482605,
+      0.016000000189989805,
+      0.19702742052078248
+    ],
+    "native_volume": "veryTall",
+    "oversize_requires_scene_overlap_check": false,
+    "status": "PASS"
+  }
+]

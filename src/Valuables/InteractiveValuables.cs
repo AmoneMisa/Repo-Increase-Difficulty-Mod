@@ -90,6 +90,11 @@ internal static class InteractiveValuables
             body.drag=.05f;body.angularDrag=.25f;
             if(key=="cannon"||key=="robot_vacuum"||key=="skeleton")WheeledPropPhysics.Prepare(body);
             var pgo = go.GetComponent<PhysGrabObject>();pgo.massOriginal = mass;pgo.colliders.Clear();
+            if(key=="cannon"||key=="robot_vacuum"||key=="skeleton")
+            {
+                pgo.spawnTorque=Vector3.zero;
+                go.AddComponent<WheeledSpawnPose>();
+            }
             var art = ValuableVisuals.Attach(go, key, template);
             if (key == "cannon")
             {
@@ -143,6 +148,11 @@ internal static class InteractiveValuables
                         continue;
                     }
                     var bounds=binding.node.GetComponent<MeshFilter>().sharedMesh.bounds;
+                    if(binding.group.StartsWith("drive_",StringComparison.Ordinal)||binding.group.StartsWith("caster_",StringComparison.Ordinal))
+                    {
+                        WheelCollider(go,binding.node.localPosition+bounds.center,Mathf.Max(bounds.extents.y,bounds.extents.z),bounds.extents.x);
+                        continue;
+                    }
                     if(key=="maneki_neko"&&binding.group=="beckoning_paw")
                     {
                         var paw=CollisionChild(go,"Beckoning paw collision "+binding.node.name);
@@ -159,8 +169,6 @@ internal static class InteractiveValuables
                 if(key=="maneki_neko")go.AddComponent<ManekiMotion>();
             }
             go.AddComponent<ValuableFoley>();
-            if(key=="cannon"||key=="robot_vacuum"||key=="skeleton")
-                foreach(var collider in go.GetComponentsInChildren<Collider>(true))WheeledPropPhysics.SetRollingContact(collider);
             if(key=="bomb"){go.AddComponent<ParticleScriptExplosion>();go.AddComponent<BombDestruction>();}
             var actual=ValuableLayout.Apply(go,art);
             value.volumeType=VolumeFor(value,actual.size*ValuableLayout.Scale(key));
@@ -208,13 +216,13 @@ internal static class InteractiveValuables
         child.AddComponent<UnityEngine.BoxCollider>().size = size;
     }
 
-    private static void WheelCollider(GameObject root, Vector3 center)
+    private static void WheelCollider(GameObject root, Vector3 center,float radius=.545f,float halfWidth=.05f)
     {
-        var child = CollisionChild(root,"Cannon wheel collider");child.transform.localPosition = center;
+        var child = CollisionChild(root,"Rolling wheel collider");child.transform.localPosition = center;
         const int n = 20;var vertices = new Vector3[n*2];var triangles = new List<int>();
         for (int side=0;side<2;side++) for (int j=0;j<n;j++)
         {
-            float a=j*Mathf.PI*2/n;vertices[side*n+j]=new Vector3(side==0?-.05f:.05f,.545f*Mathf.Cos(a),.545f*Mathf.Sin(a));
+            float a=j*Mathf.PI*2/n;vertices[side*n+j]=new Vector3(side==0?-halfWidth:halfWidth,radius*Mathf.Cos(a),radius*Mathf.Sin(a));
         }
         for (int j=0;j<n;j++)
         {
@@ -223,5 +231,6 @@ internal static class InteractiveValuables
         }
         var mesh=new Mesh{name="IHM convex wheel"};mesh.vertices=vertices;mesh.triangles=triangles.ToArray();mesh.RecalculateNormals();mesh.RecalculateBounds();
         var collider=child.AddComponent<MeshCollider>();collider.sharedMesh=mesh;collider.convex=true;
+        WheeledPropPhysics.SetRollingContact(collider);
     }
 }

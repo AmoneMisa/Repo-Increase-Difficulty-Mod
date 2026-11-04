@@ -240,8 +240,7 @@ internal static class PingController
             type = upgrade ? PingType.Upgrade : PingType.Item;
             physGrab ??= item.GetComponentInParent<PhysGrabObject>() ?? item.GetComponentInChildren<PhysGrabObject>(true);
             pos = physGrab != null ? physGrab.centerPoint : item.transform.position;
-            string name=!string.IsNullOrEmpty(item.itemName)?item.itemName:item.item!=null?item.item.itemName:item.name;
-            label = info ? Clean(name) : upgrade ? "Upgrade" : "Item";
+            label = info ? ItemDisplayName.Get(item) : upgrade ? "Upgrade" : "Item";
             return;
         }
 
@@ -301,6 +300,8 @@ internal static class PingController
         float duration = ModConfig.PingDurationSeconds.Value;
         var graphic = player != null ? PingOutline.CreatePlayer(player, pos, ColorFor(type), duration) :
             PingOutline.Create(physGrab, pos, ColorFor(type), duration);
+        if (type == PingType.Location) graphic.AttachBeacon(duration);
+        else if (type == PingType.Enemy) graphic.UseReticle();
 
         _pings.Add(new ActivePing
         {

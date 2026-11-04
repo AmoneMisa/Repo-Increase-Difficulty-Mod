@@ -8,6 +8,8 @@ namespace IncreaseHardMod.Valuables;
 // Emissive surfaces remain visible in darkness; small local lamps light nearby geometry.
 internal sealed class CollectionLights:MonoBehaviour
 {
+    // Read-only audit of the installed Valuable Wizard Time Glass prefab.
+    internal const float ReferenceIntensity=2f,ReferenceRange=5f;
     private readonly List<(MeshRenderer renderer,Color emission,int phase)> _surfaces=new();
     private readonly List<Light> _rgb=new();
     private MaterialPropertyBlock _block;
@@ -26,7 +28,7 @@ internal sealed class CollectionLights:MonoBehaviour
             {
                 var emission=art.assetKey=="ram_pair"?Color.white*1.8f:new Color(.025f,.4f,.48f)*2.2f;
                 _surfaces.Add((renderer,emission,phase++));
-                _rgb.Add(Lamp(b.node,b.node.name+" RGB spill",Vector3.zero,new Color(.08f,.65f,.8f),.07f,.24f));
+                if(_rgb.Count==0)_rgb.Add(Lamp(b.node,"IHM RGB room glow",Vector3.zero,new Color(.08f,.65f,.8f),ReferenceIntensity,ReferenceRange));
             }
             else if(art.assetKey=="centrifuge"&&material.name.IndexOf("Sample liquid",StringComparison.OrdinalIgnoreCase)>=0)
             {
@@ -37,7 +39,9 @@ internal sealed class CollectionLights:MonoBehaviour
             }
             else if(art.assetKey=="monoblock_pc"&&material.name.IndexOf("display",StringComparison.OrdinalIgnoreCase)>=0)
             {
-                var glow=Lamp(b.node,b.node.name+" screen spill",new Vector3(0,0,-.025f),new Color(.30f,.66f,.69f),.14f,.65f);
+                _surfaces.Add((renderer,new Color(.30f,.66f,.69f)*2.2f,phase++));
+                Lamp(b.node,"IHM display room glow",new Vector3(0,0,-.035f),new Color(.30f,.66f,.69f),ReferenceIntensity,ReferenceRange);
+                var glow=Lamp(b.node,b.node.name+" screen spill",new Vector3(0,0,-.025f),new Color(.30f,.66f,.69f),.35f,.85f);
                 glow.type=LightType.Spot;glow.spotAngle=105;glow.transform.localRotation=Quaternion.Euler(0,180,0);
             }
         }

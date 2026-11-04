@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using BepInEx.Configuration;
 using HarmonyLib;
 using IncreaseHardMod.Gear;
@@ -9,7 +10,7 @@ namespace IncreaseHardMod.Testing;
 /// TESTING ONLY - off by default, host-side. Shortcuts for checking shop items without playing levels:
 ///  * SkipLevelsToShop: leaving the truck goes straight to the shop instead of a level (shop -> truck -> shop ...).
 ///  * ShopCurrency: on entering the shop the run's money is raised to at least this much (in K, as the shop shows it).
-///  * ForceFlameCart: the Flamethrower C.A.R.T. is always placed on a shop cart pad, regardless of price or roll.
+///  * ForceFlameCart: the Flamethrower C.A.R.T. is always placed on a matching shop pad, regardless of price or roll.
 /// With any of these on, the flamethrower may also be fired inside the shop (no monsters there; visuals only).
 /// </summary>
 internal static class TestShortcuts
@@ -45,7 +46,7 @@ internal static class TestShortcuts
         }
     }
 
-    [HarmonyPatch(typeof(ShopManager), nameof(ShopManager.ShopInitialize))]
+    [HarmonyPatch(typeof(ShopManager), nameof(ShopManager.ShopInitialize), new[] { typeof(List<PunManager.ItemSpawn>) })]
     private static class Money
     {
         [HarmonyPrefix]
@@ -59,18 +60,18 @@ internal static class TestShortcuts
         }
     }
 
-    [HarmonyPatch(typeof(PunManager), nameof(PunManager.ShopPopulateItemVolumes))]
+    [HarmonyPatch(typeof(PunManager), nameof(PunManager.ShopPopulateItemVolumes), new[] { typeof(List<PunManager.ItemSpawn>) })]
     private static class ForceFlame
     {
         [HarmonyPrefix]
-        private static void Prefix()
+        private static void Prefix(PunManager __instance, List<PunManager.ItemSpawn> __0)
         {
             if (!ForceFlameCart.Value || !SemiFunc.IsMasterClientOrSingleplayer() || ShopManager.instance == null ||
                 StatsManager.instance == null || !StatsManager.instance.itemDictionary.TryGetValue(FlameCartItem.AssetName, out var item) || item == null)
                 return;
             var pool = ShopManager.instance.potentialItems;
             pool.RemoveAll(i => i == item);
-            // SpawnShopItem scans from the end: the first matching cart pad takes our item.
+            // SpawnShopItem scans from the end: the first matching pad takes our item.
             pool.Add(item);
             // Visit a matching pad first, before the shop's item target is reached.
             var volumes = ShopManager.instance.itemVolumes;
@@ -80,16 +81,23 @@ internal static class TestShortcuts
                 var volume = volumes[pad];
                 volumes.RemoveAt(pad);
                 volumes.Insert(0, volume);
-                Plugin.Log.LogWarning("[Testing] ForceFlameCartInShop: Flamethrower C.A.R.T. placed on a shop cart pad.");
+                Plugin.Log.LogWarning("[Testing] ForceFlameCartInShop: Flamethrower C.A.R.T. placed on a shop pad.");
                 return;
             }
-            // No cart pad in this shop: spawn it on the first free pad instead (testing only, may overlap the shelf).
+            // No matching pad in this shop: spawn it on the first free pad instead (testing only, may overlap the shelf).
             pool.Remove(item);
             var spot = volumes.Find(v => v != null);
             if (spot == null) return;
-            var position = spot.transform.position + Vector3.up * .6f;
-            if (SemiFunc.IsMultiplayer()) Photon.Pun.PhotonNetwork.InstantiateRoomObject(item.prefab.ResourcePath, position, spot.transform.rotation, 0);
-            else Object.Instantiate(item.prefab.Prefab, position, spot.transform.rotation);
+            var spawn = new PunManager.ItemSpawn
+            {
+                prefab = item.prefab,
+                position = spot.transform.position + Vector3.up * .6f,
+                rotation = spot.transform.rotation,
+            };
+            if (__0 != null)
+                __0.Add(spawn);
+            else
+                __instance.ItemSpawnApply(spawn);
             Plugin.Log.LogWarning($"[Testing] ForceFlameCartInShop: no '{item.itemVolume}' pad; spawned on another pad.");
         }
     }

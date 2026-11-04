@@ -34,7 +34,7 @@ internal static class CollectionCatalog
         new CollectionEntry("ram_pair",LootMap.Museum|LootMap.McJannek,.15f,4500,5500,LootFragility.VeryFragile),
         new CollectionEntry("monoblock_pc",LootMap.McJannek|LootMap.Museum|LootMap.Manor|LootMap.Sunstone,3,6000,8000),
         new CollectionEntry("gold_ingot",LootMap.Sunstone|LootMap.McJannek,3,3500,4800,LootFragility.Reinforced),
-        new CollectionEntry("maneki_neko",LootMap.Museum|LootMap.Manor,6,12000,16000,LootFragility.Fragile)
+        new CollectionEntry("maneki_neko",LootMap.Museum|LootMap.Manor,6f,12000,16000,LootFragility.Fragile)
     };
     internal static float SkeletonPartMass(int index)=>index<3?.16f:.06f;
     internal static float TotalMass(CollectionEntry entry)=>entry.Mass+(entry.Key=="skeleton"?3*SkeletonPartMass(0)+12*SkeletonPartMass(3):0);

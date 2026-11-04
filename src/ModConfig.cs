@@ -186,10 +186,14 @@ public static class ModConfig
     public static ConfigEntry<bool> GearEnabled;
     public static ConfigEntry<bool> DefenceOrbEnabled, DefenceDroneEnabled, ProtectionOrbEnabled;
     public static ConfigEntry<bool> PoisonCrossbowEnabled, DecoyGrenadeEnabled, IcePistolEnabled, StickyPistolEnabled;
-    // Flamethrower C.A.R.T.: wheeled flamethrower with a small cargo tray.
+    // Flamethrower C.A.R.T.: wheeled flamethrower turret with the Hauler's loot storage box.
     public static ConfigEntry<bool> FlameCartEnabled;
     public static ConfigEntry<int> FlameDamagePerTick, FlameBatteryDamage, FlameCartValueCap, FlameCartPriceMinK, FlameCartPriceMaxK;
     public static ConfigEntry<float> FlameTickSeconds, FlameRange, FlameConeAngle;
+    // Wizard Staff: chain-lightning wand (handgun base, revolver price).
+    public static ConfigEntry<bool> StaffEnabled;
+    public static ConfigEntry<int> StaffDamage, StaffMaxTargets, StaffCharges;
+    public static ConfigEntry<float> StaffRange, StaffChainRange, StaffAimAngle;
     public static ConfigEntry<int> DefenceAbsorb, ProtectionReductionPercent;
     public static ConfigEntry<float> DefenceIdleDrainPerMinute;
     public static ConfigEntry<int> DefenceItemAbsorb;
@@ -423,15 +427,22 @@ public static class ModConfig
         DecoyGrenadeEnabled = Module(cfg, "Gear", "DecoyGrenadeEnabled", true, "DecoyGrenade", "Sell the Decoy Grenade.");
         IcePistolEnabled = Module(cfg, "Gear", "IcePistolEnabled", true, "IcePistol", "Sell the Pulse Ice Pistol.");
         StickyPistolEnabled = Module(cfg, "Gear", "StickyPistolEnabled", true, "StickyPistol", "Sell the Sticky Pistol.");
-        FlameCartEnabled = Module(cfg, "Gear", "FlameCartEnabled", true, "FlameCart", "Sell the Flamethrower C.A.R.T. (a wheeled flamethrower you steer like a cart).");
+        FlameCartEnabled = Module(cfg, "Gear", "FlameCartEnabled", true, "FlameCart", "Sell the Flamethrower C.A.R.T. (a wheeled flamethrower turret with a loot storage box).");
         FlameDamagePerTick = BindInt(cfg, "Flamethrower", "DamagePerTick", 10, 1, 200, "Damage dealt to every monster inside the flame each tick.");
         FlameTickSeconds = BindFloat(cfg, "Flamethrower", "TickSeconds", 1f, 0.25f, 5f, "Seconds between flame damage ticks.");
         FlameBatteryDamage = BindInt(cfg, "Flamethrower", "BatteryDamage", 700, 50, 10000, "Total per-target damage one full battery provides (fuel is used per tick, whether or not anything is hit).");
         FlameRange = BindFloat(cfg, "Flamethrower", "Range", 7f, 2f, 15f, "Flame reach in metres, in the direction the operator looks.");
         FlameConeAngle = BindFloat(cfg, "Flamethrower", "ConeHalfAngle", 30f, 5f, 80f, "Half-angle of the flame cone in degrees.");
-        FlameCartValueCap = BindInt(cfg, "Flamethrower", "CargoValueCap", 25000, 0, 1000000, "Most loot value the cargo tray can carry while still driving in Strong mode. Over it the cart is overloaded (Weak mode only). 0 = no cap.");
+        FlameCartValueCap = BindInt(cfg, "Flamethrower", "CargoValueCap", 25000, 0, 1000000, "Most loot value its storage box (the Hauler's storage system) holds; loot that would exceed it is refused. 0 = the Hauler's own limit.");
         FlameCartPriceMinK = BindInt(cfg, "Flamethrower", "ShopPriceMinK", 75, 1, 5000, "Lowest shop price, in K as the shop shows it (75 = $75K). Shop economy modifiers still apply on top.");
         FlameCartPriceMaxK = BindInt(cfg, "Flamethrower", "ShopPriceMaxK", 120, 1, 5000, "Highest shop price, in K as the shop shows it (120 = $120K).");
+        StaffEnabled = Module(cfg, "Gear", "WizardStaffEnabled", true, "WizardStaff", "Sell the Wizard Staff (chain-lightning wand).");
+        StaffDamage = BindInt(cfg, "Wizard Staff", "BoltDamage", 75, 1, 1000, "Total lightning damage per bolt, split evenly between the monsters it strikes (75 = 75 to one, 38 + 37 to two, 25 each to three).");
+        StaffRange = BindFloat(cfg, "Wizard Staff", "Range", 5f, 1f, 20f, "How far (metres) the first bolt reaches from the staff tip.");
+        StaffMaxTargets = BindInt(cfg, "Wizard Staff", "MaxTargets", 3, 1, 10, "Most monsters one bolt can strike, including the first (the chain jumps to the nearest unstruck monster).");
+        StaffChainRange = BindFloat(cfg, "Wizard Staff", "ChainRange", 5f, 1f, 20f, "Farthest jump (metres) from one struck monster to the next.");
+        StaffAimAngle = BindFloat(cfg, "Wizard Staff", "AimAssistAngle", 20f, 0f, 60f, "If the aim line misses, the bolt still finds a monster within this many degrees of it (0 = exact aim only).");
+        StaffCharges = BindInt(cfg, "Wizard Staff", "Charges", 8, 1, 20, "Bolts per full battery (one battery bar per bolt).");
         Testing.TestShortcuts.Bind(cfg);
         LateJoinEnabled = Module(cfg, "Late Join", "Enabled", true, "LateJoin", "Host keeps the room/lobby joinable during a run/shop/truck (REPO normally seals it at run start) and re-syncs mod state to anyone who connects mid-game.");
         PingEnabled = Module(cfg, "Ping", "Enabled", true, "Ping", "Enable the ping system: press the ping key to mark what you're looking at for the whole team.");

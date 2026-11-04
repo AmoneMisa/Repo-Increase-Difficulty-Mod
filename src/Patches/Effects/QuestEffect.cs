@@ -30,6 +30,14 @@ internal static class QuestEffect
     // Enemies a gun or melee weapon has hurt: a later shove or throw no longer counts as a bare-handed kill.
     private static readonly HashSet<Enemy> _armedHit = new();
 
+    /// <summary>Credits a hit dealt without a HurtCollider (e.g. the Wizard Staff's lightning) as a gun hit.</summary>
+    internal static void NoteGunHit(Enemy enemy)
+    {
+        if (enemy == null) return;
+        _armedHit.Add(enemy);
+        _lastWeapon[enemy] = WeaponSource.Gun;
+    }
+
     // Start the quest set once a real run level finishes generating.
     [HarmonyPatch(typeof(LevelGenerator), "GenerateDone")]
     private static class OnGenerated

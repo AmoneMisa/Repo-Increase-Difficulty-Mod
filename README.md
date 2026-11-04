@@ -11,7 +11,7 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.7.5`
+- **Version:** `0.7.7`
 
 Version 0.7.4 fixes Ice Pistol freezing and Link Drone pulling ([details](release-notes/v0.7.4.md)).
 
@@ -203,14 +203,18 @@ with this mod's own models, animations and sounds.
 | **Decoy Grenade** | 1,000-1,300 | Arm it and throw it: for 5 seconds it lures nearby monsters to itself, then disappears. |
 | **Pulse Ice Pistol** | 11,000-15,000 | Freezes monsters and players for 4.5 seconds with a visible ice coating. Player freeze works in the shop too: pauses movement/jumping without shot damage; repeated hits refresh the timer. The frozen player sees a countdown. Frozen monsters cannot be picked up, take only 60% of firearm damage, and take 35% more from melee weapons. |
 | **Sticky Pistol** | 9,000-10,000 | Pulls a monster or object toward you, as long as you could lift it freely with one strength level less than you have. |
+| **Flamethrower C.A.R.T.** | $75K-$120K in the shop | A wheeled flamethrower turret with a loot box on the back. Grab it like any item; while holding it press **E** (shown in the item prompt) to toggle the flame: every monster within 7 m in the direction you look takes 10 damage per second (walls block it, players are never hurt). A full battery holds 700 damage per target (70 s of flame) and recharges at the charging station. Drop loot onto the rear box to store it (the Hauler's storage system, up to $25K); the box is extracted at an extraction point. |
+| **Wizard Staff** | Same price as the vanilla revolver | A carved wand that throws chain lightning. Fire it like a gun: the bolt strikes the first monster within 5 m of where you aim (a small aim assist helps) then jumps to the nearest monster not yet struck within 5 m, up to 3 monsters in total. The 75 damage is shared between them: 75 to a lone monster, 38 + 37 for two, 25 each for three. Walls block every jump and players are never hurt. One battery bar per bolt, 8 bolts per charge; recharges at the charging station and counts as a bullet gun for upgrades and quests. |
 
 Each drone, orb and gun has its own on/off switch in the `Modules` section of the config.
 
 ### Team ping system
 
 Press the ping key to mark what you aim at. Items use a thin 2-pixel contour of their actual
-silhouette and a downward arrow above the target. The interior stays transparent. Location markers
-use a hollow floor ring and an arrow. Projection follows the game's displayed render texture,
+silhouette and a downward arrow above the target. The interior stays transparent. Monsters are
+framed by a red targeting reticle that locks on and rotates. Location markers raise a blue beacon in
+the world (rotating rune circle on the floor, light pillar, hovering winged emblem and halo) and
+keep an on-screen arrow so they can still be found through walls. Projection follows the game's displayed render texture,
 including low-resolution rendering and letterboxing. Photon shares the target ViewID and world
 position; the sender draws once locally and ignores its own network echo.
 
@@ -379,7 +383,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.7.5`
+- **Версия:** `0.7.7`
 
 В 0.7.4 исправлены заморозка Ледяного пистолета и подтягивание Link Drone ([подробности](release-notes/v0.7.4.md)).
 
@@ -568,7 +572,8 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 | **Decoy Grenade** | 1 000-1 300 | Активируй и брось: 5 секунд приманивает ближайших монстров к себе, затем исчезает. |
 | **Pulse Ice Pistol** | 11 000-15 000 | Замораживает монстров и игроков на 4,5 секунды с видимым ледяным покрытием. На игроках работает и в магазине: останавливает движение и прыжки без урона от выстрела. Повторное попадание обновляет таймер; замороженный игрок видит обратный отсчёт. Замороженного монстра нельзя поднять, он получает 60% урона от огнестрела и на 35% больше от ближнего боя. |
 | **Sticky Pistol** | 9 000-10 000 | Притягивает монстра или предмет к тебе, если ты смог бы свободно поднять его с силой на один уровень ниже твоей. |
-| **Flamethrower C.A.R.T.** | $75K-$120K в магазине | Самостоятельный огнемёт на колёсах с небольшим грузовым лотком. Хватай за ручку и води как тележку; нажми **E**, держа его, чтобы включить/выключить пламя: каждый монстр в 7 м по направлению взгляда получает 10 урона в секунду (стены блокируют, игроков не задевает). Полной батареи хватает на 700 урона по цели (70 с огня), заряжается на зарядной станции. Лоток вмещает добычу до $25K; сверх этого — перегруз, и тележка ездит только в слабом режиме. |
+| **Flamethrower C.A.R.T.** | $75K-$120K в магазине | Огнемётная турель на колёсах с ящиком для добычи сзади. Хватай как любой предмет; держа его, нажми **E** (видно в подсказке предмета), чтобы включить/выключить пламя: каждый монстр в 7 м по направлению взгляда получает 10 урона в секунду (стены блокируют, игроков не задевает). Полной батареи хватает на 700 урона по цели (70 с огня), заряжается на зарядной станции. Добычу кладут в задний ящик (система хранения Hauler, до $25K); ящик выносится в точке эвакуации. |
+| **Wizard Staff** | Как ванильный револьвер | Резной жезл, бьющий цепной молнией. Стреляет как оружие: молния поражает первого монстра в 5 м по направлению прицела (небольшая помощь в прицеливании) и перескакивает на ближайшего ещё не поражённого монстра в 5 м, всего до 3 монстров. 75 урона делятся между ними: 75 одному монстру, 38 + 37 двоим, по 25 троим. Стены прерывают цепь, игроков не задевает. Одно деление батареи на разряд, 8 разрядов на заряд; заряжается на станции, для улучшений и квестов считается огнестрельным оружием. |
 
 У каждого дрона, орба и оружия свой переключатель в секции `Modules` конфига.
 

@@ -24,6 +24,13 @@ def make(name,seconds,kind,freq=400):
             value=.6*low*math.exp(-t*5)+.15*math.sin(2*math.pi*(220*t+9*math.sin(t*14)))*math.exp(-t*7)
         elif kind=='spritz':
             value=.25*(noise-low)*math.sin(math.pi*t/seconds)**2+.12*math.sin(2*math.pi*1800*t)*math.exp(-t*75)
+        elif kind=='zap':
+            # Electric discharge: crackling noise bursts over a falling buzz.
+            burst=1.0 if rng.random()<.35 else .25
+            buzz=math.copysign(1,math.sin(2*math.pi*(110*t+40*math.sin(t*31))))
+            value=(.55*(noise-low)*burst+.22*buzz*math.exp(-t*4)+.3*math.sin(2*math.pi*(1900*t-1500*t*t)))*math.exp(-t*7)*(1-math.exp(-t*300))
+        elif kind=='crack':
+            value=.9*(noise-low)*math.exp(-t*30)+.25*low*math.exp(-t*9)+.15*math.sin(2*math.pi*(3000*t))*math.exp(-t*40)
         else:
             envelope=math.sin(math.pi*min(1,t/seconds))**2
             value=(.26*math.sin(2*math.pi*(freq*t+70*t*t))+.08*math.sin(2*math.pi*freq*1.49*t)+.08*low)*envelope
@@ -41,4 +48,6 @@ for i,name in enumerate(('ghost','silencer','link_a','link_b','repair','defence'
     make(name+'_activate',.28 if name!='decoy' else .4,'chirp',220+i*63)
 make('power_down',.22,'chirp',140)
 make('spritz_shot',.26,'spritz')
-print('Created 16 original item cues')
+make('lightning_shot',.55,'zap')
+make('lightning_hit',.32,'crack')
+print('Created 18 original item cues')

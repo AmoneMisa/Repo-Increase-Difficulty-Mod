@@ -1,0 +1,9 @@
+{
+  "source": "Installed REPO resources.assets / Player Avatar Controller / Collision",
+  "basis": "Standing physical capsule height; excludes menu avatar and trigger padding",
+  "height_m": 1.7,
+  "measured_height_m": 1.7000000476837158,
+  "matching_prefab_count": 2,
+  "mass_kg": 6,
+  "proprietary_assets_exported": false
+}

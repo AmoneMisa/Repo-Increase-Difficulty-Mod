@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using HarmonyLib;
 using IncreaseHardMod.Drones;
 using IncreaseHardMod.Visuals;
 using Photon.Pun;
@@ -11,28 +10,39 @@ using Object = UnityEngine.Object;
 namespace IncreaseHardMod.Gear;
 
 /// <summary>
-/// Flamethrower C.A.R.T.: a standalone wheeled flamethrower with a small cargo tray.
+/// Flamethrower C.A.R.T.: a wheeled flamethrower turret with on-board loot storage.
 ///
-/// Physics/steering: a clone of the vanilla medium C.A.R.T., so grabbing the handle drives it exactly
-/// like a cart (Strong/Weak modes, haul screen, extraction). Its vanilla body is hidden; the visible
-/// chassis is drawn over the cart's own collision boxes (so the tray you see is the tray that holds
-/// loot) plus wheels and the Blender turret from tools/build_flamethrower_art.py.
+/// It is NOT a cart. The prefab starts from the vanilla C.A.R.T. Cannon with its cannon/cart logic
+/// (ItemCartCannonMain, ItemCartCannon, PhysGrabObjectGrabArea) removed, which leaves a plain
+/// physics item: PhysGrabObject (grab it anywhere, like any other item), ItemBattery with the native
+/// battery widget (charging station, saved charge) and ItemToggle. The native ItemToggle is what makes
+/// ItemAttributes print the item's "[E]" use prompt while you hold it, and it handles the E key.
 ///
-/// Battery: carts have none, so a native ItemBattery (+ the battery widget borrowed from the C.A.R.T.
-/// Cannon prefab) is added. Charging stations, saved charge, the held-item battery UI and the floating
-/// bars therefore all work natively. Fuel is spent per flame tick on the host.
+/// Storage: a copy of the Hauler's (Item Vehicle Semiscooter) own "Item Valuable Box" sits on the
+/// rear deck. Drop loot onto it and the native ItemValuableBox absorbs it, shows the fill %, refuses
+/// over-size/over-limit loot, and is extracted by the extraction point exactly as on the Hauler.
 ///
-/// Fire: while grabbing it, press Interact (E) to toggle the flame. The host validates the request,
-/// deals damage each tick to monsters inside a cone in front of the nozzle (aimed where the operator
-/// looks, within the turret's traverse), drains the battery and broadcasts the on/off state; every
-/// client draws the flame locally. Players are never damaged.
+/// Model: original Blender art from tools/build_flamethrower_art.py in three parts so the turret can
+/// yaw and the gun head can pitch toward where the operator looks.
 ///
-/// Cargo cap: loot worth more than the configured cap overloads the tray; overloaded, it cannot enter
-/// Strong mode (it still drags in Weak mode), so unload to drive it properly again.
+/// Fire: E toggles the native ItemToggle. The host validates (the toggling player must be holding it,
+/// it must have fuel), deals damage each tick to monsters inside a cone in front of the nozzle, drains
+/// the battery and broadcasts the on/off state; every client draws the flame locally with copies of
+/// the game's own explosion fire/smoke materials. Players are never damaged.
 /// </summary>
 internal static class FlameCartItem
 {
+    // Kept from the earlier cart-based version so saved purchases still load.
     public const string AssetName = "Item Cart Flamethrower";
+
+    // Unity-space mount points printed by tools/build_flamethrower_art.py (IHM_* lines).
+    private static readonly Vector3 TurretMount = new(0f, .244f, .30f);
+    private static readonly Vector3 HeadPivot = new(0f, .54f, .02f);   // turret space
+    internal static readonly Vector3 NozzleLocal = new(0f, .05f, .74f); // head space (just past the muzzle)
+    private static readonly Vector3 BoxMount = new(0f, .215f, -.30f);
+    private const float BoxScale = .9f;
+
+    private static readonly string[] StripTypes = { "ItemCartCannon", "ItemCartCannonMain", "PhysGrabObjectGrabArea" };
 
     internal static void Build()
     {
@@ -40,32 +50,35 @@ internal static class FlameCartItem
         try
         {
             var items = StatsManager.instance.itemDictionary;
-            if (!items.TryGetValue("Item Cart Medium", out var baseItem) || baseItem?.prefab?.Prefab == null ||
-                baseItem.prefab.Prefab.GetComponent<PhysGrabCart>() == null)
+            var donor = FindDonor(items);
+            if (donor == null)
             {
-                Plugin.Log.LogWarning("[Flame] Vanilla medium C.A.R.T. not found; Flamethrower C.A.R.T. disabled.");
+                Plugin.Log.LogWarning("[Flame] No vanilla battery item (C.A.R.T. Cannon) to build on; Flamethrower C.A.R.T. disabled.");
                 return;
             }
-            var batteryDonor = FindBatteryDonor(items);
-            if (batteryDonor == null)
+            var hauler = FindHaulerBox(items);
+            if (hauler == null)
             {
-                Plugin.Log.LogWarning("[Flame] No vanilla battery widget found; Flamethrower C.A.R.T. disabled.");
+                Plugin.Log.LogWarning("[Flame] Vanilla Hauler storage box not found; Flamethrower C.A.R.T. disabled.");
                 return;
             }
+            // Fail before anything is created if the embedded art is missing.
+            foreach (string key in new[] { "flamethrower_base", "flamethrower_turret", "flamethrower_head" }) ItemArt.LoadModel(key);
 
-            var item = Object.Instantiate(baseItem);
+            var item = Object.Instantiate(donor);
             item.name = AssetName;
             item.itemName = "Flamethrower C.A.R.T.";
             item.itemNameLocalized = null;
-            item.description = $"A wheeled flamethrower with a small cargo tray (up to ${ModConfig.FlameCartValueCap.Value / 1000f:0.#}K of loot). " +
-                "Grab the handle to drive it like a cart; press E to toggle a flame that burns monsters in front of you.";
+            item.itemType = SemiFunc.itemType.tool;
+            item.description = "A wheeled flamethrower turret with a loot box on the back (the Hauler's storage). " +
+                "Grab the red hand on the back of the box to push it like a C.A.R.T.; press E to toggle a flame that burns " +
+                "monsters where you aim; drop loot onto the box to store it.";
             item.maxAmount = 2;
             item.maxAmountInShop = 1;
             item.maxPurchase = false;
             item.minPlayerCount = 1;
-            item.value = Object.Instantiate(baseItem.value);
-            // Shop price in K = value * itemValueMultiplier(4) / 1000, so value = K * 250. Set directly in shop
-            // dollars (no custom-item discount): the configured range is what players see.
+            item.value = Object.Instantiate(donor.value);
+            // Shop price in K = value * itemValueMultiplier(4) / 1000, so value = K * 250.
             int minK = Mathf.Max(1, ModConfig.FlameCartPriceMinK.Value);
             int maxK = Mathf.Max(minK, ModConfig.FlameCartPriceMaxK.Value);
             item.value.valueMin = minK * 250f;
@@ -76,23 +89,62 @@ internal static class FlameCartItem
             preset.colorDark = new Color(.55f, .2f, .05f);
             item.colorPreset = preset;
 
-            var go = Object.Instantiate(baseItem.prefab.Prefab, DroneItems.EnsureHolder().transform);
+            var go = Object.Instantiate(donor.prefab.Prefab, DroneItems.EnsureHolder().transform);
             go.name = AssetName;
-            var attributes = go.GetComponent<ItemAttributes>();
-            attributes.item = item;
+            go.GetComponent<ItemAttributes>().item = item;
+            GrabMarker.LogNativeCandidates(go);
+            StripCannon(go);
 
-            var cart = go.GetComponent<PhysGrabCart>();
-            var layout = FlameCartChassis.Build(go, cart);
-            AddBattery(go, batteryDonor, layout.Top + .55f);
+            var battery = go.GetComponent<ItemBattery>();
+            int colliderLayer = ColliderLayer(go);
+            var template = ItemArt.FresnelMaterialDonor(go.transform.Find("Mesh"));
+            if (template == null) throw new InvalidOperationException("No albedo-capable material for the model");
+            int visualLayer = VisualLayer(go);
+            RemoveDonorChildren(go, battery);
+
+            var (turret, head) = BuildModel(go, template, visualLayer);
+            AddColliders(go, colliderLayer);
+            var box = AddStorage(go, hauler);
+            GrabMarker.AttachToBoxBack(box.transform, visualLayer);
+            AddHandle(go);
+            AddIconCamera(go, hauler);
+
+            // Native ItemLight Get/SetFloats _FresnelScale on these every frame; a material without it
+            // logs an error per call, so only pass renderers whose preset exposes the property.
+            var glowRenderers = new List<MeshRenderer>();
+            foreach (var r in go.transform.Find("IHM Flame Visual").GetComponentsInChildren<MeshRenderer>(true))
+                if (ItemArt.HasFresnel(r.sharedMaterial)) glowRenderers.Add(r);
+            if (glowRenderers.Count == 0)
+                Plugin.Log.LogWarning($"[Flame] No fresnel-capable material ({template.shader.name}); idle item glow disabled.");
+            foreach (var light in go.GetComponentsInChildren<ItemLight>(true))
+                light.meshRenderers = glowRenderers;
+
+            battery.batteryBars = Mathf.Max(4, battery.batteryBars);
+            battery.hasBatteryVisuals = true;
+            battery.upOffset = 1.45f;
+            battery.autoDrain = false;
+            battery.batteryDrainRate = 0f;
+            battery.isUnchargable = false;
+            if (battery.batteryTransform != null) battery.batteryTransform.localPosition = Vector3.up * battery.upOffset;
+
+            var toggle = go.GetComponent<ItemToggle>();
+            toggle.playSound = false; // ignition/shutdown cues are our own
+            toggle.toggleState = false;
+
             var flame = go.AddComponent<FlameCart>();
-            flame.turret = layout.Turret;
-            flame.nozzleLocal = layout.NozzleLocal;
-            flame.turretBaseYaw = layout.TurretYaw;
+            flame.turret = turret;
+            flame.head = head;
+            flame.storage = box;
+            flame.nativeFlames = AddNativeFlames(go, head);
+            FlameCart.NativeFireMaterial ??= FindFireMaterial(hauler.gameObject);
+            if (flame.nativeFlames == null)
+                Plugin.Log.LogWarning("[Flame] Native flamethrower effect unavailable; using the fallback particle jet.");
 
-            if (Items.RegisterItem(attributes) == null)
+            InventoryItemVisuals.Prepare(go);
+            if (Items.RegisterItem(go.GetComponent<ItemAttributes>()) == null)
                 Plugin.Log.LogWarning($"[Flame] REPOLib refused to register {AssetName}.");
             else
-                Plugin.Log.LogInfo($"[Flame] Registered {AssetName}.");
+                Plugin.Log.LogInfo($"[Flame] Registered {AssetName} (base: {donor.name}, storage: Hauler box, limit ${box.valueLimit / 1000f:0.#}K).");
         }
         catch (Exception e)
         {
@@ -100,271 +152,260 @@ internal static class FlameCartItem
         }
     }
 
-    private static ItemBattery FindBatteryDonor(Dictionary<string, Item> items)
+    // A plain floor item with a native battery widget and use toggle, and no cart/vehicle logic.
+    private static Item FindDonor(Dictionary<string, Item> items)
     {
-        foreach (string name in new[] { "Item Cart Cannon", "Item Cart Laser" })
-            if (items.TryGetValue(name, out var item) && Usable(item?.prefab?.Prefab, out var battery)) return battery;
+        if (items.TryGetValue("Item Cart Cannon", out var named) && Usable(named)) return named;
         var names = new List<string>(items.Keys);
         names.Sort(StringComparer.Ordinal);
         foreach (var name in names)
-            if (Usable(items[name]?.prefab?.Prefab, out var battery)) return battery;
+            if (Usable(items[name]) && items[name].prefab.Prefab.GetComponent<ItemEquippable>() == null) return items[name];
         return null;
 
-        static bool Usable(GameObject prefab, out ItemBattery battery)
+        static bool Usable(Item item)
         {
-            battery = prefab != null ? prefab.GetComponent<ItemBattery>() : null;
+            var prefab = item?.prefab?.Prefab;
+            if (prefab == null || prefab.GetComponent<PhysGrabCart>() != null || prefab.GetComponent<ItemVehicle>() != null ||
+                prefab.GetComponent<ItemToggle>() == null || prefab.GetComponent<PhysGrabObject>() == null) return false;
+            var battery = prefab.GetComponent<ItemBattery>();
             return battery != null && battery.batteryTransform != null &&
                    battery.batteryTransform.GetComponentInChildren<BatteryVisualLogic>(true) != null;
         }
     }
 
-    private static void AddBattery(GameObject go, ItemBattery donor, float height)
+    private static ItemVehicle FindHaulerBox(Dictionary<string, Item> items)
     {
-        var widget = Object.Instantiate(donor.batteryTransform.gameObject, go.transform, false);
-        widget.name = donor.batteryTransform.name;
-        widget.transform.localPosition = Vector3.up * height;
-        widget.transform.localRotation = Quaternion.identity;
-        var battery = go.AddComponent<ItemBattery>();
-        battery.batteryBars = Mathf.Max(4, donor.batteryBars);
-        battery.hasBatteryVisuals = true;
-        battery.batteryTransform = widget.transform;
-        battery.upOffset = height;
-        battery.autoDrain = false;
-        battery.batteryDrainRate = 0f;
-        battery.isUnchargable = false;
-        battery.onlyShowWhenItemToggleIsOn = false;
-    }
-}
+        if (items.TryGetValue("Item Vehicle Semiscooter", out var named) && Has(named, out var vehicle)) return vehicle;
+        var names = new List<string>(items.Keys);
+        names.Sort(StringComparer.Ordinal);
+        foreach (var name in names)
+            if (Has(items[name], out vehicle)) return vehicle;
+        return null;
 
-/// <summary>Visible body: hides the vanilla cart shell and paints a chassis over its collision boxes.</summary>
-internal static class FlameCartChassis
-{
-    internal struct Layout
-    {
-        public Transform Turret;
-        public Vector3 NozzleLocal;
-        public float Top;
-        public float TurretYaw;
-    }
-
-    private static readonly Color Sand = new(.74f, .63f, .43f), SandDark = new(.52f, .44f, .30f),
-        Rubber = new(.06f, .065f, .065f), Steel = new(.30f, .30f, .28f), Hazard = new(.78f, .52f, .12f);
-    private static Mesh _cube, _cylinder;
-
-    internal static Layout Build(GameObject go, PhysGrabCart cart)
-    {
-        var root = go.transform;
-        var keep = new HashSet<Renderer>();
-        if (cart.grabMesh != null) foreach (var r in cart.grabMesh) if (r != null) keep.Add(r);
-        if (cart.valueScreen != null) foreach (var r in cart.valueScreen.GetComponentsInChildren<Renderer>(true)) keep.Add(r);
-        if (cart.handlePoint != null) foreach (var r in cart.handlePoint.GetComponentsInChildren<Renderer>(true)) keep.Add(r);
-
-        var body = root.Find("Cart Mesh") ?? FindByName(root, "Cart Mesh");
-        var template = ItemArt.WeaponMaterialDonor(body);
-        if (template == null) throw new InvalidOperationException("No albedo-capable material for the chassis");
-        int layer = body != null ? body.gameObject.layer : go.layer;
-
-        // Body bounds in cart space, from the vanilla shell before it is hidden.
-        var bounds = LocalBounds(root, body != null ? body.GetComponentsInChildren<MeshFilter>(true) : root.GetComponentsInChildren<MeshFilter>(true));
-        foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
+        static bool Has(Item item, out ItemVehicle vehicle)
         {
-            if (keep.Contains(renderer) || renderer is ParticleSystemRenderer) continue;
-            if (renderer is MeshRenderer or SkinnedMeshRenderer)
-            {
-                renderer.enabled = false;
-                renderer.forceRenderingOff = true;
-            }
+            vehicle = item?.prefab?.Prefab != null ? item.prefab.Prefab.GetComponent<ItemVehicle>() : null;
+            return vehicle != null && vehicle.valuableBox != null && vehicle.valuableBox.boxChecker != null;
         }
-        if (cart.thrustEffect != null) cart.thrustEffect.localScale = Vector3.zero;
-
-        var visual = new GameObject("IHM Flame Chassis");
-        visual.transform.SetParent(root, false);
-        var sand = ItemArt.Paint(template, "workshop_wear.png", Sand, "IHM Flame sand");
-        var sandDark = ItemArt.Paint(template, "workshop_wear.png", SandDark, "IHM Flame sand shadow");
-        var rubber = ItemArt.Paint(template, "workshop_wear.png", Rubber, "IHM Flame rubber");
-        var steel = ItemArt.Paint(template, "workshop_wear.png", Steel, "IHM Flame steel");
-        var hazard = ItemArt.Paint(template, "workshop_wear.png", Hazard, "IHM Flame hazard");
-
-        // Tray: one painted slab per solid box collider of the shell (walls and floor), handle excluded.
-        int slabs = 0;
-        foreach (var box in root.GetComponentsInChildren<BoxCollider>(true))
-        {
-            if (box.isTrigger || IsUnder(box.transform, cart.handlePoint) || IsUnder(box.transform, cart.inCart ?? root.Find("In Cart"))) continue;
-            var m = root.worldToLocalMatrix * box.transform.localToWorldMatrix;
-            var center = m.MultiplyPoint3x4(box.center);
-            var size = Vector3.Scale(m.lossyScale, box.size);
-            size = new Vector3(Mathf.Abs(size.x), Mathf.Abs(size.y), Mathf.Abs(size.z));
-            if (size.x > 4f || size.y > 4f || size.z > 4f) continue;
-            Block(visual.transform, "Tray panel", center, m.rotation, size + Vector3.one * .01f, slabs % 2 == 0 ? sand : sandDark, layer);
-            slabs++;
-        }
-        if (slabs == 0)
-            Plugin.Log.LogWarning("[Flame] No box colliders found on the cart shell; drawing a default tray.");
-
-        float floor = bounds.min.y;
-        var size2 = bounds.size;
-        // Chassis skirt and bumper bands around the footprint.
-        Block(visual.transform, "Chassis skirt", new Vector3(bounds.center.x, floor + .11f, bounds.center.z), Quaternion.identity,
-            new Vector3(size2.x * .96f, .12f, size2.z * .96f), sandDark, layer);
-        Block(visual.transform, "Front bumper", new Vector3(bounds.center.x, floor + .2f, bounds.max.z + .02f), Quaternion.identity,
-            new Vector3(size2.x * .9f, .07f, .05f), hazard, layer);
-        Block(visual.transform, "Rear bumper", new Vector3(bounds.center.x, floor + .2f, bounds.min.z - .02f), Quaternion.identity,
-            new Vector3(size2.x * .9f, .07f, .05f), hazard, layer);
-        if (slabs == 0)
-            Block(visual.transform, "Tray", new Vector3(bounds.center.x, floor + .3f, bounds.center.z), Quaternion.identity,
-                new Vector3(size2.x, .12f, size2.z), sand, layer);
-
-        // Four wheels slightly inside the corners, touching the bottom of the shell.
-        float wheelR = Mathf.Clamp(size2.y * .22f, .09f, .16f);
-        foreach (float sx in new[] { -1f, 1f })
-            foreach (float sz in new[] { -1f, 1f })
-            {
-                var c = new Vector3(bounds.center.x + sx * (size2.x / 2f - .02f), floor + wheelR * .85f, bounds.center.z + sz * (size2.z / 2f - wheelR * 1.4f));
-                Wheel(visual.transform, c, wheelR, rubber, steel, layer);
-            }
-
-        // Turret on the front deck, facing away from the handle (the cart's driving direction).
-        float handleZ = cart.handlePoint != null ? root.InverseTransformPoint(cart.handlePoint.position).z : bounds.min.z;
-        bool frontIsPositive = handleZ <= bounds.center.z;
-        float frontZ = frontIsPositive ? bounds.max.z - .22f : bounds.min.z + .22f;
-        float yaw = frontIsPositive ? 0f : 180f;
-        float top = bounds.max.y;
-        var mount = new GameObject("IHM Flame Turret Mount").transform;
-        mount.SetParent(visual.transform, false);
-        mount.localPosition = new Vector3(bounds.center.x, top - .02f, frontZ);
-        mount.localRotation = Quaternion.Euler(0f, yaw, 0f);
-        Block(mount, "Turret deck", new Vector3(0f, -.03f, 0f), Quaternion.identity, new Vector3(Mathf.Min(.7f, size2.x * .8f), .06f, .5f), steel, layer);
-        float scale = Mathf.Clamp(size2.x, .75f, 1.25f); // turret is ~0.6 m wide at scale 1
-        var turret = ItemArt.AttachStatic(go, "flamethrower", template, layer);
-        turret.SetParent(mount, false);
-        turret.localPosition = Vector3.zero;
-        turret.localRotation = Quaternion.identity;
-        turret.localScale = Vector3.one * scale;
-
-        Plugin.Log.LogInfo($"[Flame] Chassis: bounds {bounds.size}, {slabs} tray panels, front {(frontIsPositive ? "+Z" : "-Z")}, turret scale {scale:0.00}.");
-        return new Layout
-        {
-            Turret = turret,
-            NozzleLocal = new Vector3(0f, .42f, .74f),
-            Top = top + .5f * scale,
-            TurretYaw = yaw,
-        };
     }
 
-    private static Transform FindByName(Transform root, string name)
+    private static void StripCannon(GameObject go)
     {
-        foreach (var t in root.GetComponentsInChildren<Transform>(true))
-            if (t.name.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0) return t;
+        // Dependents first, so no RequireComponent blocks the removal.
+        foreach (string type in StripTypes)
+            foreach (var mb in go.GetComponents<MonoBehaviour>())
+                if (mb != null && mb.GetType().Name == type) Object.DestroyImmediate(mb);
+        foreach (var mb in go.GetComponents<MonoBehaviour>())
+            if (mb != null && Array.IndexOf(StripTypes, mb.GetType().Name) >= 0)
+                throw new InvalidOperationException("Could not remove " + mb.GetType().Name);
+    }
+
+    private static int ColliderLayer(GameObject go)
+    {
+        var c = go.GetComponentInChildren<PhysGrabObjectCollider>(true);
+        return c != null ? c.gameObject.layer : go.layer;
+    }
+
+    private static int VisualLayer(GameObject go)
+    {
+        foreach (var r in go.GetComponentsInChildren<MeshRenderer>(true))
+            if (r.GetComponent<Collider>() == null) return r.gameObject.layer;
+        return go.layer;
+    }
+
+    // Keeps only children native components still rely on: battery widget, item volume, item lights, audio.
+    private static void RemoveDonorChildren(GameObject go, ItemBattery battery)
+    {
+        var doomed = new List<GameObject>();
+        foreach (Transform child in go.transform)
+        {
+            bool keep = (battery.batteryTransform != null && (child == battery.batteryTransform || battery.batteryTransform.IsChildOf(child))) ||
+                        child.GetComponent<ItemVolume>() != null || child.GetComponent<ItemLight>() != null ||
+                        (child.GetComponent<AudioSource>() != null && child.GetComponent<Renderer>() == null && child.childCount == 0);
+            if (!keep) doomed.Add(child.gameObject);
+        }
+        foreach (var obj in doomed) Object.DestroyImmediate(obj);
+    }
+
+    private static (Transform turret, Transform head) BuildModel(GameObject go, Material template, int layer)
+    {
+        var visual = new GameObject("IHM Flame Visual") { layer = layer }.transform;
+        visual.SetParent(go.transform, false);
+        ItemArt.AttachStatic(go, "flamethrower_base", template, layer).SetParent(visual, false);
+        var mount = new GameObject("IHM Flame Turret") { layer = layer }.transform;
+        mount.SetParent(visual, false);
+        mount.localPosition = TurretMount;
+        ItemArt.AttachStatic(go, "flamethrower_turret", template, layer).SetParent(mount, false);
+        var head = new GameObject("IHM Flame Head") { layer = layer }.transform;
+        head.SetParent(mount, false);
+        head.localPosition = HeadPivot;
+        ItemArt.AttachStatic(go, "flamethrower_head", template, layer).SetParent(head, false);
+        return (mount, head);
+    }
+
+    // Grab colliders over the rest pose (the turret only turns visually). The storage walls keep loot on the box.
+    private static void AddColliders(GameObject go, int layer)
+    {
+        var root = new GameObject("IHM Flame Colliders") { layer = layer }.transform;
+        root.SetParent(go.transform, false);
+        Box(root, "Chassis", new Vector3(0f, .115f, -.02f), new Vector3(.80f, .21f, 1.30f), layer);
+        Box(root, "Control box", new Vector3(.24f, .29f, .47f), new Vector3(.17f, .14f, .15f), layer);
+        Box(root, "Arm", new Vector3(0f, .50f, .28f), new Vector3(.26f, .50f, .24f), layer);
+        Box(root, "Gun head", new Vector3(0f, .83f, .62f), new Vector3(.30f, .20f, .62f), layer);
+        Box(root, "Fuel tanks", new Vector3(0f, 1.0f, .17f), new Vector3(.36f, .26f, .30f), layer);
+        const float half = StorageHalf, h = StorageHeight;
+        float y = BoxMount.y + h / 2f, z = BoxMount.z;
+        Box(root, "Storage wall L", new Vector3(-half, y, z), new Vector3(.03f, h, half * 2f), layer);
+        Box(root, "Storage wall R", new Vector3(half, y, z), new Vector3(.03f, h, half * 2f), layer);
+        Box(root, "Storage wall back", new Vector3(0f, y, z - half), new Vector3(half * 2f, h, .03f), layer);
+        Box(root, "Storage wall front", new Vector3(0f, y, z + half), new Vector3(half * 2f, h, .03f), layer);
+    }
+
+    // Storage box walls (see AddColliders): the back wall is the push handle.
+    private const float StorageHalf = .335f, StorageHeight = .36f;
+
+    private static void AddHandle(GameObject go)
+    {
+        float back = BoxMount.z - StorageHalf;
+        var point = new GameObject("IHM Handle Point").transform;
+        point.SetParent(go.transform, false);
+        point.localPosition = new Vector3(0f, BoxMount.y + StorageHeight * .75f, back - .04f);
+        var handle = go.AddComponent<FlameCartHandle>();
+        handle.handlePoint = point;
+        // The whole back wall, a little proud of it, so a grab on the hand plate always counts.
+        handle.zoneCenter = new Vector3(0f, BoxMount.y + StorageHeight / 2f, back - .03f);
+        handle.zoneSize = new Vector3(StorageHalf * 2f + .1f, StorageHeight + .12f, .22f);
+    }
+
+    private static void Box(Transform parent, string name, Vector3 center, Vector3 size, int layer)
+    {
+        var obj = new GameObject(name) { layer = layer };
+        obj.transform.SetParent(parent, false);
+        obj.transform.localPosition = center;
+        obj.AddComponent<BoxCollider>().size = size;
+        obj.AddComponent<PhysGrabObjectBoxCollider>().drawGizmos = false;
+        obj.AddComponent<PhysGrabObjectCollider>();
+    }
+
+    private static ItemValuableBox AddStorage(GameObject go, ItemVehicle hauler)
+    {
+        var obj = Object.Instantiate(hauler.valuableBox.gameObject, go.transform, false);
+        obj.name = "Item Valuable Box";
+        obj.SetActive(true);
+        obj.transform.localPosition = BoxMount;
+        obj.transform.localRotation = Quaternion.identity;
+        obj.transform.localScale = Vector3.one * BoxScale;
+        var box = obj.GetComponent<ItemValuableBox>();
+        int cap = ModConfig.FlameCartValueCap.Value;
+        if (cap > 0) box.valueLimit = cap;
+        return box;
+    }
+
+    /// <summary>
+    /// The game's own flamethrower effect (SemiZuperFlames on the Arctic Flamethrower valuable): flame jet,
+    /// ignition/stop bursts, smoke, flicker light and its native start/loop/stop sounds. Only the visuals
+    /// are copied: its particle hurt logic and colliders are removed, the host deals our damage.
+    /// </summary>
+    private static SemiZuperFlames AddNativeFlames(GameObject go, Transform head)
+    {
+        try
+        {
+            var prefab = Resources.Load<GameObject>("Valuables/04 Big/Valuable Arctic Flamethrower");
+            var source = prefab != null ? prefab.GetComponentInChildren<SemiZuperFlames>(true) : null;
+            if (source == null) return null;
+            var obj = Object.Instantiate(source.gameObject, head, false);
+            obj.name = "IHM Native Flames";
+            obj.transform.localPosition = FlameCartItem.NozzleLocal;
+            obj.transform.localRotation = Quaternion.identity;
+            obj.transform.localScale = Vector3.one;
+            foreach (var mb in obj.GetComponentsInChildren<EnemySlowMouthParticlePukeCollision>(true)) Object.DestroyImmediate(mb);
+            foreach (var hurt in obj.GetComponentsInChildren<HurtCollider>(true)) Object.DestroyImmediate(hurt);
+            foreach (var collider in obj.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(collider);
+            // Stretch the jet so what you see matches the configured damage reach (the native jet is ~6 m).
+            float reach = Mathf.Clamp(ModConfig.FlameRange.Value / 6f, .6f, 2f);
+            var flames = obj.GetComponent<SemiZuperFlames>();
+            // Idle until lit: SemiZuperFlames only stops systems it started itself.
+            foreach (var ps in obj.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                var main = ps.main;
+                main.playOnAwake = false;
+                ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+            if (flames.flameLight != null) flames.flameLight.enabled = false;
+            foreach (var ps in flames.pukeParticles)
+            {
+                if (ps == null) continue;
+                var main = ps.main;
+                main.startSpeedMultiplier *= reach;
+                // Never let the jet bounce off the flamethrower itself or the player holding it.
+                var collision = ps.collision;
+                if (collision.enabled)
+                    collision.collidesWith = SemiFunc.LayerMaskGetVisionObstruct() &
+                        ~LayerMask.GetMask("PhysGrabObject", "PhysGrabObjectCart", "PhysGrabObjectHinge", "Player");
+            }
+            return flames;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.LogWarning($"[Flame] Could not copy the native flamethrower effect: {e.Message}");
+            return null;
+        }
+    }
+
+    // The soft flame-tongue particle material the game uses for fires ("Truck Menu Animated Fire").
+    private static Material FindFireMaterial(GameObject root)
+    {
+        foreach (var r in root.GetComponentsInChildren<ParticleSystemRenderer>(true))
+            if (r.sharedMaterial != null && r.sharedMaterial.name.IndexOf("Animated Fire", StringComparison.OrdinalIgnoreCase) >= 0)
+                return r.sharedMaterial;
         return null;
     }
 
-    private static bool IsUnder(Transform t, Transform parent)
+    private static void AddIconCamera(GameObject go, ItemVehicle hauler)
     {
-        if (parent == null) return false;
-        for (var p = t; p != null; p = p.parent) if (p == parent) return true;
-        return false;
-    }
-
-    private static Bounds LocalBounds(Transform root, MeshFilter[] filters)
-    {
-        bool any = false;
-        var bounds = new Bounds();
-        foreach (var filter in filters)
-        {
-            if (filter == null || filter.sharedMesh == null) continue;
-            var m = root.worldToLocalMatrix * filter.transform.localToWorldMatrix;
-            var b = filter.sharedMesh.bounds;
-            for (int i = 0; i < 8; i++)
-            {
-                var corner = b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
-                var p = m.MultiplyPoint3x4(corner);
-                if (!any) { bounds = new Bounds(p, Vector3.zero); any = true; }
-                else bounds.Encapsulate(p);
-            }
-        }
-        return any ? bounds : new Bounds(new Vector3(0f, .45f, 0f), new Vector3(.9f, .9f, 1.3f));
-    }
-
-    private static void Primitives()
-    {
-        if (_cube != null) return;
-        foreach (var type in new[] { PrimitiveType.Cube, PrimitiveType.Cylinder })
-        {
-            var temp = GameObject.CreatePrimitive(type);
-            var mesh = temp.GetComponent<MeshFilter>().sharedMesh;
-            if (type == PrimitiveType.Cube) _cube = mesh; else _cylinder = mesh;
-            Object.DestroyImmediate(temp);
-        }
-    }
-
-    private static GameObject Block(Transform parent, string name, Vector3 position, Quaternion rotation, Vector3 size, Material material, int layer)
-    {
-        Primitives();
-        var obj = new GameObject(name) { layer = layer };
-        obj.transform.SetParent(parent, false);
-        obj.transform.localPosition = position;
-        obj.transform.localRotation = rotation;
-        obj.transform.localScale = size;
-        obj.AddComponent<MeshFilter>().sharedMesh = _cube;
-        obj.AddComponent<MeshRenderer>().sharedMaterial = material;
-        return obj;
-    }
-
-    private static void Wheel(Transform parent, Vector3 center, float radius, Material tyre, Material hub, int layer)
-    {
-        Primitives();
-        foreach (var (r, w, m, n) in new[] { (radius, .07f, tyre, "Wheel tyre"), (radius * .55f, .085f, hub, "Wheel hub") })
-        {
-            var obj = new GameObject(n) { layer = layer };
-            obj.transform.SetParent(parent, false);
-            obj.transform.localPosition = center;
-            obj.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
-            obj.transform.localScale = new Vector3(r * 2f, w / 2f, r * 2f);
-            obj.AddComponent<MeshFilter>().sharedMesh = _cylinder;
-            obj.AddComponent<MeshRenderer>().sharedMaterial = m;
-        }
+        if (go.GetComponentInChildren<SemiIconMaker>(true) != null) return;
+        var maker = hauler.GetComponentInChildren<SemiIconMaker>(true);
+        if (maker == null) return; // keeps the donor icon
+        var copy = Object.Instantiate(maker.gameObject, go.transform, false);
+        copy.name = maker.gameObject.name;
+        copy.transform.localPosition = maker.transform.localPosition;
+        copy.transform.localRotation = maker.transform.localRotation;
     }
 }
 
 /// <summary>Runtime behaviour of a spawned Flamethrower C.A.R.T. (see <see cref="FlameCartItem"/>).</summary>
 internal sealed class FlameCart : MonoBehaviour
 {
-    public Transform turret;
-    public Vector3 nozzleLocal;
-    public float turretBaseYaw;
+    public Transform turret, head;
+    public ItemValuableBox storage;
+    public SemiZuperFlames nativeFlames;
+    internal static Material NativeFireMaterial;
 
     private const float MaxTraverse = 70f;
     private PhysGrabObject _pgo;
-    private PhysGrabCart _cart;
     private ItemBattery _battery;
+    private ItemToggle _toggle;
     private PhotonView _view;
     private bool _firing;
     private int _operatorViewId = -1;
     private float _tick;
     private float _noGrabTimer;
-    private float _haulTimer;
-    private int _haul;
-    private bool _overloaded;
-    private float _turretYaw;
+    private float _turretYaw, _headPitch, _yawSpeed, _pitchSpeed;
     private ParticleSystem _flame, _smoke;
     private Light _light;
     private AudioSource _loop;
     private Sound _ignite, _off;
     private static Material _flameMaterial, _smokeMaterial;
-    private static readonly List<FlameCart> Active = new();
 
-    internal bool Overloaded => _overloaded;
-    internal static FlameCart Of(PhysGrabCart cart) => cart != null ? cart.GetComponent<FlameCart>() : null;
-
-    private void OnEnable() => Active.Add(this);
-    private void OnDisable() { Active.Remove(this); ApplyState(false, -1, false); }
+    private void OnDisable() => ApplyState(false, -1, false);
 
     private void Start()
     {
         _pgo = GetComponent<PhysGrabObject>();
-        _cart = GetComponent<PhysGrabCart>();
         _battery = GetComponent<ItemBattery>();
+        _toggle = GetComponent<ItemToggle>();
         _view = GetComponent<PhotonView>();
+        if (nativeFlames != null) return; // the native effect brings its own light and sounds
         try
         {
             _ignite = ItemAudio.Cue("flame_ignite", .55f);
@@ -377,7 +418,9 @@ internal sealed class FlameCart : MonoBehaviour
         }
     }
 
-    private Vector3 Nozzle => turret != null ? turret.TransformPoint(nozzleLocal) : transform.position + Vector3.up;
+    private Vector3 Nozzle => head != null ? head.TransformPoint(FlameCartItem.NozzleLocal) : transform.position + Vector3.up;
+
+    private bool FiringAllowedHere => !SemiFunc.RunIsShop() || Testing.TestShortcuts.Any;
 
     private PlayerAvatar Operator()
     {
@@ -389,16 +432,41 @@ internal sealed class FlameCart : MonoBehaviour
         return _pgo != null && _pgo.playerGrabbing.Count > 0 && _pgo.playerGrabbing[0] != null ? _pgo.playerGrabbing[0].playerAvatar : null;
     }
 
-    // Operator's look direction, limited to the turret's traverse around the cart's forward axis.
+    internal bool Firing => _firing;
+
+    private static readonly RaycastHit[] AimHits = new RaycastHit[16];
+
+    // The point under the operator's crosshair (first wall/floor, never this item), or max reach.
+    private Vector3 CrosshairPoint(Transform view)
+    {
+        float reach = ModConfig.FlameRange.Value + 2f;
+        var best = view.position + view.forward * reach;
+        float bestDistance = reach;
+        int count = Physics.RaycastNonAlloc(view.position, view.forward, AimHits, reach, SemiFunc.LayerMaskGetVisionObstruct(), QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < count; i++)
+        {
+            var hit = AimHits[i];
+            if (hit.collider == null || hit.collider.transform.IsChildOf(transform) || hit.collider.GetComponentInParent<PlayerAvatar>() != null) continue;
+            if (hit.distance < bestDistance) { bestDistance = hit.distance; best = hit.point; }
+        }
+        return best;
+    }
+
+    // Barrels converge on what the operator's crosshair is on (comfortable from behind the box while
+    // pushing), limited to the turret's traverse around the item's forward axis.
     private Quaternion AimRotation()
     {
-        var forward = Quaternion.Euler(0f, transform.eulerAngles.y + turretBaseYaw, 0f);
+        var forward = Quaternion.Euler(0f, transform.eulerAngles.y, 0f);
         var avatar = Operator();
         Transform view = null;
         try { view = avatar != null && avatar.localCamera != null ? avatar.localCamera.GetOverrideTransform() : null; }
         catch { view = null; }
         if (view == null) return forward;
-        var e = view.rotation.eulerAngles;
+        var pivot = head != null ? head.position : transform.position + Vector3.up;
+        var direction = CrosshairPoint(view) - pivot;
+        // Crosshair on (or right beside) the turret itself: just follow the look direction.
+        if (direction.sqrMagnitude < .64f) direction = view.forward;
+        var e = Quaternion.LookRotation(direction).eulerAngles;
         float yaw = Mathf.Clamp(Mathf.DeltaAngle(forward.eulerAngles.y, e.y), -MaxTraverse, MaxTraverse);
         float pitch = Mathf.Clamp(Mathf.DeltaAngle(0f, e.x), -20f, 25f);
         return Quaternion.Euler(pitch, forward.eulerAngles.y + yaw, 0f);
@@ -407,7 +475,6 @@ internal sealed class FlameCart : MonoBehaviour
     private void Update()
     {
         if (_pgo == null) return;
-        LocalInput();
         AimTurret();
         if (_pgo.grabbed && _battery != null) _battery.OverrideBatteryShow(.25f);
         Effects();
@@ -417,41 +484,43 @@ internal sealed class FlameCart : MonoBehaviour
     private void LateUpdate()
     {
         if (_pgo == null || !_pgo.grabbedLocal || ItemInfoExtraUI.instance == null || SemiFunc.RunIsShop()) return;
-        if (_overloaded)
-            ItemInfoExtraUI.instance.ItemInfoText($"OVERLOADED: MAX ${ModConfig.FlameCartValueCap.Value / 1000f:0.#}K", new Color(1f, .2f, .15f));
-        else if (_battery != null && _battery.batteryLife <= 0f)
+        if (_battery != null && _battery.batteryLife <= 0f)
             ItemInfoExtraUI.instance.ItemInfoText("NO FUEL: CHARGE THE BATTERY", new Color(1f, .46f, 0f));
     }
 
-    private void LocalInput()
+    // ------------------------------------------------------------------ host authority
+
+    // The native ItemToggle flips on whoever pressed E; the host decides whether the flame actually lights.
+    private void SyncToggle()
     {
-        if (!_pgo.heldByLocalPlayer || PlayerController.instance == null || PlayerController.instance.InputDisableTimer > 0f ||
-            !SemiFunc.NoTextInputsActive() || !SemiFunc.InputDown(InputKey.Interact)) return;
-        if (SemiFunc.IsMasterClientOrSingleplayer()) HostToggle(SemiFunc.PlayerAvatarLocal());
-        else _view.RPC(nameof(IHM_FlameToggleRPC), RpcTarget.MasterClient);
+        if (_toggle == null) return;
+        bool want = _toggle.toggleState;
+        if (want == _firing) return;
+        if (!want) { SetState(false, -1); return; }
+        var avatar = Toggler();
+        if (avatar != null && _battery != null && _battery.batteryLife > 0f && FiringAllowedHere)
+            SetState(true, avatar.photonView != null ? avatar.photonView.ViewID : -1);
+        else
+            _toggle.ToggleItem(false);
     }
 
-    [PunRPC]
-    private void IHM_FlameToggleRPC(PhotonMessageInfo info = default)
+    // Only a player who is actually holding the item may light it.
+    private PlayerAvatar Toggler()
     {
-        if (!SemiFunc.IsMasterClient() || _pgo == null) return;
-        // Only a player who is actually holding this cart may operate it.
+        if (!SemiFunc.IsMultiplayer())
+            return _pgo.playerGrabbing.Count > 0 && _pgo.playerGrabbing[0] != null ? _pgo.playerGrabbing[0].playerAvatar : null;
         foreach (var grabber in _pgo.playerGrabbing)
         {
             var avatar = grabber != null ? grabber.playerAvatar : null;
-            if (avatar != null && avatar.photonView != null && avatar.photonView.Owner == info.Sender)
-            {
-                HostToggle(avatar);
-                return;
-            }
+            if (avatar != null && avatar.photonView != null && avatar.photonView.ViewID == _toggle.playerTogglePhotonID) return avatar;
         }
+        return null;
     }
 
-    private void HostToggle(PlayerAvatar avatar)
+    private void Stop()
     {
-        if (avatar == null) return;
-        if (_firing) SetState(false, -1);
-        else if (_battery != null && _battery.batteryLife > 0f && (!SemiFunc.RunIsShop() || Testing.TestShortcuts.Any)) SetState(true, avatar.photonView != null ? avatar.photonView.ViewID : -1);
+        SetState(false, -1);
+        if (_toggle != null && _toggle.toggleState) _toggle.ToggleItem(false);
     }
 
     private void SetState(bool on, int viewId)
@@ -481,19 +550,12 @@ internal sealed class FlameCart : MonoBehaviour
 
     private void HostLogic()
     {
-        _haulTimer -= Time.deltaTime;
-        if (_haulTimer <= 0f)
-        {
-            _haulTimer = .5f;
-            _haul = Haul();
-            int cap = ModConfig.FlameCartValueCap.Value;
-            _overloaded = cap > 0 && _haul > cap;
-        }
+        SyncToggle();
         if (!_firing) return;
         _noGrabTimer = _pgo.playerGrabbing.Count > 0 ? 0f : _noGrabTimer + Time.deltaTime;
-        if (_noGrabTimer > 1f || _battery == null || _battery.batteryLife <= 0f || (SemiFunc.RunIsShop() && !Testing.TestShortcuts.Any))
+        if (_noGrabTimer > 1f || _battery == null || _battery.batteryLife <= 0f || !FiringAllowedHere)
         {
-            SetState(false, -1);
+            Stop();
             return;
         }
         _tick -= Time.deltaTime;
@@ -503,7 +565,7 @@ internal sealed class FlameCart : MonoBehaviour
         Burn(damage);
         float perTick = 100f * damage / Mathf.Max(1f, ModConfig.FlameBatteryDamage.Value);
         _battery.batteryLife = Mathf.Max(0f, _battery.batteryLife - perTick);
-        if (_battery.batteryLife <= 0f) SetState(false, -1);
+        if (_battery.batteryLife <= 0f) Stop();
     }
 
     private void Burn(int damage)
@@ -528,7 +590,7 @@ internal sealed class FlameCart : MonoBehaviour
         }
     }
 
-    // Walls stop the flame; the cart itself and the target's own colliders do not.
+    // Walls stop the flame; the item itself and the target's own colliders do not.
     private bool Blocked(Vector3 origin, Vector3 to, float distance, Enemy target)
     {
         if (distance < .3f) return false;
@@ -543,41 +605,40 @@ internal sealed class FlameCart : MonoBehaviour
         return false;
     }
 
-    private int Haul()
-    {
-        var inside = _cart != null ? _cart.inCart : null;
-        if (inside == null) return 0;
-        int total = 0;
-        var seen = new HashSet<ValuableObject>();
-        foreach (var collider in Physics.OverlapBox(inside.position, inside.lossyScale / 2f, inside.rotation))
-        {
-            if (collider.gameObject.layer != LayerMask.NameToLayer("PhysGrabObject")) continue;
-            var valuable = collider.GetComponentInParent<ValuableObject>();
-            if (valuable != null && seen.Add(valuable)) total += (int)valuable.dollarValueCurrent;
-        }
-        return total;
-    }
-
     // ------------------------------------------------------------------ presentation
 
     private void AimTurret()
     {
-        if (turret == null || turret.parent == null) return;
-        float target = 0f;
+        if (turret == null) return;
+        float yaw = 0f, pitch = 0f;
         if (_pgo.grabbed || _firing)
         {
             var aim = AimRotation();
-            target = Mathf.DeltaAngle(turret.parent.eulerAngles.y, aim.eulerAngles.y);
+            yaw = Mathf.DeltaAngle(transform.eulerAngles.y, aim.eulerAngles.y);
+            // Pitch relative to the item's own tilt, so a tipped base still aims at the look target.
+            var local = Quaternion.Inverse(transform.rotation) * (aim * Vector3.forward);
+            pitch = -Mathf.Atan2(local.y, new Vector2(local.x, local.z).magnitude) * Mathf.Rad2Deg;
         }
-        _turretYaw = Mathf.MoveTowardsAngle(_turretYaw, Mathf.Clamp(target, -MaxTraverse, MaxTraverse), 160f * Time.deltaTime);
+        // Eased (not linear) so the turret settles on target without jerking as the cart bumps along.
+        _turretYaw = Mathf.SmoothDampAngle(_turretYaw, Mathf.Clamp(yaw, -MaxTraverse, MaxTraverse), ref _yawSpeed, .09f, 240f);
+        _headPitch = Mathf.SmoothDampAngle(_headPitch, Mathf.Clamp(pitch, -20f, 25f), ref _pitchSpeed, .11f, 140f);
         turret.localRotation = Quaternion.Euler(0f, _turretYaw, 0f);
+        if (head != null) head.localRotation = Quaternion.Euler(_headPitch, 0f, 0f);
     }
 
     private void Effects()
     {
+        if (nativeFlames != null)
+        {
+            // FlamesActive re-anchors the effect every frame, so the jet follows the aimed barrels.
+            if (_firing) nativeFlames.FlamesActive(Nozzle, head != null ? head.rotation : AimRotation());
+            else if (nativeFlames.flamesActive) nativeFlames.FlamesInactive();
+            return;
+        }
         if (_flame == null) return;
         var nozzle = Nozzle;
-        var rotation = AimRotation();
+        // The jet leaves along the barrels, which track the operator's aim.
+        var rotation = head != null ? head.rotation : AimRotation();
         _flame.transform.SetPositionAndRotation(nozzle, rotation);
         _smoke.transform.SetPositionAndRotation(nozzle, rotation);
         var flameEmission = _flame.emission;
@@ -644,6 +705,7 @@ internal sealed class FlameCart : MonoBehaviour
         main.startLifetime = new ParticleSystem.MinMaxCurve(range / speed * (flame ? .75f : 1.1f), range / speed * (flame ? .95f : 1.6f));
         main.startSize = flame ? new ParticleSystem.MinMaxCurve(.12f, .22f) : new ParticleSystem.MinMaxCurve(.3f, .5f);
         main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+        main.startColor = Color.white;
         main.maxParticles = flame ? 260 : 90;
         main.gravityModifier = flame ? -.08f : -.15f;
         var emission = ps.emission;
@@ -680,7 +742,9 @@ internal sealed class FlameCart : MonoBehaviour
         collision.dampen = .6f;
         collision.bounce = .05f;
         collision.lifetimeLoss = .25f;
-        collision.collidesWith = SemiFunc.LayerMaskGetVisionObstruct();
+        // Walls and props only: never the flamethrower's own colliders, other items or players.
+        collision.collidesWith = SemiFunc.LayerMaskGetVisionObstruct() &
+            ~LayerMask.GetMask("PhysGrabObject", "PhysGrabObjectCart", "PhysGrabObjectHinge", "Player");
         collision.quality = ParticleSystemCollisionQuality.Low;
         var renderer = obj.GetComponent<ParticleSystemRenderer>();
         renderer.sharedMaterial = material;
@@ -690,16 +754,54 @@ internal sealed class FlameCart : MonoBehaviour
         return ps;
     }
 
+    /// <summary>
+    /// Fire and smoke use copies of the game's own explosion particle materials. The previous
+    /// Shader.Find("Legacy Shaders/Particles/...") path is not in the shipped build, so it fell back to a
+    /// fresh, OPAQUE "Particles/Standard Unlit" material and every puff rendered as a hard orange quad.
+    /// </summary>
     private static void EnsureMaterials()
     {
         if (_flameMaterial != null) return;
-        var additive = Shader.Find("Legacy Shaders/Particles/Additive") ?? Shader.Find("Particles/Standard Unlit") ?? Shader.Find("Sprites/Default");
-        var blended = Shader.Find("Legacy Shaders/Particles/Alpha Blended") ?? Shader.Find("Particles/Standard Unlit") ?? Shader.Find("Sprites/Default");
-        var puff = SoftPuff();
-        _flameMaterial = new Material(additive) { name = "IHM Flame", mainTexture = puff, renderQueue = 3100, hideFlags = HideFlags.HideAndDontSave };
-        _smokeMaterial = new Material(blended) { name = "IHM Flame Smoke", mainTexture = puff, renderQueue = 3050, hideFlags = HideFlags.HideAndDontSave };
-        foreach (var m in new[] { _flameMaterial, _smokeMaterial })
-            if (m.HasProperty("_TintColor")) m.SetColor("_TintColor", new Color(.5f, .5f, .5f, .5f));
+        Material fire = null, smoke = null;
+        try
+        {
+            var prefab = Resources.Load<GameObject>("Effects/Part Prefab Explosion");
+            var explosion = prefab != null ? prefab.GetComponent<ParticlePrefabExplosion>() : null;
+            if (explosion != null)
+            {
+                fire = explosion.particleFire != null ? explosion.particleFire.GetComponent<ParticleSystemRenderer>()?.sharedMaterial : null;
+                smoke = explosion.particleSmoke != null ? explosion.particleSmoke.GetComponent<ParticleSystemRenderer>()?.sharedMaterial : null;
+            }
+            // Prefer the soft flame-tongue texture over the explosion's speckled burst.
+            if (NativeFireMaterial != null) fire = NativeFireMaterial;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.LogWarning($"[Flame] Native explosion materials unavailable: {e.Message}");
+        }
+        _flameMaterial = fire != null ? new Material(fire) : Transparent(additive: true);
+        _smokeMaterial = smoke != null ? new Material(smoke) : Transparent(additive: false);
+        _flameMaterial.name = "IHM Flame";
+        _smokeMaterial.name = "IHM Flame Smoke";
+        _flameMaterial.hideFlags = _smokeMaterial.hideFlags = HideFlags.HideAndDontSave;
+        if (_flameMaterial.mainTexture == null) _flameMaterial.mainTexture = SoftPuff();
+        if (_smokeMaterial.mainTexture == null) _smokeMaterial.mainTexture = SoftPuff();
+        Plugin.Log.LogInfo($"[Flame] Flame materials: fire={(fire != null ? fire.name : "fallback")}, smoke={(smoke != null ? smoke.name : "fallback")}.");
+    }
+
+    // Fallback only: a correctly configured transparent Standard particle material.
+    private static Material Transparent(bool additive)
+    {
+        var shader = Shader.Find("Particles/Standard Unlit") ?? Shader.Find("Sprites/Default");
+        var m = new Material(shader) { mainTexture = SoftPuff() };
+        if (m.HasProperty("_Mode")) m.SetFloat("_Mode", additive ? 4f : 2f);
+        if (m.HasProperty("_SrcBlend")) m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        if (m.HasProperty("_DstBlend")) m.SetInt("_DstBlend", (int)(additive ? UnityEngine.Rendering.BlendMode.One : UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha));
+        if (m.HasProperty("_ZWrite")) m.SetInt("_ZWrite", 0);
+        m.DisableKeyword("_ALPHATEST_ON");
+        m.EnableKeyword("_ALPHABLEND_ON");
+        m.renderQueue = additive ? 3100 : 3050;
+        return m;
     }
 
     private static Texture2D SoftPuff()
@@ -713,41 +815,12 @@ internal sealed class FlameCart : MonoBehaviour
                 float dx = (x + .5f) / n * 2f - 1f, dy = (y + .5f) / n * 2f - 1f;
                 float d = Mathf.Sqrt(dx * dx + dy * dy);
                 float wisp = Mathf.PerlinNoise(x * .13f, y * .13f) * .35f;
-                float a = Mathf.Clamp01(1f - d) ;
+                float a = Mathf.Clamp01(1f - d);
                 a = Mathf.Clamp01(a * a * (1.2f - wisp));
                 pixels[y * n + x] = new Color(1f, 1f, 1f, a);
             }
         tex.SetPixels(pixels);
         tex.Apply(false, true);
         return tex;
-    }
-
-    /// <summary>Overloaded tray: the host never lets the cart enter Strong mode (Weak dragging still works).</summary>
-    [HarmonyPatch(typeof(PhysGrabCart), "Update")]
-    private static class OverloadPatch
-    {
-        [HarmonyPrefix]
-        private static void Prefix(PhysGrabCart __instance)
-        {
-            if (!SemiFunc.IsMasterClientOrSingleplayer() || !__instance.cartActive) return;
-            var flame = Of(__instance);
-            if (flame != null && flame._overloaded) __instance.cartActive = false;
-        }
-    }
-
-    [HarmonyPatch(typeof(PhysGrabCart), "CartSteer")]
-    private static class OverloadSteerPatch
-    {
-        [HarmonyPrefix]
-        private static void Prefix(PhysGrabCart __instance)
-        {
-            if (!SemiFunc.IsMasterClientOrSingleplayer() || Active.Count == 0) return;
-            var flame = Of(__instance);
-            if (flame == null || !flame._overloaded) return;
-            __instance.cartActive = false;
-            // Swallow the fresh press that would otherwise re-enable Strong mode this step.
-            foreach (var grabber in __instance.physGrabObjectGrabArea != null ? __instance.physGrabObjectGrabArea.listOfAllGrabbers : null ?? new List<PhysGrabber>())
-                if (grabber != null) grabber.initialPressTimer = 0f;
-        }
     }
 }

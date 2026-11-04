@@ -14,7 +14,11 @@ internal sealed class ManekiMotion:MonoBehaviour
         if(art==null||!art.EnsureBindings()||art.beckonPivot==null){enabled=false;return;}
         _paw=art.beckonPivot;
     }
-    private void FixedUpdate()
+    // Physics samples the same parent transform as rendering. LateUpdate avoids
+    // a visible 50 Hz staircase on displays rendering faster than the physics tick.
+    private void FixedUpdate()=>ApplyPose();
+    private void LateUpdate()=>ApplyPose();
+    private void ApplyPose()
     {
         if(_paw==null)return;
         double time=GameManager.Multiplayer()?PhotonNetwork.Time:Time.timeAsDouble;

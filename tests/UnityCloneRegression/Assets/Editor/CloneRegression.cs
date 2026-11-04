@@ -84,8 +84,9 @@ internal static class CloneRegression
             Check(IncreaseHardMod.Patches.Effects.LateJoinRules.ShouldSpawn(enabled,generated,spawned)==(mask!=7),"Only existing mid-run players are excluded from respawn: "+mask);
         }
         Check(Mathf.Approximately(ValuableLayout.Scale("bomb"),.8f)&&Mathf.Approximately(ValuableLayout.Scale("cannon"),.85f),"Requested bomb/cannon scale factors");
-        Check(Mathf.Approximately(ValuableLayout.Scale("centrifuge"),1.1f)&&Mathf.Approximately(ValuableLayout.Scale("robot_vacuum"),1.1f),"Requested centrifuge/vacuum scale factors");
+        Check(Mathf.Approximately(ValuableLayout.Scale("centrifuge"),1.1f)&&Mathf.Approximately(ValuableLayout.Scale("robot_vacuum"),2.2f),"Requested centrifuge/vacuum scale factors");
         Check(Mathf.Approximately(ValuableLayout.Scale("maneki_neko"),2f),"Neko doubles in all three dimensions");
+        Check(Mathf.Approximately(ValuableLayout.Scale("graphics_card"),1.2f)&&Mathf.Approximately(ValuableLayout.Scale("ram_pair"),1.2f),"GPU and RAM increased by twenty percent");
     }
     private static void CheckCollectionGeometry()
     {
@@ -133,7 +134,7 @@ internal static class CloneRegression
             var bounds=ValuableLayout.Apply(go,art);var actual=ValuableLayout.MeshBounds(go.transform,root.transform);
             Check(actual.min.y>=.011f&&actual.min.z>=.011f,entry.Key+" fits positive floor/forward native spawn convention");
             Check(Mathf.Abs(actual.center.x)<.001f,entry.Key+" width is centred on its own mesh");
-            var expectedMassCenter=model.physics==null?bounds.center:go.transform.InverseTransformPoint(art.visualRoot.TransformPoint(model.physics.centerOfMass));
+            var expectedMassCenter=entry.Key!="maneki_neko"?bounds.center:go.transform.InverseTransformPoint(art.visualRoot.TransformPoint(model.physics.centerOfMass));
             Check((go.GetComponent<Rigidbody>().centerOfMass-expectedMassCenter).sqrMagnitude<.000001f,entry.Key+" no inherited vase centre of mass");
             Check((nativeCenter.transform.localPosition-expectedMassCenter).sqrMagnitude<.000001f,entry.Key+" native centre transform matches authored mass distribution");
             if(CollectionLights.Applies(entry.Key))CheckLighting(go,art,model);
@@ -141,6 +142,11 @@ internal static class CloneRegression
             if(entry.Key=="skeleton")CheckSkeletonMass(go,art,model);
             if(entry.Key=="maneki_neko")
             {
+                float meshMin=float.PositiveInfinity,meshMax=float.NegativeInfinity;
+                foreach(var part in model.parts)foreach(var vertex in part.vertices)
+                {meshMin=Mathf.Min(meshMin,vertex.y+part.rest.position.y);meshMax=Mathf.Max(meshMax,vertex.y+part.rest.position.y);}
+                Check(Mathf.Abs((meshMax-meshMin)*ValuableLayout.Scale(entry.Key)-1.7f)<.0001f,"Neko matches native standing player capsule height, 1.70 m");
+                Check(Mathf.Approximately(entry.Mass,6f),"Neko mass is 6 kg");
                 ValuableVisuals.Overrides[entry.Key]=model;Check(art.EnsureBindings(),"Neko rebinds a local paw pivot after spawning");
                 var motion=go.AddComponent<ManekiMotion>();typeof(ManekiMotion).GetMethod("Start",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).Invoke(motion,null);
                 typeof(ManekiMotion).GetMethod("FixedUpdate",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).Invoke(motion,null);
@@ -148,6 +154,10 @@ internal static class CloneRegression
                 Check(art.beckonPivot.GetComponentsInChildren<MeshRenderer>(true).Length>=2,"Forearm, paw and claws stay attached to the animated pivot");
                 var pawCollider=art.beckonPivot.GetComponentInChildren<MeshCollider>();
                 Check(pawCollider!=null&&go.GetComponentsInChildren<MeshCollider>(true).Length==3,"Body/head/paw have three independent convex hulls");
+                art.beckonPivot.localRotation=Quaternion.identity;
+                typeof(ManekiMotion).GetMethod("LateUpdate",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).Invoke(motion,null);
+                Check(Quaternion.Angle(art.beckonPivot.localRotation,Quaternion.AngleAxis(ManekiMotion.AngleAt(Time.timeAsDouble),Vector3.right))<.001f,"Render-frame paw pose follows shared clock between physics ticks");
+                Check(pawCollider.transform.parent==art.beckonPivot,"Paw collision follows the same per-frame parent as the visible paw");
                 for(int sample=0;sample<=80;sample++)
                 {
                     double time=sample*ManekiMotion.PeriodSeconds/80;
@@ -184,7 +194,13 @@ internal static class CloneRegression
         foreach(var light in lamps)Check(light.range>0&&light.intensity>0&&light.enabled,art.assetKey+" light is enabled with finite range and intensity");
         if(art.assetKey=="robot_vacuum")
             Check(lamps[0].type==LightType.Spot&&lamps[0].cookie!=null&&Vector3.Dot(lamps[0].transform.forward,-go.transform.up)>.99f,"Vacuum projects a rotating ring/sweep cookie downward");
-        if(art.assetKey=="monoblock_pc")Check(lamps[0].intensity<=.2f&&Vector3.Dot(lamps[0].transform.forward,-go.transform.forward)>.99f,"PC screen light is weak and faces outward");
+        if(art.assetKey=="monoblock_pc")
+        {
+            var spot=System.Array.Find(lamps,l=>l.type==LightType.Spot);
+            Check(spot!=null&&spot.intensity<=.5f&&Vector3.Dot(spot.transform.forward,-go.transform.forward)>.99f,"PC screen fill faces outward");
+        }
+        if(art.assetKey=="monoblock_pc"||art.assetKey=="ram_pair"||art.assetKey=="graphics_card")
+            Check(System.Array.Exists(lamps,l=>l.type==LightType.Point&&l.range==5f&&l.intensity==2f),art.assetKey+" native Time Glass light intensity/range");
         if(art.assetKey=="centrifuge"||art.assetKey=="ram_pair"||art.assetKey=="graphics_card")
         {
             int emissive=0;var block=new MaterialPropertyBlock();
@@ -255,6 +271,25 @@ internal static class CloneRegression
         Check(watch.enabled&&go.GetComponentInChildren<Light>(true)!=null,"WaterWatch starts with missing client config");
         var liquidMaterial=liquid.GetComponent<MeshRenderer>().sharedMaterial;
         Check(liquidMaterial!=material&&liquid.transform.localScale.x>0,"Actual Draw animates liquid with default flow and instanced material");
+        var upperField=typeof(WaterWatch).GetField("_upper",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic);
+        var phaseField=typeof(WaterWatch).GetField("_flowPhase",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic);
+        upperField.SetValue(watch,.5f);phaseField.SetValue(watch,.2d);
+        for(int i=0;i<20;i++)watch.Advance(.02f);
+        float uprightAmount=(float)upperField.GetValue(watch);
+        Check(uprightAmount<.5f,"Upright actual watch transfers liquid downwards");
+        InvokeWatch(watch,"Draw");var lastPosition=liquid.transform.localPosition;
+        for(int i=0;i<=180;i++)
+        {
+            go.transform.rotation=Quaternion.Euler(0,0,i);watch.Advance(.01f);InvokeWatch(watch,"Draw");
+            Check((liquid.transform.localPosition-lastPosition).magnitude<.002f,"No drop trajectory jump during inversion at "+i+" degrees");
+            lastPosition=liquid.transform.localPosition;
+        }
+        float invertedAmount=(float)upperField.GetValue(watch);
+        for(int i=0;i<50;i++)watch.Advance(.02f);
+        Check((float)upperField.GetValue(watch)>invertedAmount,"Inverted actual watch reverses liquid transfer");
+        go.transform.rotation=Quaternion.Euler(0,0,90);double phaseBefore=(double)phaseField.GetValue(watch);
+        for(int i=0;i<50;i++)watch.Advance(.02f);
+        Check(System.Math.Abs((double)phaseField.GetValue(watch)-phaseBefore)<.00001,"Sideways drops stop progressing instead of passing through walls");
         Object.DestroyImmediate(liquidMaterial);InvokeWatch(watch,"Draw");
         Check(true,"Destroyed liquid material cannot throw during Draw");
         Object.DestroyImmediate(liquid);InvokeWatch(watch,"Draw");
@@ -277,6 +312,14 @@ internal static class CloneRegression
     {
         var mode=Physics.simulationMode;var gravity=Physics.gravity;Physics.simulationMode=SimulationMode.Script;Physics.gravity=new Vector3(0,-9.81f,0);
         var floor=GameObject.CreatePrimitive(PrimitiveType.Cube);floor.name="Fixture floor";floor.transform.position=new Vector3(0,-.5f,0);floor.transform.localScale=new Vector3(100,1,100);
+        var probe=new GameObject("Wheel contact probe");var hits=new RaycastHit[16];Physics.SyncTransforms();
+        foreach(float radius in new[]{.025f,.029f*2.2f,.545f*.85f})
+        {
+            Check(WheeledPropPhysics.Contact(probe.transform,new Vector3(0,radius+.012f,0),radius,hits,out _),"Scaled wheel touches floor "+radius);
+            Check(!WheeledPropPhysics.Contact(probe.transform,new Vector3(0,radius+.06f,0),radius,hits,out _),"Lifted wheel has no assistance "+radius);
+        }
+        Object.DestroyImmediate(probe);
+        CheckWheelAnimation(floor);
         foreach(float mass in new[]{8f,3f,3.5f})
         {
             var prop=GameObject.CreatePrimitive(PrimitiveType.Cube);prop.name="Rolling fixture "+mass;prop.transform.rotation=Quaternion.Euler(0,25,180);
@@ -299,5 +342,52 @@ internal static class CloneRegression
             Object.DestroyImmediate(prop);
         }
         Object.DestroyImmediate(floor);Physics.simulationMode=mode;Physics.gravity=gravity;
+    }
+
+    private static void CheckWheelAnimation(GameObject floor)
+    {
+        var artDirectory=Path.GetFullPath(Path.Combine(Application.dataPath,"../../../src/Art"));
+        foreach(var key in new[]{"robot_vacuum","skeleton","cannon"})
+        {
+            string path=Path.Combine(artDirectory,(key=="skeleton"?"v09_":"v11_")+key+".mesh.json");
+            var model=JsonUtility.FromJson<ValuableArtModel>(File.ReadAllText(path));ValuableVisuals.Overrides[key]=model;
+            var go=new GameObject("Wheel animation "+key);go.SetActive(false);go.transform.localScale=Vector3.one*ValuableLayout.Scale(key);
+            var visual=new GameObject("IHM Valuable Visual");visual.transform.SetParent(go.transform,false);
+            var art=go.AddComponent<ValuableArtInstance>();art.assetKey=key;go.AddComponent<PhysGrabObject>();go.AddComponent<ValuableFoley>();go.AddComponent<Rigidbody>().isKinematic=true;
+            var meshes=new List<Mesh>();var wheels=new List<Transform>();
+            if(key=="cannon")foreach(float side in new[]{-1f,1f})
+            {
+                var pivot=new GameObject(side<0?"Left wheel pivot":"Right wheel pivot");pivot.transform.SetParent(visual.transform,false);pivot.transform.localPosition=new Vector3(side*.64f,.545f,-.1f);wheels.Add(pivot.transform);
+            }
+            for(int i=0;i<model.parts.Length;i++)
+            {
+                var p=model.parts[i];var mesh=new Mesh{vertices=p.vertices,triangles=p.triangles};mesh.RecalculateBounds();meshes.Add(mesh);
+                var part=Part(visual.transform,"Part"+i.ToString("D3"),mesh);part.transform.localPosition=p.rest.position;
+                if(p.group.StartsWith("drive_")||p.group.StartsWith("caster_"))wheels.Add(part.transform);
+                if(p.group=="wheel_left"||p.group=="wheel_right")part.transform.SetParent(wheels[p.group=="wheel_left"?0:1],true);
+            }
+            Check(art.EnsureBindings(),key+" binds every delivered wheel");
+            System.Action animate;
+            if(key=="cannon")
+            {
+                var motion=go.AddComponent<CannonWheelMotion>();
+                typeof(CannonWheelMotion).GetMethod("Start",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).Invoke(motion,null);
+                animate=()=>typeof(CannonWheelMotion).GetMethod("LateUpdate",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).Invoke(motion,null);
+            }
+            else
+            {
+                var motion=go.AddComponent<FloorPropMotion>();
+                typeof(FloorPropMotion).GetMethod("Start",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).Invoke(motion,null);
+                animate=()=>motion.Animate(.02f);
+            }
+            Check(wheels.Count==(key=="skeleton"?5:2),key+" complete wheel count");
+            go.transform.position+=Vector3.forward*.02f;Physics.SyncTransforms();animate();
+            foreach(var wheel in wheels)Check(Quaternion.Angle(Quaternion.identity,wheel.localRotation)>1,key+" every wheel rotates while rolling without a held grab");
+            var rotations=wheels.ConvertAll(w=>w.localRotation);
+            go.transform.position+=Vector3.up*2;animate();
+            go.transform.position+=Vector3.forward*.02f;animate();
+            for(int i=0;i<wheels.Count;i++)Check(Quaternion.Angle(rotations[i],wheels[i].localRotation)<.001f,key+" airborne wheels do not roll against imaginary floor");
+            Object.DestroyImmediate(go);foreach(var mesh in meshes)Object.DestroyImmediate(mesh);ValuableVisuals.Overrides.Remove(key);
+        }
     }
 }

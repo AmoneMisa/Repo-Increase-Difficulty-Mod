@@ -22,7 +22,8 @@ namespace Photon.Pun
 }
 public class PhysGrabObject:UnityEngine.MonoBehaviour
 {
-    public bool grabbedLocal,dead;
+    public void Teleport(UnityEngine.Vector3 p,UnityEngine.Quaternion q){transform.SetPositionAndRotation(p,q);}
+    public bool grabbedLocal,dead,grabbed;
     public UnityEngine.Vector3 midPointOffset,boundingBox;
     public System.Collections.Generic.List<UnityEngine.Transform> colliders=new System.Collections.Generic.List<UnityEngine.Transform>();
     public System.Collections.Generic.List<FixtureGrabber> playerGrabbing=new System.Collections.Generic.List<FixtureGrabber>();
@@ -55,6 +56,7 @@ public class PlayerAvatar:UnityEngine.MonoBehaviour
     public object physGrabber;
     public Photon.Pun.PhotonView photonView;
 }
+public class Enemy:UnityEngine.MonoBehaviour {}
 public static class GameManager { public static bool Multiplayer()=>false; }
 public static class SemiFunc
 {
@@ -93,7 +95,7 @@ namespace IncreaseHardMod.Valuables
     }
     internal class ValuableFoley:UnityEngine.MonoBehaviour
     {
-        internal static readonly int Drip=0,Flip=1,Glass=2,Tube=9;
+        internal static readonly int Drip=0,Flip=1,Glass=2,Tube=9,Motor=3,Roll=4;
         internal void Emit(int sound,float volume) {}
     }
     internal class ValuableContact:UnityEngine.MonoBehaviour { internal ValuableFoley owner; }

@@ -7,6 +7,20 @@ namespace IncreaseHardMod.Valuables;
 /// <summary>Floor-only rolling assistance; keeps the cannon's real mass and airborne grab behavior.</summary>
 internal static class WheeledPropPhysics
 {
+    // Contact tolerance is in world metres, independent of the item's scale.
+    internal static bool Contact(Transform root,Vector3 axle,float radius,RaycastHit[] hits,out RaycastHit contact)
+    {
+        contact=default;float nearest=float.PositiveInfinity;
+        int count=Physics.RaycastNonAlloc(axle,Vector3.down,hits,radius+.025f,~0,QueryTriggerInteraction.Ignore);
+        for(int i=0;i<count;i++)
+        {
+            var hit=hits[i];
+            if(hit.collider==null||hit.collider.transform.IsChildOf(root)||hit.collider.GetComponentInParent<PlayerAvatar>()!=null||
+                hit.collider.GetComponentInParent<Enemy>()!=null||Vector3.Dot(hit.normal,Vector3.up)<.6f||hit.distance>=nearest)continue;
+            nearest=hit.distance;contact=hit;
+        }
+        return !float.IsPositiveInfinity(nearest);
+    }
     private static UnityEngine.Object _rolling;
     private static readonly PropertyInfo SharedMaterial=typeof(Collider).GetProperty("sharedMaterial");
     private static UnityEngine.Object RollingContact
@@ -64,5 +78,20 @@ internal static class WheeledPropPhysics
         float angle=Vector3.SignedAngle(Vector3.ProjectOnPlane(body.transform.forward,groundNormal),input,groundNormal);
         if(Mathf.Abs(angle)>90)angle=Mathf.DeltaAngle(0,angle+180);
         body.AddTorque(groundNormal*Mathf.Clamp(angle*.025f,-2,2),ForceMode.Acceleration);
+    }
+}
+
+// Native PhysGrabObject/PhotonTransformView initialise in Start. Publish the
+// corrected pose afterwards so peers do not restore the upside-down spawn pose.
+internal sealed class WheeledSpawnPose:MonoBehaviour
+{
+    private System.Collections.IEnumerator Start()
+    {
+        yield return null;
+        if(!SemiFunc.IsMasterClientOrSingleplayer())yield break;
+        var body=GetComponent<Rigidbody>();var grab=GetComponent<PhysGrabObject>();
+        if(body==null||grab==null)yield break;
+        WheeledPropPhysics.AlignAtSpawn(body);
+        grab.Teleport(body.position,body.rotation);
     }
 }

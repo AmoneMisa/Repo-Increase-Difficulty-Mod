@@ -22,10 +22,25 @@ head=next(o for o in parts if o.name.startswith('Porcelain head'))
 pivot=arm.parent;pivot.name='Beckoning paw pivot'
 bpy.context.view_layer.update()
 worlds={o:[o.matrix_world@v.co for v in o.data.vertices] for o in parts}
+target_height=json.loads((OUT/'player-height-reference.json').read_text())['height_m']
+source_height=max(p.z for vs in worlds.values() for p in vs)-min(p.z for vs in worlds.values() for p in vs)
+model_scale=target_height/source_height
+for points in worlds.values():
+    for p in points:p*=model_scale
+pivot.location*=model_scale
+# Preserve the preview composition while the actual exported mesh grows.
+for ob in scene.objects:
+    if ob in parts or ob==pivot:continue
+    ob.location*=model_scale
+    if ob.type=='MESH':ob.scale*=model_scale
+    if ob.type=='CAMERA':ob.data.ortho_scale*=model_scale
+    if ob.type=='LIGHT':
+        ob.data.energy*=model_scale**2
+        if ob.data.type=='AREA':ob.data.size*=model_scale
 # Twelve millimetres of shoulder clearance removes a hidden cheek intersection
 # at the back of the sweep without changing the approved paw/arm proportions.
-for point in worlds[arm]:point.x+=.012
-pivot.location.x+=.012
+for point in worlds[arm]:point.x+=.012*model_scale
+pivot.location.x+=.012*model_scale
 for ob,points in worlds.items():
     ob.parent=None;ob.matrix_world=Matrix.Identity(4)
     for vert,point in zip(ob.data.vertices,points):vert.co=point
@@ -34,6 +49,14 @@ hinge=pivot.location.copy()
 for vert in arm.data.vertices:vert.co-=hinge
 arm.parent=pivot;arm.matrix_parent_inverse=Matrix.Identity(4);arm.location=(0,0,0)
 bpy.context.view_layer.update()
+
+# A pair of tiny concave body faces had interpolated normals behind the face.
+# Flatten only those faces, consistently in the editable model and every export.
+for ob in parts:
+    me=ob.data;me.calc_loop_triangles()
+    bad={t.polygon_index for t in me.loop_triangles if any(t.normal.dot(me.corner_normals[i].vector)<=0 for i in t.loops)}
+    for i in bad:me.polygons[i].use_smooth=False
+    me.update()
 
 def surface_tree(ob,world=False):
     me=ob.data;me.calc_loop_triangles()

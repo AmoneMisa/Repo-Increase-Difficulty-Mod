@@ -47,13 +47,8 @@ internal sealed class CannonWheelMotion : MonoBehaviour
         bool floor=false;Vector3 normal=Vector3.up;
         foreach(var wheel in _wheels)
         {
-            int count=Physics.SphereCastNonAlloc(wheel.position,.015f,Vector3.down,_hits,.62f,~0,QueryTriggerInteraction.Ignore);
-            for(int i=0;i<count;i++)
-            {
-                var h=_hits[i];if(h.collider==null||h.collider.transform.IsChildOf(transform)||Vector3.Dot(h.normal,Vector3.up)<.6f)continue;
-                if(h.collider.GetComponentInParent<PlayerAvatar>()!=null||h.collider.GetComponentInParent<Enemy>()!=null)continue;
-                floor=true;normal=h.normal;break;
-            }
+            float radius=.545f*Mathf.Abs(transform.lossyScale.y);
+            if(WheeledPropPhysics.Contact(transform,wheel.position,radius,_hits,out var contact)){floor=true;normal=contact.normal;}
             if(floor)break;
         }
         Vector3 pull=Vector3.zero;int holders=0;
@@ -73,21 +68,13 @@ internal sealed class CannonWheelMotion : MonoBehaviour
         {
             var wheel=_wheels[i];Vector3 position=wheel.position;Vector3 delta=position-_previous[i];_previous[i]=position;
             bool grounded=false;float radius=.545f*Mathf.Max(.001f,transform.lossyScale.y);
-            if(grabbed&&Mathf.Abs(Vector3.Dot(transform.right,Vector3.up))<.5f)
+            if(Mathf.Abs(Vector3.Dot(transform.right,Vector3.up))<.5f)
             {
-                int count=Physics.SphereCastNonAlloc(position,.015f,Vector3.down,_hits,radius+.065f,~0,QueryTriggerInteraction.Ignore);
-                for(int j=0;j<count;j++)
-                {
-                    var hit=_hits[j];if(hit.collider==null||hit.collider.transform.IsChildOf(transform))continue;
-                    if(hit.collider.GetComponentInParent<PlayerAvatar>()!=null||hit.collider.GetComponentInParent<Enemy>()!=null)continue;
-                    if(Vector3.Dot(hit.normal,Vector3.up)<.45f)continue;
-                    grounded=true;
-                    if(hit.rigidbody!=null)delta-=hit.rigidbody.GetPointVelocity(position)*Time.deltaTime;
-                    break;
-                }
+                grounded=WheeledPropPhysics.Contact(transform,position,radius,_hits,out var hit);
+                if(grounded&&hit.rigidbody!=null)delta-=hit.rigidbody.GetPointVelocity(position)*Time.deltaTime;
             }
             float travel=Vector3.Dot(delta,transform.forward);
-            float angle=ValuableDynamics.WheelDegrees(travel,radius,grabbed,grounded,delta.sqrMagnitude>1f);
+            float angle=ValuableDynamics.WheelDegrees(travel,radius,true,grounded,delta.sqrMagnitude>1f);
             if(angle!=0f)wheel.localRotation*=Quaternion.AngleAxis(angle,Vector3.right);
             if(Mathf.Abs(angle)>.05f&&_rollCue<=0)
             {_rollCue=.35f;GetComponent<ValuableFoley>()?.Emit(ValuableFoley.Roll,.07f);}

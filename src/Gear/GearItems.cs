@@ -13,6 +13,7 @@ internal enum GearKind
     Poison,
     Ice,
     Sticky,
+    Lightning,
 }
 
 internal enum ShieldMode
@@ -82,6 +83,9 @@ internal static class GearItems
             }
             else
                 Plugin.Log.LogWarning("[Gear] No vanilla gun found to clone; guns disabled.");
+
+            if (gun != null && ModConfig.StaffEnabled.Value)
+                MakeStaff(gun, FindBase<ItemGunRevolver>("Item Gun Revolver", _ => false), pulseGun);
 
             if (grenade != null && ModConfig.DecoyGrenadeEnabled.Value)
                 MakeDecoy(grenade);
@@ -251,6 +255,72 @@ internal static class GearItems
         ItemArt.Weapon(go, kind.ToString().ToLowerInvariant());
         ItemAudio.Attach(go, kind.ToString().ToLowerInvariant());
         Register(attributes, name);
+    }
+
+    /// <summary>
+    /// Wizard Staff: handgun base (native holding, aiming, trigger and battery), revolver price, one battery
+    /// bar per bolt. The native bullet is replaced by <see cref="WizardStaff"/>'s chain lightning.
+    /// </summary>
+    private static void MakeStaff(Item baseItem, Item priceItem, Item beamItem)
+    {
+        var (item, go, attributes) = Clone(baseItem, "Item Gun Wizard Staff", "Wizard Staff", 0f, 0f, new Color(.45f, .65f, 1f),
+            $"A carved wand that throws chain lightning: {ModConfig.StaffDamage.Value} damage to the first monster within " +
+            $"{ModConfig.StaffRange.Value:0.#} m, jumping to up to {Mathf.Max(1, ModConfig.StaffMaxTargets.Value)} monsters in total. " +
+            $"{ModConfig.StaffCharges.Value} bolts per charge.",
+            mb => mb.GetType().Name is "ItemGunTranq" or "ItemGunRevolver", tint: false);
+        // Same shop price as the vanilla revolver.
+        if (priceItem != null && priceItem.value != null)
+            item.value = Object.Instantiate(priceItem.value);
+        else
+        {
+            item.value.valueMin = 9000f * CustomItemPrices.Multiplier;
+            item.value.valueMax = 12000f * CustomItemPrices.Multiplier;
+            Plugin.Log.LogWarning("[Gear] Vanilla revolver not found; Wizard Staff uses a fallback price.");
+        }
+
+        var gun = go.GetComponent<ItemGun>();
+        gun.numberOfBullets = 1;
+        gun.gunRandomSpread = 0f;
+        gun.gunRange = ModConfig.StaffRange.Value;
+        gun.gunRecoilForce *= .35f;
+        gun.cameraShakeMultiplier = .35f;
+        gun.batteryDrainFullBar = true;
+        gun.batteryDrainFullBars = 1;
+        var battery = go.GetComponent<ItemBattery>();
+        battery.batteryBars = Mathf.Max(1, ModConfig.StaffCharges.Value);
+
+        // The wand is longer than the pistol: its tip (the muzzle) sits further out and the carved crystal
+        // handle lies in the hand. Reshape the two grab colliders to the wand.
+        if (gun.gunMuzzle != null) gun.gunMuzzle.localPosition = new Vector3(0f, -.03f, .52f);
+        var colliders = go.transform.Find("Colliders");
+        var body = colliders != null ? colliders.Find("Semi Box Collider") : null;
+        var handle = colliders != null ? colliders.Find("Semi Box Collider (1)") : null;
+        if (body != null)
+        {
+            body.localPosition = new Vector3(0f, -.03f, .20f);
+            body.localRotation = Quaternion.identity;
+            body.localScale = new Vector3(.05f, .05f, .64f);
+        }
+        if (handle != null)
+        {
+            handle.localPosition = new Vector3(0f, -.03f, -.055f);
+            handle.localRotation = Quaternion.identity;
+            handle.localScale = new Vector3(.06f, .06f, .14f);
+        }
+        if (body == null || handle == null)
+            Plugin.Log.LogWarning("[Gear] Handgun collider layout changed; Wizard Staff keeps the pistol's grab shape.");
+
+        // Native additive beam material from the pulse pistol's tracer, for the bolts.
+        var beam = beamItem?.prefab?.Prefab != null ? beamItem.prefab.Prefab.GetComponent<ItemGun>() : null;
+        var beamLine = beam != null && beam.bulletPrefab != null ? beam.bulletPrefab.GetComponentInChildren<LineRenderer>(true) : null;
+        beamLine ??= gun.bulletPrefab != null ? gun.bulletPrefab.GetComponentInChildren<LineRenderer>(true) : null;
+        WizardStaff.UseNativeBeam(beamLine != null ? beamLine.sharedMaterial : null);
+
+        go.AddComponent<GearGun>().kind = GearKind.Lightning;
+        go.AddComponent<WizardStaff>();
+        ItemArt.Weapon(go, "staff");
+        ItemAudio.Attach(go, "lightning");
+        Register(attributes, "Item Gun Wizard Staff");
     }
 
     // The Ice Pistol borrows the pink pulse gun, but must not push anything: strip every force/stun from its hits.

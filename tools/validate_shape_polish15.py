@@ -4,7 +4,7 @@ from pathlib import Path
 from mathutils import Vector
 ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'art/shape-polish-15';BASE=ROOT/'work/shape-polish-15'
-rows=[]
+contracts=json.loads((OUT/'before-contracts.json').read_text());rows=[]
 
 def vec(p):return Vector(tuple(p[c] for c in 'xyz'))
 def check_mesh(data,key):
@@ -47,7 +47,7 @@ def roundtrip(folder,key,triangles,moving=False):
     return imports
 
 for key in ['poison','ice','sticky','decoy']:
-    path=ROOT/'src/Art'/(key+'.mesh.json');data=json.loads(path.read_text());before=json.loads((BASE/path.name).read_text())
+    path=ROOT/'src/Art'/(key+'.mesh.json');data=json.loads(path.read_text());before=contracts[key]
     count=check_mesh(data,key)
     old={p['name']:p for p in before['parts'] if p['samples']}
     new={p['name']:p for p in data['parts'] if p['samples']}
@@ -59,7 +59,7 @@ for key in ['poison','ice','sticky','decoy']:
 for folder in sorted((OUT/'valuables').iterdir()):
     if not folder.is_dir():continue
     key=folder.name;path=next(folder.glob('*.mesh.json'))
-    data=json.loads(path.read_text());before=json.loads((BASE/path.name).read_text())
+    data=json.loads(path.read_text());before=contracts[key]
     assert path.read_bytes()==(ROOT/'src/Art'/path.name).read_bytes(),(key,'runtime differs from checked export')
     assert data['materials']==before['materials'],(key,'material identity/settings')
     assert len(data['parts'])==len(before['parts'])
@@ -67,14 +67,14 @@ for folder in sorted((OUT/'valuables').iterdir()):
     for p,old in zip(data['parts'],before['parts']):
         for field in ['name','group','phase','material','rest','samples']:
             assert p.get(field)==old.get(field),(key,p['name'],field)
-        if key=='water_timer' and p['group'] in ('drop','top_pool','bottom_pool'):assert p==old
+        if key=='water_timer' and p['group'] in ('drop','top_pool','bottom_pool'):assert p==before['liquids'][p['name']]
     for mat in data['materials']:
         if mat['texture']:assert (folder/mat['texture']).read_bytes()==(ROOT/'src/Art'/mat['texture']).read_bytes()
     # Bounds measured from actual runtime meshes, after the original origin conversion.
     def limits(model):
         ps=[vec(v)+vec(p['rest']['position']) for p in model['parts'] for v in p['vertices']]
         return [min(v[k] for v in ps) for k in range(3)]+[max(v[k] for v in ps) for k in range(3)]
-    a,b=limits(data),limits(before);error=max(abs(x-y) for x,y in zip(a,b))
+    a,b=limits(data),before['bounds'];error=max(abs(x-y) for x,y in zip(a,b))
     assert error<.009,(key,'bounds or origin moved',error)
     rows.append({'asset':key,'triangles':count,'bounds_change_m':error,'part_bindings_and_rest_poses':'unchanged','imports':roundtrip(folder,key,count,key=='water_timer')})
 

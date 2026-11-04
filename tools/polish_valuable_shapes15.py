@@ -123,8 +123,8 @@ def render(key,parts,folder):
 
 def build(key):
     rev,source=SOURCES[key];resource=rev+'_'+key+'.mesh.json'
-    baseline=BASE/resource
-    if not baseline.exists():raise RuntimeError('Snapshot current src/Art to work/shape-polish-15 first')
+    baseline=ROOT/f'art/valuables/{source}/{key}'/resource
+    if not baseline.exists():raise RuntimeError('Missing archived source '+str(baseline))
     data=json.loads(baseline.read_text());folder=OUT/key;folder.mkdir(exist_ok=True)
     bpy.ops.wm.open_mainfile(filepath=str(ROOT/f'art/valuables/{source}/{key}/{key}.blend'),load_ui=False)
     bpy.context.preferences.filepaths.save_version=0;bpy.context.preferences.filepaths.file_preview_type='NONE'

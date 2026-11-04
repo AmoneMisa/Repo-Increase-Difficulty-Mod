@@ -82,11 +82,10 @@ internal static class ItemArt
             if (native == null) throw new InvalidDataException("Unknown weapon mesh hierarchy");
             var renderers = native.GetComponentsInChildren<MeshRenderer>(true);
             int layer = renderers.Length > 0 ? renderers[0].gameObject.layer : go.layer;
-            var template = FindTexturedMaterial(native);
             // REPO's Fresnel Opaque shader exposes _BaseTexture, not _MainTex/_BaseMap.
-            // Prefer the item's own body preset, then a native gun preset if no body supports albedo.
-            if (template == null)
-                template = FindWeaponMaterialDonor();
+            // Prefer the item's own body preset, then a native gun preset if no body supports albedo;
+            // a fresnel-capable one first, so native ItemLight's idle glow can drive the new art.
+            var template = FresnelMaterialDonor(native);
             if (template == null)
                 throw new InvalidDataException("No albedo-capable native item material (including weapon donors)");
             var gun = go.GetComponent<ItemGun>();
@@ -108,6 +107,7 @@ internal static class ItemArt
             motion.visualRoot = root.transform;
             // Hide only the donor body, never disable transforms used by native scripts or colliders.
             DonorVisuals.RemoveGeometry(renderers);
+            RetargetItemLights(go, root.transform);
             if (gun == null)
             {
                 var pin = go.transform.Find("Splinter");
@@ -208,6 +208,30 @@ internal static class ItemArt
 
     internal static Material WeaponMaterialDonor(Transform preferred) => FindTexturedMaterial(preferred) ?? FindWeaponMaterialDonor();
 
+    /// <summary>Like <see cref="WeaponMaterialDonor"/>, but prefers a preset exposing native ItemLight's
+    /// _FresnelScale, so the item's idle glow fade works instead of erroring every frame.</summary>
+    internal static Material FresnelMaterialDonor(Transform preferred) =>
+        FindTexturedMaterial(preferred, fresnel: true) ?? FindWeaponMaterialDonor(fresnel: true) ?? WeaponMaterialDonor(preferred);
+
+    internal static bool HasFresnel(Material material) => material != null && material.HasProperty(FresnelScale);
+
+    internal const string FresnelScale = "_FresnelScale";
+
+    /// <summary>
+    /// Native ItemLight fades _FresnelScale (the idle "pick me up" rim glow) on its listed renderers via
+    /// Get/SetFloat every frame. Point it at the visible art when that art supports the property; otherwise
+    /// leave the hidden donor renderers, which do, so it never logs a missing-property error.
+    /// </summary>
+    internal static void RetargetItemLights(GameObject go, Transform art)
+    {
+        var glow = new List<MeshRenderer>();
+        foreach (var r in art.GetComponentsInChildren<MeshRenderer>(true))
+            if (HasFresnel(r.sharedMaterial)) glow.Add(r);
+        if (glow.Count == 0) return;
+        foreach (var light in go.GetComponentsInChildren<ItemLight>(true))
+            light.meshRenderers = new List<MeshRenderer>(glow);
+    }
+
     private static string BaseTextureProperty(Material material)
     {
         if (material.HasProperty("_BaseTexture")) return "_BaseTexture";
@@ -216,7 +240,7 @@ internal static class ItemArt
         return null;
     }
 
-    private static Material FindTexturedMaterial(Transform body)
+    private static Material FindTexturedMaterial(Transform body, bool fresnel = false)
     {
         if (body == null) return null;
         foreach (var renderer in body.GetComponentsInChildren<MeshRenderer>(true))
@@ -225,13 +249,13 @@ internal static class ItemArt
             // Inspect every slot rather than assuming the first material is the body albedo.
             foreach (var material in renderer.sharedMaterials)
                 if (material != null && material.shader != null &&
-                    BaseTextureProperty(material) != null)
+                    BaseTextureProperty(material) != null && (!fresnel || HasFresnel(material)))
                     return material;
         }
         return null;
     }
 
-    private static Material FindWeaponMaterialDonor()
+    private static Material FindWeaponMaterialDonor(bool fresnel = false)
     {
         var items = StatsManager.instance != null ? StatsManager.instance.itemDictionary : null;
         if (items == null) return null;
@@ -240,14 +264,14 @@ internal static class ItemArt
         {
             if (!items.TryGetValue(name, out var item)) continue;
             var prefab = item != null && item.prefab != null ? item.prefab.Prefab : null;
-            var material = prefab != null ? FindTexturedMaterial(prefab.transform.Find("Mesh")) : null;
+            var material = prefab != null ? FindTexturedMaterial(prefab.transform.Find("Mesh"), fresnel) : null;
             if (material != null) return material;
         }
         foreach (var item in items.Values)
         {
             var prefab = item != null && item.prefab != null ? item.prefab.Prefab : null;
             if (prefab == null || prefab.GetComponent<ItemGun>() == null) continue;
-            var material = FindTexturedMaterial(prefab.transform.Find("Mesh"));
+            var material = FindTexturedMaterial(prefab.transform.Find("Mesh"), fresnel);
             if (material != null) return material;
         }
         return null;
