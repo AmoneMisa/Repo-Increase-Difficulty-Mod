@@ -100,52 +100,7 @@ internal static class ItemArt
                 root.transform.rotation = gun.gunMuzzle.rotation;
             }
             else root.transform.localScale = Vector3.one * 0.8f;
-            var materialCache = new Dictionary<string, Material>();
-            for (int i = 0; i < model.parts.Length; i++)
-            {
-                var part = model.parts[i];
-                var obj = new GameObject("Part" + i.ToString("D3")) { layer = layer };
-                obj.transform.SetParent(root.transform, false);
-                ApplyPose(obj.transform, part.rest);
-                var mesh = new Mesh { name = "IHM " + key + " " + part.name };
-                createdMeshes.Add(mesh);
-                mesh.vertices = part.vertices;
-                mesh.normals = part.normals;
-                mesh.uv = part.uv;
-                mesh.triangles = part.triangles;
-                mesh.RecalculateBounds();
-                obj.AddComponent<MeshFilter>().sharedMesh = mesh;
-                string materialKey = part.texture + ":" + ColorUtility.ToHtmlStringRGBA(part.color);
-                if (!materialCache.TryGetValue(materialKey, out var material))
-                {
-                    material = new Material(template) { name = "IHM " + key + " " + materialKey };
-                    createdMaterials.Add(material);
-                    // Do not inherit the donor weapon's texture atlas or emission map.
-                    foreach (string property in material.GetTexturePropertyNames()) material.SetTexture(property, null);
-                    var texture = string.IsNullOrEmpty(part.texture) ? Texture2D.whiteTexture : Texture(part.texture);
-                    string albedo = BaseTextureProperty(material);
-                    material.SetTexture(albedo, texture);
-                    material.SetTextureScale(albedo, Vector2.one);
-                    material.SetTextureOffset(albedo, Vector2.zero);
-                    if (material.HasProperty("_Color")) material.SetColor("_Color", part.color);
-                    if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", part.color);
-                    if (material.HasProperty("_EmissionColor")) material.SetColor("_EmissionColor", Color.black);
-                    if (material.HasProperty("_Glossiness")) material.SetFloat("_Glossiness", 0.15f);
-                    material.DisableKeyword("_EMISSION");
-                    material.DisableKeyword("_NORMALMAP");
-                    material.DisableKeyword("_METALLICGLOSSMAP");
-                    if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", 0.15f);
-                    if (material.HasProperty("_Metallic")) material.SetFloat("_Metallic", 0f);
-                    if (material.HasProperty("_NormalStrength")) material.SetFloat("_NormalStrength", 0f);
-                    // Fresnel Opaque uses explicit UV controls in addition to texture scale/offset.
-                    if (material.HasProperty("_TilingX")) material.SetFloat("_TilingX", 1f);
-                    if (material.HasProperty("_TilingY")) material.SetFloat("_TilingY", 1f);
-                    if (material.HasProperty("_OffsetX")) material.SetFloat("_OffsetX", 0f);
-                    if (material.HasProperty("_OffsetY")) material.SetFloat("_OffsetY", 0f);
-                    materialCache[materialKey] = material;
-                }
-                obj.AddComponent<MeshRenderer>().sharedMaterial = material;
-            }
+            BuildParts(root.transform, model, key, template, layer, createdMeshes, createdMaterials);
             var icon = UpgradeIcons.Load(key + "_inventory.png");
             if (icon == null) throw new InvalidDataException("Missing inventory render");
             var motion = go.AddComponent<ItemArtMotion>();
@@ -170,6 +125,88 @@ internal static class ItemArt
             Plugin.Log.LogWarning($"[Art] Keeping native appearance for {go.name}: {e.Message}");
         }
     }
+
+    /// <summary>Instantiates every exported part under <paramref name="root"/> with private albedo materials.</summary>
+    internal static void BuildParts(Transform root, ArtModel model, string key, Material template, int layer,
+        List<Mesh> createdMeshes, List<Material> createdMaterials)
+    {
+        var materialCache = new Dictionary<string, Material>();
+        for (int i = 0; i < model.parts.Length; i++)
+        {
+            var part = model.parts[i];
+            var obj = new GameObject("Part" + i.ToString("D3")) { layer = layer };
+            obj.transform.SetParent(root, false);
+            ApplyPose(obj.transform, part.rest);
+            var mesh = new Mesh { name = "IHM " + key + " " + part.name };
+            createdMeshes.Add(mesh);
+            mesh.vertices = part.vertices;
+            mesh.normals = part.normals;
+            mesh.uv = part.uv;
+            mesh.triangles = part.triangles;
+            mesh.RecalculateBounds();
+            obj.AddComponent<MeshFilter>().sharedMesh = mesh;
+            string materialKey = part.texture + ":" + ColorUtility.ToHtmlStringRGBA(part.color);
+            if (!materialCache.TryGetValue(materialKey, out var material))
+            {
+                material = Paint(template, string.IsNullOrEmpty(part.texture) ? null : part.texture, part.color, "IHM " + key + " " + materialKey);
+                createdMaterials.Add(material);
+                materialCache[materialKey] = material;
+            }
+            obj.AddComponent<MeshRenderer>().sharedMaterial = material;
+        }
+    }
+
+    /// <summary>Private matte copy of a native albedo-capable material, with an embedded texture and tint.</summary>
+    internal static Material Paint(Material template, string textureFile, Color color, string name)
+    {
+        var material = new Material(template) { name = name };
+        // Do not inherit the donor weapon's texture atlas or emission map.
+        foreach (string property in material.GetTexturePropertyNames()) material.SetTexture(property, null);
+        var texture = string.IsNullOrEmpty(textureFile) ? Texture2D.whiteTexture : Texture(textureFile);
+        string albedo = BaseTextureProperty(material);
+        material.SetTexture(albedo, texture);
+        material.SetTextureScale(albedo, Vector2.one);
+        material.SetTextureOffset(albedo, Vector2.zero);
+        if (material.HasProperty("_Color")) material.SetColor("_Color", color);
+        if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
+        if (material.HasProperty("_EmissionColor")) material.SetColor("_EmissionColor", Color.black);
+        if (material.HasProperty("_Glossiness")) material.SetFloat("_Glossiness", 0.15f);
+        material.DisableKeyword("_EMISSION");
+        material.DisableKeyword("_NORMALMAP");
+        material.DisableKeyword("_METALLICGLOSSMAP");
+        if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", 0.15f);
+        if (material.HasProperty("_Metallic")) material.SetFloat("_Metallic", 0f);
+        if (material.HasProperty("_NormalStrength")) material.SetFloat("_NormalStrength", 0f);
+        // Fresnel Opaque uses explicit UV controls in addition to texture scale/offset.
+        if (material.HasProperty("_TilingX")) material.SetFloat("_TilingX", 1f);
+        if (material.HasProperty("_TilingY")) material.SetFloat("_TilingY", 1f);
+        if (material.HasProperty("_OffsetX")) material.SetFloat("_OffsetX", 0f);
+        if (material.HasProperty("_OffsetY")) material.SetFloat("_OffsetY", 0f);
+        return material;
+    }
+
+    /// <summary>Static (non-animated) model under a new child, for non-weapon items such as carts.</summary>
+    internal static Transform AttachStatic(GameObject go, string key, Material template, int layer)
+    {
+        var meshes = new List<Mesh>();
+        var materials = new List<Material>();
+        var root = new GameObject("IHM Blender Visual " + key);
+        root.transform.SetParent(go.transform, false);
+        try
+        {
+            BuildParts(root.transform, LoadModel(key), key, template, layer, meshes, materials);
+            return root.transform;
+        }
+        catch
+        {
+            Object.DestroyImmediate(root);
+            foreach (var mesh in meshes) Object.DestroyImmediate(mesh);
+            foreach (var material in materials) Object.DestroyImmediate(material);
+            throw;
+        }
+    }
+
+    internal static Material WeaponMaterialDonor(Transform preferred) => FindTexturedMaterial(preferred) ?? FindWeaponMaterialDonor();
 
     private static string BaseTextureProperty(Material material)
     {

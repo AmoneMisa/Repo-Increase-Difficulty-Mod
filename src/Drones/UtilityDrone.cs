@@ -36,6 +36,20 @@ internal sealed class UtilityDrone : MonoBehaviour
     {
         Drone = GetComponent<ItemDrone>();
         _equip = GetComponent<ItemEquippable>();
+        if (kind == DroneKind.Repair)
+            StartCoroutine(DisablePassiveDrain());
+    }
+
+    // ItemDrone.Start copies its preset's time-based drain into the battery. The Repair Drone pays only
+    // for restored value (RepairPerFullBattery per full battery), so a full charge always repairs $25,000
+    // instead of running flat while it is still attached or waiting for damage.
+    private System.Collections.IEnumerator DisablePassiveDrain()
+    {
+        yield return null;
+        yield return null;
+        var battery = GetComponent<ItemBattery>();
+        if (battery != null) battery.batteryDrainRate = 0f;
+        if (Drone != null) Drone.batteryDrainRate = 0f;
     }
 
     /// <summary>Switched on, not stowed, and currently holding a target.</summary>

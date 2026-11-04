@@ -47,6 +47,15 @@ internal static class UpgradeIcons
         return sprite;
     }
 
+    /// <summary>True for a cached sprite that may be assigned to several prefabs/instances at once.</summary>
+    public static bool IsShared(Sprite sprite)
+    {
+        if (sprite == null) return false;
+        foreach (var cached in _spriteCache.Values)
+            if (cached == sprite) return true;
+        return false;
+    }
+
     /// <summary>
     /// Load an embedded PNG into a Texture2D (for IMGUI drawing), or null if missing/undecodable.
     /// Cached after first load.

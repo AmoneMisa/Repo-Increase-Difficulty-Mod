@@ -1,0 +1,96 @@
+using BepInEx.Configuration;
+using HarmonyLib;
+using IncreaseHardMod.Gear;
+using UnityEngine;
+
+namespace IncreaseHardMod.Testing;
+
+/// <summary>
+/// TESTING ONLY - off by default, host-side. Shortcuts for checking shop items without playing levels:
+///  * SkipLevelsToShop: leaving the truck goes straight to the shop instead of a level (shop -> truck -> shop ...).
+///  * ShopCurrency: on entering the shop the run's money is raised to at least this much (in K, as the shop shows it).
+///  * ForceFlameCart: the Flamethrower C.A.R.T. is always placed on a shop cart pad, regardless of price or roll.
+/// With any of these on, the flamethrower may also be fired inside the shop (no monsters there; visuals only).
+/// </summary>
+internal static class TestShortcuts
+{
+    internal static ConfigEntry<bool> SkipLevelsToShop, ForceFlameCart;
+    internal static ConfigEntry<int> ShopCurrency;
+
+    internal static void Bind(ConfigFile cfg)
+    {
+        const string section = "Testing (do not use in real runs)";
+        SkipLevelsToShop = cfg.Bind(section, "SkipLevelsToShop", false,
+            "TESTING ONLY. Host: leaving the truck goes straight to the shop instead of a level, so shop items can be tried without playing.");
+        ForceFlameCart = cfg.Bind(section, "ForceFlameCartInShop", false,
+            "TESTING ONLY. Host: always put the Flamethrower C.A.R.T. in the shop (ignores price, rolls and purchase limits).");
+        ShopCurrency = cfg.Bind(section, "ShopCurrencyK", 0,
+            new ConfigDescription("TESTING ONLY. Host: when the shop opens, raise the team's money to at least this many K ($1000s). 0 = off.",
+                new AcceptableValueRange<int>(0, 100000)));
+    }
+
+    internal static bool Any => SkipLevelsToShop.Value || ForceFlameCart.Value || ShopCurrency.Value > 0;
+
+    [HarmonyPatch(typeof(RunManager), "ChangeLevel")]
+    private static class SkipToShop
+    {
+        [HarmonyPrefix]
+        [HarmonyPriority(Priority.First)]
+        private static void Prefix(RunManager __instance, bool _levelFailed, ref RunManager.ChangeLevelType _changeLevelType)
+        {
+            if (!SkipLevelsToShop.Value || _levelFailed || __instance.restarting || !SemiFunc.IsMasterClientOrSingleplayer() ||
+                _changeLevelType != RunManager.ChangeLevelType.Normal || __instance.levelCurrent != __instance.levelLobby) return;
+            _changeLevelType = RunManager.ChangeLevelType.Shop;
+            Plugin.Log.LogWarning("[Testing] SkipLevelsToShop: truck -> shop (no level played).");
+        }
+    }
+
+    [HarmonyPatch(typeof(ShopManager), nameof(ShopManager.ShopInitialize))]
+    private static class Money
+    {
+        [HarmonyPrefix]
+        private static void Prefix()
+        {
+            int wanted = ShopCurrency.Value;
+            if (wanted <= 0 || !SemiFunc.RunIsShop() || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+            if (SemiFunc.StatGetRunCurrency() >= wanted) return;
+            SemiFunc.StatSetRunCurrency(wanted);
+            Plugin.Log.LogWarning($"[Testing] ShopCurrencyK: money set to {wanted}K.");
+        }
+    }
+
+    [HarmonyPatch(typeof(PunManager), nameof(PunManager.ShopPopulateItemVolumes))]
+    private static class ForceFlame
+    {
+        [HarmonyPrefix]
+        private static void Prefix()
+        {
+            if (!ForceFlameCart.Value || !SemiFunc.IsMasterClientOrSingleplayer() || ShopManager.instance == null ||
+                StatsManager.instance == null || !StatsManager.instance.itemDictionary.TryGetValue(FlameCartItem.AssetName, out var item) || item == null)
+                return;
+            var pool = ShopManager.instance.potentialItems;
+            pool.RemoveAll(i => i == item);
+            // SpawnShopItem scans from the end: the first matching cart pad takes our item.
+            pool.Add(item);
+            // Visit a matching pad first, before the shop's item target is reached.
+            var volumes = ShopManager.instance.itemVolumes;
+            int pad = volumes.FindIndex(v => v != null && v.itemVolume == item.itemVolume);
+            if (pad >= 0)
+            {
+                var volume = volumes[pad];
+                volumes.RemoveAt(pad);
+                volumes.Insert(0, volume);
+                Plugin.Log.LogWarning("[Testing] ForceFlameCartInShop: Flamethrower C.A.R.T. placed on a shop cart pad.");
+                return;
+            }
+            // No cart pad in this shop: spawn it on the first free pad instead (testing only, may overlap the shelf).
+            pool.Remove(item);
+            var spot = volumes.Find(v => v != null);
+            if (spot == null) return;
+            var position = spot.transform.position + Vector3.up * .6f;
+            if (SemiFunc.IsMultiplayer()) Photon.Pun.PhotonNetwork.InstantiateRoomObject(item.prefab.ResourcePath, position, spot.transform.rotation, 0);
+            else Object.Instantiate(item.prefab.Prefab, position, spot.transform.rotation);
+            Plugin.Log.LogWarning($"[Testing] ForceFlameCartInShop: no '{item.itemVolume}' pad; spawned on another pad.");
+        }
+    }
+}

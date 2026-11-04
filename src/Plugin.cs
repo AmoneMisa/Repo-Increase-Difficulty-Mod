@@ -14,7 +14,7 @@ public static class PluginInfo
     // Keep the identity stable across the rename: existing config and integrations use it.
     public const string PLUGIN_GUID = "com.kubai.increasehardmod";
     public const string PLUGIN_NAME = "IncreaseDifficultyMod";
-    public const string PLUGIN_VERSION = "0.7.4";
+    public const string PLUGIN_VERSION = "0.7.5";
 }
 
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -63,6 +63,7 @@ public class Plugin : BaseUnityPlugin
         HpRegenUpgrade.Register();
         DeathProtectionUpgrade.Register();
         BatteryLifeUpgrade.Register();
+        CombatDamageUpgrades.Register();
         AutoscanUpgrade.Register();
         MapUpgrade.Register();
         InventorySlotsUpgrade.Register();

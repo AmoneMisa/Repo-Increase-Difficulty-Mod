@@ -186,6 +186,10 @@ public static class ModConfig
     public static ConfigEntry<bool> GearEnabled;
     public static ConfigEntry<bool> DefenceOrbEnabled, DefenceDroneEnabled, ProtectionOrbEnabled;
     public static ConfigEntry<bool> PoisonCrossbowEnabled, DecoyGrenadeEnabled, IcePistolEnabled, StickyPistolEnabled;
+    // Flamethrower C.A.R.T.: wheeled flamethrower with a small cargo tray.
+    public static ConfigEntry<bool> FlameCartEnabled;
+    public static ConfigEntry<int> FlameDamagePerTick, FlameBatteryDamage, FlameCartValueCap, FlameCartPriceMinK, FlameCartPriceMaxK;
+    public static ConfigEntry<float> FlameTickSeconds, FlameRange, FlameConeAngle;
     public static ConfigEntry<int> DefenceAbsorb, ProtectionReductionPercent;
     public static ConfigEntry<float> DefenceIdleDrainPerMinute;
     public static ConfigEntry<int> DefenceItemAbsorb;
@@ -264,6 +268,13 @@ public static class ModConfig
     public static ConfigEntry<float> DroneBatteryPercentPerLevel;
     public static ConfigEntry<int> DroneBatteryMaxLevel;
     public static ConfigEntry<int> DroneBatteryBasePrice;
+    // Melee / Grenade Damage: per-player, each level adds a percentage to monster damage.
+    public static ConfigEntry<float> MeleeDamagePercentPerLevel;
+    public static ConfigEntry<int> MeleeDamageMaxLevel;
+    public static ConfigEntry<int> MeleeDamageBasePrice;
+    public static ConfigEntry<float> GrenadeDamagePercentPerLevel;
+    public static ConfigEntry<int> GrenadeDamageMaxLevel;
+    public static ConfigEntry<int> GrenadeDamageBasePrice;
     // Autoscan: passively discovers nearby valuables; each level widens the scan radius.
     public static ConfigEntry<float> AutoscanRangePerLevel;
     public static ConfigEntry<int> AutoscanMaxLevel;
@@ -412,6 +423,16 @@ public static class ModConfig
         DecoyGrenadeEnabled = Module(cfg, "Gear", "DecoyGrenadeEnabled", true, "DecoyGrenade", "Sell the Decoy Grenade.");
         IcePistolEnabled = Module(cfg, "Gear", "IcePistolEnabled", true, "IcePistol", "Sell the Pulse Ice Pistol.");
         StickyPistolEnabled = Module(cfg, "Gear", "StickyPistolEnabled", true, "StickyPistol", "Sell the Sticky Pistol.");
+        FlameCartEnabled = Module(cfg, "Gear", "FlameCartEnabled", true, "FlameCart", "Sell the Flamethrower C.A.R.T. (a wheeled flamethrower you steer like a cart).");
+        FlameDamagePerTick = BindInt(cfg, "Flamethrower", "DamagePerTick", 10, 1, 200, "Damage dealt to every monster inside the flame each tick.");
+        FlameTickSeconds = BindFloat(cfg, "Flamethrower", "TickSeconds", 1f, 0.25f, 5f, "Seconds between flame damage ticks.");
+        FlameBatteryDamage = BindInt(cfg, "Flamethrower", "BatteryDamage", 700, 50, 10000, "Total per-target damage one full battery provides (fuel is used per tick, whether or not anything is hit).");
+        FlameRange = BindFloat(cfg, "Flamethrower", "Range", 7f, 2f, 15f, "Flame reach in metres, in the direction the operator looks.");
+        FlameConeAngle = BindFloat(cfg, "Flamethrower", "ConeHalfAngle", 30f, 5f, 80f, "Half-angle of the flame cone in degrees.");
+        FlameCartValueCap = BindInt(cfg, "Flamethrower", "CargoValueCap", 25000, 0, 1000000, "Most loot value the cargo tray can carry while still driving in Strong mode. Over it the cart is overloaded (Weak mode only). 0 = no cap.");
+        FlameCartPriceMinK = BindInt(cfg, "Flamethrower", "ShopPriceMinK", 75, 1, 5000, "Lowest shop price, in K as the shop shows it (75 = $75K). Shop economy modifiers still apply on top.");
+        FlameCartPriceMaxK = BindInt(cfg, "Flamethrower", "ShopPriceMaxK", 120, 1, 5000, "Highest shop price, in K as the shop shows it (120 = $120K).");
+        Testing.TestShortcuts.Bind(cfg);
         LateJoinEnabled = Module(cfg, "Late Join", "Enabled", true, "LateJoin", "Host keeps the room/lobby joinable during a run/shop/truck (REPO normally seals it at run start) and re-syncs mod state to anyone who connects mid-game.");
         PingEnabled = Module(cfg, "Ping", "Enabled", true, "Ping", "Enable the ping system: press the ping key to mark what you're looking at for the whole team.");
         ItemUnstuckEnabled = Module(cfg, "Item Unstuck", "Enabled", true, "ItemUnstuck", "Master switch for the valuable safety-net features (relocate stuck loot, invulnerable-until-grab, undamaged-value HUD). The relocate/invuln parts are HOST-SIDE (computed by the host).");
@@ -838,6 +859,24 @@ public static class ModConfig
         DroneBatteryBasePrice = BindInt(cfg,
             "Player Upgrades", "DroneBatteryBasePrice", 6000, 0, 1000000,
             "Drone Battery Life: approximate shop price of the first level.");
+        MeleeDamagePercentPerLevel = BindFloat(cfg,
+            "Player Upgrades", "MeleeDamagePercentPerLevel", 0.05f, 0.01f, 0.5f,
+            "Melee Damage: extra monster damage from your melee weapons per level. 0.05 = +5%/level.");
+        MeleeDamageMaxLevel = BindInt(cfg,
+            "Player Upgrades", "MeleeDamageMaxLevel", 10, 1, 100,
+            "Melee Damage: maximum purchasable level (10 x 5% = +50%).");
+        MeleeDamageBasePrice = BindInt(cfg,
+            "Player Upgrades", "MeleeDamageBasePrice", 7000, 0, 1000000,
+            "Melee Damage: approximate shop price of the first level.");
+        GrenadeDamagePercentPerLevel = BindFloat(cfg,
+            "Player Upgrades", "GrenadeDamagePercentPerLevel", 0.05f, 0.01f, 0.5f,
+            "Grenade Damage: extra monster damage from grenades you throw per level. 0.05 = +5%/level.");
+        GrenadeDamageMaxLevel = BindInt(cfg,
+            "Player Upgrades", "GrenadeDamageMaxLevel", 10, 1, 100,
+            "Grenade Damage: maximum purchasable level (10 x 5% = +50%).");
+        GrenadeDamageBasePrice = BindInt(cfg,
+            "Player Upgrades", "GrenadeDamageBasePrice", 7000, 0, 1000000,
+            "Grenade Damage: approximate shop price of the first level.");
         AutoscanRangePerLevel = BindFloat(cfg,
             "Player Upgrades", "AutoscanRangePerLevel", 5f, 1f, 30f,
             "Autoscan: scan radius added per level, in metres. Discovers valuables and native discoverable items for the team. 5 = level 1 scans 5m, level 2 scans 10m.");

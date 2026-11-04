@@ -188,6 +188,7 @@ internal static class DroneItems
         string artKey = kind == DroneKind.Link ? (slot == 0 ? "link_a" : "link_b") : kind.ToString().ToLowerInvariant();
         ItemArt.Skin(go, artKey, orb: false);
         ItemAudio.Attach(go, artKey);
+        InventoryItemVisuals.Prepare(go);
 
         var prefabRef = Items.RegisterItem(attributes);
         if (prefabRef == null)

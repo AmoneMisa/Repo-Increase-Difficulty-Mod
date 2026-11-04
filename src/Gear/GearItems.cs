@@ -85,6 +85,8 @@ internal static class GearItems
 
             if (grenade != null && ModConfig.DecoyGrenadeEnabled.Value)
                 MakeDecoy(grenade);
+
+            FlameCartItem.Build();
         }
         catch (Exception e)
         {
@@ -167,6 +169,7 @@ internal static class GearItems
 
     private static void Register(ItemAttributes attributes, string name)
     {
+        InventoryItemVisuals.Prepare(attributes.gameObject);
         if (Items.RegisterItem(attributes) == null)
             Plugin.Log.LogWarning($"[Gear] REPOLib refused to register {name}.");
         else

@@ -11,7 +11,7 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.7.4`
+- **Version:** `0.7.5`
 
 Version 0.7.4 fixes Ice Pistol freezing and Link Drone pulling ([details](release-notes/v0.7.4.md)).
 
@@ -160,6 +160,8 @@ count) and, like every number below, are configurable.
 | **HP Regeneration** | 3 | Heals about 0.07% of max HP per second per level, but only until you are back to 30% of max HP - it is an emergency trickle, not a full heal. ~20,000 |
 | **Death Protection** | 1 charge | Survive one lethal hit with 1 HP. The charge is spent when it saves you; re-buy to restore it. ~50,000 |
 | **Drone Battery Life** | 20 | Your drones' batteries last 5% longer per level (up to +100%). ~6,000 |
+| **Melee Damage** | 10 | Your melee weapons deal 5% more damage to monsters per level (up to +50%). ~7,000 |
+| **Grenade Damage** | 10 | Grenades you throw deal 5% more damage to monsters per level (up to +50%). ~7,000 |
 | **Gun Extra Shots** (one per gun type: bullet / laser / tranq) | 5 each | +1 shot from every battery charge per level (`GunExtraBulletsPerLevel`). Ice, Poison and Sticky pistols and Spritz use the tranq upgrade. ~6,000 |
 | **Autoscan** | 5 | Automatically discovers valuables around you every second, 5 m further per level (5-25 m). ~8,000 |
 | **Map Suite** | 10 | One upgrade, ten map features: L1 alive-player count, L2 dead-player count, L3 active monsters, L4 respawning monsters, L5 quota heading and valuable tracker (found/total, haul), L6 team pings on the map, L7-L8 zoom the map out (zoom keys `-` / `=`), L9 cosmetic-box tracker, L10 monsters as dots. Replaces the vanilla *Map Player Count* upgrade by default. ~15,000 for the first level |
@@ -185,7 +187,7 @@ player must run the mod, with the same module toggles.
 | **Ghost Drone** | 11,000-15,000 | Attach it to a valuable: players walk straight through that valuable and it is left out of extraction counting and suction while the drone is on. Weight, price and durability are unchanged. Anyone still inside it when the drone goes off stays pass-through until they step out. |
 | **Silencer Drone** | 7,000-9,000 | Attach it to a valuable, item, cart, player or monster: the noise it makes (collisions, sounds, voice chat/TTS, and the radius monsters investigate it from) drops to 8% by default. It does not make the target deaf. |
 | **Link Drone Set (A + B)** | 19,000-24,000 | One purchase gives both halves. Attach A to one object and B to another within 6 m: a physical cable ties them together (the cable is straight, colour-coded; faint amber while waiting, red under strain). Grab one end and the other is slowly reeled in, 0.75 m/s down to 1.25 m. It lets go if over-stretched for too long; switch a half off and on to relink. |
-| **Repair Drone** | 15,000-18,000 base (7,500-9,000 after the custom-item discount) | Attach it to a damaged valuable to restore its lost value, up to its original value, at up to 500 per second. A full battery repairs 25,000 - more than the 20,000 power crystal it takes to recharge. A valuable that was fully destroyed cannot be repaired. |
+| **Repair Drone** | 15,000-18,000 base (7,500-9,000 after the custom-item discount) | Attach it to a damaged valuable to restore its lost value, up to its original value, at up to 500 per second. The battery does not drain on its own, so a full battery always repairs 25,000 - more than the 20,000 power crystal it takes to recharge. A valuable that was fully destroyed cannot be repaired. |
 
 #### Extra gear (shop)
 
@@ -377,7 +379,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.7.4`
+- **Версия:** `0.7.5`
 
 В 0.7.4 исправлены заморозка Ледяного пистолета и подтягивание Link Drone ([подробности](release-notes/v0.7.4.md)).
 
@@ -523,6 +525,8 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 | **HP Regeneration** | 3 | Лечит около 0,07% максимума здоровья в секунду за уровень, но только пока здоровье не поднимется до 30% от максимума - это аварийная струйка, а не полное лечение. ~20 000 |
 | **Death Protection** | 1 заряд | Переживаешь один смертельный удар с 1 HP. Заряд тратится, когда он тебя спас; купи снова, чтобы восстановить. ~50 000 |
 | **Drone Battery Life** | 20 | Батареи твоих дронов служат на 5% дольше за уровень (до +100%). ~6 000 |
+| **Melee Damage** | 10 | Твоё оружие ближнего боя наносит монстрам на 5% больше урона за уровень (до +50%). ~7 000 |
+| **Grenade Damage** | 10 | Твои гранаты наносят монстрам на 5% больше урона за уровень (до +50%). ~7 000 |
 | **Gun Extra Shots** (своё на каждый тип оружия: пули / лазер / транквилизатор) | по 5 | +1 выстрел с каждого заряда батареи за уровень (`GunExtraBulletsPerLevel`). Ледяной, ядовитый и липкий пистолеты и Spritz используют улучшение транквилизатора. ~6 000 |
 | **Autoscan** | 5 | Раз в секунду находит ценности вокруг, на 5 м дальше за уровень (5-25 м). ~8 000 |
 | **Map Suite** | 10 | Одно улучшение, десять функций карты: L1 число живых игроков, L2 число мёртвых, L3 активные монстры, L4 возрождающиеся монстры, L5 направление к квоте и трекер ценностей (найдено/всего, добыча), L6 командные пинги на карте, L7-L8 отдаление карты (клавиши `-` / `=`), L9 трекер косметических ящиков, L10 монстры точками. По умолчанию заменяет ванильное *Map Player Count*. ~15 000 за первый уровень |
@@ -548,7 +552,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 | **Ghost Drone** | 11 000-15 000 | Прикрепи к ценности: игроки проходят сквозь неё, а при экстракции она не считается и не засасывается, пока дрон включён. Вес, цена и прочность не меняются. Кто остался внутри при выключении дрона, проходит сквозь, пока не выйдет. |
 | **Silencer Drone** | 7 000-9 000 | Прикрепи к ценности, предмету, тележке, игроку или монстру: шум от него (столкновения, звуки, голос и TTS, радиус, с которого монстры идут на шум) падает до 8% по умолчанию. Цель не глохнет. |
 | **Link Drone Set (A + B)** | 19 000-24 000 | Одна покупка даёт обе половины. Прикрепи A к одному объекту, B к другому в радиусе 6 м: физический трос стягивает их (трос прямой, цветной; бледно-жёлтый в ожидании, красный при натяжении). Если держать один конец, второй медленно подтягивается, 0,75 м/с до 1,25 м. При долгом перенапряжении трос отпускает; выключи и включи половину, чтобы связать снова. |
-| **Repair Drone** | 15 000-18 000 база (7 500-9 000 после скидки на наши предметы) | Прикрепи к повреждённой ценности: возвращает потерянную стоимость до оригинальной, до 500 в секунду. Полной батареи хватает на 25 000 - больше, чем стоит кристалл в 20 000 для перезарядки. Полностью разрушенную ценность починить нельзя. |
+| **Repair Drone** | 15 000-18 000 база (7 500-9 000 после скидки на наши предметы) | Прикрепи к повреждённой ценности: возвращает потерянную стоимость до оригинальной, до 500 в секунду. Батарея не разряжается сама по себе, поэтому полной батареи всегда хватает на 25 000 - больше, чем стоит кристалл в 20 000 для перезарядки. Полностью разрушенную ценность починить нельзя. |
 
 #### Дополнительное снаряжение (магазин)
 
@@ -564,6 +568,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 | **Decoy Grenade** | 1 000-1 300 | Активируй и брось: 5 секунд приманивает ближайших монстров к себе, затем исчезает. |
 | **Pulse Ice Pistol** | 11 000-15 000 | Замораживает монстров и игроков на 4,5 секунды с видимым ледяным покрытием. На игроках работает и в магазине: останавливает движение и прыжки без урона от выстрела. Повторное попадание обновляет таймер; замороженный игрок видит обратный отсчёт. Замороженного монстра нельзя поднять, он получает 60% урона от огнестрела и на 35% больше от ближнего боя. |
 | **Sticky Pistol** | 9 000-10 000 | Притягивает монстра или предмет к тебе, если ты смог бы свободно поднять его с силой на один уровень ниже твоей. |
+| **Flamethrower C.A.R.T.** | $75K-$120K в магазине | Самостоятельный огнемёт на колёсах с небольшим грузовым лотком. Хватай за ручку и води как тележку; нажми **E**, держа его, чтобы включить/выключить пламя: каждый монстр в 7 м по направлению взгляда получает 10 урона в секунду (стены блокируют, игроков не задевает). Полной батареи хватает на 700 урона по цели (70 с огня), заряжается на зарядной станции. Лоток вмещает добычу до $25K; сверх этого — перегруз, и тележка ездит только в слабом режиме. |
 
 У каждого дрона, орба и оружия свой переключатель в секции `Modules` конфига.
 
