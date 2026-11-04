@@ -36,6 +36,15 @@ public enum ObjectiveType : byte
     MeleeKill = 7,      // kill N enemies with a melee weapon (team)
     NoGunKills = 8,     // finish the level having made no kills with a gun (team, "melee only")
     IntactExtract = 9,  // extract N valuables undamaged (full dollar value) (team)
+    GunKill = 10,       // kill N enemies with a gun (team)
+    ExtractCount = 11,  // extract N valuables of any condition (team)
+    HighValueExtract = 12, // extract N valuables whose original value is at least Param dollars (team)
+    SoulExtract = 13,   // extract N enemy souls (EnemyValuable orbs) (team)
+    MoonRitual = 14,    // Halloween event: earn the moon's approval at an extraction point (team)
+    HandKill = 15,      // kill N enemies with bare hands: grabbing, throwing, pushing - no gun or melee (team)
+    StunEnemies = 16,   // stun N enemies (team)
+    Revive = 17,        // revive N teammates (team)
+    ExtractionRush = 18, // close every extraction point within Target seconds; Progress = elapsed seconds (team)
 }
 
 /// <summary>Which kind of weapon dealt the killing blow, for weapon-restricted quests.</summary>
@@ -44,6 +53,7 @@ public enum WeaponSource : byte
     Other = 0,   // fall/pit/environment/unknown
     Gun = 1,     // any ItemGun / gun bullet
     Melee = 2,   // any ItemMelee
+    Hands = 3,   // grabbed / thrown objects or the grabbed enemy itself, no gun or melee involved
 }
 
 /// <summary>Contract rank ladder, F (easiest) up to SSS.</summary>

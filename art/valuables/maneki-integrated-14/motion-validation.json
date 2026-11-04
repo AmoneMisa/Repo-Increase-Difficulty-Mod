@@ -1,0 +1,25 @@
+{
+  "triangles": 34918,
+  "period_seconds": 2.6666666666666665,
+  "unity_angles_deg": [
+    -12,
+    18
+  ],
+  "tested_cycle_samples": 161,
+  "head_intersections": 0,
+  "minimum_embedded_shoulder_vertices": 66,
+  "physical_size_xyz_m": [
+    1.0671117305755615,
+    0.6676391363143921,
+    1.5674234628677368
+  ],
+  "runtime_geometry_scale": 0.5,
+  "current_prefab_scale": 2,
+  "center_of_mass_method": "uniform hollow porcelain shell area centroid",
+  "collider_triangle_counts": [
+    168,
+    168,
+    166
+  ],
+  "status": "geometry/motion checks passed; native game validation pending"
+}

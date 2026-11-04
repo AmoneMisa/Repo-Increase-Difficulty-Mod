@@ -1,0 +1,6 @@
+{
+  "name": "FableRealm.Editor",
+  "references": ["LevelAuthoring.Editor"],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": true
+}

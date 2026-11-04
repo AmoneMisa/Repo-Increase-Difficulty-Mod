@@ -12,23 +12,27 @@ Sunrise/McJannel correspond to Sunstone Valley Resort (`Level - Desert`) and McJ
 Station (`Level - Arctic`). Swiftbroom is `Level - Wizard`, Headman Manor is
 `Level - Manor`, Museum is `Level - Museum`. Dedicated pools restrict loot by map.
 
-| Valuable | Base value | Root mass | Durability | Locations |
+| Valuable | Base value | Total mass | Durability | Locations |
 |---|---:|---:|---|---|
 | Crystal skull | $2,500–4,000 | 0.25 kg | Very fragile | Sunstone, Swiftbroom, McJannek |
-| Heavy bomb | $28,000–35,000 | 30 kg | Reinforced | McJannek |
+| Heavy bomb | $28,000–35,000 | 9 kg | Reinforced | McJannek |
 | Winx bath set | $2,000–3,000 | 0.8 kg | Normal | Sunstone, Museum, Manor |
-| Cannon | $15,000 | 55 kg | Reinforced | Manor, Sunstone, Museum |
+| Cannon | $15,000 | 8 kg | Reinforced | Manor, Sunstone, Museum |
 | Liquid watch | $2,200–3,200 | 0.65 kg | Fragile | McJannek, Swiftbroom, Manor, Museum |
 | Centrifuge | $7,000–9,500 | 4.5 kg | Sturdy | McJannek |
-| Wheeled skeleton | $12,000–15,000 | 10 kg + joint bodies | Sturdy | McJannek, Sunstone, Museum |
+| Wheeled skeleton | $12,000–15,000 | 3 kg including joint bodies | Sturdy | McJannek, Sunstone, Museum |
 | Robot vacuum | $6,000–8,000 | 3.5 kg | Sturdy | Manor, Museum |
 | Graphics card | $4,500–5,500 | 0.75 kg | Very fragile | Museum, McJannek |
 | RAM pair | $4,500–5,500 | 0.15 kg | Very fragile | Museum, McJannek |
 | Monoblock PC | $6,000–8,000 | 3 kg | Normal | McJannek, Museum, Manor, Sunstone |
 | Gold ingot | $3,500–4,800 | 3 kg | Reinforced | Sunstone/Sunstore, McJannek |
-| Porcelain Maneki-neko | $12,000–16,000 | 6.5 kg | Fragile | Museum, Manor |
+| Porcelain Maneki-neko | $12,000–16,000 | 6 kg | Fragile | Museum, Manor |
 
 0.7.2 sizes relative to 0.7.1: bomb −20%, cannon −15%, centrifuge/vacuum +10%.
+Neko is now doubled in each dimension relative to its previous collection size.
+The skeleton has a 1.8 kg root plus 1.2 kg across fifteen bodies, for 3 kg total.
+Joint drive forces scale with the lighter bones. Other collection items previously
+below or equal to 6 kg retain their configured masses.
 Each model uses its own bounds, mass centre and grab midpoint: X centred, Y above
 the floor, Z forward from the native spawn origin. Volume selection uses native
 category dimensions. A full mesh-footprint overlap check runs before custom spawning;
@@ -59,16 +63,17 @@ lights. Vacuum projects rotating rings and a sweep downward onto the floor; PC h
 a weak forward screen light. All twelve centrifuge liquids emit; two small fill lights
 remain attached to individual samples after release. Water watch retains its coloured
 emissive liquids and soft local light. Metal finishes replace the bomb/cannon green.
-The porcelain cat is about0.64 m tall, with ears integrated into one head surface,
+The doubled porcelain cat is about 1.27 m tall, with ears integrated into one head surface,
 conformal face paint, an external rounded collar and inward-folded lower paws.
 Its continuous raised forepaw and collision follow a local
 shoulder pivot through a2.67 s fore/aft cycle, synchronized by Photon time. Its entire
 paw sweep is included in the spawn reservation. The small tapered ingot is about15 cm long.
 
-Validation: Release builds without errors/warnings;167 collection/liquid/late-spawn
+Validation: Release builds without errors/warnings;178 collection/liquid/late-spawn
 policy checks,22 motion checks,39 HUD checks and97 network-handler checks pass.
 These use dependency stand-ins and are not a live multiplayer run. The actual Unity
-6000.2.9f1 fixture now passes199 clone/physics/lighting checks, including the projected
+6000.2.9f1 fixture now passes203 clone/physics/lighting checks, including total skeleton
+mass across all sixteen rigidbodies, doubled neko scale, the projected
 vacuum cookie, PC light, detached sample light and local paw motion. Native network
 components are stand-ins. GLB/OBJ reimports, normals/winding, UVs, texture references
 and animation bounds pass Blender validation for all six lighting-revision meshes.

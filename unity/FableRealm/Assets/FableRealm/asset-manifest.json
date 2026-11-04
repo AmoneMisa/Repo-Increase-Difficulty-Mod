@@ -1,0 +1,116 @@
+{
+  "materials": [
+    {
+      "name": "Bark",
+      "color": "#503950",
+      "smoothness": 0.19999999999999996
+    },
+    {
+      "name": "Leaves",
+      "color": "#527f71",
+      "smoothness": 0.09999999999999998
+    },
+    {
+      "name": "Moss",
+      "color": "#6f8a68",
+      "smoothness": 0.09999999999999998
+    },
+    {
+      "name": "Ivory",
+      "color": "#e4d5b4",
+      "smoothness": 0.30000000000000004
+    },
+    {
+      "name": "Stone",
+      "color": "#9396ac",
+      "smoothness": 0.09999999999999998
+    },
+    {
+      "name": "Biscuit",
+      "color": "#b67343",
+      "smoothness": 0.09999999999999998
+    },
+    {
+      "name": "Icing",
+      "color": "#f7d5cf",
+      "smoothness": 0.4
+    },
+    {
+      "name": "Roof",
+      "color": "#944b6b",
+      "smoothness": 0.19999999999999996
+    },
+    {
+      "name": "Gold",
+      "color": "#c99452",
+      "smoothness": 0.7
+    },
+    {
+      "name": "Glass",
+      "color": "#edb86e",
+      "smoothness": 0.7
+    },
+    {
+      "name": "Mushroom",
+      "color": "#af709e",
+      "smoothness": 0.19999999999999996
+    },
+    {
+      "name": "Glow",
+      "color": "#8be5cf",
+      "smoothness": 0.6
+    },
+    {
+      "name": "Rose",
+      "color": "#b64c75",
+      "smoothness": 0.30000000000000004
+    },
+    {
+      "name": "Earth",
+      "color": "#686b65",
+      "smoothness": 0.0
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Tree",
+      "vertices": 933,
+      "polygons": 741
+    },
+    {
+      "name": "Mushroom",
+      "vertices": 536,
+      "polygons": 404
+    },
+    {
+      "name": "Arch",
+      "vertices": 239,
+      "polygons": 208
+    },
+    {
+      "name": "Cottage",
+      "vertices": 546,
+      "polygons": 362
+    },
+    {
+      "name": "GiantCup",
+      "vertices": 797,
+      "polygons": 662
+    },
+    {
+      "name": "Rose",
+      "vertices": 343,
+      "polygons": 271
+    },
+    {
+      "name": "Lantern",
+      "vertices": 112,
+      "polygons": 87
+    },
+    {
+      "name": "Tower",
+      "vertices": 512,
+      "polygons": 404
+    }
+  ]
+}

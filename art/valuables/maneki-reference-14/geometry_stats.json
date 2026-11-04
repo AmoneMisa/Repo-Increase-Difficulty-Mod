@@ -1,0 +1,18 @@
+{
+  "stage": "geometry approval, static exports",
+  "scale_m_per_reference_pixel": 0.0055,
+  "dimensions_m_xyz": [
+    1.0551116466522217,
+    0.6676391363143921,
+    1.5674234628677368
+  ],
+  "origin": "base at z=0; x/y centred on own bounds",
+  "triangles": 34918,
+  "objects": 10,
+  "paw_pivot_m": [
+    0.3170948326587677,
+    0.03411459922790527,
+    0.6654986143112183
+  ],
+  "animation": "deliberately deferred until silhouette approval"
+}

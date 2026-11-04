@@ -1,0 +1,5 @@
+{
+  "name": "LevelAuthoring.Editor",
+  "includePlatforms": ["Editor"],
+  "autoReferenced": true
+}

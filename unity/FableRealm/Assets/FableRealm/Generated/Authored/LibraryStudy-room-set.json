@@ -1,0 +1,17 @@
+{
+    "schemaVersion": 1,
+    "id": "LibraryStudy",
+    "title": "Library showcase and reusable empty room",
+    "rooms": [
+        {
+            "recipe": "Assets/FableRealm/RoomDefinitions/ExampleRoom.room.json",
+            "role": "Normal",
+            "difficulty": 1
+        },
+        {
+            "recipe": "Assets/FableRealm/RoomDefinitions/HollowLibrary.room.json",
+            "role": "DeadEnd",
+            "difficulty": 1
+        }
+    ]
+}

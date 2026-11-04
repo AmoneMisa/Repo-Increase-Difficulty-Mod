@@ -1,0 +1,22 @@
+# Blender 5.2.1 LTS MTL File: 'graphics_card.blend'
+# www.blender.org
+
+newmtl Cyan_light_guide
+Ns 490.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.025000 0.400000 0.480000
+Ks 0.500000 0.500000 0.500000
+Ke 0.055000 0.880000 1.056000
+Ni 1.460000
+d 1.000000
+illum 2
+
+newmtl Painted_atlas_graphics_card
+Ns 144.399994
+Ka 0.080000 0.080000 0.080000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.460000
+d 1.000000
+illum 3
+map_Kd v08_graphics_card_atlas.png

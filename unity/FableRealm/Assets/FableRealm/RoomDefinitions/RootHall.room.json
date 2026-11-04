@@ -1,0 +1,4395 @@
+{
+  "schemaVersion": 1,
+  "id": "RootHall",
+  "title": "Зал переплетённых корней",
+  "seed": 91,
+  "bounds": {
+    "x": 15,
+    "y": 12,
+    "z": 15
+  },
+  "materials": [
+    {
+      "id": "Oak",
+      "color": "#896047",
+      "grain": 0.26,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "OakLight",
+      "color": "#a77d57",
+      "grain": 0.22,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "OakDark",
+      "color": "#48322c",
+      "grain": 0.3,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "Bark",
+      "color": "#625047",
+      "grain": 0.35,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "Stone",
+      "color": "#343b40",
+      "grain": 0.1,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "Brass",
+      "color": "#c59b58",
+      "grain": 0.12,
+      "smoothness": 0.25,
+      "metallic": 0.55,
+      "emission": 0
+    },
+    {
+      "id": "BookWine",
+      "color": "#743f4d",
+      "grain": 0.1,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "BookTeal",
+      "color": "#366364",
+      "grain": 0.1,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "BookOchre",
+      "color": "#bd8a49",
+      "grain": 0.1,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "BookInk",
+      "color": "#394351",
+      "grain": 0.1,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "BookCream",
+      "color": "#c5b398",
+      "grain": 0.1,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "WarmGlass",
+      "color": "#ffd294",
+      "grain": 0,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 1.4
+    },
+    {
+      "id": "MoonGlass",
+      "color": "#69afbe",
+      "grain": 0,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 1.4
+    },
+    {
+      "id": "MossGlow",
+      "color": "#7db98f",
+      "grain": 0,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0.4
+    },
+    {
+      "id": "Moss",
+      "color": "#53634a",
+      "grain": 0.18,
+      "smoothness": 0.1
+    }
+  ],
+  "elements": [
+    {
+      "id": "floor-0",
+      "kind": "box",
+      "position": {
+        "x": -6.0,
+        "y": -0.2,
+        "z": 0.0
+      },
+      "size": {
+        "x": 3.0,
+        "y": 0.4,
+        "z": 15.0
+      },
+      "material": "Moss",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Walkable"
+    },
+    {
+      "id": "floor-1",
+      "kind": "box",
+      "position": {
+        "x": 6.0,
+        "y": -0.2,
+        "z": 0.0
+      },
+      "size": {
+        "x": 3.0,
+        "y": 0.4,
+        "z": 15.0
+      },
+      "material": "Moss",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Walkable"
+    },
+    {
+      "id": "floor-2",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": -0.2,
+        "z": -4.5
+      },
+      "size": {
+        "x": 9.0,
+        "y": 0.4,
+        "z": 6.0
+      },
+      "material": "Moss",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Walkable"
+    },
+    {
+      "id": "floor-3",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": -0.2,
+        "z": 4.5
+      },
+      "size": {
+        "x": 9.0,
+        "y": 0.4,
+        "z": 6.0
+      },
+      "material": "Moss",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Walkable"
+    },
+    {
+      "id": "crevice-bottom",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": -3.2,
+        "z": 0
+      },
+      "size": {
+        "x": 9,
+        "y": 0.4,
+        "z": 3
+      },
+      "material": "Stone",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "crevice-wall-0",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": -1.7,
+        "z": -1.6
+      },
+      "size": {
+        "x": 9,
+        "y": 2.6,
+        "z": 0.2
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "crevice-wall-1",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": -1.7,
+        "z": 1.6
+      },
+      "size": {
+        "x": 9,
+        "y": 2.6,
+        "z": 0.2
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "crevice-end-0",
+      "kind": "box",
+      "position": {
+        "x": -4.6,
+        "y": -1.7,
+        "z": 0
+      },
+      "size": {
+        "x": 0.2,
+        "y": 2.6,
+        "z": 3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "crevice-end-1",
+      "kind": "box",
+      "position": {
+        "x": 4.6,
+        "y": -1.7,
+        "z": 0
+      },
+      "size": {
+        "x": 0.2,
+        "y": 2.6,
+        "z": 3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "bridge",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": -0.12,
+        "z": 0
+      },
+      "size": {
+        "x": 3.2,
+        "y": 0.24,
+        "z": 3.4
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Walkable"
+    },
+    {
+      "id": "bridge-board-0",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": 0.01,
+        "z": -1.55
+      },
+      "size": {
+        "x": 3.2,
+        "y": 0.02,
+        "z": 0.28
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-1",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": 0.01,
+        "z": -1.24
+      },
+      "size": {
+        "x": 3.2,
+        "y": 0.02,
+        "z": 0.28
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-2",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": 0.01,
+        "z": -0.93
+      },
+      "size": {
+        "x": 3.2,
+        "y": 0.02,
+        "z": 0.28
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-3",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": 0.01,
+        "z": -0.6200000000000001
+      },
+      "size": {
+        "x": 3.2,
+        "y": 0.02,
+        "z": 0.28
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-4",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": 0.01,
+        "z": -0.31000000000000005
+      },
+      "size": {
+        "x": 3.2,
+        "y": 0.02,
+        "z": 0.28
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-5",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": 0.01,
+        "z": 0.0
+      },
+      "size": {
+        "x": 3.2,
+        "y": 0.02,
+        "z": 0.28
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-6",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": 0.01,
+        "z": 0.30999999999999983
+      },
+      "size": {
+        "x": 3.2,
+        "y": 0.02,
+        "z": 0.28
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-7",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": 0.01,
+        "z": 0.6199999999999999
+      },
+      "size": {
+        "x": 3.2,
+        "y": 0.02,
+        "z": 0.28
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-8",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": 0.01,
+        "z": 0.9299999999999999
+      },
+      "size": {
+        "x": 3.2,
+        "y": 0.02,
+        "z": 0.28
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-9",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": 0.01,
+        "z": 1.24
+      },
+      "size": {
+        "x": 3.2,
+        "y": 0.02,
+        "z": 0.28
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-10",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": 0.01,
+        "z": 1.55
+      },
+      "size": {
+        "x": 3.2,
+        "y": 0.02,
+        "z": 0.28
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-west",
+      "kind": "rail",
+      "position": {
+        "x": -1.7,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 3.3,
+        "y": 0.9,
+        "z": 0.15
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 7,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "bridge-east",
+      "kind": "rail",
+      "position": {
+        "x": 1.7,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 3.3,
+        "y": 0.9,
+        "z": 0.15
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 7,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "ledge-left--1",
+      "kind": "rail",
+      "position": {
+        "x": -3.15,
+        "y": 0,
+        "z": -1.6
+      },
+      "size": {
+        "x": 2.6,
+        "y": 0.9,
+        "z": 0.15
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 5,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "ledge-right--1",
+      "kind": "rail",
+      "position": {
+        "x": 3.15,
+        "y": 0,
+        "z": -1.6
+      },
+      "size": {
+        "x": 2.6,
+        "y": 0.9,
+        "z": 0.15
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 5,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "ledge-left-1",
+      "kind": "rail",
+      "position": {
+        "x": -3.15,
+        "y": 0,
+        "z": 1.6
+      },
+      "size": {
+        "x": 2.6,
+        "y": 0.9,
+        "z": 0.15
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 5,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "ledge-right-1",
+      "kind": "rail",
+      "position": {
+        "x": 3.15,
+        "y": 0,
+        "z": 1.6
+      },
+      "size": {
+        "x": 2.6,
+        "y": 0.9,
+        "z": 0.15
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 5,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "wall-0--1",
+      "kind": "box",
+      "position": {
+        "x": -4.8,
+        "y": 4,
+        "z": 7.35
+      },
+      "size": {
+        "x": 5.1,
+        "y": 8,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "wall-0-1",
+      "kind": "box",
+      "position": {
+        "x": 4.8,
+        "y": 4,
+        "z": 7.35
+      },
+      "size": {
+        "x": 5.1,
+        "y": 8,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "lintel-0",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 5.9,
+        "z": 7.35
+      },
+      "size": {
+        "x": 4.5,
+        "y": 4.2,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "door-arch-0",
+      "kind": "arch",
+      "position": {
+        "x": 0.0,
+        "y": 0,
+        "z": 7.05
+      },
+      "size": {
+        "x": 4.2,
+        "y": 4.1,
+        "z": 0.4
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "radius": 0.23,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "wall-1--1",
+      "kind": "box",
+      "position": {
+        "x": 7.35,
+        "y": 4,
+        "z": 4.800000000000001
+      },
+      "size": {
+        "x": 5.1,
+        "y": 8,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "wall-1-1",
+      "kind": "box",
+      "position": {
+        "x": 7.35,
+        "y": 4,
+        "z": -4.799999999999999
+      },
+      "size": {
+        "x": 5.1,
+        "y": 8,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "lintel-1",
+      "kind": "box",
+      "position": {
+        "x": 7.35,
+        "y": 5.9,
+        "z": 4.500576986866523e-16
+      },
+      "size": {
+        "x": 4.5,
+        "y": 4.2,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "door-arch-1",
+      "kind": "arch",
+      "position": {
+        "x": 7.05,
+        "y": 0,
+        "z": 4.31687996699442e-16
+      },
+      "size": {
+        "x": 4.2,
+        "y": 4.1,
+        "z": 0.4
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "radius": 0.23,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "wall-2--1",
+      "kind": "box",
+      "position": {
+        "x": 4.800000000000001,
+        "y": 4,
+        "z": -7.349999999999999
+      },
+      "size": {
+        "x": 5.1,
+        "y": 8,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "wall-2-1",
+      "kind": "box",
+      "position": {
+        "x": -4.799999999999999,
+        "y": 4,
+        "z": -7.3500000000000005
+      },
+      "size": {
+        "x": 5.1,
+        "y": 8,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "lintel-2",
+      "kind": "box",
+      "position": {
+        "x": 9.001153973733046e-16,
+        "y": 5.9,
+        "z": -7.35
+      },
+      "size": {
+        "x": 4.5,
+        "y": 4.2,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "door-arch-2",
+      "kind": "arch",
+      "position": {
+        "x": 8.63375993398884e-16,
+        "y": 0,
+        "z": -7.05
+      },
+      "size": {
+        "x": 4.2,
+        "y": 4.1,
+        "z": 0.4
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": true,
+      "radius": 0.23,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "wall-3--1",
+      "kind": "box",
+      "position": {
+        "x": -7.349999999999999,
+        "y": 4,
+        "z": -4.800000000000002
+      },
+      "size": {
+        "x": 5.1,
+        "y": 8,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 270,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "wall-3-1",
+      "kind": "box",
+      "position": {
+        "x": -7.3500000000000005,
+        "y": 4,
+        "z": 4.799999999999998
+      },
+      "size": {
+        "x": 5.1,
+        "y": 8,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 270,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "lintel-3",
+      "kind": "box",
+      "position": {
+        "x": -7.35,
+        "y": 5.9,
+        "z": -1.3501730960599567e-15
+      },
+      "size": {
+        "x": 4.5,
+        "y": 4.2,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 270,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "door-arch-3",
+      "kind": "arch",
+      "position": {
+        "x": -7.05,
+        "y": 0,
+        "z": -1.2950639900983258e-15
+      },
+      "size": {
+        "x": 4.2,
+        "y": 4.1,
+        "z": 0.4
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 270,
+        "z": 0
+      },
+      "collider": true,
+      "radius": 0.23,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "ceiling-side--1",
+      "kind": "box",
+      "position": {
+        "x": -5.75,
+        "y": 8.1,
+        "z": 0
+      },
+      "size": {
+        "x": 3.5,
+        "y": 0.25,
+        "z": 14.8
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "ceiling-end--1",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": 8.1,
+        "z": -5.75
+      },
+      "size": {
+        "x": 8,
+        "y": 0.25,
+        "z": 3.5
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "ceiling-side-1",
+      "kind": "box",
+      "position": {
+        "x": 5.75,
+        "y": 8.1,
+        "z": 0
+      },
+      "size": {
+        "x": 3.5,
+        "y": 0.25,
+        "z": 14.8
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "ceiling-end-1",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": 8.1,
+        "z": 5.75
+      },
+      "size": {
+        "x": 8,
+        "y": 0.25,
+        "z": 3.5
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "skylight-rim",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 3.8,
+          "y": 8.05,
+          "z": 0.0
+        },
+        {
+          "x": 3.7674904732204793,
+          "y": 8.05,
+          "z": 0.49599953043619593
+        },
+        {
+          "x": 3.6705181398984594,
+          "y": 8.05,
+          "z": 0.9835123713895788
+        },
+        {
+          "x": 3.5107422235428896,
+          "y": 8.05,
+          "z": 1.4541970429873412
+        },
+        {
+          "x": 3.290896534380867,
+          "y": 8.05,
+          "z": 1.8999999999999997
+        },
+        {
+          "x": 3.0147426931066934,
+          "y": 8.05,
+          "z": 2.3132934302331383
+        },
+        {
+          "x": 2.6870057685088806,
+          "y": 8.05,
+          "z": 2.6870057685088806
+        },
+        {
+          "x": 2.3132934302331383,
+          "y": 8.05,
+          "z": 3.0147426931066934
+        },
+        {
+          "x": 1.9000000000000004,
+          "y": 8.05,
+          "z": 3.2908965343808667
+        },
+        {
+          "x": 1.4541970429873412,
+          "y": 8.05,
+          "z": 3.5107422235428896
+        },
+        {
+          "x": 0.9835123713895788,
+          "y": 8.05,
+          "z": 3.6705181398984594
+        },
+        {
+          "x": 0.4959995304361965,
+          "y": 8.05,
+          "z": 3.7674904732204793
+        },
+        {
+          "x": 2.326828918379971e-16,
+          "y": 8.05,
+          "z": 3.8
+        },
+        {
+          "x": -0.49599953043619605,
+          "y": 8.05,
+          "z": 3.7674904732204793
+        },
+        {
+          "x": -0.9835123713895784,
+          "y": 8.05,
+          "z": 3.6705181398984594
+        },
+        {
+          "x": -1.45419704298734,
+          "y": 8.05,
+          "z": 3.51074222354289
+        },
+        {
+          "x": -1.899999999999999,
+          "y": 8.05,
+          "z": 3.290896534380867
+        },
+        {
+          "x": -2.3132934302331383,
+          "y": 8.05,
+          "z": 3.0147426931066934
+        },
+        {
+          "x": -2.68700576850888,
+          "y": 8.05,
+          "z": 2.6870057685088806
+        },
+        {
+          "x": -3.014742693106693,
+          "y": 8.05,
+          "z": 2.313293430233139
+        },
+        {
+          "x": -3.290896534380867,
+          "y": 8.05,
+          "z": 1.8999999999999997
+        },
+        {
+          "x": -3.5107422235428896,
+          "y": 8.05,
+          "z": 1.4541970429873414
+        },
+        {
+          "x": -3.670518139898459,
+          "y": 8.05,
+          "z": 0.9835123713895798
+        },
+        {
+          "x": -3.7674904732204793,
+          "y": 8.05,
+          "z": 0.49599953043619754
+        },
+        {
+          "x": -3.8,
+          "y": 8.05,
+          "z": 4.653657836759942e-16
+        },
+        {
+          "x": -3.7674904732204793,
+          "y": 8.05,
+          "z": -0.4959995304361967
+        },
+        {
+          "x": -3.6705181398984594,
+          "y": 8.05,
+          "z": -0.9835123713895789
+        },
+        {
+          "x": -3.51074222354289,
+          "y": 8.05,
+          "z": -1.4541970429873408
+        },
+        {
+          "x": -3.290896534380867,
+          "y": 8.05,
+          "z": -1.8999999999999988
+        },
+        {
+          "x": -3.0147426931066934,
+          "y": 8.05,
+          "z": -2.3132934302331383
+        },
+        {
+          "x": -2.687005768508882,
+          "y": 8.05,
+          "z": -2.687005768508879
+        },
+        {
+          "x": -2.313293430233139,
+          "y": 8.05,
+          "z": -3.0147426931066925
+        },
+        {
+          "x": -1.9000000000000017,
+          "y": 8.05,
+          "z": -3.2908965343808663
+        },
+        {
+          "x": -1.45419704298734,
+          "y": 8.05,
+          "z": -3.51074222354289
+        },
+        {
+          "x": -0.9835123713895784,
+          "y": 8.05,
+          "z": -3.6705181398984594
+        },
+        {
+          "x": -0.49599953043619616,
+          "y": 8.05,
+          "z": -3.7674904732204793
+        },
+        {
+          "x": -6.980486755139912e-16,
+          "y": 8.05,
+          "z": -3.8
+        },
+        {
+          "x": 0.49599953043619477,
+          "y": 8.05,
+          "z": -3.7674904732204797
+        },
+        {
+          "x": 0.983512371389577,
+          "y": 8.05,
+          "z": -3.67051813989846
+        },
+        {
+          "x": 1.4541970429873388,
+          "y": 8.05,
+          "z": -3.5107422235428905
+        },
+        {
+          "x": 1.9000000000000004,
+          "y": 8.05,
+          "z": -3.2908965343808667
+        },
+        {
+          "x": 2.3132934302331356,
+          "y": 8.05,
+          "z": -3.0147426931066956
+        },
+        {
+          "x": 2.6870057685088797,
+          "y": 8.05,
+          "z": -2.687005768508881
+        },
+        {
+          "x": 3.0147426931066925,
+          "y": 8.05,
+          "z": -2.3132934302331396
+        },
+        {
+          "x": 3.290896534380866,
+          "y": 8.05,
+          "z": -1.9000000000000017
+        },
+        {
+          "x": 3.51074222354289,
+          "y": 8.05,
+          "z": -1.4541970429873403
+        },
+        {
+          "x": 3.6705181398984585,
+          "y": 8.05,
+          "z": -0.9835123713895819
+        },
+        {
+          "x": 3.7674904732204793,
+          "y": 8.05,
+          "z": -0.4959995304361964
+        },
+        {
+          "x": 3.8,
+          "y": 8.05,
+          "z": -9.307315673519883e-16
+        }
+      ],
+      "radius": 0.23,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "skylight",
+      "kind": "disc",
+      "position": {
+        "x": 0,
+        "y": 8.3,
+        "z": 0
+      },
+      "size": {
+        "x": 7.5,
+        "y": 7.5,
+        "z": 0.05
+      },
+      "material": "MoonGlass",
+      "rotation": {
+        "x": 90,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "skylight-source",
+      "kind": "light",
+      "position": {
+        "x": 0,
+        "y": 6.5,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MoonGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 3,
+      "range": 12,
+      "shadows": true,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "trunk--1--1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "points": [
+        {
+          "x": -6,
+          "y": 0,
+          "z": -4.8
+        },
+        {
+          "x": -5.9,
+          "y": 2,
+          "z": -4.7
+        },
+        {
+          "x": -6.3,
+          "y": 4,
+          "z": -4.8
+        },
+        {
+          "x": -5.2,
+          "y": 6.3,
+          "z": -4.1
+        },
+        {
+          "x": -2.8,
+          "y": 7.8,
+          "z": -2.7
+        }
+      ],
+      "radius": 0.38,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "trunk-twist--1--1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -6.4,
+          "y": 0,
+          "z": -4.7
+        },
+        {
+          "x": -5.5,
+          "y": 1.9,
+          "z": -4.6
+        },
+        {
+          "x": -6.1,
+          "y": 4.2,
+          "z": -4.5
+        },
+        {
+          "x": -4.8,
+          "y": 6.5,
+          "z": -3.9
+        }
+      ],
+      "radius": 0.16,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "root-to-floor--1--1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -6,
+          "y": 1,
+          "z": -4.8
+        },
+        {
+          "x": -5.3,
+          "y": 0.3,
+          "z": -4.8
+        },
+        {
+          "x": -4.2,
+          "y": 0.08,
+          "z": -5.7
+        }
+      ],
+      "radius": 0.2,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "trunk--1-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "points": [
+        {
+          "x": -6,
+          "y": 0,
+          "z": 6.6
+        },
+        {
+          "x": -5.9,
+          "y": 2,
+          "z": 6.5
+        },
+        {
+          "x": -6.3,
+          "y": 4,
+          "z": 6.6
+        },
+        {
+          "x": -5.2,
+          "y": 6.3,
+          "z": 4.1
+        },
+        {
+          "x": -2.8,
+          "y": 7.8,
+          "z": 2.7
+        }
+      ],
+      "radius": 0.38,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "trunk-twist--1-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -6.4,
+          "y": 0,
+          "z": 4.7
+        },
+        {
+          "x": -5.5,
+          "y": 1.9,
+          "z": 4.6
+        },
+        {
+          "x": -6.1,
+          "y": 4.2,
+          "z": 4.5
+        },
+        {
+          "x": -4.8,
+          "y": 6.5,
+          "z": 3.9
+        }
+      ],
+      "radius": 0.16,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "root-to-floor--1-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -6,
+          "y": 1,
+          "z": 4.8
+        },
+        {
+          "x": -5.3,
+          "y": 0.3,
+          "z": 4.8
+        },
+        {
+          "x": -4.2,
+          "y": 0.08,
+          "z": 5.7
+        }
+      ],
+      "radius": 0.2,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "trunk-1--1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "points": [
+        {
+          "x": 6,
+          "y": 0,
+          "z": -4.8
+        },
+        {
+          "x": 5.9,
+          "y": 2,
+          "z": -4.7
+        },
+        {
+          "x": 6.3,
+          "y": 4,
+          "z": -4.8
+        },
+        {
+          "x": 5.2,
+          "y": 6.3,
+          "z": -4.1
+        },
+        {
+          "x": 2.8,
+          "y": 7.8,
+          "z": -2.7
+        }
+      ],
+      "radius": 0.38,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "trunk-twist-1--1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 6.4,
+          "y": 0,
+          "z": -4.7
+        },
+        {
+          "x": 5.5,
+          "y": 1.9,
+          "z": -4.6
+        },
+        {
+          "x": 6.1,
+          "y": 4.2,
+          "z": -4.5
+        },
+        {
+          "x": 4.8,
+          "y": 6.5,
+          "z": -3.9
+        }
+      ],
+      "radius": 0.16,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "root-to-floor-1--1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 6,
+          "y": 1,
+          "z": -4.8
+        },
+        {
+          "x": 5.3,
+          "y": 0.3,
+          "z": -4.8
+        },
+        {
+          "x": 4.2,
+          "y": 0.08,
+          "z": -5.7
+        }
+      ],
+      "radius": 0.2,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "trunk-1-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "points": [
+        {
+          "x": 6,
+          "y": 0,
+          "z": 6.6
+        },
+        {
+          "x": 5.9,
+          "y": 2,
+          "z": 6.5
+        },
+        {
+          "x": 6.3,
+          "y": 4,
+          "z": 6.6
+        },
+        {
+          "x": 5.2,
+          "y": 6.3,
+          "z": 4.1
+        },
+        {
+          "x": 2.8,
+          "y": 7.8,
+          "z": 2.7
+        }
+      ],
+      "radius": 0.38,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "trunk-twist-1-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 6.4,
+          "y": 0,
+          "z": 4.7
+        },
+        {
+          "x": 5.5,
+          "y": 1.9,
+          "z": 4.6
+        },
+        {
+          "x": 6.1,
+          "y": 4.2,
+          "z": 4.5
+        },
+        {
+          "x": 4.8,
+          "y": 6.5,
+          "z": 3.9
+        }
+      ],
+      "radius": 0.16,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "root-to-floor-1-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 6,
+          "y": 1,
+          "z": 4.8
+        },
+        {
+          "x": 5.3,
+          "y": 0.3,
+          "z": 4.8
+        },
+        {
+          "x": 4.2,
+          "y": 0.08,
+          "z": 5.7
+        }
+      ],
+      "radius": 0.2,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "root-stair",
+      "kind": "stairs",
+      "position": {
+        "x": -3.25,
+        "y": 0,
+        "z": 5.2
+      },
+      "size": {
+        "x": 2.6,
+        "y": 3,
+        "z": 6.5
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 22,
+      "navigation": "Walkable"
+    },
+    {
+      "id": "upper-landing",
+      "kind": "box",
+      "position": {
+        "x": 3.25,
+        "y": 2.88,
+        "z": 5.2
+      },
+      "size": {
+        "x": 6.5,
+        "y": 0.24,
+        "z": 2.6
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Walkable"
+    },
+    {
+      "id": "upper-east",
+      "kind": "box",
+      "position": {
+        "x": 5.2,
+        "y": 2.88,
+        "z": 2.7
+      },
+      "size": {
+        "x": 2.6,
+        "y": 0.24,
+        "z": 2.4
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Walkable"
+    },
+    {
+      "id": "landing-front",
+      "kind": "rail",
+      "position": {
+        "x": 1.95,
+        "y": 3,
+        "z": 3.85
+      },
+      "size": {
+        "x": 3.9,
+        "y": 0.9,
+        "z": 0.15
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 8,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "east-balcony-inner",
+      "kind": "rail",
+      "position": {
+        "x": 3.85,
+        "y": 3,
+        "z": 2.7
+      },
+      "size": {
+        "x": 2.4,
+        "y": 0.9,
+        "z": 0.15
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 5,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "east-balcony-end",
+      "kind": "rail",
+      "position": {
+        "x": 5.2,
+        "y": 3,
+        "z": 1.5
+      },
+      "size": {
+        "x": 2.6,
+        "y": 0.9,
+        "z": 0.15
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 5,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "landing-support-0",
+      "kind": "box",
+      "position": {
+        "x": 1.4,
+        "y": 1.38,
+        "z": 5.7
+      },
+      "size": {
+        "x": 0.3,
+        "y": 2.76,
+        "z": 0.3
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "landing-support-1",
+      "kind": "box",
+      "position": {
+        "x": 5.9,
+        "y": 1.38,
+        "z": 5.7
+      },
+      "size": {
+        "x": 0.3,
+        "y": 2.76,
+        "z": 0.3
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "stair-handhold",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -6.5,
+          "y": 1,
+          "z": 3.85
+        },
+        {
+          "x": 0,
+          "y": 4,
+          "z": 3.85
+        }
+      ],
+      "radius": 0.06,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "refuge-back",
+      "kind": "box",
+      "position": {
+        "x": 3.6,
+        "y": 1.25,
+        "z": -3.7
+      },
+      "size": {
+        "x": 2.8,
+        "y": 2.5,
+        "z": 0.2
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "refuge-east",
+      "kind": "box",
+      "position": {
+        "x": 4.9,
+        "y": 1.25,
+        "z": -4.6
+      },
+      "size": {
+        "x": 0.2,
+        "y": 2.5,
+        "z": 2
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "refuge-west",
+      "kind": "box",
+      "position": {
+        "x": 2.3,
+        "y": 1.25,
+        "z": -4.6
+      },
+      "size": {
+        "x": 0.2,
+        "y": 2.5,
+        "z": 2
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "refuge-roof",
+      "kind": "box",
+      "position": {
+        "x": 3.6,
+        "y": 2.6,
+        "z": -4.6
+      },
+      "size": {
+        "x": 2.8,
+        "y": 0.2,
+        "z": 2
+      },
+      "material": "Moss",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "refuge-arch",
+      "kind": "arch",
+      "position": {
+        "x": 3.6,
+        "y": 0,
+        "z": -5.55
+      },
+      "size": {
+        "x": 2.5,
+        "y": 2.5,
+        "z": 0.2
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "radius": 0.12,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "glow-0-light",
+      "kind": "light",
+      "position": {
+        "x": -3.5,
+        "y": 1.3,
+        "z": -3.2
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 2,
+      "range": 7,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-0-crystal-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -3.25,
+          "y": 1.0,
+          "z": -3.2
+        },
+        {
+          "x": -3.38,
+          "y": 1.5,
+          "z": -3.2
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-0-crystal-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -3.4227457514062634,
+          "y": 1.0,
+          "z": -2.9622358709262118
+        },
+        {
+          "x": -3.4629179606750062,
+          "y": 1.57,
+          "z": -3.085873218044582
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-0-crystal-2",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -3.7022542485937366,
+          "y": 1.0,
+          "z": -3.053053686926882
+        },
+        {
+          "x": -3.597082039324994,
+          "y": 1.6400000000000001,
+          "z": -3.1294657697249035
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-0-crystal-3",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -3.7022542485937366,
+          "y": 1.0,
+          "z": -3.3469463130731185
+        },
+        {
+          "x": -3.597082039324994,
+          "y": 1.71,
+          "z": -3.270534230275097
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-0-crystal-4",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -3.4227457514062634,
+          "y": 1.0,
+          "z": -3.4377641290737886
+        },
+        {
+          "x": -3.4629179606750062,
+          "y": 1.78,
+          "z": -3.3141267819554185
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-1-light",
+      "kind": "light",
+      "position": {
+        "x": 3.5,
+        "y": 1.3,
+        "z": 2.8
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 2,
+      "range": 7,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-1-crystal-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 3.75,
+          "y": 1.0,
+          "z": 2.8
+        },
+        {
+          "x": 3.62,
+          "y": 1.5,
+          "z": 2.8
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-1-crystal-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 3.5772542485937366,
+          "y": 1.0,
+          "z": 3.0377641290737882
+        },
+        {
+          "x": 3.5370820393249938,
+          "y": 1.57,
+          "z": 2.914126781955418
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-1-crystal-2",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 3.2977457514062634,
+          "y": 1.0,
+          "z": 2.946946313073118
+        },
+        {
+          "x": 3.402917960675006,
+          "y": 1.6400000000000001,
+          "z": 2.8705342302750965
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-1-crystal-3",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 3.2977457514062634,
+          "y": 1.0,
+          "z": 2.6530536869268815
+        },
+        {
+          "x": 3.402917960675006,
+          "y": 1.71,
+          "z": 2.729465769724903
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-1-crystal-4",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 3.5772542485937366,
+          "y": 1.0,
+          "z": 2.5622358709262114
+        },
+        {
+          "x": 3.5370820393249938,
+          "y": 1.78,
+          "z": 2.6858732180445815
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-2-light",
+      "kind": "light",
+      "position": {
+        "x": -5.9,
+        "y": 2,
+        "z": 1.6
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 2,
+      "range": 7,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-2-crystal-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -5.65,
+          "y": 1.7,
+          "z": 1.6
+        },
+        {
+          "x": -5.78,
+          "y": 2.2,
+          "z": 1.6
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-2-crystal-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -5.822745751406264,
+          "y": 1.7,
+          "z": 1.8377641290737885
+        },
+        {
+          "x": -5.862917960675007,
+          "y": 2.27,
+          "z": 1.7141267819554185
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-2-crystal-2",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -6.102254248593737,
+          "y": 1.7,
+          "z": 1.7469463130731184
+        },
+        {
+          "x": -5.997082039324994,
+          "y": 2.3400000000000003,
+          "z": 1.670534230275097
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-2-crystal-3",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -6.102254248593737,
+          "y": 1.7,
+          "z": 1.4530536869268817
+        },
+        {
+          "x": -5.997082039324994,
+          "y": 2.41,
+          "z": 1.5294657697249034
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-2-crystal-4",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -5.822745751406264,
+          "y": 1.7,
+          "z": 1.3622358709262117
+        },
+        {
+          "x": -5.862917960675007,
+          "y": 2.4800000000000004,
+          "z": 1.4858732180445817
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-3-light",
+      "kind": "light",
+      "position": {
+        "x": 5.9,
+        "y": 2,
+        "z": -1.6
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 2,
+      "range": 7,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-3-crystal-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 6.15,
+          "y": 1.7,
+          "z": -1.6
+        },
+        {
+          "x": 6.0200000000000005,
+          "y": 2.2,
+          "z": -1.6
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-3-crystal-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 5.977254248593737,
+          "y": 1.7,
+          "z": -1.3622358709262117
+        },
+        {
+          "x": 5.937082039324994,
+          "y": 2.27,
+          "z": -1.4858732180445817
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-3-crystal-2",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 5.697745751406264,
+          "y": 1.7,
+          "z": -1.4530536869268817
+        },
+        {
+          "x": 5.802917960675007,
+          "y": 2.3400000000000003,
+          "z": -1.5294657697249032
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-3-crystal-3",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 5.697745751406264,
+          "y": 1.7,
+          "z": -1.7469463130731184
+        },
+        {
+          "x": 5.802917960675007,
+          "y": 2.41,
+          "z": -1.6705342302750967
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-3-crystal-4",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 5.977254248593737,
+          "y": 1.7,
+          "z": -1.8377641290737885
+        },
+        {
+          "x": 5.937082039324994,
+          "y": 2.4800000000000004,
+          "z": -1.7141267819554185
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-4-light",
+      "kind": "light",
+      "position": {
+        "x": 4.8,
+        "y": 4.2,
+        "z": 5.7
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 2,
+      "range": 7,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-4-crystal-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 5.05,
+          "y": 3.9000000000000004,
+          "z": 5.7
+        },
+        {
+          "x": 4.92,
+          "y": 4.4,
+          "z": 5.7
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-4-crystal-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 4.8772542485937365,
+          "y": 3.9000000000000004,
+          "z": 5.937764129073789
+        },
+        {
+          "x": 4.837082039324994,
+          "y": 4.470000000000001,
+          "z": 5.8141267819554185
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-4-crystal-2",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 4.597745751406263,
+          "y": 3.9000000000000004,
+          "z": 5.8469463130731185
+        },
+        {
+          "x": 4.7029179606750064,
+          "y": 4.54,
+          "z": 5.770534230275097
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-4-crystal-3",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 4.597745751406263,
+          "y": 3.9000000000000004,
+          "z": 5.553053686926882
+        },
+        {
+          "x": 4.7029179606750064,
+          "y": 4.61,
+          "z": 5.629465769724903
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "glow-4-crystal-4",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 4.8772542485937365,
+          "y": 3.9000000000000004,
+          "z": 5.462235870926212
+        },
+        {
+          "x": 4.837082039324994,
+          "y": 4.680000000000001,
+          "z": 5.585873218044582
+        }
+      ],
+      "radius": 0.09,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "crevice-light",
+      "kind": "light",
+      "position": {
+        "x": 0,
+        "y": -1.7,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 2,
+      "range": 6,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "fallen-root-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 0.0,
+          "y": -3,
+          "z": 0.9
+        },
+        {
+          "x": 0.25,
+          "y": -2.7,
+          "z": 1.1
+        },
+        {
+          "x": 0.4,
+          "y": -2.95,
+          "z": 1.3
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "fallen-root-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 2.6343064041494886,
+          "y": -3,
+          "z": -0.8984652982152779
+        },
+        {
+          "x": 2.8843064041494886,
+          "y": -2.7,
+          "z": -0.6984652982152779
+        },
+        {
+          "x": 3.0343064041494885,
+          "y": -2.95,
+          "z": -0.49846529821527785
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "fallen-root-2",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -3.8850419744597784,
+          "y": -3,
+          "z": 0.8938664268823734
+        },
+        {
+          "x": -3.6350419744597784,
+          "y": -2.7,
+          "z": 1.0938664268823735
+        },
+        {
+          "x": -3.4850419744597785,
+          "y": -2.95,
+          "z": 1.2938664268823734
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "fallen-root-3",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 3.0953046690116954,
+          "y": -3,
+          "z": -0.886219070214714
+        },
+        {
+          "x": 3.3453046690116954,
+          "y": -2.7,
+          "z": -0.686219070214714
+        },
+        {
+          "x": 3.4953046690116953,
+          "y": -2.95,
+          "z": -0.486219070214714
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "fallen-root-4",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -0.6798744467696206,
+          "y": -3,
+          "z": 0.8755493091276918
+        },
+        {
+          "x": -0.4298744467696206,
+          "y": -2.7,
+          "z": 1.0755493091276918
+        },
+        {
+          "x": -0.2798744467696206,
+          "y": -2.95,
+          "z": 1.2755493091276917
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "fallen-root-5",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -2.0926343802016962,
+          "y": -3,
+          "z": -0.8618935322910463
+        },
+        {
+          "x": -1.8426343802016962,
+          "y": -2.7,
+          "z": -0.6618935322910462
+        },
+        {
+          "x": -1.6926343802016963,
+          "y": -2.95,
+          "z": -0.46189353229104624
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "fallen-root-6",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 3.766065328542184,
+          "y": -3,
+          "z": 0.8452983120271826
+        },
+        {
+          "x": 4.016065328542184,
+          "y": -2.7,
+          "z": 1.0452983120271826
+        },
+        {
+          "x": 4.166065328542184,
+          "y": -2.95,
+          "z": 1.2452983120271828
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "fallen-root-7",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -3.461511430967868,
+          "y": -3,
+          "z": -0.8258202454786738
+        },
+        {
+          "x": -3.211511430967868,
+          "y": -2.7,
+          "z": -0.6258202454786739
+        },
+        {
+          "x": -3.061511430967868,
+          "y": -2.95,
+          "z": -0.4258202454786738
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "fallen-root-8",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 1.338928222397592,
+          "y": -3,
+          "z": 0.8035257615866187
+        },
+        {
+          "x": 1.588928222397592,
+          "y": -2.7,
+          "z": 1.0035257615866187
+        },
+        {
+          "x": 1.738928222397592,
+          "y": -2.95,
+          "z": 1.2035257615866186
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "fallen-root-9",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 1.4868769174542795,
+          "y": -3,
+          "z": -0.7784908945381698
+        },
+        {
+          "x": 1.7368769174542795,
+          "y": -2.7,
+          "z": -0.5784908945381697
+        },
+        {
+          "x": 1.8868769174542797,
+          "y": -2.95,
+          "z": -0.37849089453816975
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "fallen-root-10",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -3.5317556118258326,
+          "y": -3,
+          "z": 0.7508010244558593
+        },
+        {
+          "x": -3.2817556118258326,
+          "y": -2.7,
+          "z": 0.9508010244558593
+        },
+        {
+          "x": -3.1317556118258327,
+          "y": -2.95,
+          "z": 1.1508010244558593
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "fallen-root-11",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 3.721711868521518,
+          "y": -3,
+          "z": -0.7205505862130942
+        },
+        {
+          "x": 3.971711868521518,
+          "y": -2.7,
+          "z": -0.5205505862130941
+        },
+        {
+          "x": 4.121711868521518,
+          "y": -2.95,
+          "z": -0.3205505862130942
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "fallen-root-12",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -1.956978273980227,
+          "y": -3,
+          "z": 0.6878427473688982
+        },
+        {
+          "x": -1.706978273980227,
+          "y": -2.7,
+          "z": 0.8878427473688981
+        },
+        {
+          "x": -1.556978273980227,
+          "y": -2.95,
+          "z": 1.087842747368898
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "fallen-root-13",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -0.8355849071539619,
+          "y": -3,
+          "z": -0.6527890563202723
+        },
+        {
+          "x": -0.5855849071539619,
+          "y": -2.7,
+          "z": -0.4527890563202723
+        },
+        {
+          "x": -0.4355849071539619,
+          "y": -2.95,
+          "z": -0.25278905632027227
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "fallen-root-14",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 3.189288392653123,
+          "y": -3,
+          "z": 0.6155090618721268
+        },
+        {
+          "x": 3.439288392653123,
+          "y": -2.7,
+          "z": 0.8155090618721268
+        },
+        {
+          "x": 3.5892883926531227,
+          "y": -2.95,
+          "z": 1.0155090618721268
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "south",
+      "kind": "nav",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -6.5
+      },
+      "connectsTo": [
+        "hide-entry",
+        "front"
+      ]
+    },
+    {
+      "id": "hide-entry",
+      "kind": "nav",
+      "position": {
+        "x": 3.6,
+        "y": 0,
+        "z": -6.2
+      },
+      "connectsTo": [
+        "south",
+        "hide-inside"
+      ]
+    },
+    {
+      "id": "hide-inside",
+      "kind": "nav",
+      "position": {
+        "x": 3.6,
+        "y": 0,
+        "z": -4.6
+      },
+      "connectsTo": [
+        "hide-entry"
+      ]
+    },
+    {
+      "id": "front",
+      "kind": "nav",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -3
+      },
+      "connectsTo": [
+        "south",
+        "bridge-south",
+        "east-south",
+        "west-south"
+      ]
+    },
+    {
+      "id": "bridge-south",
+      "kind": "nav",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -1.8
+      },
+      "connectsTo": [
+        "front",
+        "bridge"
+      ]
+    },
+    {
+      "id": "bridge",
+      "kind": "nav",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "connectsTo": [
+        "bridge-south",
+        "bridge-north"
+      ]
+    },
+    {
+      "id": "bridge-north",
+      "kind": "nav",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 1.8
+      },
+      "connectsTo": [
+        "bridge",
+        "back"
+      ]
+    },
+    {
+      "id": "back",
+      "kind": "nav",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 3
+      },
+      "connectsTo": [
+        "bridge-north",
+        "north",
+        "east-north",
+        "west-north"
+      ]
+    },
+    {
+      "id": "north",
+      "kind": "nav",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 6.5
+      },
+      "connectsTo": [
+        "back"
+      ]
+    },
+    {
+      "id": "east",
+      "kind": "nav",
+      "position": {
+        "x": 6.5,
+        "y": 0,
+        "z": 0
+      },
+      "connectsTo": [
+        "east-south",
+        "east-north"
+      ]
+    },
+    {
+      "id": "east-south",
+      "kind": "nav",
+      "position": {
+        "x": 5.8,
+        "y": 0,
+        "z": -2.6
+      },
+      "connectsTo": [
+        "front",
+        "east"
+      ]
+    },
+    {
+      "id": "east-north",
+      "kind": "nav",
+      "position": {
+        "x": 5.8,
+        "y": 0,
+        "z": 2.7
+      },
+      "connectsTo": [
+        "east",
+        "back"
+      ]
+    },
+    {
+      "id": "west",
+      "kind": "nav",
+      "position": {
+        "x": -6.5,
+        "y": 0,
+        "z": 0
+      },
+      "connectsTo": [
+        "west-south",
+        "west-north"
+      ]
+    },
+    {
+      "id": "west-south",
+      "kind": "nav",
+      "position": {
+        "x": -5.8,
+        "y": 0,
+        "z": -2.7
+      },
+      "connectsTo": [
+        "front",
+        "west"
+      ]
+    },
+    {
+      "id": "west-north",
+      "kind": "nav",
+      "position": {
+        "x": -5.8,
+        "y": 0,
+        "z": 2.7
+      },
+      "connectsTo": [
+        "west",
+        "back",
+        "stair-foot"
+      ]
+    },
+    {
+      "id": "stair-foot",
+      "kind": "nav",
+      "position": {
+        "x": -6.5,
+        "y": 0,
+        "z": 5.2
+      },
+      "connectsTo": [
+        "west-north",
+        "stair-mid"
+      ]
+    },
+    {
+      "id": "stair-mid",
+      "kind": "nav",
+      "position": {
+        "x": -3.25,
+        "y": 1.5,
+        "z": 5.2
+      },
+      "connectsTo": [
+        "stair-foot",
+        "stair-top"
+      ]
+    },
+    {
+      "id": "stair-top",
+      "kind": "nav",
+      "position": {
+        "x": 0,
+        "y": 3,
+        "z": 5.2
+      },
+      "connectsTo": [
+        "stair-mid",
+        "landing"
+      ]
+    },
+    {
+      "id": "landing",
+      "kind": "nav",
+      "position": {
+        "x": 5.2,
+        "y": 3,
+        "z": 5.2
+      },
+      "connectsTo": [
+        "stair-top",
+        "balcony"
+      ]
+    },
+    {
+      "id": "balcony",
+      "kind": "nav",
+      "position": {
+        "x": 5.2,
+        "y": 3,
+        "z": 2.7
+      },
+      "connectsTo": [
+        "landing"
+      ]
+    },
+    {
+      "id": "door-north",
+      "kind": "portal",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 7.5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 4.2,
+        "y": 3.8,
+        "z": 0.4
+      }
+    },
+    {
+      "id": "door-east",
+      "kind": "portal",
+      "position": {
+        "x": 7.5,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "size": {
+        "x": 4.2,
+        "y": 3.8,
+        "z": 0.4
+      }
+    },
+    {
+      "id": "door-south",
+      "kind": "portal",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -7.5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "size": {
+        "x": 4.2,
+        "y": 3.8,
+        "z": 0.4
+      }
+    },
+    {
+      "id": "door-west",
+      "kind": "portal",
+      "position": {
+        "x": -7.5,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 270,
+        "z": 0
+      },
+      "size": {
+        "x": 4.2,
+        "y": 3.8,
+        "z": 0.4
+      }
+    },
+    {
+      "id": "crevice",
+      "kind": "pit",
+      "position": {
+        "x": 3,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 9,
+        "y": 3,
+        "z": 3
+      }
+    },
+    {
+      "id": "refuge",
+      "kind": "hide",
+      "position": {
+        "x": 3.6,
+        "y": 1,
+        "z": -4.6
+      }
+    },
+    {
+      "id": "room",
+      "kind": "volume",
+      "position": {
+        "x": 0,
+        "y": 2.5,
+        "z": 0
+      },
+      "size": {
+        "x": 14.8,
+        "y": 11,
+        "z": 14.8
+      }
+    }
+  ],
+  "views": [
+    {
+      "id": "entrance",
+      "position": {
+        "x": 0,
+        "y": 1.65,
+        "z": -6.5
+      },
+      "target": {
+        "x": 0,
+        "y": 2.8,
+        "z": 2.5
+      },
+      "fieldOfView": 72
+    },
+    {
+      "id": "balcony",
+      "position": {
+        "x": 5.2,
+        "y": 4.65,
+        "z": 3
+      },
+      "target": {
+        "x": -1,
+        "y": 1,
+        "z": 0
+      },
+      "fieldOfView": 78
+    }
+  ],
+  "navigation": {
+    "radius": 0.35,
+    "height": 1.8,
+    "climb": 0.25,
+    "slope": 35,
+    "voxel": 0.08,
+    "sampleDistance": 0.25,
+    "maxVerticalSnap": 0.15
+  }
+}

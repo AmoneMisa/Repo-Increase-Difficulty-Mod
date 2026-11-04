@@ -88,8 +88,22 @@ internal static class GearEffects
                 if (kv.Key == null || !kv.Key.isActiveAndEnabled || kv.Value <= Time.time ||
                     (kv.Key.HasHealth && kv.Key.Health != null && kv.Key.Health.dead))
                     Scratch.Add(kv.Key);
-                else if (kv.Key.HasRigidbody && kv.Key.Rigidbody.physGrabObject != null)
-                    kv.Key.Rigidbody.physGrabObject.OverrideGrabDisable(0.2f);
+                else
+                {
+                    var frozen = kv.Key;
+                    // The native FreezeTimer only zeroes the rigidbody velocity; most monsters keep walking
+                    // through their NavMeshAgent. Hold the agent too, and keep the native timer topped up.
+                    // Freeze() is an RPC to every client: top up in ~1 s chunks, never per frame, and never past the end.
+                    float left = kv.Value - Time.time;
+                    if (frozen.FreezeTimer < Mathf.Min(0.3f, left - 0.05f)) frozen.Freeze(Mathf.Min(1f, left));
+                    if (frozen.HasNavMeshAgent && frozen.NavMeshAgent != null)
+                    {
+                        frozen.NavMeshAgent.Stop(0.2f);
+                        frozen.NavMeshAgent.ResetPath();
+                    }
+                    if (frozen.HasRigidbody && frozen.Rigidbody.physGrabObject != null)
+                        frozen.Rigidbody.physGrabObject.OverrideGrabDisable(0.2f);
+                }
             }
             foreach (var e in Scratch)
                 Frozen.Remove(e);

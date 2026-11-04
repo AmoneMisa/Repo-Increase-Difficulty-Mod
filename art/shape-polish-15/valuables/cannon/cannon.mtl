@@ -1,0 +1,12 @@
+# Blender 5.2.1 LTS MTL File: 'cannon.blend'
+# www.blender.org
+
+newmtl Painted_atlas_cannon.001
+Ns 324.899994
+Ka 0.650000 0.650000 0.650000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.460000
+d 1.000000
+illum 3
+map_Kd v11_cannon_atlas.png

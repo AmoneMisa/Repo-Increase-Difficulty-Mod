@@ -23,19 +23,21 @@ internal static class CollectionCatalog
 {
     internal static readonly IReadOnlyList<CollectionEntry> Entries=new[]{
         new CollectionEntry("crystal_skull",LootMap.Sunstone|LootMap.Swiftbroom|LootMap.McJannek,.25f,2500,4000,LootFragility.VeryFragile),
-        new CollectionEntry("bomb",LootMap.McJannek,30,28000,35000,LootFragility.Reinforced),
+        new CollectionEntry("bomb",LootMap.McJannek,9,28000,35000,LootFragility.Reinforced),
         new CollectionEntry("bath_gift_set",LootMap.Sunstone|LootMap.Museum|LootMap.Manor,.8f,2000,3000),
-        new CollectionEntry("cannon",LootMap.Manor|LootMap.Sunstone|LootMap.Museum,55,15000,15000,LootFragility.Reinforced),
+        new CollectionEntry("cannon",LootMap.Manor|LootMap.Sunstone|LootMap.Museum,8,15000,15000,LootFragility.Reinforced),
         new CollectionEntry("water_timer",LootMap.McJannek|LootMap.Swiftbroom|LootMap.Manor|LootMap.Museum,.65f,2200,3200,LootFragility.Fragile),
         new CollectionEntry("centrifuge",LootMap.McJannek,4.5f,7000,9500,LootFragility.Sturdy),
-        new CollectionEntry("skeleton",LootMap.McJannek|LootMap.Sunstone|LootMap.Museum,10,12000,15000,LootFragility.Sturdy),
+        new CollectionEntry("skeleton",LootMap.McJannek|LootMap.Sunstone|LootMap.Museum,1.8f,12000,15000,LootFragility.Sturdy),
         new CollectionEntry("robot_vacuum",LootMap.Manor|LootMap.Museum,3.5f,6000,8000,LootFragility.Sturdy),
         new CollectionEntry("graphics_card",LootMap.Museum|LootMap.McJannek,.75f,4500,5500,LootFragility.VeryFragile),
         new CollectionEntry("ram_pair",LootMap.Museum|LootMap.McJannek,.15f,4500,5500,LootFragility.VeryFragile),
         new CollectionEntry("monoblock_pc",LootMap.McJannek|LootMap.Museum|LootMap.Manor|LootMap.Sunstone,3,6000,8000),
         new CollectionEntry("gold_ingot",LootMap.Sunstone|LootMap.McJannek,3,3500,4800,LootFragility.Reinforced),
-        new CollectionEntry("maneki_neko",LootMap.Museum|LootMap.Manor,6.5f,12000,16000,LootFragility.Fragile)
+        new CollectionEntry("maneki_neko",LootMap.Museum|LootMap.Manor,6,12000,16000,LootFragility.Fragile)
     };
+    internal static float SkeletonPartMass(int index)=>index<3?.16f:.06f;
+    internal static float TotalMass(CollectionEntry entry)=>entry.Mass+(entry.Key=="skeleton"?3*SkeletonPartMass(0)+12*SkeletonPartMass(3):0);
     internal static LootDurability DurabilityFor(LootFragility kind)
     {
         switch(kind)

@@ -10,6 +10,8 @@ args=argparse.ArgumentParser(); args.add_argument('--root', type=Path, required=
 ROOT=args.parse_args(sys.argv[sys.argv.index('--')+1:]).root.resolve()
 OUT=ROOT/'src'/'Art'; OUT.mkdir(parents=True,exist_ok=True)
 ART=ROOT/'art'; ART.mkdir(parents=True,exist_ok=True)
+POLISH=ART/'shape-polish-15'; POLISH.mkdir(parents=True,exist_ok=True)
+bpy.context.preferences.filepaths.save_version=0
 bpy.ops.object.select_all(action='SELECT'); bpy.ops.object.delete(use_global=False)
 scene=bpy.context.scene; scene.render.engine='CYCLES'; scene.cycles.samples=24
 scene.render.resolution_x=1600; scene.render.resolution_y=1000; scene.render.resolution_percentage=100
@@ -141,8 +143,18 @@ def mesh_object(name,verts,faces,mat):
     bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT'); bpy.ops.uv.smart_project(island_margin=.025); bpy.ops.object.mode_set(mode='OBJECT')
     return finish(o,name,mat)
 
-def shell(name,rings,mat,sides=12):
+def interpolated(rows,steps=4):
+    result=[]
+    for i in range(len(rows)-1):
+        a,b,c,d=rows[max(0,i-1)],rows[i],rows[i+1],rows[min(len(rows)-1,i+2)]
+        for j in range(steps):
+            t=j/steps
+            result.append(tuple(max(min(b[k],c[k]),min(max(b[k],c[k]),.5*(2*b[k]+(-a[k]+c[k])*t+(2*a[k]-5*b[k]+4*c[k]-d[k])*t*t+(-a[k]+3*b[k]-3*c[k]+d[k])*t*t*t))) for k in range(len(b))))
+    return result+[rows[-1]]
+
+def shell(name,rings,mat,sides=24):
     """Tapered elliptical sections along Y: (y, half-width, half-height, center-z)."""
+    rings=interpolated(rings);sides=max(sides,24)
     verts=[(w*math.cos(j*2*math.pi/sides),y,z+h*math.sin(j*2*math.pi/sides)) for y,w,h,z in rings for j in range(sides)]
     faces=[]
     for i in range(len(rings)-1):
@@ -153,18 +165,19 @@ def shell(name,rings,mat,sides=12):
 
 def limb(name,side,mat,inset=False):
     path=[(.035,.245),(.10,.22),(.18,.165),(.25,.085),(.305,-.015),(.333,-.11),(.33,-.175),(.353,-.21)]
-    verts=[]
+    path=interpolated(path,4);verts=[]
+    section=[(-.8,-1),(.8,-1),(1,-.65),(1,.65),(.8,1),(-.8,1),(-1,.65),(-1,-.65)]
     for i,(x,y) in enumerate(path):
         before=Vector(path[max(0,i-1)]); after=Vector(path[min(len(path)-1,i+1)])
         tangent=(after-before).normalized(); normal=Vector((-tangent.y,tangent.x))
-        width=(.035-i*.0015)*(.50 if inset else 1)
-        for across,up in ((-1,-1),(1,-1),(1,1),(-1,1)):
+        width=(.035-i/(len(path)-1)*.0105)*(.50 if inset else 1)
+        for across,up in section:
             v=Vector((x,y))+normal*width*across
             verts.append((side*v.x,v.y,.10+(.012 if inset else 0)+up*(.003 if inset else .013)))
-    faces=[(0,1,2,3)]
+    faces=[tuple(range(8))]
     for i in range(len(path)-1):
-        for j in range(4): faces.append((i*4+j,i*4+(j+1)%4,(i+1)*4+(j+1)%4,(i+1)*4+j))
-    faces.append(tuple(range(len(verts)-4,len(verts))))
+        for j in range(8): faces.append((i*8+j,i*8+(j+1)%8,(i+1)*8+(j+1)%8,(i+1)*8+j))
+    faces.append(tuple(range(len(verts)-8,len(verts))))
     return mesh_object(name,verts,faces,mat)
 
 def draw_cable(side):
@@ -182,7 +195,7 @@ def box(name,loc,size,mat,bevel=.004):
     bpy.ops.mesh.primitive_cube_add(size=1,location=loc); o=bpy.context.object; o.dimensions=size
     bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
     if bevel:
-        mod=o.modifiers.new('Single cut edges','BEVEL'); mod.width=bevel; mod.segments=1
+        mod=o.modifiers.new('Rounded manufactured edges','BEVEL'); mod.width=bevel; mod.segments=4
         bpy.ops.object.modifier_apply(modifier=mod.name)
     # Small reproducible irregularities in casing corners; functional anchors stay unchanged.
     if name in ('Receiver','Cooling block','Pressure body','Speaker housing'):
@@ -191,11 +204,13 @@ def box(name,loc,size,mat,bevel=.004):
             vertex.co.z += .002*math.sin(vertex.co.x*53)
     return finish(o,name,mat)
 def cylinder(name,loc,r,depth,mat,axis='Z',verts=10):
-    bpy.ops.mesh.primitive_cylinder_add(vertices=verts,radius=r,depth=depth,location=loc)
+    bpy.ops.mesh.primitive_cylinder_add(vertices=max(24 if r>.025 else 12,verts),radius=r,depth=depth,location=loc)
     o=bpy.context.object
     if axis=='Y': o.rotation_euler.x=math.pi/2
     if axis=='X': o.rotation_euler.y=math.pi/2
     bpy.ops.object.transform_apply(location=False,rotation=True,scale=True)
+    mod=o.modifiers.new('Turned rim radius','BEVEL');mod.width=min(r*.12,depth*.20,.004);mod.segments=3
+    bpy.ops.object.modifier_apply(modifier=mod.name)
     return finish(o,name,mat)
 def bar(name,a,b,r,mat):
     mid=(Vector(a)+Vector(b))/2; o=cylinder(name,mid,r,(Vector(b)-Vector(a)).length,mat,verts=6)
@@ -219,8 +234,12 @@ def grip():
     for z in (-.16,-.11,-.06):
         tread=box('Grip tread',(0,-.174+.28*(z+.08),z),(.088,.014,.014),steel,.003)
         tread.rotation_euler.x=-.28
-    box('Trigger guard bottom',(0,.005,-.12),(.035,.17,.025),steel,.004)
-    box('Trigger guard front',(0,.08,-.065),(.035,.025,.12),steel,.004)
+    curve=bpy.data.curves.new('Continuous curved trigger guard','CURVE');curve.dimensions='3D';curve.resolution_u=5;curve.bevel_depth=.011;curve.bevel_resolution=2
+    spline=curve.splines.new('BEZIER');spline.bezier_points.add(4)
+    for p,co in zip(spline.bezier_points,[(0,-.075,-.085),(0,-.050,-.125),(0,.037,-.130),(0,.079,-.080),(0,.065,-.025)]):
+        p.co=co;p.handle_left_type='AUTO';p.handle_right_type='AUTO'
+    guard=bpy.data.objects.new('Curved trigger guard',curve);scene.collection.objects.link(guard)
+    bpy.ops.object.select_all(action='DESELECT');guard.select_set(True);bpy.context.view_layer.objects.active=guard;bpy.ops.object.convert(target='MESH');finish(guard,guard.name,steel)
     box('Trigger',(0,.007,-.028),(.022,.025,.07),bone,.003)
 
 def crossbow():
@@ -291,11 +310,18 @@ for key,builder in [('poison',crossbow),('ice',ice),('sticky',sticky),('decoy',d
     parts=[]; origin,last=builder(); scene.frame_set(1)
     data={'version':1,'fps':30,'frames':last,'parts':[]}
     for o in parts:
+        bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o
+        if o.name!='Specification plate' and not o.name.startswith('Specification plate.'):
+            bpy.ops.object.shade_smooth_by_angle(angle=math.radians(50),keep_sharp_edges=False)
+            normal=o.modifiers.new('Weighted manufacturing normals','WEIGHTED_NORMAL');normal.keep_sharp=True;normal.weight=30
+            bpy.ops.object.modifier_apply(modifier=normal.name)
+        if not o.data.uv_layers:
+            bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT');bpy.ops.uv.smart_project(island_margin=.02);bpy.ops.object.mode_set(mode='OBJECT')
         mesh=o.data; mesh.calc_loop_triangles(); vertices=[]; normals=[]; uv=[]; indices=[]
         for tri in mesh.loop_triangles:
             for li in reversed(tri.loops):
                 loop=mesh.loops[li]; vertices.append(vec(C@mesh.vertices[loop.vertex_index].co))
-                normals.append(vec(C@tri.normal)); p=mesh.uv_layers.active.data[li].uv if mesh.uv_layers.active else (0,0)
+                normals.append(vec(C@mesh.corner_normals[li].vector)); p=mesh.uv_layers.active.data[li].uv if mesh.uv_layers.active else (0,0)
                 uv.append({'x':float(p[0]),'y':float(p[1])}); indices.append(len(indices))
         mat=mesh.materials[0]; texture_name=key+'_skin.png' if mat==skinmats[key] else 'workshop_wear.png'
         col=mat.diffuse_color
@@ -305,6 +331,21 @@ for key,builder in [('poison',crossbow),('ice',ice),('sticky',sticky),('decoy',d
         data['parts'].append(record); scene.frame_set(1)
     (OUT/(key+'.mesh.json')).write_text(json.dumps(data,separators=(',',':')),encoding='utf8')
     models[key]=list(parts)
+    # Portable meshes use the exact same parts and animation, with the muzzle at zero.
+    folder=POLISH/key;folder.mkdir(exist_ok=True)
+    bpy.ops.object.select_all(action='DESELECT')
+    export_root=bpy.data.objects.new(key+' muzzle origin',None);scene.collection.objects.link(export_root);export_root.location=-Vector(origin)
+    for o in parts:o.parent=export_root;o.select_set(True)
+    export_root.select_set(True)
+    scene.frame_start=1;scene.frame_end=last
+    bpy.ops.export_scene.gltf(filepath=str(folder/(key+'.glb')),use_selection=True,export_format='GLB',export_animations=True,export_force_sampling=True)
+    bpy.ops.wm.obj_export(filepath=str(folder/(key+'.obj')),export_selected_objects=True,path_mode='COPY',forward_axis='NEGATIVE_Z',up_axis='Y')
+    # OBJ needs explicit companions because packed Blender image paths may be relative.
+    import shutil
+    for image in [wear,textures[key]]:shutil.copyfile(OUT/(image.name+'.png'),folder/(image.name+'.png'))
+    mtl=folder/(key+'.mtl');mtl.write_text('\n'.join('map_Kd '+Path(line.split()[-1].replace('\\','/')).name if line.startswith('map_Kd ') else line for line in mtl.read_text().splitlines())+'\n')
+    for o in parts:o.parent=None
+    bpy.data.objects.remove(export_root,do_unlink=True)
     # Presentation offsets on parents are excluded from the Unity export above.
     parent=bpy.data.objects.new(key.upper()+' / animation 1-30',None); scene.collection.objects.link(parent); parent.location=offset[key]
     for o in parts: o.parent=parent
@@ -322,6 +363,7 @@ bpy.ops.object.camera_add(location=(2.4,3.4,3.6)); camera=bpy.context.object
 camera.rotation_euler=(Vector((0,.16,.2))-camera.location).to_track_quat('-Z','Y').to_euler(); camera.data.type='ORTHO'; camera.data.ortho_scale=3.65; scene.camera=camera
 scene.frame_end=30; scene.frame_set(1)
 bpy.ops.wm.save_as_mainfile(filepath=str(ART/'ihm_items.blend'))
+shutil.copyfile(ART/'ihm_items.blend',POLISH/'weapons.blend')
 scene.render.filepath=str(ART/'item_lineup.png'); bpy.ops.render.render(write_still=True)
 
 # Square transparent inventory renders, with the same geometry as the runtime export.
@@ -333,4 +375,8 @@ for key,objects in models.items():
     camera.location=center+Vector((1,1.5,1)); camera.rotation_euler=(center-camera.location).to_track_quat('-Z','Y').to_euler()
     camera.data.ortho_scale=.94 if key!='decoy' else .65
     scene.render.filepath=str(OUT/(key+'_inventory.png')); bpy.ops.render.render(write_still=True)
+    scene.render.resolution_x=900;scene.render.resolution_y=900;scene.render.film_transparent=False
+    scene.world.color=(.20,.22,.24)
+    scene.render.filepath=str(POLISH/key/(key+'_preview.png'));bpy.ops.render.render(write_still=True)
+    scene.render.resolution_x=256;scene.render.resolution_y=256;scene.render.film_transparent=True
 print('IHM_ART_OK',sum(len(json.loads((OUT/(k+'.mesh.json')).read_text())['parts']) for k in models),'parts')

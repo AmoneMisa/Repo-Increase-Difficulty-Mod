@@ -13,14 +13,14 @@ internal sealed class PlayerFreezeEffect : MonoBehaviour
     internal static readonly List<PlayerFreezeEffect> Active = new();
     internal PlayerAvatar Avatar;
     private float _until;
-    private int _scene;
+    private Scene _scene;
     private readonly FrostCoating _frost = new();
     private bool _coated;
     private NativeHudPanel _note;
     private TextMeshProUGUI _label;
 
     internal float Remaining => Avatar != null && Avatar.isActiveAndEnabled && !Avatar.isDisabled && !Avatar.deadSet &&
-        _scene == SceneManager.GetActiveScene().handle ? Mathf.Max(0f, _until - Time.time) : 0f;
+        _scene == SceneManager.GetActiveScene() ? Mathf.Max(0f, _until - Time.time) : 0f;
 
     internal static void Apply(PlayerAvatar avatar, float seconds)
     {
@@ -29,7 +29,9 @@ internal sealed class PlayerFreezeEffect : MonoBehaviour
         var effect = avatar.GetComponent<PlayerFreezeEffect>();
         if (effect == null) effect = avatar.gameObject.AddComponent<PlayerFreezeEffect>();
         effect.Avatar = avatar;
-        int scene = SceneManager.GetActiveScene().handle;
+        // Scene.handle changed from int to SceneHandle in Unity 6. Compare scenes
+        // through the stable equality operator instead of binding to the old getter.
+        Scene scene = SceneManager.GetActiveScene();
         if (effect._scene != scene) effect._until = 0f;
         effect._scene = scene;
         effect._until = Mathf.Max(effect._until, Time.time + Mathf.Min(seconds, 30f));

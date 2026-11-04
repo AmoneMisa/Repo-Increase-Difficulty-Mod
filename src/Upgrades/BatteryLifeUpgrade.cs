@@ -51,9 +51,9 @@ internal static class BatteryLifeUpgrade
             return;
 
         // Distinct front artwork and matching inventory renders for each weapon category.
-        DefineGun(BulletId, "Bullet Gun Battery Life", "Upgrade_Gun-Bullet-Count.png");
-        DefineGun(LaserId, "Laser Gun Battery Life", "Upgrade_Gun-Laser-Capacity.png");
-        DefineGun(TranqId, "Tranq Gun Battery Life", "Upgrade_Gun-Tranq-Capacity.png");
+        DefineGun(BulletId, "Bullet Gun Extra Shots", "Upgrade_Gun-Bullet-Count.png");
+        DefineGun(LaserId, "Laser Gun Extra Shots", "Upgrade_Gun-Laser-Capacity.png");
+        DefineGun(TranqId, "Tranq Gun Extra Shots", "Upgrade_Gun-Tranq-Capacity.png");
 
         PlayerUpgradeRegistry.Define(new PlayerUpgradeRegistry.Definition
         {
@@ -72,7 +72,7 @@ internal static class BatteryLifeUpgrade
         {
             Id = id,
             DisplayName = name,
-            Description = "This gun's battery lasts longer. Stacks per level (up to +100%).",
+            Description = $"Each level gives this gun type {ModConfig.GunExtraBulletsPerLevel.Value:0.##} extra shot(s) from every battery charge.",
             MaxLevel = EffectiveMaxLevel(false),
             BaseShopPrice = ModConfig.GunBatteryBasePrice.Value,
             IconFile = iconFile,
@@ -81,6 +81,7 @@ internal static class BatteryLifeUpgrade
 
     internal static int EffectiveMaxLevel(bool drone)
     {
+        if (!drone) return Mathf.Clamp(ModConfig.GunExtraBulletsMaxLevel.Value, 1, 100);
         float percent = Mathf.Clamp(drone ? ModConfig.DroneBatteryPercentPerLevel.Value : ModConfig.GunBatteryPercentPerLevel.Value, .01f, .5f);
         int configured = drone ? ModConfig.DroneBatteryMaxLevel.Value : ModConfig.GunBatteryMaxLevel.Value;
         return Mathf.Clamp(configured, 1, Mathf.CeilToInt(1f / percent));
@@ -111,9 +112,16 @@ internal static class BatteryLifeUpgrade
         _ => null,
     };
 
-    private static float PercentPerLevelFor(Category c) =>
-        c == Category.Drone ? ModConfig.DroneBatteryPercentPerLevel.Value
-                            : ModConfig.GunBatteryPercentPerLevel.Value;
+    // Shots one full battery gives a gun, before the upgrade: whole bars for bar-per-shot guns, else 100 / drain.
+    private static float BaseShots(ItemBattery battery)
+    {
+        var gun = battery.GetComponent<ItemGun>();
+        if (gun == null) return 0f;
+        float shots = gun.batteryDrainFullBar
+            ? battery.batteryBars / (float)Mathf.Max(1, gun.batteryDrainFullBars)
+            : 100f / Mathf.Max(1f, gun.batteryDrain);
+        return Mathf.Max(1f, shots);
+    }
 
     // Who is using this item. PhysGrabObject.lastPlayerGrabbing only tracks physical grabs and clears ~3 s after
     // release, so it misses equipped guns and deployed drones. Equipped items name their owner; drones name
@@ -147,8 +155,12 @@ internal static class BatteryLifeUpgrade
         if (user == null || string.IsNullOrEmpty(user.steamID)) return 1f;
         int cap = EffectiveMaxLevel(category == Category.Drone);
         int level = Mathf.Clamp(RepoUpgrades.GetUpgrade(UpgradeIdFor(category))?.GetLevel(user.steamID) ?? 0, 0, Mathf.Max(0, cap));
-        float bonus = Mathf.Clamp01(PercentPerLevelFor(category) * level);
-        return 1f / (1f + bonus);
+        if (category == Category.Drone)
+            return 1f / (1f + Mathf.Clamp01(ModConfig.DroneBatteryPercentPerLevel.Value * level));
+        // Guns: +N bullets per level, expressed as a cheaper drain so the native bar/charge logic is untouched.
+        float shots = BaseShots(battery);
+        if (shots <= 0f) return 1f;
+        return shots / (shots + level * Mathf.Max(0f, ModConfig.GunExtraBulletsPerLevel.Value));
     }
 
     private static void SetDrainResult(ItemBattery battery, float before, float rawCost)

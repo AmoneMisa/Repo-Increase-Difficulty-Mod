@@ -14,6 +14,8 @@ public sealed class QuestContext
     public int Day;                       // levelsCompleted, drives late-run difficulty
     public QuestRank Rank = QuestRank.F;   // the run owner's contract rank
     public bool HasPits;
+    public bool Halloween;                 // the Halloween event (moon ritual) is active
+    public int Towers;                     // extraction points that can host the moon's judging
     public int HaulGoal;                   // RoundDirector.haulGoal for extraction quests
     public int ValuableCount;              // how many ValuableObjects are on the level (intact-extract gating)
     public readonly List<string> EnemyNames = new();
@@ -112,6 +114,17 @@ public static class QuestCatalog
         builders.Add(() => BuildKillAny(ctx));
         builders.Add(() => BuildMeleeKill(ctx));
         builders.Add(() => BuildNoGunKills(ctx));
+        builders.Add(() => BuildGunKill(ctx));
+        builders.Add(() => BuildHandKill(ctx));
+        builders.Add(() => BuildStun(ctx));
+        if (ctx.Players > 1)
+            builders.Add(() => BuildRevive(ctx));
+        if (ctx.Halloween && ctx.Towers > 0)
+            builders.Add(() => BuildMoonRitual(ctx));
+        if (ctx.EnemyNames.Count > 0)
+            builders.Add(() => BuildSoulExtract(ctx));
+        if (ctx.HaulGoal > 0)
+            builders.Add(() => BuildExtractionRush(ctx));
 
         if (ctx.EnemyNames.Count > 0)
             builders.Add(() => BuildKillType(ctx));
@@ -123,6 +136,10 @@ public static class QuestCatalog
             builders.Add(() => BuildReachHaul(ctx));
         if (ctx.ValuableCount > 0)
             builders.Add(() => BuildIntactExtract(ctx));
+        if (ctx.ValuableCount > 0)
+            builders.Add(() => BuildExtractCount(ctx));
+        if (ctx.ValuableCount > 0 && ctx.HaulGoal > 0)
+            builders.Add(() => BuildHighValueExtract(ctx));
         builders.Add(() => BuildNoDeaths(ctx));
 
         int want = Random.Range(
@@ -295,6 +312,141 @@ public static class QuestCatalog
             Rank = ctx.Rank,
             Target = target,
             Title = $"Extract {target} valuables undamaged",
+        };
+    }
+
+    private static ActiveQuest BuildGunKill(QuestContext ctx)
+    {
+        int target = ScaleKills(ctx, 3f);
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team,
+            Category = QuestCategory.Combat,
+            Objective = ObjectiveType.GunKill,
+            Rank = ctx.Rank,
+            Target = target,
+            Title = $"Kill {target} enemies with guns",
+        };
+    }
+
+    private static ActiveQuest BuildExtractCount(QuestContext ctx)
+    {
+        // Damaged loot counts too, so it can ask for more than the intact quest; still capped by what exists.
+        int target = Mathf.Clamp(ScaleKills(ctx, 3f), 1, Mathf.Max(1, ctx.ValuableCount));
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team,
+            Category = QuestCategory.Extraction,
+            Objective = ObjectiveType.ExtractCount,
+            Rank = ctx.Rank,
+            Target = target,
+            Title = $"Extract {target} valuables",
+        };
+    }
+
+    private static ActiveQuest BuildHighValueExtract(QuestContext ctx)
+    {
+        // "Valuable" is relative to the quota: about a twelfth of it, rounded to $500, never below $1,000.
+        int minimum = Mathf.Max(1000, Mathf.RoundToInt(ctx.HaulGoal / 12f / 500f) * 500);
+        int target = Mathf.Clamp(ScaleKills(ctx, 1f), 1, Mathf.Max(1, ctx.ValuableCount));
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team,
+            Category = QuestCategory.Extraction,
+            Objective = ObjectiveType.HighValueExtract,
+            Rank = ctx.Rank,
+            Target = target,
+            Param = minimum.ToString(),
+            Title = $"Extract {target} valuables worth ${minimum / 1000f:0.#}K or more each",
+        };
+    }
+
+    private static ActiveQuest BuildHandKill(QuestContext ctx)
+    {
+        int target = Mathf.Max(1, ScaleKills(ctx, 1.5f));
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team,
+            Category = QuestCategory.Combat,
+            Objective = ObjectiveType.HandKill,
+            Rank = ctx.Rank,
+            Target = target,
+            Title = $"Kill {target} enemies bare-handed (grab, throw, push - no weapons)",
+        };
+    }
+
+    private static ActiveQuest BuildStun(QuestContext ctx)
+    {
+        int target = ScaleKills(ctx, 4f);
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team,
+            Category = QuestCategory.Combat,
+            Objective = ObjectiveType.StunEnemies,
+            Rank = ctx.Rank,
+            Target = target,
+            Title = $"Stun {target} enemies",
+        };
+    }
+
+    private static ActiveQuest BuildRevive(QuestContext ctx)
+    {
+        int target = Mathf.Clamp(Mathf.RoundToInt(QuestRankInfo.Scale(ctx.Rank) / 2f), 1, Mathf.Max(1, ctx.Players));
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team,
+            Category = QuestCategory.Survival,
+            Objective = ObjectiveType.Revive,
+            Rank = ctx.Rank,
+            Target = target,
+            Title = target == 1 ? "Revive a fallen teammate" : $"Revive {target} fallen teammates",
+        };
+    }
+
+    private static ActiveQuest BuildMoonRitual(QuestContext ctx)
+    {
+        // One approved offering per extraction point; higher ranks ask for more, never more than exist.
+        int target = Mathf.Clamp(1 + (int)ctx.Rank / 3, 1, ctx.Towers);
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team,
+            Category = QuestCategory.Extraction,
+            Objective = ObjectiveType.MoonRitual,
+            Rank = ctx.Rank,
+            Target = target,
+            Param = "ritual",
+            Title = target == 1 ? "A moon is judging: win its approval at an extraction point"
+                                : $"A moon is judging: win its approval at {target} extraction points",
+        };
+    }
+
+    private static ActiveQuest BuildSoulExtract(QuestContext ctx)
+    {
+        int target = Mathf.Max(1, ScaleKills(ctx, 1.5f));
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team,
+            Category = QuestCategory.Extraction,
+            Objective = ObjectiveType.SoulExtract,
+            Rank = ctx.Rank,
+            Target = target,
+            Title = $"Extract {target} enemy souls",
+        };
+    }
+
+    private static ActiveQuest BuildExtractionRush(QuestContext ctx)
+    {
+        // Generous at low ranks (10 minutes), tighter by 30 s per rank, never under 5 minutes.
+        int seconds = Mathf.Max(300, 600 - 30 * (int)ctx.Rank);
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team,
+            Category = QuestCategory.Extraction,
+            Objective = ObjectiveType.ExtractionRush,
+            Rank = ctx.Rank,
+            Target = seconds,
+            Param = seconds.ToString(),
+            Title = $"Close every extraction within {seconds / 60}:{seconds % 60:00}",
         };
     }
 

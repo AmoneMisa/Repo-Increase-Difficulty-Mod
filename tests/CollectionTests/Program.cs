@@ -32,10 +32,13 @@ foreach(var name in new[]{"Level - Shop Suburb","Level - Arena Fight","Level - T
     Assert(CollectionCatalog.Identify(name,"Sunstone Valley Resort")==LootMap.None,"No shop/arena/custom-map leakage "+name);
 CollectionEntry Get(string key)=>CollectionCatalog.Entries.Single(e=>e.Key==key);
 Assert(Get("gold_ingot").Mass==3,"Small ingot is 3 kg");
-Assert(Get("maneki_neko").Mass==6.5f&&Get("maneki_neko").Fragility==LootFragility.Fragile,"Porcelain neko is 6.5 kg and fragile");
+Assert(Get("maneki_neko").Mass==6&&Get("maneki_neko").Fragility==LootFragility.Fragile,"Porcelain neko is 6 kg and fragile");
 foreach(var key in new[]{"crystal_skull","ram_pair","graphics_card"})Assert(Get(key).Fragility==LootFragility.VeryFragile,key+" very fragile");
 Assert(Get("water_timer").Fragility==LootFragility.Fragile,"Fragile liquid watch");
-Assert(Get("bomb").Mass==30&&Get("cannon").Mass>Get("centrifuge").Mass,"Bomb now 30 kg; cannon remains heavy");
+Assert(Get("bomb").Mass==9&&Get("cannon").Mass==8,"Requested 9 kg bomb and 8 kg cannon");
+Assert(Math.Abs(CollectionCatalog.TotalMass(Get("skeleton"))-3)<.0001f,"Skeleton is 3 kg including every joint body");
+foreach(var entry in CollectionCatalog.Entries.Where(e=>e.Key!="bomb"&&e.Key!="cannon"&&e.Key!="maneki_neko"))
+ Assert(CollectionCatalog.TotalMass(entry)<=6,"Other custom loot has no remaining mass above 6 kg: "+entry.Key);
 Assert(Get("crystal_skull").Mass<Get("robot_vacuum").Mass&&Get("monoblock_pc").Mass<Get("robot_vacuum").Mass,"Light skull and PC");
 foreach(var key in new[]{"robot_vacuum","centrifuge","skeleton"})Assert(Get(key).Fragility==LootFragility.Sturdy,key+" sturdier than normal");
 foreach(var key in new[]{"cannon","bomb"})Assert(Get(key).Fragility==LootFragility.Reinforced,key+" reinforced beyond sturdy");

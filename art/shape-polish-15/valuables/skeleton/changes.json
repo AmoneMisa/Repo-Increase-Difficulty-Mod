@@ -1,0 +1,54 @@
+{
+  "asset": "skeleton",
+  "runtime": "v09_skeleton.mesh.json",
+  "triangles_before": 19904,
+  "triangles_after": 32266,
+  "bounds_before_xyz": [
+    [
+      -0.2820749878883362,
+      -0.15276414155960083,
+      0.0012235864996910095
+    ],
+    [
+      0.2820749878883362,
+      0.37276414036750793,
+      1.6888067722320557
+    ]
+  ],
+  "bounds_after_xyz": [
+    [
+      -0.2820749878883362,
+      -0.15237678587436676,
+      0.0012235864996910095
+    ],
+    [
+      0.2820749878883362,
+      0.37237676978111267,
+      1.6888067722320557
+    ]
+  ],
+  "groups": [
+    "caster_0",
+    "caster_1",
+    "caster_2",
+    "caster_3",
+    "caster_4",
+    "foot_left",
+    "foot_right",
+    "forearm_left",
+    "forearm_right",
+    "hand_left",
+    "hand_right",
+    "head",
+    "pelvis",
+    "shin_left",
+    "shin_right",
+    "static",
+    "thigh_left",
+    "thigh_right",
+    "torso",
+    "upper_arm_left",
+    "upper_arm_right"
+  ],
+  "runtime_bindings_preserved": true
+}

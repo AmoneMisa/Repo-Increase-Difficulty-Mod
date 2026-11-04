@@ -1,0 +1,20 @@
+[
+  {
+    "cue": "valuable_porcelain.wav",
+    "duration_s": 0.42,
+    "rate_hz": 22050,
+    "channels": 1,
+    "bits": 16,
+    "peak": 20971,
+    "rms": 1954.2960592621573
+  },
+  {
+    "cue": "valuable_porcelain_break.wav",
+    "duration_s": 0.78,
+    "rate_hz": 22050,
+    "channels": 1,
+    "bits": 16,
+    "peak": 20971,
+    "rms": 2460.9081939437947
+  }
+]

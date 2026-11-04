@@ -146,10 +146,13 @@ internal sealed class QuestHud : MonoBehaviour
         return q.Objective switch
         {
             ObjectiveType.NoDeaths or ObjectiveType.NoDamage or ObjectiveType.NoGunKills => "...",
+            ObjectiveType.ExtractionRush => FormatClock(Mathf.Max(0, q.Target - q.Progress)),
             ObjectiveType.ReachHaul => $"${Mathf.RoundToInt(q.Progress / 1000f)}K/${Mathf.RoundToInt(q.Target / 1000f)}K",
             _ => $"{q.Progress}/{q.Target}",
         };
     }
+
+    private static string FormatClock(int seconds) => $"{seconds / 60}:{seconds % 60:00}";
 
     private void Hide()
     {

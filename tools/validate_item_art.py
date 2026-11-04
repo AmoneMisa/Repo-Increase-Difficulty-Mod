@@ -42,8 +42,8 @@ for key in ('ghost','silencer','link_a','link_b','repair','defence','protection'
 for key in ('poison','ice','sticky','decoy'): assert (assets/f'{key}_inventory.png').is_file()
 for png in assets.glob('*.png'):
     data=png.read_bytes(); assert data[:8]==b'\x89PNG\r\n\x1a\n'
-    expected_sizes=((256,16),) if png.name=='v09_rgb_gradient.png' else ((1024,1024),) if png.name.startswith(('v08_','v09_')) else ((128,128),(256,256))
-    assert struct.unpack('>II',data[16:24]) in expected_sizes
+    expected_sizes=((256,16),) if png.name=='v09_rgb_gradient.png' else ((2048,2048),(1024,1024)) if png.name.startswith('v14_maneki_') else ((1024,1024),) if png.name.startswith(('v08_','v09_','v10_','v11_')) else ((128,128),(256,256))
+    assert struct.unpack('>II',data[16:24]) in expected_sizes,(png.name,'unexpected texture size')
 assert (root/'art/ihm_items.blend').is_file()
 for name in ('workshop_wear','poison_puff','ice_frost'):
     assert (assets/(name+'.png')).is_file()

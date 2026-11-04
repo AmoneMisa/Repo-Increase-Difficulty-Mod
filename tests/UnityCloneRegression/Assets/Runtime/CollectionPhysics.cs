@@ -57,7 +57,7 @@ internal sealed class CollectionPhysics : MonoBehaviour
             else{var box=node.gameObject.AddComponent<BoxCollider>();box.center=bounds.center;box.size=Vector3.Max(bounds.size,new Vector3(.01f,.01f,.01f));collider=box;}
             // Seated samples belong to the root body, so grabbing one cannot pin the case to a kinematic body.
             Rigidbody body=null;
-            if(!_tubes){body=AddBody(node,i<3?.75f:.23f);body.isKinematic=!_host;}
+            if(!_tubes){body=AddBody(node,CollectionCatalog.SkeletonPartMass(i));body.isKinematic=!_host;}
             collider.enabled=true;
             var p=new Part{node=node,parent=node.parent,rest=node.localPosition,rotation=node.localRotation,body=body,collider=collider};_parts.Add(p);
             node.gameObject.AddComponent<ValuableContact>().owner=_sound;
@@ -81,7 +81,8 @@ internal sealed class CollectionPhysics : MonoBehaviour
                 float limit=i==0?9:i==1?16:i==2?28:38;
                 joint.lowAngularXLimit=new SoftJointLimit{limit=-limit};joint.highAngularXLimit=new SoftJointLimit{limit=limit};
                 joint.angularYLimit=new SoftJointLimit{limit=limit*.7f};joint.angularZLimit=new SoftJointLimit{limit=limit};
-                joint.rotationDriveMode=RotationDriveMode.Slerp;joint.slerpDrive=new JointDrive{positionSpring=i<3?38:4,positionDamper=i<3?5:.7f,maximumForce=80};
+                float response=body.mass/(i<3?.75f:.23f);
+                joint.rotationDriveMode=RotationDriveMode.Slerp;joint.slerpDrive=new JointDrive{positionSpring=(i<3?38:4)*response,positionDamper=(i<3?5:.7f)*response,maximumForce=80*response};
                 joint.projectionMode=JointProjectionMode.PositionAndRotation;joint.projectionDistance=.025f;joint.projectionAngle=12;
                 joint.enableCollision=false;body.solverIterations=10;body.solverVelocityIterations=6;
             }

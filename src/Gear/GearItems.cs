@@ -219,8 +219,7 @@ internal static class GearItems
                 }
                 if (kind == GearKind.Poison)
                 {
-                    hurt.enemyDamage = ModConfig.PoisonHitDamage.Value;
-                    hurt.enemyStun = false;
+                    PoisonBoltDamage.Configure(hurt, ModConfig.PoisonHitDamage.Value);
                 }
                 else if (kind == GearKind.Sticky)
                 {

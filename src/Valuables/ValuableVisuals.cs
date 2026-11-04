@@ -109,7 +109,9 @@ internal static class ValuableVisuals
 }
 
 #pragma warning disable CS0649
-[Serializable] internal sealed class ValuableArtModel { public ValuableArtPart[] parts;public ValuableArtMaterial[] materials;public Vector3 beckonPivot; }
+[Serializable] internal sealed class ValuableArtModel { public ValuableArtPart[] parts;public ValuableArtMaterial[] materials;public Vector3 beckonPivot;public ValuableArtPhysics physics; }
+[Serializable] internal sealed class ValuableArtPhysics { public Vector3 centerOfMass,motionMin,motionMax;public ValuableArtCollider[] colliders; }
+[Serializable] internal sealed class ValuableArtCollider { public string name;public bool moving;public Vector3[] vertices;public int[] triangles; }
 [Serializable] internal sealed class ValuableArtMaterial { public string name, texture;public Color color;public float transmission, emission, roughness,metallic; }
 [Serializable] internal sealed class ValuableArtPart
 {

@@ -1,0 +1,35 @@
+{
+  "asset": "graphics_card",
+  "runtime": "v11_graphics_card.mesh.json",
+  "triangles_before": 4804,
+  "triangles_after": 20164,
+  "bounds_before_xyz": [
+    [
+      -0.18700000643730164,
+      -0.08799999952316284,
+      0.0
+    ],
+    [
+      0.16699999570846558,
+      0.08049999922513962,
+      0.08099999278783798
+    ]
+  ],
+  "bounds_after_xyz": [
+    [
+      -0.18700000643730164,
+      -0.08799999952316284,
+      0.0
+    ],
+    [
+      0.16699999570846558,
+      0.08049999922513962,
+      0.08099999278783798
+    ]
+  ],
+  "groups": [
+    "rgb_gpu",
+    "static"
+  ],
+  "runtime_bindings_preserved": true
+}

@@ -11,13 +11,20 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.7.2`
+- **Version:** `0.7.4`
+
+Version 0.7.4 fixes Ice Pistol freezing and Link Drone pulling ([details](release-notes/v0.7.4.md)).
+
+Version 0.7.3 includes the Steam/Photon late-join, Unity 6 freeze, poison-bolt player damage
+and native HUD visibility fixes. Right-side order: quota, extraction count, Map Suite data,
+modifier names, with descriptions in Tab. [Fix details and validation limits](release-notes/v0.7.3.md).
 
 Version 0.7.2 corrects custom mesh centres and full-footprint spawn checks, reduces bomb
-mass to 30 kg, adds orientation-driven liquid flow and independent centrifuge tubes,
+mass to 9 kg, adds orientation-driven liquid flow and independent centrifuge tubes,
 and fixes shop/retry HUD state and mid-run joining. The updated build adds local item
 lighting, dark cast-metal bomb/cannon finishes, a 3 kg gold ingot and a beckoning porcelain
-Maneki-neko (13 valuables total). [Fix details](release-notes/v0.7.2.md).
+Maneki-neko (13 valuables total). Current balance: cannon 8 kg, doubled-size neko 6 kg,
+wheeled skeleton 3 kg including its articulated parts. [Fix details](release-notes/v0.7.2.md).
 
 Version 0.7.0 adds Spritz and eleven map-restricted valuables, stronger mechanical props,
 destruction-triggered heavy-bomb explosions and one-time centrifuge sample-kit value loss.
@@ -153,7 +160,7 @@ count) and, like every number below, are configurable.
 | **HP Regeneration** | 3 | Heals about 0.07% of max HP per second per level, but only until you are back to 30% of max HP - it is an emergency trickle, not a full heal. ~20,000 |
 | **Death Protection** | 1 charge | Survive one lethal hit with 1 HP. The charge is spent when it saves you; re-buy to restore it. ~50,000 |
 | **Drone Battery Life** | 20 | Your drones' batteries last 5% longer per level (up to +100%). ~6,000 |
-| **Gun Battery Life** (one per gun type: bullet / laser / tranq) | 20 each | That gun's battery lasts 5% longer per level (up to +100%). ~6,000 |
+| **Gun Extra Shots** (one per gun type: bullet / laser / tranq) | 5 each | +1 shot from every battery charge per level (`GunExtraBulletsPerLevel`). Ice, Poison and Sticky pistols and Spritz use the tranq upgrade. ~6,000 |
 | **Autoscan** | 5 | Automatically discovers valuables around you every second, 5 m further per level (5-25 m). ~8,000 |
 | **Map Suite** | 10 | One upgrade, ten map features: L1 alive-player count, L2 dead-player count, L3 active monsters, L4 respawning monsters, L5 quota heading and valuable tracker (found/total, haul), L6 team pings on the map, L7-L8 zoom the map out (zoom keys `-` / `=`), L9 cosmetic-box tracker, L10 monsters as dots. Replaces the vanilla *Map Player Count* upgrade by default. ~15,000 for the first level |
 | **Ping Info** | 1 | Addon for Ping Anywhere: adds valuable prices, rarity and exact target names. Cannot place pings alone. ~6,000 |
@@ -163,8 +170,8 @@ count) and, like every number below, are configurable.
 
 | Upgrade | Levels | What it does |
 | --- | --- | --- |
-| **Heal Power** | 3 | All healing gains diminishing bonuses: 1.25x / 1.4375x / 1.5781x at levels 1–3, approaching 2x. Starts at 10,000 |
-| **Charge Efficiency** | 3 | The charging station multiplies remaining energy drain by 0.8 per level: 80% / 64% / 51.2%; minimum 5%. Starts at 10,000. Stacks with the power-crystal economy: fewer crystals burned per recharge |
+| **Heal Power** | 10 | The truck's heal is multiplied by 1.05 per level, compounding (35 HP: 36.75 at level 1, 38.59 at level 2, about 57 at level 10); heal packs, drones and regeneration are not affected. The Taxman's line shows the real amount. Starts at 10,000 |
+| **Charge Efficiency** | 10 | The charging station multiplies remaining energy drain by 0.95 per level, compounding like Slower Stamina Use: 95% / 90.25% / 85.7% at levels 1-3, 59.9% at level 10; minimum 5%. Starts at 10,000. Stacks with the power-crystal economy: fewer crystals burned per recharge |
 | **Loot Cash-In** | 1 | Once every quota is closed, leftover valuables are sold automatically for 75% of their value. One-time unlock, 50,000 |
 
 #### Utility drones (shop)
@@ -370,12 +377,19 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.7.2`
+- **Версия:** `0.7.4`
+
+В 0.7.4 исправлены заморозка Ледяного пистолета и подтягивание Link Drone ([подробности](release-notes/v0.7.4.md)).
+
+В 0.7.3 собраны исправления Late Join, заморозки Unity 6, урона арбалета по игрокам
+и видимости HUD. Порядок справа: квота, количество квот, данные Map Suite,
+названия модификаторов; описания доступны в Tab. [Исправления и ограничения проверки](release-notes/v0.7.3.md).
 
 В 0.7.2 исправлены центры моделей и проверка полного места для спавна, масса бомбы снижена
-до 30 кг. Добавлены физическая анимация жидкости часов, отдельное выпадение пробирок,
+до 9 кг. Добавлены физическая анимация жидкости часов, отдельное выпадение пробирок,
 исправления HUD и позднего входа. В обновлённой сборке — подсветка предметов, тёмный металл
 бомбы и пушки, золотой слиток и фарфоровый неко с движущейся лапой (всего 13 ценностей).
+Текущий баланс: пушка 8 кг, увеличенный вдвое неко 6 кг, скелет на колёсах 3 кг вместе с костями.
 [Описание исправлений](release-notes/v0.7.2.md).
 
 В 0.7.0 добавлены Spritz и 11 ценностей с ограничениями по картам, усиленная прочность
@@ -509,7 +523,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 | **HP Regeneration** | 3 | Лечит около 0,07% максимума здоровья в секунду за уровень, но только пока здоровье не поднимется до 30% от максимума - это аварийная струйка, а не полное лечение. ~20 000 |
 | **Death Protection** | 1 заряд | Переживаешь один смертельный удар с 1 HP. Заряд тратится, когда он тебя спас; купи снова, чтобы восстановить. ~50 000 |
 | **Drone Battery Life** | 20 | Батареи твоих дронов служат на 5% дольше за уровень (до +100%). ~6 000 |
-| **Gun Battery Life** (своё на каждый тип оружия: пули / лазер / транквилизатор) | по 20 | Батарея этого оружия служит на 5% дольше за уровень (до +100%). ~6 000 |
+| **Gun Extra Shots** (своё на каждый тип оружия: пули / лазер / транквилизатор) | по 5 | +1 выстрел с каждого заряда батареи за уровень (`GunExtraBulletsPerLevel`). Ледяной, ядовитый и липкий пистолеты и Spritz используют улучшение транквилизатора. ~6 000 |
 | **Autoscan** | 5 | Раз в секунду находит ценности вокруг, на 5 м дальше за уровень (5-25 м). ~8 000 |
 | **Map Suite** | 10 | Одно улучшение, десять функций карты: L1 число живых игроков, L2 число мёртвых, L3 активные монстры, L4 возрождающиеся монстры, L5 направление к квоте и трекер ценностей (найдено/всего, добыча), L6 командные пинги на карте, L7-L8 отдаление карты (клавиши `-` / `=`), L9 трекер косметических ящиков, L10 монстры точками. По умолчанию заменяет ванильное *Map Player Count*. ~15 000 за первый уровень |
 | **Ping Info** | 1 | Дополнение к Ping Anywhere: стоимость, редкость и точные названия. Само по себе не позволяет пинговать. ~6 000 |
@@ -519,8 +533,8 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 
 | Улучшение | Уровни | Что делает |
 | --- | --- | --- |
-| **Heal Power** | 3 | Всё лечение получает убывающий бонус: 1,25x / 1,4375x / 1,5781x на уровнях 1–3, с пределом 2x. От 10 000 |
-| **Charge Efficiency** | 3 | Остаточный расход энергии умножается на 0,8 за уровень: 80% / 64% / 51,2%; минимум 5%. От 10 000. Работает вместе с экономикой кристаллов: на зарядку уходит меньше кристаллов |
+| **Heal Power** | 10 | Лечение в грузовике умножается на 1,05 за уровень с накоплением (35 HP: 36,75 на уровне 1, 38,59 на уровне 2, около 57 на уровне 10); аптечки, дроны и регенерация не затронуты. Таксман показывает реальное значение. От 10 000 |
+| **Charge Efficiency** | 10 | Остаточный расход энергии умножается на 0,95 за уровень с накоплением, как у Slower Stamina Use: 95% / 90,25% / 85,7% на уровнях 1-3, 59,9% на уровне 10; минимум 5%. От 10 000. Работает вместе с экономикой кристаллов: на зарядку уходит меньше кристаллов |
 | **Loot Cash-In** | 1 | Когда все квоты закрыты, оставшиеся ценности продаются автоматически за 75% стоимости. Разовая разблокировка, 50 000 |
 
 #### Утилитарные дроны (магазин)
@@ -860,13 +874,13 @@ Retains the quest-system work already on remote master. Quest network events are
 ### 0.6.4 HUD, quests and balance corrections / исправления HUD, квестов и баланса
 
 - **J** toggles quests, closed by default; Tab no longer opens quests automatically. Change `Quests / PeekKey` in config to rebind it. PgUp/PgDn page crowded lists. Keys are ignored while typing.
-- Map Suite statistics stay on Tab in the same bounded sidebar renderer. No black text backplates. Modifier names clear the quota; explanations follow the level number in a narrow wrapped column.
+- Right-hand HUD order: quota amount, quota count, Map Suite statistics, modifier names. On Tab, map statistics and modifier explanations appear together in the bounded sidebar, with separate pagination when needed. No text backplates.
 - Ping Anywhere is the base unlock for all target categories, including teammates. Ping Info only adds names, prices and rarity. Previous Pin ownership still migrates to Ping Anywhere.
 - Link Drone Set purchases deliver two separately deployable parts, A and B, with a shared saved set identity. Disabling or losing one part never pairs the other with a different kit. Pair labels identify each set; old owned pairs migrate once.
 - Quest dollar rewards are converted once into the native wallet's K units (rounded up to whole K, matching extraction). Economic payout multipliers apply only to extraction, not quest rewards. Existing inflated saved balances are **not** guessed or automatically rewritten.
-- Shared Heal Power uses `2 - (1-p)^level`; shared Charge Efficiency uses `max(0.05, (1-p)^level)`. Defaults: healing 1.25x / 1.4375x / 1.578125x, charging drain 80% / 64% / 51.2%. Existing upgrade IDs and owned levels are retained; formulas also apply to saved levels.
+- Shared Heal Power uses `(1 + p)^level` (default p = 0.05, config `HealBonusPerLevel`) and only the truck's heal; shared Charge Efficiency uses `max(0.05, (1-p)^level)`. Defaults: healing 1.05x compounding per level (1.63x at level 10), charging drain 95% / 90.25% / 85.7% (config `ChargeReductionPerLevel`, replacing `ChargePercentPerLevel`). Existing upgrade IDs and owned levels are retained; formulas also apply to saved levels.
 
-**RU:** J открывает/закрывает квесты; по умолчанию они скрыты и не открываются через Tab. Клавиша меняется в `Quests / PeekKey`, страницы — PgUp/PgDn. Статистика Map Suite остаётся в Tab без чёрной подложки, в ограниченной колонке. Модификаторы расположены под квотой, описания — под номером уровня. Ping Anywhere открывает все пинги, Ping Info только добавляет сведения. Набор Link Drone даёт два отдельных предмета A/B с постоянной сохранённой парой. Денежные награды квестов переводятся в тысячи один раз, экономические множители применяются к выдаче денег за эвакуацию. Уже завышенный баланс сохранения автоматически не меняется. Улучшения грузовика действуют на команду с убывающей эффективностью по формулам выше; изученные уровни сохраняются.
+**RU:** J открывает/закрывает квесты; по умолчанию они скрыты и не открываются через Tab. Клавиша меняется в `Quests / PeekKey`, страницы — PgUp/PgDn. Порядок справа: квота, количество квот, данные Map Suite, названия модификаторов. В Tab статистика карты и описания модификаторов видны одновременно в ограниченной колонке без подложки; при необходимости у каждого блока есть страницы. Ping Anywhere открывает все пинги, Ping Info только добавляет сведения. Набор Link Drone даёт два отдельных предмета A/B с постоянной сохранённой парой. Денежные награды квестов переводятся в тысячи один раз, экономические множители применяются к выдаче денег за эвакуацию. Уже завышенный баланс сохранения автоматически не меняется. Улучшения грузовика действуют на команду с убывающей эффективностью по формулам выше; изученные уровни сохраняются.
 
 Replace the previous DLL with the 0.6.4 package and restart every client. Controlled fixtures do not certify live multiplayer delivery or the game's final blur/chromatic post-processing.
 Замените предыдущую DLL новой 0.6.4 и перезапустите игру у всех участников. Проверки на стенде не заменяют проверку сетевой доставки предметов и итогового размытия HUD в самой игре.

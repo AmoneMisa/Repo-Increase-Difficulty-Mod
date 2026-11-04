@@ -254,9 +254,9 @@
   {
     "key": "maneki_neko",
     "size_m": [
-      0.4643264636397362,
-      0.633101224899292,
-      0.521882586479187
+      0.9286529272794724,
+      1.266202449798584,
+      1.043765172958374
     ],
     "local_mass_and_grab_center": [
       0.0,
@@ -268,7 +268,7 @@
       0.011549150466918946,
       0.2722466160058975
     ],
-    "native_volume": "medium",
+    "native_volume": "big",
     "oversize_requires_scene_overlap_check": false,
     "status": "PASS"
   }

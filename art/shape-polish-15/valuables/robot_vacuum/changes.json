@@ -1,0 +1,39 @@
+{
+  "asset": "robot_vacuum",
+  "runtime": "v11_robot_vacuum.mesh.json",
+  "triangles_before": 3212,
+  "triangles_after": 12156,
+  "bounds_before_xyz": [
+    [
+      -0.17599999904632568,
+      -0.17599999904632568,
+      -0.010999999940395355
+    ],
+    [
+      0.17599999904632568,
+      0.17599999904632568,
+      0.12700000405311584
+    ]
+  ],
+  "bounds_after_xyz": [
+    [
+      -0.17583757638931274,
+      -0.17590200901031494,
+      -0.010604290291666985
+    ],
+    [
+      0.17583757638931274,
+      0.17583757638931274,
+      0.12700000405311584
+    ]
+  ],
+  "groups": [
+    "brush",
+    "drive_left",
+    "drive_right",
+    "lidar",
+    "scanner_emitter",
+    "static"
+  ],
+  "runtime_bindings_preserved": true
+}

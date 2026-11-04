@@ -258,6 +258,8 @@ public static class ModConfig
     // lasts longer. "+100%" = twice the usage.
     public static ConfigEntry<float> GunBatteryPercentPerLevel;
     public static ConfigEntry<int> GunBatteryMaxLevel;
+    public static ConfigEntry<float> GunExtraBulletsPerLevel;
+    public static ConfigEntry<int> GunExtraBulletsMaxLevel;
     public static ConfigEntry<int> GunBatteryBasePrice;
     public static ConfigEntry<float> DroneBatteryPercentPerLevel;
     public static ConfigEntry<int> DroneBatteryMaxLevel;
@@ -760,19 +762,19 @@ public static class ModConfig
 
         // --- Truck upgrades ---
                 TruckHealPercentPerLevel = BindFloat(cfg,
-            "Truck Upgrades", "HealPercentPerLevel", 0.25f, 0f, 0.95f,
-            "Heal Power: each level closes this fraction of the remaining bonus gap towards 2x healing. Multiplier = 2 - (1-p)^level. At p=0.25, levels 1/2/3 give 1.25x/1.4375x/1.5781x healing.");
+            "Truck Upgrades", "HealBonusPerLevel", 0.05f, 0f, 1f,
+            "Heal Power: the truck heal is multiplied by (1 + p) per level, compounding. Multiplier = (1 + p)^level. At p=0.05, a 35 HP heal becomes 36.75 / 38.59 / 40.52 at levels 1/2/3 (truck heal only).");
         TruckHealMaxLevel = BindInt(cfg,
-            "Truck Upgrades", "HealMaxLevel", 3, 0, 20,
+            "Truck Upgrades", "HealPowerMaxLevel", 10, 0, 20,
             "Heal Power: maximum purchasable level.");
         TruckHealBaseCost = BindInt(cfg,
             "Truck Upgrades", "HealBaseCost", 10000, 0, 1000000,
             "Heal Power: cost of the first level (grows by CostGrowth each level).");
         TruckChargePercentPerLevel = BindFloat(cfg,
-            "Truck Upgrades", "ChargePercentPerLevel", 0.20f, 0f, 0.95f,
-            "Charge Efficiency: multiply remaining energy-pool drain by (1-p) per level, with a 5% minimum. At p=0.20, levels 1/2/3 spend 80%/64%/51.2% of normal energy.");
+            "Truck Upgrades", "ChargeReductionPerLevel", 0.05f, 0f, 0.95f,
+            "Charge Efficiency: multiply remaining energy-pool drain by (1-p) per level, compounding like Slower Stamina Use, with a 5% minimum. At p=0.05, levels 1/2/3 spend 95%/90.25%/85.7% of normal energy.");
         TruckChargeMaxLevel = BindInt(cfg,
-            "Truck Upgrades", "ChargeMaxLevel", 3, 0, 20,
+            "Truck Upgrades", "ChargePowerMaxLevel", 10, 0, 20,
             "Charge Efficiency: maximum purchasable level.");
         TruckChargeBaseCost = BindInt(cfg,
             "Truck Upgrades", "ChargeBaseCost", 10000, 0, 1000000,
@@ -818,6 +820,12 @@ public static class ModConfig
         GunBatteryMaxLevel = BindInt(cfg,
             "Player Upgrades", "GunBatteryMaxLevel", 20, 1, 100,
             "Gun Battery Life: maximum purchasable level (20 x 5% = +100%).");
+        GunExtraBulletsPerLevel = BindFloat(cfg,
+            "Player Upgrades", "GunExtraBulletsPerLevel", 1f, 0.25f, 5f,
+            "Gun upgrades (Bullet/Laser/Tranq): extra shots every battery charge gives per level. 1 = one more shot per level.");
+        GunExtraBulletsMaxLevel = BindInt(cfg,
+            "Player Upgrades", "GunExtraBulletsMaxLevel", 5, 1, 100,
+            "Gun upgrades (Bullet/Laser/Tranq): maximum purchasable level.");
         GunBatteryBasePrice = BindInt(cfg,
             "Player Upgrades", "GunBatteryBasePrice", 6000, 0, 1000000,
             "Gun Battery Life: approximate shop price of the first level (each gun type is a separate upgrade).");

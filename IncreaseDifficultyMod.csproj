@@ -6,7 +6,7 @@
     <Product>IncreaseDifficultyMod</Product>
     <!-- Preserve code/resource identities and saved integrations after the public rename. -->
     <RootNamespace>IncreaseHardMod</RootNamespace>
-    <Version>0.7.2</Version>
+    <Version>0.7.4</Version>
     <LangVersion>latest</LangVersion>
     <!-- Unity fixture DLLs must never become candidates for resolving the game's Assembly-CSharp. -->
     <DefaultItemExcludes>$(DefaultItemExcludes);tests\UnityCloneRegression\Library\**;tests\UnityCloneRegression\Temp\**;tests\UnityCloneRegression\Logs\**;tests\UnityCloneRegression\UserSettings\**</DefaultItemExcludes>
@@ -55,6 +55,10 @@
 
   <!-- Reference the game assemblies directly and publicize them so we can touch private members. -->
   <ItemGroup>
+    <Reference Include="Facepunch.Steamworks.Win64">
+      <HintPath>$(ManagedDir)\Facepunch.Steamworks.Win64.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="PhotonVoice">
       <HintPath>$(ManagedDir)\PhotonVoice.dll</HintPath>
       <Private>false</Private>

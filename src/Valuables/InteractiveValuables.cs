@@ -121,8 +121,10 @@ internal static class InteractiveValuables
                         BoxCollider(go,"Centrifuge wall "+i,new Vector3(.22f*Mathf.Cos(a),.123f,.22f*Mathf.Sin(a)),new Vector3(.026f,.18f,.08f),Quaternion.Euler(0,-a*Mathf.Rad2Deg,0));
                     }
                 }
+                bool manekiCollision=key=="maneki_neko"&&ManekiPhysics.Attach(go,art);
                 foreach(var binding in art.bindings)
                 {
+                    if(manekiCollision)continue;
                     if(key=="centrifuge"&&binding.group.StartsWith("tube_",StringComparison.Ordinal))continue;
                     if(key=="centrifuge")
                     {
@@ -164,7 +166,7 @@ internal static class InteractiveValuables
             value.volumeType=VolumeFor(value,actual.size*ValuableLayout.Scale(key));
             go.GetComponent<PhotonView>().RefreshRpcMonoBehaviourCache();
             if (REPOLib.Modules.Valuables.RegisterValuable(value,pools) == null) throw new InvalidOperationException("REPOLib rejected the valuable.");
-            Registered.Add(key);Plugin.Log.LogInfo($"[Valuables] Registered {key}: ${entry.Min:0}-${entry.Max:0}, {mass:0.##} kg, {entry.Fragility}; pools: {string.Join(", ",pools)}");
+            Registered.Add(key);Plugin.Log.LogInfo($"[Valuables] Registered {key}: ${entry.Min:0}-${entry.Max:0}, total {CollectionCatalog.TotalMass(entry):0.##} kg (root {mass:0.##}), {entry.Fragility}; pools: {string.Join(", ",pools)}");
         }
         catch (Exception e)
         {

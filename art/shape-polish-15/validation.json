@@ -1,0 +1,162 @@
+{
+  "status": "PASS",
+  "assets": [
+    {
+      "asset": "poison",
+      "triangles": 7538,
+      "animation_tracks_unchanged": 3,
+      "imports": {
+        "glb": "PASS",
+        "obj": "PASS"
+      }
+    },
+    {
+      "asset": "ice",
+      "triangles": 7714,
+      "animation_tracks_unchanged": 2,
+      "imports": {
+        "glb": "PASS",
+        "obj": "PASS"
+      }
+    },
+    {
+      "asset": "sticky",
+      "triangles": 6790,
+      "animation_tracks_unchanged": 1,
+      "imports": {
+        "glb": "PASS",
+        "obj": "PASS"
+      }
+    },
+    {
+      "asset": "decoy",
+      "triangles": 4322,
+      "animation_tracks_unchanged": 2,
+      "imports": {
+        "glb": "PASS",
+        "obj": "PASS"
+      }
+    },
+    {
+      "asset": "bath_gift_set",
+      "triangles": 6752,
+      "bounds_change_m": 0.0,
+      "part_bindings_and_rest_poses": "unchanged",
+      "imports": {
+        "glb": "PASS",
+        "obj": "PASS"
+      }
+    },
+    {
+      "asset": "bomb",
+      "triangles": 5866,
+      "bounds_change_m": 0.0,
+      "part_bindings_and_rest_poses": "unchanged",
+      "imports": {
+        "glb": "PASS",
+        "obj": "PASS"
+      }
+    },
+    {
+      "asset": "cannon",
+      "triangles": 27880,
+      "bounds_change_m": 0.0038852691650390625,
+      "part_bindings_and_rest_poses": "unchanged",
+      "imports": {
+        "glb": "PASS",
+        "obj": "PASS"
+      }
+    },
+    {
+      "asset": "centrifuge",
+      "triangles": 24005,
+      "bounds_change_m": 0.0010510683059692383,
+      "part_bindings_and_rest_poses": "unchanged",
+      "imports": {
+        "glb": "PASS",
+        "obj": "PASS"
+      }
+    },
+    {
+      "asset": "gold_ingot",
+      "triangles": 1784,
+      "bounds_change_m": 4.617124795913696e-05,
+      "part_bindings_and_rest_poses": "unchanged",
+      "imports": {
+        "glb": "PASS",
+        "obj": "PASS"
+      }
+    },
+    {
+      "asset": "graphics_card",
+      "triangles": 20164,
+      "bounds_change_m": 0.0,
+      "part_bindings_and_rest_poses": "unchanged",
+      "imports": {
+        "glb": "PASS",
+        "obj": "PASS"
+      }
+    },
+    {
+      "asset": "monoblock_pc",
+      "triangles": 3340,
+      "bounds_change_m": 0.0,
+      "part_bindings_and_rest_poses": "unchanged",
+      "imports": {
+        "glb": "PASS",
+        "obj": "PASS"
+      }
+    },
+    {
+      "asset": "ram_pair",
+      "triangles": 3200,
+      "bounds_change_m": 0.0,
+      "part_bindings_and_rest_poses": "unchanged",
+      "imports": {
+        "glb": "PASS",
+        "obj": "PASS"
+      }
+    },
+    {
+      "asset": "robot_vacuum",
+      "triangles": 12156,
+      "bounds_change_m": 0.00039570964872837067,
+      "part_bindings_and_rest_poses": "unchanged",
+      "imports": {
+        "glb": "PASS",
+        "obj": "PASS"
+      }
+    },
+    {
+      "asset": "skeleton",
+      "triangles": 32266,
+      "bounds_change_m": 0.00038737058639526367,
+      "part_bindings_and_rest_poses": "unchanged",
+      "imports": {
+        "glb": "PASS",
+        "obj": "PASS"
+      }
+    },
+    {
+      "asset": "spritz",
+      "triangles": 3264,
+      "bounds_change_m": 0.0004070401191711426,
+      "part_bindings_and_rest_poses": "unchanged",
+      "imports": {
+        "glb": "PASS",
+        "obj": "PASS"
+      }
+    },
+    {
+      "asset": "water_timer",
+      "triangles": 3154,
+      "bounds_change_m": 0.0,
+      "part_bindings_and_rest_poses": "unchanged",
+      "imports": {
+        "glb": "PASS",
+        "obj": "PASS"
+      }
+    }
+  ],
+  "scope": "Geometry, file imports, unchanged weapon animation and valuable attachment contracts. Not an in-game appearance check."
+}

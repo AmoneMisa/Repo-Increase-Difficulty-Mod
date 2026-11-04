@@ -17,7 +17,7 @@ for key in keys:
  if key=='maneki_neko':lo[2]-=.09;hi[2]+=.09
  offset=[-(lo[0]+hi[0])/2,.012-lo[1],.012-lo[2]]
  minimum=[lo[i]+offset[i] for i in range(3)];maximum=[hi[i]+offset[i] for i in range(3)]
- scale=.8 if key=='bomb' else .85 if key=='cannon' else 1.1 if key in ['centrifuge','robot_vacuum'] else 1
+ scale=.8 if key=='bomb' else .85 if key=='cannon' else 1.1 if key in ['centrifuge','robot_vacuum'] else 2 if key=='maneki_neko' else 1
  size=[(hi[i]-lo[i])*scale for i in range(3)];center=[(minimum[i]+maximum[i])/2 for i in range(3)]
  assert abs(center[0])<1e-6 and abs(minimum[1]-.012)<1e-6 and abs(minimum[2]-.012)<1e-6
  scored=[(sum(max(0,(size[i]+.025-cap[i])/cap[i]) for i in range(3)),math.prod(cap),name) for name,cap in capacities.items()]

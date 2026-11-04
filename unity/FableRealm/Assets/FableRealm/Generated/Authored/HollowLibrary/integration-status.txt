@@ -1,0 +1,1 @@
+Authoring only. Game component binding, navmesh, minimap, valuable spawning and REPOLib registration are not implemented.

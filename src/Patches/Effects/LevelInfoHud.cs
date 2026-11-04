@@ -17,6 +17,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
 
     private TextMeshProUGUI _timerLabel;
     private TextMeshProUGUI _modsLabel;
+    private TextMeshProUGUI _mapLabel;
     private TextMeshProUGUI _descriptionLabel;
     private readonly List<string> _descriptions = new();
     private readonly List<string> _effectDescriptions = new();
@@ -24,7 +25,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
     private bool _suppressed;
     private TextMeshProUGUI _detailsPageLabel;
     private bool _tabWasOpen;
-    private bool _mapSection;
+    private int _mapPage = 1;
     private int _detailsPage = 1;
     private bool _layoutReady;
     private LevelGenerator _generation;
@@ -102,7 +103,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
             _room = PhotonNetwork.CurrentRoom;
             _request = null;
             _snapshotModifiers = null;
-            _mapSection = false;
+            _mapPage = 1;
             _detailsPage = 1;
         }
         if (!PhotonNetwork.InRoom || _readersRoom != PhotonNetwork.CurrentRoom)
@@ -150,7 +151,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
         {
             // Hiding/loading the native HUD is not a new scene or a new snapshot request.
             // RefreshState invalidates by generation instance, room and host on return.
-            _mapSection = false;
+            _mapPage = 1;
             if (!PhotonNetwork.InRoom) _readers.Clear();
             HideAll();
             return;
@@ -206,7 +207,6 @@ internal sealed class LevelInfoHud : MonoBehaviour
             }
             _modsLabel.text = string.Join("\n", _parts);
             _descriptionLabel.text = "";
-            PositionMods();
 
         }
         else
@@ -215,8 +215,8 @@ internal sealed class LevelInfoHud : MonoBehaviour
             _effectDescriptions.Clear();
             _modsLabel.text = "";
             _descriptionLabel.text = "";
-            PositionMods();
         }
+        PositionMods(mapInfo);
         if (_modsLabel.enabled)
         {
             _modsLabel.overflowMode = TextOverflowModes.Page;
@@ -225,7 +225,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
             if (TabOpen && SemiFunc.NoTextInputsActive() && Input.GetKeyDown(KeyCode.End))
                 _modsLabel.pageToDisplay = _modsLabel.pageToDisplay % pages + 1;
         }
-        RenderDetails(mapInfo);
+        RenderDetails();
     }
 
     // Create (or recreate) the native labels once the HUD canvas and a font template exist.
@@ -234,15 +234,15 @@ internal sealed class LevelInfoHud : MonoBehaviour
         if (HUDCanvas.instance == null)
             return false;
 
-        if (_timerLabel != null && _modsLabel != null && _descriptionLabel != null && _detailsPageLabel != null &&
+        if (_timerLabel != null && _modsLabel != null && _mapLabel != null && _descriptionLabel != null && _detailsPageLabel != null &&
             _timerLabel.transform.parent == HUDCanvas.instance.transform)
             return true;
 
         if (_timerLabel != null && _timerLabel.transform.parent != HUDCanvas.instance.transform)
         {
-            foreach (var label in new[] { _timerLabel, _modsLabel, _descriptionLabel, _detailsPageLabel })
+            foreach (var label in new[] { _timerLabel, _modsLabel, _mapLabel, _descriptionLabel, _detailsPageLabel })
                 if (label != null) Destroy(label.gameObject);
-            _timerLabel = _modsLabel = _descriptionLabel = _detailsPageLabel = null;
+            _timerLabel = _modsLabel = _mapLabel = _descriptionLabel = _detailsPageLabel = null;
         }
         var template = FindTemplate();
         if (template == null)
@@ -270,6 +270,16 @@ internal sealed class LevelInfoHud : MonoBehaviour
             _detailsPage = 1;
         }
 
+        if (_mapLabel == null)
+        {
+            _mapLabel = CreateLabel("IHM_MapSuite", template, Color.white,
+                TextAlignmentOptions.TopRight, new Vector2(1f, 1f), Vector2.zero, 300f);
+            _mapLabel.fontSize *= 0.5f;
+            ConfigureModifierLabel(_mapLabel);
+            _mapLabel.fontStyle = template.fontStyle;
+            _mapLabel.overflowMode = TextOverflowModes.Page;
+        }
+
         if (_detailsPageLabel == null)
         {
             _detailsPageLabel = CreateLabel("IHM_DetailsPage", template, ModColor,
@@ -280,50 +290,42 @@ internal sealed class LevelInfoHud : MonoBehaviour
         return true;
     }
 
-    private void RenderDetails(string mapInfo)
+    private void RenderDetails()
     {
         _descriptionLabel.enabled = _detailsPageLabel.enabled = false;
         bool tab = TabOpen;
-        if (!tab || !_tabWasOpen) _detailsPage = 1;
+        if (!tab || !_tabWasOpen) { _detailsPage = 1; _mapPage = 1; }
         _tabWasOpen = tab;
         if (!tab || !_layoutReady) return;
-        bool hasMap = !string.IsNullOrEmpty(mapInfo);
-        if (!hasMap) _mapSection = false;
-        else if (_parts.Count == 0) _mapSection = true;
-        bool previousSection = Input.GetKeyDown(KeyCode.Comma);
-        bool nextSection = Input.GetKeyDown(KeyCode.Period);
-        if (hasMap && _parts.Count > 0 && SemiFunc.NoTextInputsActive() &&
-            previousSection != nextSection)
+
+        int mapPages = _mapLabel.enabled ? Mathf.Max(1, _mapLabel.textInfo.pageCount) : 1;
+        if (SemiFunc.NoTextInputsActive())
         {
-            _mapSection = !_mapSection;
-            _detailsPage = 1;
+            if (Input.GetKeyDown(KeyCode.Period)) _mapPage = _mapPage % mapPages + 1;
+            if (Input.GetKeyDown(KeyCode.Comma)) _mapPage = (_mapPage + mapPages - 2) % mapPages + 1;
         }
-        // The two sections share the measured RIGHT region. Neither can grow into upgrades,
-        // quests, the central map, LEVEL, or the bottom mission/inventory band.
-        if (_mapSection) _descriptionLabel.text = "<b>MAP SUITE</b>\n<color=#FFFFFF>" + mapInfo + "</color>";
-        else
-        {
-            _descriptions.Clear();
-            for (int i = 0; i < _parts.Count; i++)
-                _descriptions.Add(_parts[i] + "\n" + _effectDescriptions[i]);
-            _descriptionLabel.text = string.Join("\n\n", _descriptions);
-        }
+        _mapPage = Mathf.Clamp(_mapPage, 1, mapPages);
+        _mapLabel.pageToDisplay = _mapPage;
+
+        _descriptions.Clear();
+        for (int i = 0; i < _parts.Count; i++)
+            _descriptions.Add(_parts[i] + "\n" + _effectDescriptions[i]);
+        _descriptionLabel.text = string.Join("\n\n", _descriptions);
         _descriptionLabel.enableAutoSizing = false;
         _descriptionLabel.overflowMode = TextOverflowModes.Page;
         var rt = _descriptionLabel.rectTransform;
-        float footer = _detailsPageLabel.fontSize * 4f;
-        if (rt.rect.height < footer + _descriptionLabel.fontSize) return;
-        rt.sizeDelta = new Vector2(rt.sizeDelta.x, Mathf.Max(0f, rt.rect.height - footer));
-        if (rt.rect.height < _descriptionLabel.fontSize || string.IsNullOrEmpty(_descriptionLabel.text))
-        {
-            if (!hasMap) return;
-        }
-        else
+        // Reserve a small footer only inside the remaining details region. Neither the
+        // map block nor paged descriptions can overlap the native level/inventory band.
+        float footer = _detailsPageLabel.fontSize * 3f;
+        if (rt.rect.height < footer) return;
+        rt.sizeDelta = new Vector2(rt.sizeDelta.x, rt.rect.height - footer);
+        int pages = 1;
+        if (rt.rect.height >= _descriptionLabel.fontSize && !string.IsNullOrEmpty(_descriptionLabel.text))
         {
             _descriptionLabel.enabled = true;
             _descriptionLabel.ForceMeshUpdate();
+            pages = Mathf.Max(1, _descriptionLabel.textInfo.pageCount);
         }
-        int pages = Mathf.Max(1, _descriptionLabel.textInfo.pageCount);
         if (SemiFunc.NoTextInputsActive())
         {
             if (Input.GetKeyDown(KeyCode.RightArrow)) _detailsPage = _detailsPage % pages + 1;
@@ -331,8 +333,9 @@ internal sealed class LevelInfoHud : MonoBehaviour
         }
         _detailsPage = Mathf.Clamp(_detailsPage, 1, pages);
         _descriptionLabel.pageToDisplay = _detailsPage;
-        _detailsPageLabel.text = (_modsLabel.textInfo.pageCount > 1 ? "END: NAMES\n" : "") + (hasMap && _parts.Count > 0 ? ", / .: " + (_mapSection ? "MODIFIERS" : "MAP SUITE") : "") +
-            (pages > 1 ? $"\nLEFT / RIGHT  {_detailsPage}/{pages}" : "");
+        _detailsPageLabel.text = (_modsLabel.enabled && _modsLabel.textInfo.pageCount > 1 ? "END: NAMES\n" : "") +
+            (mapPages > 1 ? $", / .: MAP SUITE  {_mapPage}/{mapPages}\n" : "") +
+            (pages > 1 ? $"LEFT / RIGHT  {_detailsPage}/{pages}" : "");
         _detailsPageLabel.rectTransform.anchoredPosition = rt.anchoredPosition + new Vector2(0f, -rt.rect.height);
         _detailsPageLabel.rectTransform.sizeDelta = new Vector2(rt.rect.width, footer);
         _detailsPageLabel.enabled = !string.IsNullOrEmpty(_detailsPageLabel.text);
@@ -342,6 +345,9 @@ internal sealed class LevelInfoHud : MonoBehaviour
         TextAlignmentOptions align, Vector2 anchor, Vector2 offset, float width)
     {
         var go = new GameObject(name);
+        // Parenting does not inherit a Unity layer. REPO's world-space HUD camera
+        // renders only UI (layer 5), so Default-layer labels were entirely invisible.
+        go.layer = HUDCanvas.instance.gameObject.layer;
         go.transform.SetParent(HUDCanvas.instance.transform, false);
 
         var tmp = go.AddComponent<TextMeshProUGUI>();
@@ -404,7 +410,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
         return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
     }
 
-    private void PositionMods()
+    private void PositionMods(string mapInfo)
     {
         _layoutReady = false;
         var canvas = HUDCanvas.instance.rect;
@@ -412,7 +418,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
         // Wait for native anchors rather than drawing over the quota during HUD initialization.
         if (canvas == null)
         {
-            _modsLabel.enabled = _descriptionLabel.enabled = false;
+            _modsLabel.enabled = _mapLabel.enabled = _descriptionLabel.enabled = false;
             return;
         }
 
@@ -424,6 +430,14 @@ internal sealed class LevelInfoHud : MonoBehaviour
         Rect number = level!=null&&level.textNumber!=null ? Bounds(level.textNumber.rectTransform) : new Rect();
         Rect quota = quotaVisible ? Bounds(GoalUI.instance.uiText.rectTransform) :
             new Rect(area.xMax-_modsLabel.fontSizeMax,area.yMax-_modsLabel.fontSizeMax*3f,0,0);
+        bool haulVisible = HaulUI.instance != null && HaulUI.instance.uiText != null &&
+            HaulUI.instance.uiText.isActiveAndEnabled && !HaulUI.instance.isHidden;
+        if (haulVisible)
+        {
+            var haul = Bounds(HaulUI.instance.uiText.rectTransform);
+            quota = quotaVisible ? Rect.MinMaxRect(quota.xMin, Mathf.Min(quota.yMin, haul.yMin),
+                quota.xMax, Mathf.Max(quota.yMax, haul.yMax)) : haul;
+        }
         float gap = _modsLabel.fontSizeMax * 0.4f;
         float right = quota.xMax;
         float width = Mathf.Min(area.width * 0.23f, 360f);
@@ -431,6 +445,19 @@ internal sealed class LevelInfoHud : MonoBehaviour
         float bottom = Mathf.Max(area.yMin + area.height * 0.24f,
             Mathf.Max(heading.yMax, number.yMax) + gap);
         float available = Mathf.Max(0f, top - bottom);
+        // Keep the requested order: native haul, native extraction count, Map Suite,
+        // modifier names. Map data and descriptions are separate, simultaneous blocks.
+        _mapLabel.text = TabOpen && SafeRunIsLevel() ? mapInfo : "";
+        float mapHeight = string.IsNullOrEmpty(_mapLabel.text) ? 0f :
+            _mapLabel.GetPreferredValues(_mapLabel.text, width, Mathf.Infinity).y;
+        float mapBudget = string.IsNullOrEmpty(_modsLabel.text) ? available * 0.8f : available * 0.45f;
+        SetBlock(_mapLabel, right, top, width, Mathf.Min(mapHeight, mapBudget));
+        if (_mapLabel.enabled)
+        {
+            _mapLabel.ForceMeshUpdate();
+            top -= _mapLabel.rectTransform.rect.height + gap;
+        }
+        available = Mathf.Max(0f, top - bottom);
         float nameHeight = _modsLabel.GetPreferredValues(_modsLabel.text, width, Mathf.Infinity).y;
         SetBlock(_modsLabel, right, top, width, Mathf.Min(nameHeight, available * 0.45f));
         // TMP's visual glyph edge (including native font bearings) follows the animated quota
@@ -458,6 +485,12 @@ internal sealed class LevelInfoHud : MonoBehaviour
     {
         _tabWasOpen = false;
         _detailsPage = 1;
+        _mapPage = 1;
+        if (_mapLabel != null)
+        {
+            _mapLabel.enabled = false;
+            _mapLabel.pageToDisplay = 1;
+        }
         if (_modsLabel != null) _modsLabel.pageToDisplay = 1;
         if (_timerLabel != null)
             _timerLabel.enabled = false;
@@ -478,7 +511,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
 
     private void OnDestroy()
     {
-        foreach (var label in new[] { _timerLabel, _modsLabel, _descriptionLabel, _detailsPageLabel })
+        foreach (var label in new[] { _timerLabel, _modsLabel, _mapLabel, _descriptionLabel, _detailsPageLabel })
             if (label != null) Destroy(label.gameObject);
         if (_instance == this) _instance = null;
     }

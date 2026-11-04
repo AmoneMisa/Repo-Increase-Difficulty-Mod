@@ -1,0 +1,9150 @@
+{
+  "schemaVersion": 1,
+  "id": "HollowLibrary",
+  "title": "Библиотека забытых сказок",
+  "seed": 73,
+  "bounds": {
+    "x": 15,
+    "y": 12,
+    "z": 15
+  },
+  "materials": [
+    {
+      "id": "Oak",
+      "color": "#896047",
+      "grain": 0.26,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "OakLight",
+      "color": "#a77d57",
+      "grain": 0.22,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "OakDark",
+      "color": "#48322c",
+      "grain": 0.3,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "Bark",
+      "color": "#625047",
+      "grain": 0.35,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "Stone",
+      "color": "#343b40",
+      "grain": 0.1,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "Brass",
+      "color": "#c59b58",
+      "grain": 0.12,
+      "smoothness": 0.25,
+      "metallic": 0.55,
+      "emission": 0
+    },
+    {
+      "id": "BookWine",
+      "color": "#743f4d",
+      "grain": 0.1,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "BookTeal",
+      "color": "#366364",
+      "grain": 0.1,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "BookOchre",
+      "color": "#bd8a49",
+      "grain": 0.1,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "BookInk",
+      "color": "#394351",
+      "grain": 0.1,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "BookCream",
+      "color": "#c5b398",
+      "grain": 0.1,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0
+    },
+    {
+      "id": "WarmGlass",
+      "color": "#ffd294",
+      "grain": 0,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 1.4
+    },
+    {
+      "id": "MoonGlass",
+      "color": "#69afbe",
+      "grain": 0,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 1.4
+    },
+    {
+      "id": "MossGlow",
+      "color": "#7db98f",
+      "grain": 0,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0.4
+    }
+  ],
+  "elements": [
+    {
+      "id": "floor-0",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": -0.16,
+        "z": 0.0
+      },
+      "size": {
+        "x": 5.0,
+        "y": 0.32,
+        "z": 15.0
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Walkable"
+    },
+    {
+      "id": "plank-0-0",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -7.33
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-1",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -6.97
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-2",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -6.61
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-3",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -6.25
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-4",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -5.890000000000001
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-5",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -5.53
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-6",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -5.17
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-7",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -4.8100000000000005
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-8",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -4.45
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-9",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -4.09
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-10",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -3.7300000000000004
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-11",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -3.37
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-12",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -3.01
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-13",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -2.6500000000000004
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-14",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -2.29
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-15",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -1.9300000000000006
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-16",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -1.5700000000000003
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-17",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -1.21
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-18",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -0.8500000000000004
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-19",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -0.4900000000000001
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-20",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": -0.1300000000000007
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-21",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 0.22999999999999962
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-22",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 0.59
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-23",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 0.9499999999999994
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-24",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 1.3100000000000005
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-25",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 1.67
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-26",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 2.0299999999999994
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-27",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 2.389999999999999
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-28",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 2.75
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-29",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 3.1099999999999994
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-30",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 3.469999999999999
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-31",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 3.83
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-32",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 4.1899999999999995
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-33",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 4.549999999999999
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-34",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 4.91
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-35",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 5.27
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-36",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 5.629999999999999
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-37",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 5.99
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-38",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 6.35
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-39",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 6.709999999999999
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-40",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 7.0699999999999985
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-0-41",
+      "kind": "box",
+      "position": {
+        "x": -5.0,
+        "y": 0.006,
+        "z": 7.38
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.2400000000000002
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "floor-1",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": -0.16,
+        "z": 0.0
+      },
+      "size": {
+        "x": 5.0,
+        "y": 0.32,
+        "z": 15.0
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Walkable"
+    },
+    {
+      "id": "plank-1-0",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -7.33
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-1",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -6.97
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-2",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -6.61
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-3",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -6.25
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-4",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -5.890000000000001
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-5",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -5.53
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-6",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -5.17
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-7",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -4.8100000000000005
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-8",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -4.45
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-9",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -4.09
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-10",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -3.7300000000000004
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-11",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -3.37
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-12",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -3.01
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-13",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -2.6500000000000004
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-14",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -2.29
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-15",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -1.9300000000000006
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-16",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -1.5700000000000003
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-17",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -1.21
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-18",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -0.8500000000000004
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-19",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -0.4900000000000001
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-20",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": -0.1300000000000007
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-21",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 0.22999999999999962
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-22",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 0.59
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-23",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 0.9499999999999994
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-24",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 1.3100000000000005
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-25",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 1.67
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-26",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 2.0299999999999994
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-27",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 2.389999999999999
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-28",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 2.75
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-29",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 3.1099999999999994
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-30",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 3.469999999999999
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-31",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 3.83
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-32",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 4.1899999999999995
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-33",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 4.549999999999999
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-34",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 4.91
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-35",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 5.27
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-36",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 5.629999999999999
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-37",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 5.99
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-38",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 6.35
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-39",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 6.709999999999999
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-40",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 7.0699999999999985
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-1-41",
+      "kind": "box",
+      "position": {
+        "x": 5.0,
+        "y": 0.006,
+        "z": 7.38
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.2400000000000002
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "floor-2",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": -0.16,
+        "z": -4.0
+      },
+      "size": {
+        "x": 5.0,
+        "y": 0.32,
+        "z": 7.0
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Walkable"
+    },
+    {
+      "id": "plank-2-0",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -7.33
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-1",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -6.97
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-2",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -6.61
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-3",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -6.25
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-4",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -5.890000000000001
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-5",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -5.53
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-6",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -5.17
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-7",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -4.8100000000000005
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-8",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -4.45
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-9",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -4.09
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-10",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -3.7300000000000004
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-11",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -3.37
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-12",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -3.01
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-13",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -2.6500000000000004
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-14",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -2.29
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-15",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -1.9300000000000006
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-16",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -1.5700000000000003
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-17",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -1.21
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-18",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -0.8500000000000004
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-2-19",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": -0.5800000000000001
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.16000000000000014
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "floor-3",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": -0.16,
+        "z": 5.5
+      },
+      "size": {
+        "x": 5.0,
+        "y": 0.32,
+        "z": 4.0
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Walkable"
+    },
+    {
+      "id": "plank-3-0",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": 3.67
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-3-1",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": 4.03
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-3-2",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": 4.39
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-3-3",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": 4.75
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-3-4",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": 5.109999999999999
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-3-5",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": 5.47
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-3-6",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": 5.83
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-3-7",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": 6.1899999999999995
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-3-8",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": 6.55
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-3-9",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": 6.91
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-3-10",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": 7.27
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.34
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "plank-3-11",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 0.006,
+        "z": 7.48
+      },
+      "size": {
+        "x": 4.98,
+        "y": 0.012,
+        "z": 0.040000000000000036
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "pit-bottom",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": -3.36,
+        "z": 1.5
+      },
+      "size": {
+        "x": 5,
+        "y": 0.32,
+        "z": 4
+      },
+      "material": "Stone",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "pit-side--2_6",
+      "kind": "box",
+      "position": {
+        "x": -2.6,
+        "y": -1.76,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.2,
+        "y": 2.88,
+        "z": 4
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "pit-side-2_6",
+      "kind": "box",
+      "position": {
+        "x": 2.6,
+        "y": -1.76,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.2,
+        "y": 2.88,
+        "z": 4
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "pit-end-0",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": -1.76,
+        "z": -0.6
+      },
+      "size": {
+        "x": 5,
+        "y": 2.88,
+        "z": 0.2
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "pit-end-1",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": -1.76,
+        "z": 3.6
+      },
+      "size": {
+        "x": 5,
+        "y": 2.88,
+        "z": 0.2
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "bridge",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": -0.1,
+        "z": 1.5
+      },
+      "size": {
+        "x": 5.3,
+        "y": 0.2,
+        "z": 1.8
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Walkable"
+    },
+    {
+      "id": "bridge-board-0",
+      "kind": "box",
+      "position": {
+        "x": -2.5,
+        "y": 0.015,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.03,
+        "z": 1.8
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-1",
+      "kind": "box",
+      "position": {
+        "x": -2.1666666666666665,
+        "y": 0.015,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.03,
+        "z": 1.8
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-2",
+      "kind": "box",
+      "position": {
+        "x": -1.8333333333333335,
+        "y": 0.015,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.03,
+        "z": 1.8
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-3",
+      "kind": "box",
+      "position": {
+        "x": -1.5,
+        "y": 0.015,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.03,
+        "z": 1.8
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-4",
+      "kind": "box",
+      "position": {
+        "x": -1.1666666666666667,
+        "y": 0.015,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.03,
+        "z": 1.8
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-5",
+      "kind": "box",
+      "position": {
+        "x": -0.8333333333333333,
+        "y": 0.015,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.03,
+        "z": 1.8
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-6",
+      "kind": "box",
+      "position": {
+        "x": -0.5,
+        "y": 0.015,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.03,
+        "z": 1.8
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-7",
+      "kind": "box",
+      "position": {
+        "x": -0.16666666666666652,
+        "y": 0.015,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.03,
+        "z": 1.8
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-8",
+      "kind": "box",
+      "position": {
+        "x": 0.16666666666666652,
+        "y": 0.015,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.03,
+        "z": 1.8
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-9",
+      "kind": "box",
+      "position": {
+        "x": 0.5,
+        "y": 0.015,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.03,
+        "z": 1.8
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-10",
+      "kind": "box",
+      "position": {
+        "x": 0.8333333333333335,
+        "y": 0.015,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.03,
+        "z": 1.8
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-11",
+      "kind": "box",
+      "position": {
+        "x": 1.1666666666666665,
+        "y": 0.015,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.03,
+        "z": 1.8
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-12",
+      "kind": "box",
+      "position": {
+        "x": 1.5,
+        "y": 0.015,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.03,
+        "z": 1.8
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-13",
+      "kind": "box",
+      "position": {
+        "x": 1.833333333333333,
+        "y": 0.015,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.03,
+        "z": 1.8
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-14",
+      "kind": "box",
+      "position": {
+        "x": 2.166666666666667,
+        "y": 0.015,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.03,
+        "z": 1.8
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-board-15",
+      "kind": "box",
+      "position": {
+        "x": 2.5,
+        "y": 0.015,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.03,
+        "z": 1.8
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "bridge-north",
+      "kind": "rail",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 2.45
+      },
+      "size": {
+        "x": 5.2,
+        "y": 0.95,
+        "z": 0.15
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 14,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "bridge-south",
+      "kind": "rail",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0.55
+      },
+      "size": {
+        "x": 5.2,
+        "y": 0.95,
+        "z": 0.15
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 14,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "pit-front",
+      "kind": "rail",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -0.6
+      },
+      "size": {
+        "x": 5.1,
+        "y": 0.95,
+        "z": 0.15
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 14,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "pit-back",
+      "kind": "rail",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 3.6
+      },
+      "size": {
+        "x": 5.1,
+        "y": 0.95,
+        "z": 0.15
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 14,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "pit-side-rail--1-0",
+      "kind": "rail",
+      "position": {
+        "x": -2.6,
+        "y": 0,
+        "z": -0.05
+      },
+      "size": {
+        "x": 0.8,
+        "y": 0.95,
+        "z": 0.15
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 2,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "pit-side-rail--1-1",
+      "kind": "rail",
+      "position": {
+        "x": -2.6,
+        "y": 0,
+        "z": 3.05
+      },
+      "size": {
+        "x": 0.8,
+        "y": 0.95,
+        "z": 0.15
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 2,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "pit-side-rail-1-0",
+      "kind": "rail",
+      "position": {
+        "x": 2.6,
+        "y": 0,
+        "z": -0.05
+      },
+      "size": {
+        "x": 0.8,
+        "y": 0.95,
+        "z": 0.15
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 2,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "pit-side-rail-1-1",
+      "kind": "rail",
+      "position": {
+        "x": 2.6,
+        "y": 0,
+        "z": 3.05
+      },
+      "size": {
+        "x": 0.8,
+        "y": 0.95,
+        "z": 0.15
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 2,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "rear-wall",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": 4,
+        "z": 7.35
+      },
+      "size": {
+        "x": 14.8,
+        "y": 8,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "side-wall--1",
+      "kind": "box",
+      "position": {
+        "x": -7.35,
+        "y": 4,
+        "z": 0
+      },
+      "size": {
+        "x": 0.3,
+        "y": 8,
+        "z": 14.8
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "front-wall--1",
+      "kind": "box",
+      "position": {
+        "x": -4.8,
+        "y": 4,
+        "z": -7.35
+      },
+      "size": {
+        "x": 5.1,
+        "y": 8,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "side-wall-1",
+      "kind": "box",
+      "position": {
+        "x": 7.35,
+        "y": 4,
+        "z": 0
+      },
+      "size": {
+        "x": 0.3,
+        "y": 8,
+        "z": 14.8
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "front-wall-1",
+      "kind": "box",
+      "position": {
+        "x": 4.8,
+        "y": 4,
+        "z": -7.35
+      },
+      "size": {
+        "x": 5.1,
+        "y": 8,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "door-lintel",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": 5.9,
+        "z": -7.35
+      },
+      "size": {
+        "x": 4.5,
+        "y": 4.2,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "ceiling",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": 8.1,
+        "z": 0
+      },
+      "size": {
+        "x": 14.8,
+        "y": 0.3,
+        "z": 14.8
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "entrance-arch",
+      "kind": "arch",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -7
+      },
+      "size": {
+        "x": 4.2,
+        "y": 4.1,
+        "z": 0.4
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "radius": 0.22,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "wall-rib--1-0",
+      "kind": "box",
+      "position": {
+        "x": -7.13,
+        "y": 4,
+        "z": -6.8
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib--1-1",
+      "kind": "box",
+      "position": {
+        "x": -7.13,
+        "y": 4,
+        "z": -6.0
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib--1-2",
+      "kind": "box",
+      "position": {
+        "x": -7.13,
+        "y": 4,
+        "z": -5.199999999999999
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib--1-3",
+      "kind": "box",
+      "position": {
+        "x": -7.13,
+        "y": 4,
+        "z": -4.3999999999999995
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib--1-4",
+      "kind": "box",
+      "position": {
+        "x": -7.13,
+        "y": 4,
+        "z": -3.5999999999999996
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib--1-5",
+      "kind": "box",
+      "position": {
+        "x": -7.13,
+        "y": 4,
+        "z": -2.8
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib--1-6",
+      "kind": "box",
+      "position": {
+        "x": -7.13,
+        "y": 4,
+        "z": -1.9999999999999991
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib--1-7",
+      "kind": "box",
+      "position": {
+        "x": -7.13,
+        "y": 4,
+        "z": -1.1999999999999993
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib--1-8",
+      "kind": "box",
+      "position": {
+        "x": -7.13,
+        "y": 4,
+        "z": -0.39999999999999947
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib--1-9",
+      "kind": "box",
+      "position": {
+        "x": -7.13,
+        "y": 4,
+        "z": 0.40000000000000036
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib--1-10",
+      "kind": "box",
+      "position": {
+        "x": -7.13,
+        "y": 4,
+        "z": 1.2000000000000002
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib--1-11",
+      "kind": "box",
+      "position": {
+        "x": -7.13,
+        "y": 4,
+        "z": 2.000000000000001
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib--1-12",
+      "kind": "box",
+      "position": {
+        "x": -7.13,
+        "y": 4,
+        "z": 2.8000000000000016
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib--1-13",
+      "kind": "box",
+      "position": {
+        "x": -7.13,
+        "y": 4,
+        "z": 3.6000000000000005
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib--1-14",
+      "kind": "box",
+      "position": {
+        "x": -7.13,
+        "y": 4,
+        "z": 4.400000000000001
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib--1-15",
+      "kind": "box",
+      "position": {
+        "x": -7.13,
+        "y": 4,
+        "z": 5.2
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib--1-16",
+      "kind": "box",
+      "position": {
+        "x": -7.13,
+        "y": 4,
+        "z": 6.000000000000001
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib--1-17",
+      "kind": "box",
+      "position": {
+        "x": -7.13,
+        "y": 4,
+        "z": 6.800000000000002
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "trunk--1--5",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -6.9,
+          "y": 0,
+          "z": -5
+        },
+        {
+          "x": -6.8,
+          "y": 2,
+          "z": -4.8
+        },
+        {
+          "x": -6.65,
+          "y": 4.5,
+          "z": -5
+        },
+        {
+          "x": -6.2,
+          "y": 6.4,
+          "z": -5
+        },
+        {
+          "x": -4.5,
+          "y": 7.6,
+          "z": -5
+        },
+        {
+          "x": -1.5,
+          "y": 7.95,
+          "z": -5
+        }
+      ],
+      "radius": 0.25,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "root--1--5",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -6.9,
+          "y": 1,
+          "z": -5
+        },
+        {
+          "x": -6.3,
+          "y": 0.3,
+          "z": -4.7
+        },
+        {
+          "x": -5.8,
+          "y": 0.05,
+          "z": -4.4
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "trunk--1-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -6.9,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": -6.8,
+          "y": 2,
+          "z": 0.2
+        },
+        {
+          "x": -6.65,
+          "y": 4.5,
+          "z": 0
+        },
+        {
+          "x": -6.2,
+          "y": 6.4,
+          "z": 0
+        },
+        {
+          "x": -4.5,
+          "y": 7.6,
+          "z": 0
+        },
+        {
+          "x": -1.5,
+          "y": 7.95,
+          "z": 0
+        }
+      ],
+      "radius": 0.25,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "root--1-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -6.9,
+          "y": 1,
+          "z": 0
+        },
+        {
+          "x": -6.3,
+          "y": 0.3,
+          "z": 0.3
+        },
+        {
+          "x": -5.8,
+          "y": 0.05,
+          "z": 0.6
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "trunk--1-5",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -6.9,
+          "y": 0,
+          "z": 5
+        },
+        {
+          "x": -6.8,
+          "y": 2,
+          "z": 5.2
+        },
+        {
+          "x": -6.65,
+          "y": 4.5,
+          "z": 5
+        },
+        {
+          "x": -6.2,
+          "y": 6.4,
+          "z": 5
+        },
+        {
+          "x": -4.5,
+          "y": 7.6,
+          "z": 5
+        },
+        {
+          "x": -1.5,
+          "y": 7.95,
+          "z": 5
+        }
+      ],
+      "radius": 0.25,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "root--1-5",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -6.9,
+          "y": 1,
+          "z": 5
+        },
+        {
+          "x": -6.3,
+          "y": 0.3,
+          "z": 5.3
+        },
+        {
+          "x": -5.8,
+          "y": 0.05,
+          "z": 5.6
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib-1-0",
+      "kind": "box",
+      "position": {
+        "x": 7.13,
+        "y": 4,
+        "z": -6.8
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib-1-1",
+      "kind": "box",
+      "position": {
+        "x": 7.13,
+        "y": 4,
+        "z": -6.0
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib-1-2",
+      "kind": "box",
+      "position": {
+        "x": 7.13,
+        "y": 4,
+        "z": -5.199999999999999
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib-1-3",
+      "kind": "box",
+      "position": {
+        "x": 7.13,
+        "y": 4,
+        "z": -4.3999999999999995
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib-1-4",
+      "kind": "box",
+      "position": {
+        "x": 7.13,
+        "y": 4,
+        "z": -3.5999999999999996
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib-1-5",
+      "kind": "box",
+      "position": {
+        "x": 7.13,
+        "y": 4,
+        "z": -2.8
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib-1-6",
+      "kind": "box",
+      "position": {
+        "x": 7.13,
+        "y": 4,
+        "z": -1.9999999999999991
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib-1-7",
+      "kind": "box",
+      "position": {
+        "x": 7.13,
+        "y": 4,
+        "z": -1.1999999999999993
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib-1-8",
+      "kind": "box",
+      "position": {
+        "x": 7.13,
+        "y": 4,
+        "z": -0.39999999999999947
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib-1-9",
+      "kind": "box",
+      "position": {
+        "x": 7.13,
+        "y": 4,
+        "z": 0.40000000000000036
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib-1-10",
+      "kind": "box",
+      "position": {
+        "x": 7.13,
+        "y": 4,
+        "z": 1.2000000000000002
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib-1-11",
+      "kind": "box",
+      "position": {
+        "x": 7.13,
+        "y": 4,
+        "z": 2.000000000000001
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib-1-12",
+      "kind": "box",
+      "position": {
+        "x": 7.13,
+        "y": 4,
+        "z": 2.8000000000000016
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib-1-13",
+      "kind": "box",
+      "position": {
+        "x": 7.13,
+        "y": 4,
+        "z": 3.6000000000000005
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib-1-14",
+      "kind": "box",
+      "position": {
+        "x": 7.13,
+        "y": 4,
+        "z": 4.400000000000001
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib-1-15",
+      "kind": "box",
+      "position": {
+        "x": 7.13,
+        "y": 4,
+        "z": 5.2
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib-1-16",
+      "kind": "box",
+      "position": {
+        "x": 7.13,
+        "y": 4,
+        "z": 6.000000000000001
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-rib-1-17",
+      "kind": "box",
+      "position": {
+        "x": 7.13,
+        "y": 4,
+        "z": 6.800000000000002
+      },
+      "size": {
+        "x": 0.12,
+        "y": 8,
+        "z": 0.05
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "trunk-1--5",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 6.9,
+          "y": 0,
+          "z": -5
+        },
+        {
+          "x": 6.8,
+          "y": 2,
+          "z": -4.8
+        },
+        {
+          "x": 6.65,
+          "y": 4.5,
+          "z": -5
+        },
+        {
+          "x": 6.2,
+          "y": 6.4,
+          "z": -5
+        },
+        {
+          "x": 4.5,
+          "y": 7.6,
+          "z": -5
+        },
+        {
+          "x": 1.5,
+          "y": 7.95,
+          "z": -5
+        }
+      ],
+      "radius": 0.25,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "root-1--5",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 6.9,
+          "y": 1,
+          "z": -5
+        },
+        {
+          "x": 6.3,
+          "y": 0.3,
+          "z": -4.7
+        },
+        {
+          "x": 5.8,
+          "y": 0.05,
+          "z": -4.4
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "trunk-1-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 6.9,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 6.8,
+          "y": 2,
+          "z": 0.2
+        },
+        {
+          "x": 6.65,
+          "y": 4.5,
+          "z": 0
+        },
+        {
+          "x": 6.2,
+          "y": 6.4,
+          "z": 0
+        },
+        {
+          "x": 4.5,
+          "y": 7.6,
+          "z": 0
+        },
+        {
+          "x": 1.5,
+          "y": 7.95,
+          "z": 0
+        }
+      ],
+      "radius": 0.25,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "root-1-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 6.9,
+          "y": 1,
+          "z": 0
+        },
+        {
+          "x": 6.3,
+          "y": 0.3,
+          "z": 0.3
+        },
+        {
+          "x": 5.8,
+          "y": 0.05,
+          "z": 0.6
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "trunk-1-5",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 6.9,
+          "y": 0,
+          "z": 5
+        },
+        {
+          "x": 6.8,
+          "y": 2,
+          "z": 5.2
+        },
+        {
+          "x": 6.65,
+          "y": 4.5,
+          "z": 5
+        },
+        {
+          "x": 6.2,
+          "y": 6.4,
+          "z": 5
+        },
+        {
+          "x": 4.5,
+          "y": 7.6,
+          "z": 5
+        },
+        {
+          "x": 1.5,
+          "y": 7.95,
+          "z": 5
+        }
+      ],
+      "radius": 0.25,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "root-1-5",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 6.9,
+          "y": 1,
+          "z": 5
+        },
+        {
+          "x": 6.3,
+          "y": 0.3,
+          "z": 5.3
+        },
+        {
+          "x": 5.8,
+          "y": 0.05,
+          "z": 5.6
+        }
+      ],
+      "radius": 0.15,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "ceiling-arch--3_7",
+      "kind": "arch",
+      "position": {
+        "x": 0,
+        "y": 3.4,
+        "z": -3.7
+      },
+      "size": {
+        "x": 12.8,
+        "y": 4.5,
+        "z": 0.3
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "radius": 0.16,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "ceiling-arch-1_5",
+      "kind": "arch",
+      "position": {
+        "x": 0,
+        "y": 3.4,
+        "z": 1.5
+      },
+      "size": {
+        "x": 12.8,
+        "y": 4.5,
+        "z": 0.3
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "radius": 0.16,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "ceiling-arch-5_6",
+      "kind": "arch",
+      "position": {
+        "x": 0,
+        "y": 3.4,
+        "z": 5.6
+      },
+      "size": {
+        "x": 12.8,
+        "y": 4.5,
+        "z": 0.3
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "radius": 0.16,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "west-gallery",
+      "kind": "box",
+      "position": {
+        "x": -5.25,
+        "y": 2.88,
+        "z": 3.2
+      },
+      "size": {
+        "x": 3.5,
+        "y": 0.24,
+        "z": 6.8
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Walkable"
+    },
+    {
+      "id": "rear-gallery",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": 2.88,
+        "z": 5.3
+      },
+      "size": {
+        "x": 7,
+        "y": 0.24,
+        "z": 2.6
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Walkable"
+    },
+    {
+      "id": "east-gallery",
+      "kind": "box",
+      "position": {
+        "x": 5.25,
+        "y": 2.88,
+        "z": 3.2
+      },
+      "size": {
+        "x": 3.5,
+        "y": 0.24,
+        "z": 6.8
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Walkable"
+    },
+    {
+      "id": "west-stair",
+      "kind": "stairs",
+      "position": {
+        "x": -5.25,
+        "y": 0,
+        "z": -3.2
+      },
+      "size": {
+        "x": 3.5,
+        "y": 3,
+        "z": 6
+      },
+      "material": "Oak",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 20,
+      "navigation": "Walkable"
+    },
+    {
+      "id": "gallery-inner--1",
+      "kind": "rail",
+      "position": {
+        "x": -3.55,
+        "y": 3,
+        "z": 1.9
+      },
+      "size": {
+        "x": 4.2,
+        "y": 0.95,
+        "z": 0.15
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 12,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "column--1-1_0",
+      "kind": "box",
+      "position": {
+        "x": -3.7,
+        "y": 1.4,
+        "z": 1.0
+      },
+      "size": {
+        "x": 0.27,
+        "y": 2.8,
+        "z": 0.27
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "capital--1-1_0",
+      "kind": "box",
+      "position": {
+        "x": -3.7,
+        "y": 2.65,
+        "z": 1.0
+      },
+      "size": {
+        "x": 0.5,
+        "y": 0.25,
+        "z": 0.5
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "column--1-5_9",
+      "kind": "box",
+      "position": {
+        "x": -3.7,
+        "y": 1.4,
+        "z": 5.9
+      },
+      "size": {
+        "x": 0.27,
+        "y": 2.8,
+        "z": 0.27
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "capital--1-5_9",
+      "kind": "box",
+      "position": {
+        "x": -3.7,
+        "y": 2.65,
+        "z": 5.9
+      },
+      "size": {
+        "x": 0.5,
+        "y": 0.25,
+        "z": 0.5
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "gallery-inner-1",
+      "kind": "rail",
+      "position": {
+        "x": 3.55,
+        "y": 3,
+        "z": 1.9
+      },
+      "size": {
+        "x": 4.2,
+        "y": 0.95,
+        "z": 0.15
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 12,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "column-1-1_0",
+      "kind": "box",
+      "position": {
+        "x": 3.7,
+        "y": 1.4,
+        "z": 1.0
+      },
+      "size": {
+        "x": 0.27,
+        "y": 2.8,
+        "z": 0.27
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "capital-1-1_0",
+      "kind": "box",
+      "position": {
+        "x": 3.7,
+        "y": 2.65,
+        "z": 1.0
+      },
+      "size": {
+        "x": 0.5,
+        "y": 0.25,
+        "z": 0.5
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "column-1-5_9",
+      "kind": "box",
+      "position": {
+        "x": 3.7,
+        "y": 1.4,
+        "z": 5.9
+      },
+      "size": {
+        "x": 0.27,
+        "y": 2.8,
+        "z": 0.27
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "capital-1-5_9",
+      "kind": "box",
+      "position": {
+        "x": 3.7,
+        "y": 2.65,
+        "z": 5.9
+      },
+      "size": {
+        "x": 0.5,
+        "y": 0.25,
+        "z": 0.5
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "rear-balustrade",
+      "kind": "rail",
+      "position": {
+        "x": 0,
+        "y": 3,
+        "z": 4
+      },
+      "size": {
+        "x": 7,
+        "y": 0.95,
+        "z": 0.15
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 20,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "east-end",
+      "kind": "rail",
+      "position": {
+        "x": 5.25,
+        "y": 3,
+        "z": -0.2
+      },
+      "size": {
+        "x": 3.5,
+        "y": 0.95,
+        "z": 0.15
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 10,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "stair-handrail--1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -6.87,
+          "y": 1,
+          "z": -6.2
+        },
+        {
+          "x": -6.87,
+          "y": 4,
+          "z": -0.2
+        }
+      ],
+      "radius": 0.055,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "stair-handrail-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -3.63,
+          "y": 1,
+          "z": -6.2
+        },
+        {
+          "x": -3.63,
+          "y": 4,
+          "z": -0.2
+        }
+      ],
+      "radius": 0.055,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "back-lower-0",
+      "kind": "shelf",
+      "position": {
+        "x": -5.4,
+        "y": 0,
+        "z": 6.72
+      },
+      "size": {
+        "x": 2.2,
+        "y": 2.65,
+        "z": 0.72
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 4,
+      "palette": [
+        "Brass",
+        "BookWine",
+        "BookTeal",
+        "BookOchre",
+        "BookInk",
+        "BookCream"
+      ],
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "back-lower-1",
+      "kind": "shelf",
+      "position": {
+        "x": -2.7,
+        "y": 0,
+        "z": 6.72
+      },
+      "size": {
+        "x": 2.2,
+        "y": 2.65,
+        "z": 0.72
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 4,
+      "palette": [
+        "Brass",
+        "BookWine",
+        "BookTeal",
+        "BookOchre",
+        "BookInk",
+        "BookCream"
+      ],
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "back-lower-2",
+      "kind": "shelf",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 6.72
+      },
+      "size": {
+        "x": 2.2,
+        "y": 2.65,
+        "z": 0.72
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 4,
+      "palette": [
+        "Brass",
+        "BookWine",
+        "BookTeal",
+        "BookOchre",
+        "BookInk",
+        "BookCream"
+      ],
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "back-lower-3",
+      "kind": "shelf",
+      "position": {
+        "x": 2.7,
+        "y": 0,
+        "z": 6.72
+      },
+      "size": {
+        "x": 2.2,
+        "y": 2.65,
+        "z": 0.72
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 4,
+      "palette": [
+        "Brass",
+        "BookWine",
+        "BookTeal",
+        "BookOchre",
+        "BookInk",
+        "BookCream"
+      ],
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "back-lower-4",
+      "kind": "shelf",
+      "position": {
+        "x": 5.4,
+        "y": 0,
+        "z": 6.72
+      },
+      "size": {
+        "x": 2.2,
+        "y": 2.65,
+        "z": 0.72
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 4,
+      "palette": [
+        "Brass",
+        "BookWine",
+        "BookTeal",
+        "BookOchre",
+        "BookInk",
+        "BookCream"
+      ],
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "east-lower-0",
+      "kind": "shelf",
+      "position": {
+        "x": 6.72,
+        "y": 0,
+        "z": -4.8
+      },
+      "size": {
+        "x": 2.2,
+        "y": 2.65,
+        "z": 0.72
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 4,
+      "palette": [
+        "Brass",
+        "BookWine",
+        "BookTeal",
+        "BookOchre",
+        "BookInk",
+        "BookCream"
+      ],
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "east-lower-1",
+      "kind": "shelf",
+      "position": {
+        "x": 6.72,
+        "y": 0,
+        "z": -1.8
+      },
+      "size": {
+        "x": 2.2,
+        "y": 2.65,
+        "z": 0.72
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 4,
+      "palette": [
+        "Brass",
+        "BookWine",
+        "BookTeal",
+        "BookOchre",
+        "BookInk",
+        "BookCream"
+      ],
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "east-lower-2",
+      "kind": "shelf",
+      "position": {
+        "x": 6.72,
+        "y": 0,
+        "z": 1.2
+      },
+      "size": {
+        "x": 2.2,
+        "y": 2.65,
+        "z": 0.72
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 4,
+      "palette": [
+        "Brass",
+        "BookWine",
+        "BookTeal",
+        "BookOchre",
+        "BookInk",
+        "BookCream"
+      ],
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "east-lower-3",
+      "kind": "shelf",
+      "position": {
+        "x": 6.72,
+        "y": 0,
+        "z": 4.2
+      },
+      "size": {
+        "x": 2.2,
+        "y": 2.65,
+        "z": 0.72
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 4,
+      "palette": [
+        "Brass",
+        "BookWine",
+        "BookTeal",
+        "BookOchre",
+        "BookInk",
+        "BookCream"
+      ],
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "west-lower-0",
+      "kind": "shelf",
+      "position": {
+        "x": -6.72,
+        "y": 0,
+        "z": 1.4
+      },
+      "size": {
+        "x": 2.2,
+        "y": 2.65,
+        "z": 0.72
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": -90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 4,
+      "palette": [
+        "Brass",
+        "BookWine",
+        "BookTeal",
+        "BookOchre",
+        "BookInk",
+        "BookCream"
+      ],
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "west-lower-1",
+      "kind": "shelf",
+      "position": {
+        "x": -6.72,
+        "y": 0,
+        "z": 4.4
+      },
+      "size": {
+        "x": 2.2,
+        "y": 2.65,
+        "z": 0.72
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": -90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 4,
+      "palette": [
+        "Brass",
+        "BookWine",
+        "BookTeal",
+        "BookOchre",
+        "BookInk",
+        "BookCream"
+      ],
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "upper-side--1-0",
+      "kind": "shelf",
+      "position": {
+        "x": -6.72,
+        "y": 3,
+        "z": 1.4
+      },
+      "size": {
+        "x": 2.2,
+        "y": 2.65,
+        "z": 0.72
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": -90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 4,
+      "palette": [
+        "Brass",
+        "BookWine",
+        "BookTeal",
+        "BookOchre",
+        "BookInk",
+        "BookCream"
+      ],
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "upper-side--1-1",
+      "kind": "shelf",
+      "position": {
+        "x": -6.72,
+        "y": 3,
+        "z": 4.4
+      },
+      "size": {
+        "x": 2.2,
+        "y": 2.65,
+        "z": 0.72
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": -90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 4,
+      "palette": [
+        "Brass",
+        "BookWine",
+        "BookTeal",
+        "BookOchre",
+        "BookInk",
+        "BookCream"
+      ],
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "upper-side-1-0",
+      "kind": "shelf",
+      "position": {
+        "x": 6.72,
+        "y": 3,
+        "z": 1.4
+      },
+      "size": {
+        "x": 2.2,
+        "y": 2.65,
+        "z": 0.72
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 4,
+      "palette": [
+        "Brass",
+        "BookWine",
+        "BookTeal",
+        "BookOchre",
+        "BookInk",
+        "BookCream"
+      ],
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "upper-side-1-1",
+      "kind": "shelf",
+      "position": {
+        "x": 6.72,
+        "y": 3,
+        "z": 4.4
+      },
+      "size": {
+        "x": 2.2,
+        "y": 2.65,
+        "z": 0.72
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "count": 4,
+      "palette": [
+        "Brass",
+        "BookWine",
+        "BookTeal",
+        "BookOchre",
+        "BookInk",
+        "BookCream"
+      ],
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "upper-rear-0",
+      "kind": "shelf",
+      "position": {
+        "x": -5.1,
+        "y": 3,
+        "z": 6.72
+      },
+      "size": {
+        "x": 2.8,
+        "y": 2.65,
+        "z": 0.72
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 4,
+      "palette": [
+        "Brass",
+        "BookWine",
+        "BookTeal",
+        "BookOchre",
+        "BookInk",
+        "BookCream"
+      ],
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "upper-rear-1",
+      "kind": "shelf",
+      "position": {
+        "x": 5.1,
+        "y": 3,
+        "z": 6.72
+      },
+      "size": {
+        "x": 2.8,
+        "y": 2.65,
+        "z": 0.72
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 4,
+      "palette": [
+        "Brass",
+        "BookWine",
+        "BookTeal",
+        "BookOchre",
+        "BookInk",
+        "BookCream"
+      ],
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "reading-niche-back",
+      "kind": "shelf",
+      "position": {
+        "x": 3.5,
+        "y": 0,
+        "z": -4.6
+      },
+      "size": {
+        "x": 2.5,
+        "y": 2.7,
+        "z": 0.72
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 4,
+      "palette": [
+        "Brass",
+        "BookWine",
+        "BookTeal",
+        "BookOchre",
+        "BookInk",
+        "BookCream"
+      ],
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "reading-niche-side",
+      "kind": "box",
+      "position": {
+        "x": 4.8,
+        "y": 1.3,
+        "z": -5.3
+      },
+      "size": {
+        "x": 0.18,
+        "y": 2.6,
+        "z": 1.9
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "reading-niche-roof",
+      "kind": "box",
+      "position": {
+        "x": 3.5,
+        "y": 2.75,
+        "z": -5.3
+      },
+      "size": {
+        "x": 2.8,
+        "y": 0.18,
+        "z": 1.9
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "reading-bench",
+      "kind": "box",
+      "position": {
+        "x": 4.35,
+        "y": 0.35,
+        "z": -5.35
+      },
+      "size": {
+        "x": 0.55,
+        "y": 0.7,
+        "z": 1.4
+      },
+      "material": "BookWine",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "window-glass",
+      "kind": "disc",
+      "position": {
+        "x": 0,
+        "y": 5.5,
+        "z": 7.12
+      },
+      "size": {
+        "x": 3.45,
+        "y": 3.45,
+        "z": 0.06
+      },
+      "material": "MoonGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "window-ring-1_95",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 1.95,
+          "y": 5.5,
+          "z": 7.02
+        },
+        {
+          "x": 1.9333174796789303,
+          "y": 5.7545260748291005,
+          "z": 7.02
+        },
+        {
+          "x": 1.883555361263683,
+          "y": 6.004697137949916,
+          "z": 7.02
+        },
+        {
+          "x": 1.8015650883970091,
+          "y": 6.246232693111925,
+          "z": 7.02
+        },
+        {
+          "x": 1.6887495373796555,
+          "y": 6.475,
+          "z": 7.02
+        },
+        {
+          "x": 1.5470390135679086,
+          "y": 6.687084786567006,
+          "z": 7.02
+        },
+        {
+          "x": 1.3788582233137678,
+          "y": 6.878858223313768,
+          "z": 7.02
+        },
+        {
+          "x": 1.1870847865670053,
+          "y": 7.047039013567908,
+          "z": 7.02
+        },
+        {
+          "x": 0.9750000000000002,
+          "y": 7.188749537379655,
+          "z": 7.02
+        },
+        {
+          "x": 0.7462326931119252,
+          "y": 7.301565088397009,
+          "z": 7.02
+        },
+        {
+          "x": 0.5046971379499154,
+          "y": 7.383555361263683,
+          "z": 7.02
+        },
+        {
+          "x": 0.25452607482910083,
+          "y": 7.43331747967893,
+          "z": 7.02
+        },
+        {
+          "x": 1.1940306291686693e-16,
+          "y": 7.45,
+          "z": 7.02
+        },
+        {
+          "x": -0.2545260748291006,
+          "y": 7.43331747967893,
+          "z": 7.02
+        },
+        {
+          "x": -0.5046971379499152,
+          "y": 7.383555361263683,
+          "z": 7.02
+        },
+        {
+          "x": -0.7462326931119245,
+          "y": 7.301565088397009,
+          "z": 7.02
+        },
+        {
+          "x": -0.9749999999999995,
+          "y": 7.188749537379655,
+          "z": 7.02
+        },
+        {
+          "x": -1.1870847865670053,
+          "y": 7.047039013567908,
+          "z": 7.02
+        },
+        {
+          "x": -1.3788582233137676,
+          "y": 6.878858223313768,
+          "z": 7.02
+        },
+        {
+          "x": -1.5470390135679084,
+          "y": 6.687084786567006,
+          "z": 7.02
+        },
+        {
+          "x": -1.6887495373796555,
+          "y": 6.475,
+          "z": 7.02
+        },
+        {
+          "x": -1.8015650883970091,
+          "y": 6.246232693111925,
+          "z": 7.02
+        },
+        {
+          "x": -1.883555361263683,
+          "y": 6.004697137949916,
+          "z": 7.02
+        },
+        {
+          "x": -1.9333174796789303,
+          "y": 5.754526074829101,
+          "z": 7.02
+        },
+        {
+          "x": -1.95,
+          "y": 5.5,
+          "z": 7.02
+        },
+        {
+          "x": -1.9333174796789303,
+          "y": 5.245473925170899,
+          "z": 7.02
+        },
+        {
+          "x": -1.883555361263683,
+          "y": 4.995302862050084,
+          "z": 7.02
+        },
+        {
+          "x": -1.8015650883970094,
+          "y": 4.753767306888075,
+          "z": 7.02
+        },
+        {
+          "x": -1.6887495373796557,
+          "y": 4.525,
+          "z": 7.02
+        },
+        {
+          "x": -1.5470390135679086,
+          "y": 4.312915213432994,
+          "z": 7.02
+        },
+        {
+          "x": -1.3788582233137683,
+          "y": 4.121141776686233,
+          "z": 7.02
+        },
+        {
+          "x": -1.1870847865670058,
+          "y": 3.9529609864320916,
+          "z": 7.02
+        },
+        {
+          "x": -0.9750000000000009,
+          "y": 3.811250462620345,
+          "z": 7.02
+        },
+        {
+          "x": -0.7462326931119245,
+          "y": 3.6984349116029906,
+          "z": 7.02
+        },
+        {
+          "x": -0.5046971379499152,
+          "y": 3.6164446387363167,
+          "z": 7.02
+        },
+        {
+          "x": -0.25452607482910067,
+          "y": 3.56668252032107,
+          "z": 7.02
+        },
+        {
+          "x": -3.5820918875060077e-16,
+          "y": 3.55,
+          "z": 7.02
+        },
+        {
+          "x": 0.25452607482909995,
+          "y": 3.5666825203210695,
+          "z": 7.02
+        },
+        {
+          "x": 0.5046971379499146,
+          "y": 3.6164446387363167,
+          "z": 7.02
+        },
+        {
+          "x": 0.7462326931119239,
+          "y": 3.69843491160299,
+          "z": 7.02
+        },
+        {
+          "x": 0.9750000000000002,
+          "y": 3.811250462620345,
+          "z": 7.02
+        },
+        {
+          "x": 1.1870847865670038,
+          "y": 3.9529609864320907,
+          "z": 7.02
+        },
+        {
+          "x": 1.3788582233137674,
+          "y": 4.1211417766862315,
+          "z": 7.02
+        },
+        {
+          "x": 1.5470390135679082,
+          "y": 4.312915213432994,
+          "z": 7.02
+        },
+        {
+          "x": 1.6887495373796548,
+          "y": 4.5249999999999995,
+          "z": 7.02
+        },
+        {
+          "x": 1.8015650883970094,
+          "y": 4.753767306888076,
+          "z": 7.02
+        },
+        {
+          "x": 1.8835553612636828,
+          "y": 4.995302862050083,
+          "z": 7.02
+        },
+        {
+          "x": 1.9333174796789303,
+          "y": 5.2454739251708995,
+          "z": 7.02
+        },
+        {
+          "x": 1.95,
+          "y": 5.499999999999999,
+          "z": 7.02
+        }
+      ],
+      "radius": 0.08,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "window-ring-1_72",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 1.72,
+          "y": 5.5,
+          "z": 7.02
+        },
+        {
+          "x": 1.7052851615629538,
+          "y": 5.724505050618489,
+          "z": 7.02
+        },
+        {
+          "x": 1.6613924212171975,
+          "y": 5.945168757576336,
+          "z": 7.02
+        },
+        {
+          "x": 1.589072795919413,
+          "y": 6.158215503667955,
+          "z": 7.02
+        },
+        {
+          "x": 1.4895636945092345,
+          "y": 6.359999999999999,
+          "z": 7.02
+        },
+        {
+          "x": 1.3645677453009244,
+          "y": 6.547069657894999,
+          "z": 7.02
+        },
+        {
+          "x": 1.2162236636408619,
+          "y": 6.716223663640862,
+          "z": 7.02
+        },
+        {
+          "x": 1.0470696578949996,
+          "y": 6.864567745300924,
+          "z": 7.02
+        },
+        {
+          "x": 0.8600000000000002,
+          "y": 6.9895636945092345,
+          "z": 7.02
+        },
+        {
+          "x": 0.6582155036679546,
+          "y": 7.089072795919413,
+          "z": 7.02
+        },
+        {
+          "x": 0.44516875757633567,
+          "y": 7.161392421217197,
+          "z": 7.02
+        },
+        {
+          "x": 0.22450505061848894,
+          "y": 7.205285161562954,
+          "z": 7.02
+        },
+        {
+          "x": 1.0531962472667238e-16,
+          "y": 7.22,
+          "z": 7.02
+        },
+        {
+          "x": -0.22450505061848874,
+          "y": 7.205285161562954,
+          "z": 7.02
+        },
+        {
+          "x": -0.44516875757633545,
+          "y": 7.161392421217197,
+          "z": 7.02
+        },
+        {
+          "x": -0.6582155036679539,
+          "y": 7.089072795919414,
+          "z": 7.02
+        },
+        {
+          "x": -0.8599999999999997,
+          "y": 6.9895636945092345,
+          "z": 7.02
+        },
+        {
+          "x": -1.0470696578949996,
+          "y": 6.864567745300924,
+          "z": 7.02
+        },
+        {
+          "x": -1.2162236636408617,
+          "y": 6.716223663640862,
+          "z": 7.02
+        },
+        {
+          "x": -1.3645677453009242,
+          "y": 6.547069657894999,
+          "z": 7.02
+        },
+        {
+          "x": -1.4895636945092345,
+          "y": 6.359999999999999,
+          "z": 7.02
+        },
+        {
+          "x": -1.589072795919413,
+          "y": 6.158215503667955,
+          "z": 7.02
+        },
+        {
+          "x": -1.6613924212171973,
+          "y": 5.945168757576337,
+          "z": 7.02
+        },
+        {
+          "x": -1.7052851615629538,
+          "y": 5.72450505061849,
+          "z": 7.02
+        },
+        {
+          "x": -1.72,
+          "y": 5.5,
+          "z": 7.02
+        },
+        {
+          "x": -1.7052851615629538,
+          "y": 5.275494949381511,
+          "z": 7.02
+        },
+        {
+          "x": -1.6613924212171975,
+          "y": 5.054831242423664,
+          "z": 7.02
+        },
+        {
+          "x": -1.5890727959194133,
+          "y": 4.841784496332046,
+          "z": 7.02
+        },
+        {
+          "x": -1.4895636945092348,
+          "y": 4.640000000000001,
+          "z": 7.02
+        },
+        {
+          "x": -1.3645677453009244,
+          "y": 4.452930342105001,
+          "z": 7.02
+        },
+        {
+          "x": -1.2162236636408623,
+          "y": 4.283776336359139,
+          "z": 7.02
+        },
+        {
+          "x": -1.0470696578949998,
+          "y": 4.135432254699076,
+          "z": 7.02
+        },
+        {
+          "x": -0.8600000000000008,
+          "y": 4.0104363054907655,
+          "z": 7.02
+        },
+        {
+          "x": -0.6582155036679539,
+          "y": 3.9109272040805867,
+          "z": 7.02
+        },
+        {
+          "x": -0.44516875757633545,
+          "y": 3.8386075787828027,
+          "z": 7.02
+        },
+        {
+          "x": -0.2245050506184888,
+          "y": 3.794714838437046,
+          "z": 7.02
+        },
+        {
+          "x": -3.159588741800171e-16,
+          "y": 3.7800000000000002,
+          "z": 7.02
+        },
+        {
+          "x": 0.2245050506184882,
+          "y": 3.794714838437046,
+          "z": 7.02
+        },
+        {
+          "x": 0.4451687575763349,
+          "y": 3.8386075787828022,
+          "z": 7.02
+        },
+        {
+          "x": 0.6582155036679533,
+          "y": 3.9109272040805863,
+          "z": 7.02
+        },
+        {
+          "x": 0.8600000000000002,
+          "y": 4.0104363054907655,
+          "z": 7.02
+        },
+        {
+          "x": 1.0470696578949983,
+          "y": 4.135432254699074,
+          "z": 7.02
+        },
+        {
+          "x": 1.2162236636408614,
+          "y": 4.2837763363591375,
+          "z": 7.02
+        },
+        {
+          "x": 1.3645677453009242,
+          "y": 4.452930342105,
+          "z": 7.02
+        },
+        {
+          "x": 1.4895636945092339,
+          "y": 4.639999999999999,
+          "z": 7.02
+        },
+        {
+          "x": 1.5890727959194133,
+          "y": 4.841784496332046,
+          "z": 7.02
+        },
+        {
+          "x": 1.661392421217197,
+          "y": 5.0548312424236626,
+          "z": 7.02
+        },
+        {
+          "x": 1.7052851615629538,
+          "y": 5.275494949381511,
+          "z": 7.02
+        },
+        {
+          "x": 1.72,
+          "y": 5.5,
+          "z": 7.02
+        }
+      ],
+      "radius": 0.08,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "window-ring-0_48",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 0.48,
+          "y": 5.5,
+          "z": 7.02
+        },
+        {
+          "x": 0.475893533459429,
+          "y": 5.562652572265625,
+          "z": 7.02
+        },
+        {
+          "x": 0.4636443966187528,
+          "y": 5.62423314164921,
+          "z": 7.02
+        },
+        {
+          "x": 0.4434621756054176,
+          "y": 5.683688047535243,
+          "z": 7.02
+        },
+        {
+          "x": 0.41569219381653055,
+          "y": 5.74,
+          "z": 7.02
+        },
+        {
+          "x": 0.38080960333979286,
+          "y": 5.792205485924186,
+          "z": 7.02
+        },
+        {
+          "x": 0.33941125496954283,
+          "y": 5.8394112549695425,
+          "z": 7.02
+        },
+        {
+          "x": 0.2922054859241859,
+          "y": 5.8808096033397925,
+          "z": 7.02
+        },
+        {
+          "x": 0.24000000000000005,
+          "y": 5.915692193816531,
+          "z": 7.02
+        },
+        {
+          "x": 0.18368804753524312,
+          "y": 5.943462175605418,
+          "z": 7.02
+        },
+        {
+          "x": 0.12423314164920995,
+          "y": 5.9636443966187525,
+          "z": 7.02
+        },
+        {
+          "x": 0.06265257226562482,
+          "y": 5.975893533459429,
+          "z": 7.02
+        },
+        {
+          "x": 2.9391523179536474e-17,
+          "y": 5.98,
+          "z": 7.02
+        },
+        {
+          "x": -0.06265257226562476,
+          "y": 5.975893533459429,
+          "z": 7.02
+        },
+        {
+          "x": -0.1242331416492099,
+          "y": 5.9636443966187525,
+          "z": 7.02
+        },
+        {
+          "x": -0.18368804753524295,
+          "y": 5.943462175605418,
+          "z": 7.02
+        },
+        {
+          "x": -0.23999999999999988,
+          "y": 5.915692193816531,
+          "z": 7.02
+        },
+        {
+          "x": -0.2922054859241859,
+          "y": 5.8808096033397925,
+          "z": 7.02
+        },
+        {
+          "x": -0.3394112549695428,
+          "y": 5.8394112549695425,
+          "z": 7.02
+        },
+        {
+          "x": -0.3808096033397928,
+          "y": 5.792205485924186,
+          "z": 7.02
+        },
+        {
+          "x": -0.41569219381653055,
+          "y": 5.74,
+          "z": 7.02
+        },
+        {
+          "x": -0.4434621756054176,
+          "y": 5.683688047535243,
+          "z": 7.02
+        },
+        {
+          "x": -0.46364439661875273,
+          "y": 5.62423314164921,
+          "z": 7.02
+        },
+        {
+          "x": -0.475893533459429,
+          "y": 5.562652572265625,
+          "z": 7.02
+        },
+        {
+          "x": -0.48,
+          "y": 5.5,
+          "z": 7.02
+        },
+        {
+          "x": -0.475893533459429,
+          "y": 5.437347427734375,
+          "z": 7.02
+        },
+        {
+          "x": -0.4636443966187528,
+          "y": 5.37576685835079,
+          "z": 7.02
+        },
+        {
+          "x": -0.4434621756054177,
+          "y": 5.316311952464757,
+          "z": 7.02
+        },
+        {
+          "x": -0.4156921938165306,
+          "y": 5.26,
+          "z": 7.02
+        },
+        {
+          "x": -0.38080960333979286,
+          "y": 5.207794514075814,
+          "z": 7.02
+        },
+        {
+          "x": -0.339411254969543,
+          "y": 5.1605887450304575,
+          "z": 7.02
+        },
+        {
+          "x": -0.292205485924186,
+          "y": 5.1191903966602075,
+          "z": 7.02
+        },
+        {
+          "x": -0.2400000000000002,
+          "y": 5.084307806183469,
+          "z": 7.02
+        },
+        {
+          "x": -0.18368804753524295,
+          "y": 5.056537824394582,
+          "z": 7.02
+        },
+        {
+          "x": -0.1242331416492099,
+          "y": 5.0363556033812475,
+          "z": 7.02
+        },
+        {
+          "x": -0.06265257226562478,
+          "y": 5.024106466540571,
+          "z": 7.02
+        },
+        {
+          "x": -8.817456953860942e-17,
+          "y": 5.02,
+          "z": 7.02
+        },
+        {
+          "x": 0.06265257226562461,
+          "y": 5.024106466540571,
+          "z": 7.02
+        },
+        {
+          "x": 0.12423314164920973,
+          "y": 5.0363556033812475,
+          "z": 7.02
+        },
+        {
+          "x": 0.1836880475352428,
+          "y": 5.056537824394582,
+          "z": 7.02
+        },
+        {
+          "x": 0.24000000000000005,
+          "y": 5.084307806183469,
+          "z": 7.02
+        },
+        {
+          "x": 0.29220548592418555,
+          "y": 5.119190396660207,
+          "z": 7.02
+        },
+        {
+          "x": 0.3394112549695427,
+          "y": 5.1605887450304575,
+          "z": 7.02
+        },
+        {
+          "x": 0.38080960333979275,
+          "y": 5.207794514075814,
+          "z": 7.02
+        },
+        {
+          "x": 0.4156921938165304,
+          "y": 5.26,
+          "z": 7.02
+        },
+        {
+          "x": 0.4434621756054177,
+          "y": 5.316311952464757,
+          "z": 7.02
+        },
+        {
+          "x": 0.4636443966187527,
+          "y": 5.37576685835079,
+          "z": 7.02
+        },
+        {
+          "x": 0.475893533459429,
+          "y": 5.437347427734375,
+          "z": 7.02
+        },
+        {
+          "x": 0.48,
+          "y": 5.5,
+          "z": 7.02
+        }
+      ],
+      "radius": 0.08,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "window-ray-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 0.48,
+          "y": 5.5,
+          "z": 7
+        },
+        {
+          "x": 1.7,
+          "y": 5.5,
+          "z": 7
+        }
+      ],
+      "radius": 0.035,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "window-ray-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 0.33941125496954283,
+          "y": 5.8394112549695425,
+          "z": 7
+        },
+        {
+          "x": 1.2020815280171309,
+          "y": 6.702081528017131,
+          "z": 7
+        }
+      ],
+      "radius": 0.035,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "window-ray-2",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 2.9391523179536474e-17,
+          "y": 5.98,
+          "z": 7
+        },
+        {
+          "x": 1.0409497792752501e-16,
+          "y": 7.2,
+          "z": 7
+        }
+      ],
+      "radius": 0.035,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "window-ray-3",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -0.3394112549695428,
+          "y": 5.8394112549695425,
+          "z": 7
+        },
+        {
+          "x": -1.2020815280171306,
+          "y": 6.702081528017131,
+          "z": 7
+        }
+      ],
+      "radius": 0.035,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "window-ray-4",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -0.48,
+          "y": 5.5,
+          "z": 7
+        },
+        {
+          "x": -1.7,
+          "y": 5.5,
+          "z": 7
+        }
+      ],
+      "radius": 0.035,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "window-ray-5",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -0.3394112549695429,
+          "y": 5.1605887450304575,
+          "z": 7
+        },
+        {
+          "x": -1.202081528017131,
+          "y": 4.29791847198287,
+          "z": 7
+        }
+      ],
+      "radius": 0.035,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "window-ray-6",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": -8.817456953860942e-17,
+          "y": 5.02,
+          "z": 7
+        },
+        {
+          "x": -3.1228493378257504e-16,
+          "y": 3.8,
+          "z": 7
+        }
+      ],
+      "radius": 0.035,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "window-ray-7",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 0.3394112549695427,
+          "y": 5.1605887450304575,
+          "z": 7
+        },
+        {
+          "x": 1.2020815280171304,
+          "y": 4.297918471982869,
+          "z": 7
+        }
+      ],
+      "radius": 0.035,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-chain",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 0,
+          "y": 8,
+          "z": 1.5
+        },
+        {
+          "x": 0,
+          "y": 5.5,
+          "z": 1.5
+        }
+      ],
+      "radius": 0.025,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-ring",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "points": [
+        {
+          "x": 1.55,
+          "y": 5.5,
+          "z": 1.5
+        },
+        {
+          "x": 1.5264520171689224,
+          "y": 5.5,
+          "z": 1.7691546753837422
+        },
+        {
+          "x": 1.456523562218158,
+          "y": 5.5,
+          "z": 2.0301312221547865
+        },
+        {
+          "x": 1.34233937586588,
+          "y": 5.5,
+          "z": 2.275
+        },
+        {
+          "x": 1.1873688868344159,
+          "y": 5.5,
+          "z": 2.4963207950141357
+        },
+        {
+          "x": 0.9963207950141361,
+          "y": 5.5,
+          "z": 2.687368886834416
+        },
+        {
+          "x": 0.7750000000000002,
+          "y": 5.5,
+          "z": 2.8423393758658797
+        },
+        {
+          "x": 0.5301312221547867,
+          "y": 5.5,
+          "z": 2.956523562218158
+        },
+        {
+          "x": 0.26915467538374216,
+          "y": 5.5,
+          "z": 3.026452017168922
+        },
+        {
+          "x": 9.491012693391987e-17,
+          "y": 5.5,
+          "z": 3.05
+        },
+        {
+          "x": -0.269154675383742,
+          "y": 5.5,
+          "z": 3.026452017168922
+        },
+        {
+          "x": -0.5301312221547861,
+          "y": 5.5,
+          "z": 2.956523562218158
+        },
+        {
+          "x": -0.7749999999999997,
+          "y": 5.5,
+          "z": 2.8423393758658797
+        },
+        {
+          "x": -0.9963207950141361,
+          "y": 5.5,
+          "z": 2.687368886834416
+        },
+        {
+          "x": -1.1873688868344159,
+          "y": 5.5,
+          "z": 2.496320795014136
+        },
+        {
+          "x": -1.3423393758658797,
+          "y": 5.5,
+          "z": 2.2750000000000004
+        },
+        {
+          "x": -1.456523562218158,
+          "y": 5.5,
+          "z": 2.030131222154787
+        },
+        {
+          "x": -1.5264520171689224,
+          "y": 5.5,
+          "z": 1.769154675383742
+        },
+        {
+          "x": -1.55,
+          "y": 5.5,
+          "z": 1.5000000000000002
+        },
+        {
+          "x": -1.5264520171689226,
+          "y": 5.5,
+          "z": 1.2308453246162585
+        },
+        {
+          "x": -1.456523562218158,
+          "y": 5.5,
+          "z": 0.9698687778452135
+        },
+        {
+          "x": -1.34233937586588,
+          "y": 5.5,
+          "z": 0.7249999999999998
+        },
+        {
+          "x": -1.1873688868344165,
+          "y": 5.5,
+          "z": 0.5036792049858646
+        },
+        {
+          "x": -0.9963207950141362,
+          "y": 5.5,
+          "z": 0.3126311131655841
+        },
+        {
+          "x": -0.7750000000000007,
+          "y": 5.5,
+          "z": 0.1576606241341203
+        },
+        {
+          "x": -0.5301312221547863,
+          "y": 5.5,
+          "z": 0.04347643778184196
+        },
+        {
+          "x": -0.26915467538374205,
+          "y": 5.5,
+          "z": -0.026452017168922426
+        },
+        {
+          "x": -2.847303808017596e-16,
+          "y": 5.5,
+          "z": -0.050000000000000044
+        },
+        {
+          "x": 0.26915467538374144,
+          "y": 5.5,
+          "z": -0.026452017168922648
+        },
+        {
+          "x": 0.5301312221547869,
+          "y": 5.5,
+          "z": 0.04347643778184196
+        },
+        {
+          "x": 0.774999999999999,
+          "y": 5.5,
+          "z": 0.1576606241341194
+        },
+        {
+          "x": 0.9963207950141358,
+          "y": 5.5,
+          "z": 0.3126311131655839
+        },
+        {
+          "x": 1.1873688868344157,
+          "y": 5.5,
+          "z": 0.5036792049858636
+        },
+        {
+          "x": 1.3423393758658801,
+          "y": 5.5,
+          "z": 0.7250000000000005
+        },
+        {
+          "x": 1.456523562218158,
+          "y": 5.5,
+          "z": 0.9698687778452136
+        },
+        {
+          "x": 1.5264520171689224,
+          "y": 5.5,
+          "z": 1.2308453246162578
+        },
+        {
+          "x": 1.55,
+          "y": 5.5,
+          "z": 1.4999999999999996
+        }
+      ],
+      "radius": 0.06,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-0-mount",
+      "kind": "box",
+      "position": {
+        "x": 1.55,
+        "y": 4.9,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.45,
+        "y": 0.12,
+        "z": 0.45
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-0-glass",
+      "kind": "box",
+      "position": {
+        "x": 1.55,
+        "y": 5.2,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.24,
+        "y": 0.5,
+        "z": 0.24
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-0-cap",
+      "kind": "box",
+      "position": {
+        "x": 1.55,
+        "y": 5.5,
+        "z": 1.5
+      },
+      "size": {
+        "x": 0.4,
+        "y": 0.1,
+        "z": 0.4
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-0-light",
+      "kind": "light",
+      "position": {
+        "x": 1.55,
+        "y": 5.2,
+        "z": 1.5
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 1.1,
+      "range": 8,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-1-mount",
+      "kind": "box",
+      "position": {
+        "x": 0.7750000000000002,
+        "y": 4.9,
+        "z": 2.8423393758658797
+      },
+      "size": {
+        "x": 0.45,
+        "y": 0.12,
+        "z": 0.45
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-1-glass",
+      "kind": "box",
+      "position": {
+        "x": 0.7750000000000002,
+        "y": 5.2,
+        "z": 2.8423393758658797
+      },
+      "size": {
+        "x": 0.24,
+        "y": 0.5,
+        "z": 0.24
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-1-cap",
+      "kind": "box",
+      "position": {
+        "x": 0.7750000000000002,
+        "y": 5.5,
+        "z": 2.8423393758658797
+      },
+      "size": {
+        "x": 0.4,
+        "y": 0.1,
+        "z": 0.4
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-1-light",
+      "kind": "light",
+      "position": {
+        "x": 0.7750000000000002,
+        "y": 5.2,
+        "z": 2.8423393758658797
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 1.1,
+      "range": 8,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-2-mount",
+      "kind": "box",
+      "position": {
+        "x": -0.7749999999999997,
+        "y": 4.9,
+        "z": 2.8423393758658797
+      },
+      "size": {
+        "x": 0.45,
+        "y": 0.12,
+        "z": 0.45
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-2-glass",
+      "kind": "box",
+      "position": {
+        "x": -0.7749999999999997,
+        "y": 5.2,
+        "z": 2.8423393758658797
+      },
+      "size": {
+        "x": 0.24,
+        "y": 0.5,
+        "z": 0.24
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-2-cap",
+      "kind": "box",
+      "position": {
+        "x": -0.7749999999999997,
+        "y": 5.5,
+        "z": 2.8423393758658797
+      },
+      "size": {
+        "x": 0.4,
+        "y": 0.1,
+        "z": 0.4
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-2-light",
+      "kind": "light",
+      "position": {
+        "x": -0.7749999999999997,
+        "y": 5.2,
+        "z": 2.8423393758658797
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 1.1,
+      "range": 8,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-3-mount",
+      "kind": "box",
+      "position": {
+        "x": -1.55,
+        "y": 4.9,
+        "z": 1.5000000000000002
+      },
+      "size": {
+        "x": 0.45,
+        "y": 0.12,
+        "z": 0.45
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-3-glass",
+      "kind": "box",
+      "position": {
+        "x": -1.55,
+        "y": 5.2,
+        "z": 1.5000000000000002
+      },
+      "size": {
+        "x": 0.24,
+        "y": 0.5,
+        "z": 0.24
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-3-cap",
+      "kind": "box",
+      "position": {
+        "x": -1.55,
+        "y": 5.5,
+        "z": 1.5000000000000002
+      },
+      "size": {
+        "x": 0.4,
+        "y": 0.1,
+        "z": 0.4
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-3-light",
+      "kind": "light",
+      "position": {
+        "x": -1.55,
+        "y": 5.2,
+        "z": 1.5000000000000002
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 1.1,
+      "range": 8,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-4-mount",
+      "kind": "box",
+      "position": {
+        "x": -0.7750000000000007,
+        "y": 4.9,
+        "z": 0.1576606241341203
+      },
+      "size": {
+        "x": 0.45,
+        "y": 0.12,
+        "z": 0.45
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-4-glass",
+      "kind": "box",
+      "position": {
+        "x": -0.7750000000000007,
+        "y": 5.2,
+        "z": 0.1576606241341203
+      },
+      "size": {
+        "x": 0.24,
+        "y": 0.5,
+        "z": 0.24
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-4-cap",
+      "kind": "box",
+      "position": {
+        "x": -0.7750000000000007,
+        "y": 5.5,
+        "z": 0.1576606241341203
+      },
+      "size": {
+        "x": 0.4,
+        "y": 0.1,
+        "z": 0.4
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-4-light",
+      "kind": "light",
+      "position": {
+        "x": -0.7750000000000007,
+        "y": 5.2,
+        "z": 0.1576606241341203
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 1.1,
+      "range": 8,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-5-mount",
+      "kind": "box",
+      "position": {
+        "x": 0.7750000000000002,
+        "y": 4.9,
+        "z": 0.15766062413412008
+      },
+      "size": {
+        "x": 0.45,
+        "y": 0.12,
+        "z": 0.45
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-5-glass",
+      "kind": "box",
+      "position": {
+        "x": 0.7750000000000002,
+        "y": 5.2,
+        "z": 0.15766062413412008
+      },
+      "size": {
+        "x": 0.24,
+        "y": 0.5,
+        "z": 0.24
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-5-cap",
+      "kind": "box",
+      "position": {
+        "x": 0.7750000000000002,
+        "y": 5.5,
+        "z": 0.15766062413412008
+      },
+      "size": {
+        "x": 0.4,
+        "y": 0.1,
+        "z": 0.4
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "chandelier-5-light",
+      "kind": "light",
+      "position": {
+        "x": 0.7750000000000002,
+        "y": 5.2,
+        "z": 0.15766062413412008
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 1.1,
+      "range": 8,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-0-mount",
+      "kind": "box",
+      "position": {
+        "x": -2.8,
+        "y": 1.9000000000000001,
+        "z": -6
+      },
+      "size": {
+        "x": 0.45,
+        "y": 0.12,
+        "z": 0.45
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-0-glass",
+      "kind": "box",
+      "position": {
+        "x": -2.8,
+        "y": 2.2,
+        "z": -6
+      },
+      "size": {
+        "x": 0.24,
+        "y": 0.5,
+        "z": 0.24
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-0-cap",
+      "kind": "box",
+      "position": {
+        "x": -2.8,
+        "y": 2.5,
+        "z": -6
+      },
+      "size": {
+        "x": 0.4,
+        "y": 0.1,
+        "z": 0.4
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-0-light",
+      "kind": "light",
+      "position": {
+        "x": -2.8,
+        "y": 2.2,
+        "z": -6
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 1.7,
+      "range": 6,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-1-mount",
+      "kind": "box",
+      "position": {
+        "x": 2.5,
+        "y": 1.9000000000000001,
+        "z": -6
+      },
+      "size": {
+        "x": 0.45,
+        "y": 0.12,
+        "z": 0.45
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-1-glass",
+      "kind": "box",
+      "position": {
+        "x": 2.5,
+        "y": 2.2,
+        "z": -6
+      },
+      "size": {
+        "x": 0.24,
+        "y": 0.5,
+        "z": 0.24
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-1-cap",
+      "kind": "box",
+      "position": {
+        "x": 2.5,
+        "y": 2.5,
+        "z": -6
+      },
+      "size": {
+        "x": 0.4,
+        "y": 0.1,
+        "z": 0.4
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-1-light",
+      "kind": "light",
+      "position": {
+        "x": 2.5,
+        "y": 2.2,
+        "z": -6
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 1.7,
+      "range": 6,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-2-mount",
+      "kind": "box",
+      "position": {
+        "x": -3.8,
+        "y": 4.5,
+        "z": 4
+      },
+      "size": {
+        "x": 0.45,
+        "y": 0.12,
+        "z": 0.45
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-2-glass",
+      "kind": "box",
+      "position": {
+        "x": -3.8,
+        "y": 4.8,
+        "z": 4
+      },
+      "size": {
+        "x": 0.24,
+        "y": 0.5,
+        "z": 0.24
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-2-cap",
+      "kind": "box",
+      "position": {
+        "x": -3.8,
+        "y": 5.1,
+        "z": 4
+      },
+      "size": {
+        "x": 0.4,
+        "y": 0.1,
+        "z": 0.4
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-2-light",
+      "kind": "light",
+      "position": {
+        "x": -3.8,
+        "y": 4.8,
+        "z": 4
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 1.7,
+      "range": 6,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-3-mount",
+      "kind": "box",
+      "position": {
+        "x": 3.8,
+        "y": 4.5,
+        "z": 4
+      },
+      "size": {
+        "x": 0.45,
+        "y": 0.12,
+        "z": 0.45
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-3-glass",
+      "kind": "box",
+      "position": {
+        "x": 3.8,
+        "y": 4.8,
+        "z": 4
+      },
+      "size": {
+        "x": 0.24,
+        "y": 0.5,
+        "z": 0.24
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-3-cap",
+      "kind": "box",
+      "position": {
+        "x": 3.8,
+        "y": 5.1,
+        "z": 4
+      },
+      "size": {
+        "x": 0.4,
+        "y": 0.1,
+        "z": 0.4
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-3-light",
+      "kind": "light",
+      "position": {
+        "x": 3.8,
+        "y": 4.8,
+        "z": 4
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 1.7,
+      "range": 6,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-4-mount",
+      "kind": "box",
+      "position": {
+        "x": -5.7,
+        "y": 1.5,
+        "z": 3
+      },
+      "size": {
+        "x": 0.45,
+        "y": 0.12,
+        "z": 0.45
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-4-glass",
+      "kind": "box",
+      "position": {
+        "x": -5.7,
+        "y": 1.8,
+        "z": 3
+      },
+      "size": {
+        "x": 0.24,
+        "y": 0.5,
+        "z": 0.24
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-4-cap",
+      "kind": "box",
+      "position": {
+        "x": -5.7,
+        "y": 2.1,
+        "z": 3
+      },
+      "size": {
+        "x": 0.4,
+        "y": 0.1,
+        "z": 0.4
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-4-light",
+      "kind": "light",
+      "position": {
+        "x": -5.7,
+        "y": 1.8,
+        "z": 3
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 1.7,
+      "range": 6,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-5-mount",
+      "kind": "box",
+      "position": {
+        "x": 5.7,
+        "y": 1.5,
+        "z": 3
+      },
+      "size": {
+        "x": 0.45,
+        "y": 0.12,
+        "z": 0.45
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-5-glass",
+      "kind": "box",
+      "position": {
+        "x": 5.7,
+        "y": 1.8,
+        "z": 3
+      },
+      "size": {
+        "x": 0.24,
+        "y": 0.5,
+        "z": 0.24
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-5-cap",
+      "kind": "box",
+      "position": {
+        "x": 5.7,
+        "y": 2.1,
+        "z": 3
+      },
+      "size": {
+        "x": 0.4,
+        "y": 0.1,
+        "z": 0.4
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "wall-lamp-5-light",
+      "kind": "light",
+      "position": {
+        "x": 5.7,
+        "y": 1.8,
+        "z": 3
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "WarmGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 1.7,
+      "range": 6,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "moonlight",
+      "kind": "light",
+      "position": {
+        "x": 0,
+        "y": 6,
+        "z": 5.8
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MoonGlass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 2.3,
+      "range": 10,
+      "shadows": true,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "pit-glow",
+      "kind": "light",
+      "position": {
+        "x": 0,
+        "y": -2,
+        "z": 1.5
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "MossGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "intensity": 1.8,
+      "range": 5,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "fallen-tome-0",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": -3.05,
+        "z": 2.8
+      },
+      "size": {
+        "x": 0.55,
+        "y": 0.24,
+        "z": 0.8
+      },
+      "material": "BookWine",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "fallen-tome-1",
+      "kind": "box",
+      "position": {
+        "x": -1.4728987999159384,
+        "y": -3.05,
+        "z": 0.3247062153778204
+      },
+      "size": {
+        "x": 0.55,
+        "y": 0.24,
+        "z": 0.8
+      },
+      "material": "BookTeal",
+      "rotation": {
+        "x": 0,
+        "y": 37,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "fallen-tome-2",
+      "kind": "box",
+      "position": {
+        "x": 1.6933150020235916,
+        "y": -3.05,
+        "z": 2.325100738725425
+      },
+      "size": {
+        "x": 0.55,
+        "y": 0.24,
+        "z": 0.8
+      },
+      "material": "BookOchre",
+      "rotation": {
+        "x": 0,
+        "y": 74,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "fallen-tome-3",
+      "kind": "box",
+      "position": {
+        "x": -0.4738172244584448,
+        "y": -3.05,
+        "z": 1.1833926001434691
+      },
+      "size": {
+        "x": 0.55,
+        "y": 0.24,
+        "z": 0.8
+      },
+      "material": "BookInk",
+      "rotation": {
+        "x": 0,
+        "y": 111,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "fallen-tome-4",
+      "kind": "box",
+      "position": {
+        "x": -1.1485920282263054,
+        "y": -3.05,
+        "z": 1.2473711216080647
+      },
+      "size": {
+        "x": 0.55,
+        "y": 0.24,
+        "z": 0.8
+      },
+      "material": "BookCream",
+      "rotation": {
+        "x": 0,
+        "y": 148,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "fallen-tome-5",
+      "kind": "box",
+      "position": {
+        "x": 1.7942936297018386,
+        "y": -3.05,
+        "z": 2.2733968623028598
+      },
+      "size": {
+        "x": 0.55,
+        "y": 0.24,
+        "z": 0.8
+      },
+      "material": "BookWine",
+      "rotation": {
+        "x": 0,
+        "y": 185,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "fallen-tome-6",
+      "kind": "box",
+      "position": {
+        "x": -0.9142138627031253,
+        "y": -3.05,
+        "z": 0.35421576252909714
+      },
+      "size": {
+        "x": 0.55,
+        "y": 0.24,
+        "z": 0.8
+      },
+      "material": "BookTeal",
+      "rotation": {
+        "x": 0,
+        "y": 222,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "fallen-tome-7",
+      "kind": "box",
+      "position": {
+        "x": -0.7432695886329664,
+        "y": -3.05,
+        "z": 2.798346357416552
+      },
+      "size": {
+        "x": 0.55,
+        "y": 0.24,
+        "z": 0.8
+      },
+      "material": "BookOchre",
+      "rotation": {
+        "x": 0,
+        "y": 259,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "fallen-tome-8",
+      "kind": "box",
+      "position": {
+        "x": 1.7687121792554512,
+        "y": -3.05,
+        "z": 0.29818669261164166
+      },
+      "size": {
+        "x": 0.55,
+        "y": 0.24,
+        "z": 0.8
+      },
+      "material": "BookInk",
+      "rotation": {
+        "x": 0,
+        "y": 296,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "entry",
+      "kind": "nav",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -6.5
+      },
+      "connectsTo": [
+        "hide-entry",
+        "front",
+        "west-foot"
+      ]
+    },
+    {
+      "id": "hide-entry",
+      "kind": "nav",
+      "position": {
+        "x": 3.5,
+        "y": 0,
+        "z": -6.2
+      },
+      "connectsTo": [
+        "entry",
+        "hide-inside"
+      ]
+    },
+    {
+      "id": "hide-inside",
+      "kind": "nav",
+      "position": {
+        "x": 3.5,
+        "y": 0,
+        "z": -5.4
+      },
+      "connectsTo": [
+        "hide-entry"
+      ]
+    },
+    {
+      "id": "front",
+      "kind": "nav",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -3.7
+      },
+      "connectsTo": [
+        "entry",
+        "east-front"
+      ]
+    },
+    {
+      "id": "west-foot",
+      "kind": "nav",
+      "position": {
+        "x": -5.25,
+        "y": 0,
+        "z": -6.2
+      },
+      "connectsTo": [
+        "entry",
+        "west-mid"
+      ]
+    },
+    {
+      "id": "west-mid",
+      "kind": "nav",
+      "position": {
+        "x": -5.25,
+        "y": 1.5,
+        "z": -3.2
+      },
+      "connectsTo": [
+        "west-foot",
+        "west-top"
+      ]
+    },
+    {
+      "id": "west-top",
+      "kind": "nav",
+      "position": {
+        "x": -5.25,
+        "y": 3,
+        "z": -0.2
+      },
+      "connectsTo": [
+        "west-mid",
+        "upper-west"
+      ]
+    },
+    {
+      "id": "upper-west",
+      "kind": "nav",
+      "position": {
+        "x": -5.25,
+        "y": 3,
+        "z": 5.2
+      },
+      "connectsTo": [
+        "west-top",
+        "upper-rear"
+      ]
+    },
+    {
+      "id": "upper-rear",
+      "kind": "nav",
+      "position": {
+        "x": 0,
+        "y": 3,
+        "z": 5.2
+      },
+      "connectsTo": [
+        "upper-west",
+        "upper-east"
+      ]
+    },
+    {
+      "id": "upper-east",
+      "kind": "nav",
+      "position": {
+        "x": 5.25,
+        "y": 3,
+        "z": 5.2
+      },
+      "connectsTo": [
+        "upper-rear",
+        "upper-east-end"
+      ]
+    },
+    {
+      "id": "upper-east-end",
+      "kind": "nav",
+      "position": {
+        "x": 5.25,
+        "y": 3,
+        "z": 0.5
+      },
+      "connectsTo": [
+        "upper-east"
+      ]
+    },
+    {
+      "id": "east-front",
+      "kind": "nav",
+      "position": {
+        "x": 1.8,
+        "y": 0,
+        "z": -3.7
+      },
+      "connectsTo": [
+        "front",
+        "east-turn"
+      ]
+    },
+    {
+      "id": "east-turn",
+      "kind": "nav",
+      "position": {
+        "x": 4.8,
+        "y": 0,
+        "z": -2.6
+      },
+      "connectsTo": [
+        "east-front",
+        "east-bridge"
+      ]
+    },
+    {
+      "id": "east-bridge",
+      "kind": "nav",
+      "position": {
+        "x": 4.8,
+        "y": 0,
+        "z": 1.5
+      },
+      "connectsTo": [
+        "east-turn",
+        "east-back",
+        "bridge"
+      ]
+    },
+    {
+      "id": "east-back",
+      "kind": "nav",
+      "position": {
+        "x": 4.8,
+        "y": 0,
+        "z": 4.8
+      },
+      "connectsTo": [
+        "east-bridge",
+        "back"
+      ]
+    },
+    {
+      "id": "back",
+      "kind": "nav",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 4.8
+      },
+      "connectsTo": [
+        "east-back",
+        "west-back"
+      ]
+    },
+    {
+      "id": "west-back",
+      "kind": "nav",
+      "position": {
+        "x": -4.8,
+        "y": 0,
+        "z": 4.8
+      },
+      "connectsTo": [
+        "back",
+        "west-bridge"
+      ]
+    },
+    {
+      "id": "west-bridge",
+      "kind": "nav",
+      "position": {
+        "x": -4.8,
+        "y": 0,
+        "z": 1.5
+      },
+      "connectsTo": [
+        "west-back",
+        "bridge"
+      ]
+    },
+    {
+      "id": "bridge",
+      "kind": "nav",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 1.5
+      },
+      "connectsTo": [
+        "west-bridge",
+        "east-bridge"
+      ]
+    },
+    {
+      "id": "south",
+      "kind": "portal",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -7.5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "size": {
+        "x": 4.2,
+        "y": 3.8,
+        "z": 0.4
+      }
+    },
+    {
+      "id": "reading-hide",
+      "kind": "hide",
+      "position": {
+        "x": 3.5,
+        "y": 1,
+        "z": -5.4
+      }
+    },
+    {
+      "id": "open-pit",
+      "kind": "pit",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 5,
+        "y": 3.2,
+        "z": 4
+      }
+    },
+    {
+      "id": "room-volume",
+      "kind": "volume",
+      "position": {
+        "x": 0,
+        "y": 2.3,
+        "z": 0
+      },
+      "size": {
+        "x": 14.6,
+        "y": 11,
+        "z": 14.6
+      }
+    },
+    {
+      "id": "upper-loot",
+      "kind": "loot",
+      "position": {
+        "x": 5.8,
+        "y": 3.5,
+        "z": 4.4
+      },
+      "size": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 0.5
+      }
+    }
+  ],
+  "views": [
+    {
+      "id": "entrance",
+      "position": {
+        "x": 0,
+        "y": 1.65,
+        "z": -6.5
+      },
+      "target": {
+        "x": 0,
+        "y": 3.1,
+        "z": 3
+      },
+      "fieldOfView": 72
+    },
+    {
+      "id": "gallery",
+      "position": {
+        "x": -5.15,
+        "y": 4.65,
+        "z": 1
+      },
+      "target": {
+        "x": 1.2,
+        "y": 1.9,
+        "z": 3.5
+      },
+      "fieldOfView": 75
+    },
+    {
+      "id": "reading-niche",
+      "position": {
+        "x": 1.8,
+        "y": 1.65,
+        "z": -6.5
+      },
+      "target": {
+        "x": 4,
+        "y": 1.4,
+        "z": -4.4
+      },
+      "fieldOfView": 65
+    }
+  ],
+  "navigation": {
+    "radius": 0.35,
+    "height": 1.8,
+    "climb": 0.25,
+    "slope": 35,
+    "voxel": 0.08,
+    "sampleDistance": 0.25,
+    "maxVerticalSnap": 0.15
+  }
+}

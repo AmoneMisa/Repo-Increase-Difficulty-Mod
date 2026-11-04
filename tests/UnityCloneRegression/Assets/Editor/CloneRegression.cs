@@ -85,6 +85,7 @@ internal static class CloneRegression
         }
         Check(Mathf.Approximately(ValuableLayout.Scale("bomb"),.8f)&&Mathf.Approximately(ValuableLayout.Scale("cannon"),.85f),"Requested bomb/cannon scale factors");
         Check(Mathf.Approximately(ValuableLayout.Scale("centrifuge"),1.1f)&&Mathf.Approximately(ValuableLayout.Scale("robot_vacuum"),1.1f),"Requested centrifuge/vacuum scale factors");
+        Check(Mathf.Approximately(ValuableLayout.Scale("maneki_neko"),2f),"Neko doubles in all three dimensions");
     }
     private static void CheckCollectionGeometry()
     {
@@ -95,8 +96,9 @@ internal static class CloneRegression
             if(!File.Exists(path))path=Path.Combine(artDirectory,"v10_"+entry.Key+".mesh.json");
             if(!File.Exists(path))path=Path.Combine(artDirectory,"v09_"+entry.Key+".mesh.json");
             var model=JsonUtility.FromJson<ValuableArtModel>(File.ReadAllText(path));
+            if(entry.Key=="maneki_neko")ValuableVisuals.Overrides[entry.Key]=model;
             var go=new GameObject("Fixture "+entry.Key);go.SetActive(false);go.transform.localScale=Vector3.one*ValuableLayout.Scale(entry.Key);
-            go.AddComponent<Rigidbody>();go.AddComponent<PhysGrabObject>();
+            go.AddComponent<Rigidbody>().mass=entry.Mass;go.AddComponent<PhysGrabObject>();
             var art=go.AddComponent<ValuableArtInstance>();art.assetKey=entry.Key;
             var root=new GameObject("IHM Valuable Visual");root.transform.SetParent(go.transform,false);art.visualRoot=root.transform;
             var nativeCenter=new GameObject("Center of Mass");nativeCenter.transform.SetParent(go.transform,false);nativeCenter.transform.localPosition=Vector3.one*7;
@@ -122,13 +124,21 @@ internal static class CloneRegression
                     Check(hull.sharedMesh.vertexCount>0,"Bomb convex piece has actual geometry "+i);
                 }
             }
+            if(entry.Key=="maneki_neko")
+            {
+                Check(art.EnsureBindings(),"Approved maneki binds before collision setup");
+                Check(ManekiPhysics.Attach(go,art),"Approved maneki uses authored collision hulls");
+                foreach(var collider in go.GetComponentsInChildren<MeshCollider>(true))meshes.Add(collider.sharedMesh);
+            }
             var bounds=ValuableLayout.Apply(go,art);var actual=ValuableLayout.MeshBounds(go.transform,root.transform);
             Check(actual.min.y>=.011f&&actual.min.z>=.011f,entry.Key+" fits positive floor/forward native spawn convention");
             Check(Mathf.Abs(actual.center.x)<.001f,entry.Key+" width is centred on its own mesh");
-            Check((go.GetComponent<Rigidbody>().centerOfMass-bounds.center).sqrMagnitude<.000001f,entry.Key+" no inherited vase centre of mass");
-            Check((nativeCenter.transform.localPosition-actual.center).sqrMagnitude<.000001f,entry.Key+" native centre transform matches real bounds");
+            var expectedMassCenter=model.physics==null?bounds.center:go.transform.InverseTransformPoint(art.visualRoot.TransformPoint(model.physics.centerOfMass));
+            Check((go.GetComponent<Rigidbody>().centerOfMass-expectedMassCenter).sqrMagnitude<.000001f,entry.Key+" no inherited vase centre of mass");
+            Check((nativeCenter.transform.localPosition-expectedMassCenter).sqrMagnitude<.000001f,entry.Key+" native centre transform matches authored mass distribution");
             if(CollectionLights.Applies(entry.Key))CheckLighting(go,art,model);
             if(entry.Key=="centrifuge")CheckSamplePhysics(go,art,model);
+            if(entry.Key=="skeleton")CheckSkeletonMass(go,art,model);
             if(entry.Key=="maneki_neko")
             {
                 ValuableVisuals.Overrides[entry.Key]=model;Check(art.EnsureBindings(),"Neko rebinds a local paw pivot after spawning");
@@ -136,10 +146,33 @@ internal static class CloneRegression
                 typeof(ManekiMotion).GetMethod("FixedUpdate",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).Invoke(motion,null);
                 Check(Quaternion.Angle(Quaternion.identity,art.beckonPivot.localRotation)<=24.01f,"Neko paw motion stays within its reserved sweep");
                 Check(art.beckonPivot.GetComponentsInChildren<MeshRenderer>(true).Length>=2,"Forearm, paw and claws stay attached to the animated pivot");
+                var pawCollider=art.beckonPivot.GetComponentInChildren<MeshCollider>();
+                Check(pawCollider!=null&&go.GetComponentsInChildren<MeshCollider>(true).Length==3,"Body/head/paw have three independent convex hulls");
+                for(int sample=0;sample<=80;sample++)
+                {
+                    double time=sample*ManekiMotion.PeriodSeconds/80;
+                    float angle=ManekiMotion.AngleAt(time);
+                    Check(Mathf.Abs(angle-ManekiMotion.AngleAt(time+ManekiMotion.PeriodSeconds*100000))<.001f,"Late join shares phase "+sample);
+                    art.beckonPivot.localRotation=Quaternion.AngleAxis(angle,Vector3.right);
+                    foreach(var collider in go.GetComponentsInChildren<MeshCollider>(true))
+                    foreach(var vertex in collider.sharedMesh.vertices)
+                        Check(bounds.Contains(go.transform.InverseTransformPoint(collider.transform.TransformPoint(vertex))),"Collision sweep fits reserved spawn volume "+sample);
+                }
                 ValuableVisuals.Overrides.Remove(entry.Key);
             }
             Object.DestroyImmediate(go);foreach(var mesh in meshes)Object.DestroyImmediate(mesh);foreach(var material in materials)Object.DestroyImmediate(material);
         }
+    }
+    private static void CheckSkeletonMass(GameObject go,ValuableArtInstance art,ValuableArtModel model)
+    {
+        ValuableVisuals.Overrides["skeleton"]=model;Check(art.EnsureBindings(),"Skeleton resolves all actual articulated parts");
+        go.AddComponent<Photon.Pun.PhotonView>();go.AddComponent<ValuableFoley>();
+        var motion=go.AddComponent<CollectionPhysics>();
+        typeof(CollectionPhysics).GetMethod("Start",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).Invoke(motion,null);
+        var bodies=go.GetComponentsInChildren<Rigidbody>(true);float mass=0;foreach(var body in bodies)mass+=body.mass;
+        Check(bodies.Length==16,"Skeleton mass includes root and all fifteen joint bodies");
+        Check(Mathf.Abs(mass-3f)<.0001f,"Actual assembled skeleton is 3 kg, not 3 kg plus heavy limbs");
+        ValuableVisuals.Overrides.Remove("skeleton");
     }
     private static void CheckLighting(GameObject go,ValuableArtInstance art,ValuableArtModel model)
     {
@@ -244,7 +277,7 @@ internal static class CloneRegression
     {
         var mode=Physics.simulationMode;var gravity=Physics.gravity;Physics.simulationMode=SimulationMode.Script;Physics.gravity=new Vector3(0,-9.81f,0);
         var floor=GameObject.CreatePrimitive(PrimitiveType.Cube);floor.name="Fixture floor";floor.transform.position=new Vector3(0,-.5f,0);floor.transform.localScale=new Vector3(100,1,100);
-        foreach(float mass in new[]{55f,15f,5f})
+        foreach(float mass in new[]{8f,3f,3.5f})
         {
             var prop=GameObject.CreatePrimitive(PrimitiveType.Cube);prop.name="Rolling fixture "+mass;prop.transform.rotation=Quaternion.Euler(0,25,180);
             var body=prop.AddComponent<Rigidbody>();body.mass=mass;body.constraints=RigidbodyConstraints.FreezeAll;

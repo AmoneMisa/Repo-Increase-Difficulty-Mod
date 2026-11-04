@@ -59,7 +59,7 @@ internal static class TruckUpgrades
         {
             Id = HealId,
             DisplayName = "Heal Power",
-            Description = "Truck upgrade (whole team): all healing is stronger, with diminishing returns towards 2x base healing.",
+            Description = $"Truck upgrade (whole team): all healing heals {ModConfig.TruckHealPercentPerLevel.Value * 100f:0.#}% more per level, compounding (each level multiplies the previous heal).",
             MaxLevel = Mathf.Max(1, ModConfig.TruckHealMaxLevel.Value),
             BaseShopPrice = ModConfig.TruckHealBaseCost.Value,
             IconFile = "Upgrade_Truck_Heal-Power.png",
@@ -103,9 +103,8 @@ internal static class TruckUpgrades
         return definition != null ? Mathf.Clamp(max, 0, definition.MaxLevel) : Mathf.Max(0, max);
     }
 
-    /// <summary>All-healing multiplier approaches 2x by multiplying the remaining bonus gap each level.</summary>
-    public static float HealMultiplier =>
-        1f + (1f - Mathf.Pow(1f - Mathf.Clamp(ModConfig.TruckHealPercentPerLevel.Value, 0f, .95f), TeamLevel(HealId)));
+    /// <summary>Truck-heal multiplier: each level multiplies the heal by (1 + p), default 1.05, compounding.</summary>
+    public static float HealMultiplier => Mathf.Pow(1f + Mathf.Clamp(ModConfig.TruckHealPercentPerLevel.Value, 0f, 1f), TeamLevel(HealId));
 
     /// <summary>Each level multiplies the remaining station drain, with a 5% minimum drain.</summary>
     public static float ChargeDrainMultiplier =>

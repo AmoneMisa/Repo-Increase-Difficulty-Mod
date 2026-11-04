@@ -1,0 +1,34 @@
+{
+  "asset": "monoblock_pc",
+  "runtime": "v09_monoblock_pc.mesh.json",
+  "triangles_before": 1452,
+  "triangles_after": 3340,
+  "bounds_before_xyz": [
+    [
+      -0.2939999997615814,
+      -0.07899999618530273,
+      0.0
+    ],
+    [
+      0.2939999997615814,
+      0.11500000953674316,
+      0.5135000348091125
+    ]
+  ],
+  "bounds_after_xyz": [
+    [
+      -0.2939999997615814,
+      -0.07899999618530273,
+      0.0
+    ],
+    [
+      0.2939999997615814,
+      0.11500000953674316,
+      0.5135000348091125
+    ]
+  ],
+  "groups": [
+    "static"
+  ],
+  "runtime_bindings_preserved": true
+}

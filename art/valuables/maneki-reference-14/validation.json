@@ -1,0 +1,246 @@
+{
+  "blend": {
+    "bounds_xyz_m": [
+      [
+        -0.5275558233261108,
+        -0.33381956815719604,
+        0.0
+      ],
+      [
+        0.5275558233261108,
+        0.33381956815719604,
+        1.5674234628677368
+      ]
+    ],
+    "meshes": [
+      {
+        "object": "Porcelain body - continuous seated sculpt",
+        "triangles": 12648,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 0.2826955396926779
+      },
+      {
+        "object": "Porcelain head with grown-in rounded ears",
+        "triangles": 12754,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 0.22522052770176934
+      },
+      {
+        "object": "Raised right arm and cat paw",
+        "triangles": 3276,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 0.018899894464435973
+      },
+      {
+        "object": "Visible vermilion collar band",
+        "triangles": 3072,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 0.00544798288025418
+      },
+      {
+        "object": "Small collar gilt ornament",
+        "triangles": 528,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 3.0475703628403683e-05
+      },
+      {
+        "object": "Small collar gilt ornament.001",
+        "triangles": 528,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 3.047570362840369e-05
+      },
+      {
+        "object": "Small collar gilt ornament.002",
+        "triangles": 528,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 3.047570362840369e-05
+      },
+      {
+        "object": "Small collar gilt ornament.003",
+        "triangles": 528,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 3.0475703628403686e-05
+      },
+      {
+        "object": "Pendant eyelet",
+        "triangles": 528,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 4.022792905834899e-05
+      },
+      {
+        "object": "Round gold pendant",
+        "triangles": 528,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 0.0022010232098444945
+      }
+    ],
+    "triangles": 34918
+  },
+  "glb": {
+    "bounds_xyz_m": [
+      [
+        -0.5275558233261108,
+        -0.33381956815719604,
+        0.0
+      ],
+      [
+        0.5275558233261108,
+        0.33381956815719604,
+        1.5674234628677368
+      ]
+    ],
+    "meshes": [
+      {
+        "object": "Raised right arm and cat paw",
+        "triangles": 3276,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 0.018899894464602215
+      },
+      {
+        "object": "Pendant eyelet",
+        "triangles": 528,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 4.022792905818194e-05
+      },
+      {
+        "object": "Porcelain body - continuous seated sculpt",
+        "triangles": 12648,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 0.2826960016248104
+      },
+      {
+        "object": "Porcelain head with grown-in rounded ears",
+        "triangles": 12754,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 0.2252207897562961
+      },
+      {
+        "object": "Round gold pendant",
+        "triangles": 528,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 0.0022010232098353556
+      },
+      {
+        "object": "Small collar gilt ornament",
+        "triangles": 528,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 3.0475703628277116e-05
+      },
+      {
+        "object": "Small collar gilt ornament.001",
+        "triangles": 528,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 3.0475703628277116e-05
+      },
+      {
+        "object": "Small collar gilt ornament.002",
+        "triangles": 528,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 3.0475703628277112e-05
+      },
+      {
+        "object": "Small collar gilt ornament.003",
+        "triangles": 528,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 3.0475703628277112e-05
+      },
+      {
+        "object": "Visible vermilion collar band",
+        "triangles": 3072,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 0.005447982880203494
+      }
+    ],
+    "triangles": 34918,
+    "bounds_error_m": 0.0,
+    "loaded_texture_count": 3
+  },
+  "obj": {
+    "bounds_xyz_m": [
+      [
+        -0.5275560021400452,
+        -0.3338199853897095,
+        -6.81632839061308e-09
+      ],
+      [
+        0.5275560021400452,
+        0.33382001519203186,
+        1.5674229860305786
+      ]
+    ],
+    "meshes": [
+      {
+        "object": "Pendant_eyelet",
+        "triangles": 528,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 4.022805999879315e-05
+      },
+      {
+        "object": "Porcelain_body_-_continuous_seated_sculpt",
+        "triangles": 12648,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 0.28269553099059563
+      },
+      {
+        "object": "Porcelain_head_with_grown-in_rounded_ears",
+        "triangles": 12754,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 0.22522054604840155
+      },
+      {
+        "object": "Raised_right_arm_and_cat_paw",
+        "triangles": 3276,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 0.018899888018772334
+      },
+      {
+        "object": "Round_gold_pendant",
+        "triangles": 528,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 0.002201019645466073
+      },
+      {
+        "object": "Small_collar_gilt_ornament",
+        "triangles": 528,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 3.0475621130539298e-05
+      },
+      {
+        "object": "Small_collar_gilt_ornament.001",
+        "triangles": 528,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 3.0475616841656653e-05
+      },
+      {
+        "object": "Small_collar_gilt_ornament.002",
+        "triangles": 528,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 3.047561769460726e-05
+      },
+      {
+        "object": "Small_collar_gilt_ornament.003",
+        "triangles": 528,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 3.0475611652046342e-05
+      },
+      {
+        "object": "Visible_vermilion_collar_band",
+        "triangles": 3072,
+        "nonmanifold_edges_after_uv_weld": 0,
+        "signed_volume_m3": 0.005447981435964915
+      }
+    ],
+    "triangles": 34918,
+    "bounds_error_m": 4.76837158203125e-07,
+    "loaded_texture_count": 3
+  },
+  "status": "PASS: static geometry and material round trips only",
+  "not_checked": [
+    "approved appearance",
+    "animation sweep and shoulder joint",
+    "runtime colliders and centre of mass",
+    "native car size comparison",
+    "Unity integration",
+    "in-game shaders, audio, spawning, host/client and late join"
+  ]
+}

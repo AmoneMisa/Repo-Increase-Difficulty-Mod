@@ -27,6 +27,8 @@ internal static class QuestEffect
     // The most recent weapon that hurt each enemy, so EnemyHealth.Death can attribute the
     // kill to a gun or a melee weapon (for the melee-only / no-gun-kills quests).
     private static readonly Dictionary<Enemy, WeaponSource> _lastWeapon = new();
+    // Enemies a gun or melee weapon has hurt: a later shove or throw no longer counts as a bare-handed kill.
+    private static readonly HashSet<Enemy> _armedHit = new();
 
     // Start the quest set once a real run level finishes generating.
     [HarmonyPatch(typeof(LevelGenerator), "GenerateDone")]
@@ -69,6 +71,12 @@ internal static class QuestEffect
                 _lastWeapon.Remove(enemy);
                 weapon = w;
             }
+            bool armed = enemy != null && _armedHit.Remove(enemy);
+            if (armed && weapon == WeaponSource.Hands)
+                weapon = WeaponSource.Other;
+            // An enemy that died while a player had hold of it (or just let go) was slammed or thrown by hand.
+            if (!armed && weapon == WeaponSource.Other && enemy != null && HeldByPlayer(enemy))
+                weapon = WeaponSource.Hands;
 
             QuestManager.OnEnemyKilled(parent, weapon);
 
@@ -97,8 +105,17 @@ internal static class QuestEffect
                 _recentPitContact[_enemy] = Time.time;
 
             var weapon = Classify(__instance);
+            if (weapon == WeaponSource.Gun || weapon == WeaponSource.Melee)
+                _armedHit.Add(_enemy);
             if (weapon != WeaponSource.Other)
                 _lastWeapon[_enemy] = weapon;
+        }
+
+        // A grabbed or just-released object (a thrown valuable, crate or the like) is a hand attack.
+        private static bool HandHeld(HurtCollider collider)
+        {
+            var body = collider.GetComponentInParent<PhysGrabObject>();
+            return body != null && (body.grabbed || body.lastPlayerGrabbing != null);
         }
 
         private static WeaponSource Classify(HurtCollider collider)
@@ -108,8 +125,15 @@ internal static class QuestEffect
             if (collider.GetComponentInParent<ItemGun>() != null ||
                 collider.GetComponentInParent<ItemGunBullet>() != null)
                 return WeaponSource.Gun;
-            return WeaponSource.Other;
+            return HandHeld(collider) ? WeaponSource.Hands : WeaponSource.Other;
         }
+    }
+
+    private static bool HeldByPlayer(Enemy enemy)
+    {
+        if (!enemy.HasRigidbody || enemy.Rigidbody == null) return false;
+        var body = enemy.Rigidbody.physGrabObject;
+        return body != null && (body.grabbed || body.lastPlayerGrabbing != null);
     }
 
     // Team death count for the no-deaths survival quest.
@@ -181,6 +205,42 @@ internal static class QuestEffect
             if (__instance.playerAvatar != PlayerAvatar.instance)
                 return;
             QuestManager.OnLocalPlayerDamaged();
+        }
+    }
+
+    // An enemy newly stunned (not one already stunned being re-stunned).
+    [HarmonyPatch(typeof(EnemyStateStunned), "Set")]
+    private static class OnStun
+    {
+        [HarmonyPrefix]
+        private static void Prefix(EnemyStateStunned __instance, out bool __state) => __state = __instance.stunTimer <= 0f;
+
+        [HarmonyPostfix]
+        private static void Postfix(EnemyStateStunned __instance, bool __state)
+        {
+            if (__state && __instance.stunTimer > 0f)
+                QuestManager.OnEnemyStunned();
+        }
+    }
+
+    // A teammate brought back (the truck's revive and the mod's free auto-revive do not count).
+    [HarmonyPatch(typeof(PlayerAvatar), "ReviveRPC")]
+    private static class OnRevive
+    {
+        [HarmonyPostfix]
+        private static void Postfix(PlayerAvatar __instance, bool _revivedByTruck) =>
+            QuestManager.OnPlayerRevived(__instance, _revivedByTruck);
+    }
+
+    // Halloween: the moon accepted an offering at an extraction point ("A moon is judging").
+    [HarmonyPatch(typeof(ExtractionHalloweenTower), "HalloweenRewardCommitRPC")]
+    private static class OnMoonApproval
+    {
+        [HarmonyPostfix]
+        private static void Postfix(ExtractionHalloweenTower __instance)
+        {
+            if (__instance.recoveredBonus > 0 && __instance.IsApproved())
+                QuestManager.OnMoonApproved();
         }
     }
 }

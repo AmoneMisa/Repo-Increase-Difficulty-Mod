@@ -101,7 +101,9 @@ namespace IncreaseHardMod.Valuables
 namespace IncreaseHardMod.Valuables
 {
     // Fixture metadata only. Hierarchy rebinding and donor removal use copied production code.
-    [System.Serializable] internal sealed class ValuableArtModel { public ValuableArtPart[] parts;public FixtureArtMaterial[] materials;public UnityEngine.Vector3 beckonPivot; }
+    [System.Serializable] internal sealed class ValuableArtModel { public ValuableArtPart[] parts;public FixtureArtMaterial[] materials;public UnityEngine.Vector3 beckonPivot;public ValuableArtPhysics physics; }
+    [System.Serializable] internal sealed class ValuableArtPhysics { public UnityEngine.Vector3 centerOfMass,motionMin,motionMax;public ValuableArtCollider[] colliders; }
+    [System.Serializable] internal sealed class ValuableArtCollider { public string name;public bool moving;public UnityEngine.Vector3[] vertices;public int[] triangles; }
     [System.Serializable] internal sealed class FixtureArtMaterial { public string name;public UnityEngine.Color color;public float emission; }
     [System.Serializable] internal sealed class ValuableArtPart
     {

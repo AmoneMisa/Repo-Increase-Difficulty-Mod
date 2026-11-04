@@ -191,14 +191,29 @@ internal static class LinkManager
         bool grabbedA = link.A.TargetPgo != null && link.A.TargetPgo.grabbed;
         bool grabbedB = link.B.TargetPgo != null && link.B.TargetPgo.grabbed;
         bool enemy = link.A.Drone.targetIsEnemy || link.B.Drone.targetIsEnemy;
-        if (grabbedA != grabbedB && !enemy && dist <= joint.linearLimit.limit + 0.4f)
+        if (grabbedA != grabbedB && !enemy)
         {
             var limit = joint.linearLimit;
-            // Never lengthen a cable that was initially shorter than CompactLength.
-            limit.limit = Mathf.MoveTowards(limit.limit, Mathf.Min(CompactLength, limit.limit), ReelSpeed * dt);
+            // Never lengthen a cable that was initially shorter than CompactLength. The limit follows the
+            // real gap down, so a held end that is pulled away still drags the other end after it.
+            float target = Mathf.Min(CompactLength, limit.limit);
+            limit.limit = Mathf.MoveTowards(limit.limit, target, ReelSpeed * dt);
+            if (dist < limit.limit) limit.limit = Mathf.Max(target, dist);
             joint.linearLimit = limit;
             rbA.WakeUp();
             rbB.WakeUp();
+
+            // The hard limit alone stalls on heavy or snagged loot: also pull the free end toward the held one
+            // whenever the cable is taut.
+            var free = grabbedA ? rbB : rbA;
+            Vector3 to = (grabbedA ? ptA : ptB) - (grabbedA ? ptB : ptA);
+            if (!free.isKinematic && dist >= joint.linearLimit.limit - 0.05f && to.magnitude > CompactLength)
+            {
+                // Documented reel speed: 0.75 m/s toward the held end.
+                Vector3 current = free.GetPointVelocity(free.worldCenterOfMass);
+                Vector3 wanted = Vector3.MoveTowards(current, to.normalized * ReelSpeed, 20f * dt);
+                free.AddForce(wanted - current, ForceMode.VelocityChange);
+            }
         }
     }
 

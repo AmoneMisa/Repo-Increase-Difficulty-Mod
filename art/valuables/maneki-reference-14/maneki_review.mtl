@@ -1,0 +1,62 @@
+# Blender 5.2.1 LTS MTL File: 'maneki_review.blend'
+# www.blender.org
+
+newmtl Flat_fired_face_and_inner_ear_painting
+Ns 592.899963
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd textures/head_painted.png
+
+newmtl Fuku_medallion_gold
+Ns 504.100067
+Ka 0.720000 0.720000 0.720000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd textures/medallion_gold.png
+
+newmtl Ivory_white_glazed_porcelain
+Ns 592.899963
+Ka 1.000000 1.000000 1.000000
+Kd 0.930000 0.915000 0.850000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+
+newmtl Three_painted_paw_marks
+Ns 592.899963
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd textures/paw_painted.png
+
+newmtl Vermilion_glazed_collar
+Ns 504.100067
+Ka 1.000000 1.000000 1.000000
+Kd 0.420000 0.002000 0.005000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+
+newmtl Warm_antique_gold
+Ns 532.900024
+Ka 0.780000 0.780000 0.780000
+Kd 0.750000 0.440000 0.075000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3

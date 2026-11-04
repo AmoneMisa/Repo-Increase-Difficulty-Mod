@@ -1,3 +1,4 @@
+using IncreaseHardMod.Quests;
 using System.Collections;
 using System.Collections.Generic;
 using HarmonyLib;
@@ -99,10 +100,12 @@ internal static class AutoReviveEffect
         if (ModConfig.AutoReviveAtCar.Value && TryMoveHeadToCar(player))
         {
             // Revive "by truck" so TruckHealer fully heals them at the car.
+            QuestManager.MarkAutoRevive(player); // the mod's free revive is not a teammate rescue
             player.Revive(TruckHealer.instance != null);
         }
         else
         {
+            QuestManager.MarkAutoRevive(player);
             player.Revive();
         }
     }

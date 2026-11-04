@@ -38,6 +38,10 @@ public static class QuestManager
     private const float IntactValueEpsilon = 0.5f;
 
     private static int _teamDeaths;
+    private static float _levelSeconds;
+    private static float _rushPulse;
+    // Players the mod's own free revive is about to bring back; they must not credit "revive a teammate".
+    private static readonly HashSet<PlayerAvatar> _autoRevived = new();
     private static bool _levelActive;
     private static float _broadcastCooldown;
     private static bool _dirty;
@@ -64,6 +68,9 @@ public static class QuestManager
             return;
 
         _teamDeaths = 0;
+        _levelSeconds = 0f;
+        _rushPulse = 0f;
+        _autoRevived.Clear();
         _levelActive = true;
         _extractedThisLevel.Clear();
 
@@ -175,6 +182,14 @@ public static class QuestManager
                     if (weapon == WeaponSource.Melee)
                         Advance(q, 1);
                     break;
+                case ObjectiveType.HandKill:
+                    if (weapon == WeaponSource.Hands)
+                        Advance(q, 1);
+                    break;
+                case ObjectiveType.GunKill:
+                    if (weapon == WeaponSource.Gun)
+                        Advance(q, 1);
+                    break;
                 case ObjectiveType.NoGunKills:
                     // "Melee only": any gun kill disqualifies this survival quest.
                     if (weapon == WeaponSource.Gun && !q.Completed)
@@ -185,6 +200,43 @@ public static class QuestManager
                     break;
             }
         }
+    }
+
+    public static void OnEnemyStunned()
+    {
+        if (!ModConfig.QuestsEnabled.Value || !SemiFunc.IsMasterClientOrSingleplayer())
+            return;
+        foreach (var q in _teamQuests)
+            if (q.Objective == ObjectiveType.StunEnemies)
+                Advance(q, 1);
+    }
+
+    internal static void MarkAutoRevive(PlayerAvatar player)
+    {
+        if (player != null) _autoRevived.Add(player);
+    }
+
+    public static void OnPlayerRevived(PlayerAvatar player, bool byTruck)
+    {
+        if (!ModConfig.QuestsEnabled.Value || !SemiFunc.IsMasterClientOrSingleplayer())
+            return;
+        if (player != null && _autoRevived.Remove(player))
+            return;
+        if (byTruck)
+            return;
+        foreach (var q in _teamQuests)
+            if (q.Objective == ObjectiveType.Revive)
+                Advance(q, 1);
+    }
+
+    /// <summary>Halloween: the moon accepted an extraction point's offering.</summary>
+    public static void OnMoonApproved()
+    {
+        if (!ModConfig.QuestsEnabled.Value || !SemiFunc.IsMasterClientOrSingleplayer())
+            return;
+        foreach (var q in _teamQuests)
+            if (q.Objective == ObjectiveType.MoonRitual)
+                Advance(q, 1);
     }
 
     public static void OnPitKill()
@@ -219,6 +271,8 @@ public static class QuestManager
 
         foreach (var q in _teamQuests)
         {
+            if (q.Objective == ObjectiveType.ExtractionRush && !q.Completed && !q.Failed && rd.allExtractionPointsCompleted)
+                CompleteTeamQuest(q);
             if (q.Objective == ObjectiveType.ReachHaul && !q.Completed)
             {
                 q.Progress = Mathf.Min(q.Target, rd.totalHaul);
@@ -240,26 +294,43 @@ public static class QuestManager
         if (!ModConfig.QuestsEnabled.Value || !SemiFunc.IsMasterClientOrSingleplayer() || valuable == null)
             return;
 
-        // Nothing to do if no intact-extract quest is live.
-        bool anyIntact = false;
+        // Nothing to do if no extraction-count quest is live.
+        bool anyLive = false;
         foreach (var q in _teamQuests)
-            if (q.Objective == ObjectiveType.IntactExtract && !q.Completed && !q.Failed)
+            if (q.Objective is ObjectiveType.IntactExtract or ObjectiveType.ExtractCount or ObjectiveType.HighValueExtract
+                    or ObjectiveType.SoulExtract &&
+                !q.Completed && !q.Failed)
             {
-                anyIntact = true;
+                anyLive = true;
                 break;
             }
-        if (!anyIntact)
+        if (!anyLive)
             return;
 
         if (!_extractedThisLevel.Add(valuable.GetInstanceID()))
             return;   // already counted this valuable
 
-        if (valuable.dollarValueCurrent < valuable.dollarValueOriginal - IntactValueEpsilon)
-            return;   // took damage on the way out -> not intact
-
+        bool intact = valuable.dollarValueCurrent >= valuable.dollarValueOriginal - IntactValueEpsilon;
         foreach (var q in _teamQuests)
-            if (q.Objective == ObjectiveType.IntactExtract)
-                Advance(q, 1);
+        {
+            switch (q.Objective)
+            {
+                case ObjectiveType.IntactExtract:
+                    if (intact) Advance(q, 1);   // took damage on the way out -> not intact
+                    break;
+                case ObjectiveType.ExtractCount:
+                    Advance(q, 1);
+                    break;
+                case ObjectiveType.SoulExtract:
+                    if (valuable.GetComponent<EnemyValuable>() != null)
+                        Advance(q, 1);
+                    break;
+                case ObjectiveType.HighValueExtract:
+                    if (int.TryParse(q.Param, out int minimum) && valuable.dollarValueOriginal >= minimum)
+                        Advance(q, 1);
+                    break;
+            }
+        }
     }
 
     /// <summary>Local client: our character took damage -> our personal "no damage" quest fails.</summary>
@@ -434,6 +505,9 @@ public static class QuestManager
 
         var rd = RoundDirector.instance;
         ctx.HaulGoal = rd != null ? rd.haulGoal : 0;
+        ctx.Halloween = SemiFunc.GameEventIsHalloween();
+        if (ctx.Halloween)
+            ctx.Towers = Object.FindObjectsOfType<ExtractionHalloweenTower>().Length;
 
         var valuables = Object.FindObjectsOfType<ValuableObject>();
         ctx.ValuableCount = valuables != null ? valuables.Length : 0;
@@ -477,6 +551,7 @@ public static class QuestManager
 
     public static void Tick(float dt)
     {
+        TickRush(dt);
         if (!SemiFunc.IsMasterClientOrSingleplayer() || !SemiFunc.IsMultiplayer())
             return;
         if (!_dirty)
@@ -485,6 +560,40 @@ public static class QuestManager
         if (_broadcastCooldown > 0f)
             return;
         Broadcast();
+    }
+
+    // Host clock for "close every extraction within M:SS". Progress mirrors the elapsed seconds (about once a
+    // second) so clients can show the countdown; the quest fails when the clock reaches the limit.
+    private static void TickRush(float dt)
+    {
+        if (!_levelActive || !ModConfig.QuestsEnabled.Value || !SemiFunc.IsMasterClientOrSingleplayer())
+            return;
+        _levelSeconds += dt;
+        _rushPulse -= dt;
+        foreach (var q in _teamQuests)
+        {
+            if (q.Objective != ObjectiveType.ExtractionRush || q.Completed || q.Failed)
+                continue;
+            var rd = RoundDirector.instance;
+            if (rd != null && rd.allExtractionPointsCompleted)
+            {
+                CompleteTeamQuest(q);
+                continue;
+            }
+            if (_levelSeconds >= q.Target)
+            {
+                q.Progress = q.Target;
+                q.Failed = true;
+                _dirty = true;
+            }
+            else if (_rushPulse <= 0f)
+            {
+                q.Progress = Mathf.FloorToInt(_levelSeconds);
+                _dirty = true;
+            }
+        }
+        if (_rushPulse <= 0f)
+            _rushPulse = 1f;
     }
 
     private static void Broadcast()

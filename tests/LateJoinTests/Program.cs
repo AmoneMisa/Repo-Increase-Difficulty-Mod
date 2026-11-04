@@ -1,0 +1,125 @@
+using System.Collections;
+using IncreaseHardMod;
+using IncreaseHardMod.Patches.Effects;
+using Photon.Pun;
+using Steamworks;
+using UnityEngine;
+
+int checks = 0;
+void Check(bool ok, string message)
+{
+    if (!ok) throw new Exception(message);
+    checks++;
+    Console.WriteLine("PASS: " + message);
+}
+void Reset()
+{
+    ModConfig.LateJoinEnabled.Value = true;
+    PhotonNetwork.InRoom = PhotonNetwork.IsMasterClient = SteamClient.IsValid = true;
+    PhotonNetwork.CurrentRoom = new();
+    PhotonNetwork.OpenCalls = 0;
+    PhotonNetwork.CloudRegion = "eu";
+    SteamLobbyManager.instance = new();
+    GameManager.instance = new();
+    GameDirector.instance = new();
+    RunManager.instance = new();
+    DataDirector.instance = new();
+    LevelGenerator.Instance = new();
+    SemiFunc.Level = true;
+    SemiFunc.Shop = SemiFunc.Truck = false;
+    Time.realtimeSinceStartup = 0;
+}
+IEnumerator NativeConnect() { yield return "native-password-and-version-checks"; }
+
+Reset();
+LateJoinSession.OpenRoom("test");
+Check(PhotonNetwork.CurrentRoom.IsOpen && PhotonNetwork.OpenCalls == 1, "Closed Photon room opens through native wrapper");
+Check(SteamLobbyManager.instance.currentLobby.Joinable && SteamLobbyManager.instance.privateLobby && !PhotonNetwork.CurrentRoom.IsVisible,
+    "Friends lobby stays private and becomes joinable");
+Check(SteamLobbyManager.instance.currentLobby.GetData("RoomName") == "actual-photon-room" &&
+    SteamLobbyManager.instance.currentLobby.GetData("BuildName") == "v0.5.0.net3" &&
+    SteamLobbyManager.instance.currentLobby.GetData("Region") == "eu", "Host publishes actual Photon routing and version");
+SteamLobbyManager.instance.currentLobby.Joinable = false;
+LateJoinSession.OpenRoom("steam locked independently");
+Check(SteamLobbyManager.instance.currentLobby.Joinable && PhotonNetwork.OpenCalls == 1,
+    "Already-open Photon room does not skip reopening Steam");
+Check(SteamLobbyManager.instance.Publishes == 1, "Unchanged metadata is not republished every tick");
+SteamLobbyManager.instance.currentLobby.Data["BuildName"] = "";
+LateJoinSession.OpenRoom("missing build");
+Check(SteamLobbyManager.instance.Publishes == 2, "Host repairs missing BuildName even when Photon is already open");
+
+Reset();
+GameManager.instance.connectRandom = true;
+LateJoinSession.OpenRoom("public");
+Check(PhotonNetwork.CurrentRoom.IsVisible && SteamLobbyManager.instance.currentLobby.Joinable &&
+    !SteamLobbyManager.instance.privateLobby, "Public rooms reopen both Steam and Photon");
+
+foreach (string guard in new[] { "disabled", "guest", "disconnected", "loading", "outro", "restarting", "menu", "no room", "no game" })
+{
+    Reset();
+    switch (guard)
+    {
+        case "disabled": ModConfig.LateJoinEnabled.Value = false; break;
+        case "guest": PhotonNetwork.IsMasterClient = false; break;
+        case "disconnected": PhotonNetwork.InRoom = false; break;
+        case "loading": LevelGenerator.Instance.Generated = false; break;
+        case "outro": GameDirector.instance.currentState = GameDirector.gameState.Outro; break;
+        case "restarting": RunManager.instance.restarting = true; break;
+        case "menu": SemiFunc.Level = false; break;
+        case "no room": PhotonNetwork.CurrentRoom = null; break;
+        case "no game": GameManager.instance = null; break;
+    }
+    LateJoinSession.OpenRoom("guard");
+    Check(PhotonNetwork.OpenCalls == 0 && !SteamLobbyManager.instance.currentLobby.Joinable &&
+        SteamLobbyManager.instance.Publishes == 0, "No admission changes: " + guard);
+}
+Reset();
+SteamLobbyManager.instance.currentLobby.Owner = new(999);
+LateJoinSession.OpenRoom("not Steam owner");
+Check(!SteamLobbyManager.instance.currentLobby.Joinable && SteamLobbyManager.instance.Publishes == 0,
+    "Photon host cannot rewrite a Steam lobby it does not own");
+Reset();
+GameDirector.instance.currentState = GameDirector.gameState.Start;
+LateJoinSession.OpenRoom("generation complete");
+Check(PhotonNetwork.CurrentRoom.IsOpen, "Generation completion opens without waiting for the next safety tick");
+
+Reset();
+SteamLobbyManager.instance.currentLobby.Owner = new(999);
+IEnumerator native = NativeConnect();
+var pending = LateJoinSession.WaitForLobbyData(native);
+Check(pending.MoveNext() && pending.Current == null && SteamLobbyManager.instance.currentLobby.Refreshes == 1,
+    "Guest waits and requests missing Steam metadata before native closed-lobby check");
+Time.realtimeSinceStartup = .5f;
+pending.MoveNext();
+Check(SteamLobbyManager.instance.currentLobby.Refreshes == 1, "Refresh requests are throttled");
+// Simulate Steam's data callback, not a host write by the guest.
+SteamLobbyManager.instance.currentLobby.Data = new() { ["BuildName"] = "host-version", ["RoomName"] = "host-room", ["Region"] = "us" };
+Check(pending.MoveNext() && ReferenceEquals(pending.Current, native), "Ready metadata resumes original connection and version/password validation");
+Check(SteamLobbyManager.instance.Publishes == 0 && PhotonNetwork.OpenCalls == 0, "Guest never invents routing or opens a room");
+
+Reset();
+SteamLobbyManager.instance.currentLobby.Owner = new(999);
+native = NativeConnect(); pending = LateJoinSession.WaitForLobbyData(native); pending.MoveNext();
+Time.realtimeSinceStartup = 9;
+Check(pending.MoveNext() && ReferenceEquals(pending.Current, native), "Truly closed lobby times out to native error instead of hanging");
+Reset();
+SteamLobbyManager.instance.currentLobby.Owner = new(999);
+pending = LateJoinSession.WaitForLobbyData(NativeConnect()); pending.MoveNext();
+SteamLobbyManager.instance.currentLobby = new() { Id = new(789) };
+Check(!pending.MoveNext(), "Second invite cancels previous pending connection");
+Reset();
+SteamLobbyManager.instance.currentLobby.Owner = new(999);
+pending = LateJoinSession.WaitForLobbyData(NativeConnect()); pending.MoveNext();
+SteamLobbyManager.instance.currentLobby = new() { Id = new(0) };
+Check(!pending.MoveNext(), "Leaving lobby cancels metadata wait");
+foreach (string mode in new[] { "host", "disabled", "local", "public" })
+{
+    Reset();
+    if (mode != "host") SteamLobbyManager.instance.currentLobby.Owner = new(999);
+    if (mode == "disabled") ModConfig.LateJoinEnabled.Value = false;
+    if (mode == "local") GameManager.instance.localTest = true;
+    if (mode == "public") GameManager.instance.connectRandom = true;
+    native = NativeConnect(); pending = LateJoinSession.WaitForLobbyData(native);
+    Check(pending.MoveNext() && ReferenceEquals(pending.Current, native), "No metadata delay for " + mode);
+}
+Console.WriteLine($"LATE_JOIN_PASS: {checks}");

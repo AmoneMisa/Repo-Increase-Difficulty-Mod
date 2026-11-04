@@ -24,6 +24,10 @@ internal static class ChangeLevelPatch
     {
         // Harmony postfixes also run when the original immediately rejects a request.
         __state = !__instance.restarting && (SemiFunc.MenuLevel() || SemiFunc.IsMasterClientOrSingleplayer());
+        // Each change buffers an UpdateLevelRPC for guests; drop the history so a joiner replays only the latest.
+        if (__state && GameManager.Multiplayer() && SemiFunc.IsMasterClient() && __instance.runManagerPUN != null &&
+            Photon.Pun.PhotonNetwork.InRoom)
+            Photon.Pun.PhotonNetwork.RemoveBufferedRPCs(__instance.runManagerPUN.photonView.ViewID, "UpdateLevelRPC");
     }
 
     [HarmonyPostfix]
@@ -32,6 +36,9 @@ internal static class ChangeLevelPatch
         if (!__state)
             return;
         Effects.LateJoinSceneState.Publish();
+        // Heading into a menu: the game reopens the lobby itself. Anywhere else, close until the new scene is built.
+        if (GameManager.Multiplayer() && SemiFunc.IsMasterClient() && !SemiFunc.MenuLevel() && !SemiFunc.RunIsLobbyMenu())
+            Effects.LateJoinSession.CloseForTransition("level change");
         if (SemiFunc.IsMasterClientOrSingleplayer())
             Economy.BlackMarket.LoadFromStats();
 

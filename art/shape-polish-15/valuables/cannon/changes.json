@@ -1,0 +1,36 @@
+{
+  "asset": "cannon",
+  "runtime": "v11_cannon.mesh.json",
+  "triangles_before": 5048,
+  "triangles_after": 27880,
+  "bounds_before_xyz": [
+    [
+      -0.7719999551773071,
+      -0.8393510580062866,
+      0.0
+    ],
+    [
+      0.7720000147819519,
+      1.284999966621399,
+      1.3006031513214111
+    ]
+  ],
+  "bounds_after_xyz": [
+    [
+      -0.7719999551773071,
+      -0.8354657888412476,
+      0.0
+    ],
+    [
+      0.7720000147819519,
+      1.284999966621399,
+      1.3006031513214111
+    ]
+  ],
+  "groups": [
+    "static",
+    "wheel_left",
+    "wheel_right"
+  ],
+  "runtime_bindings_preserved": true
+}

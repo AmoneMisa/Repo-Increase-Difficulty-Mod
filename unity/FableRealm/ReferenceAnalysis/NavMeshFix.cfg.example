@@ -1,0 +1,5 @@
+# Optional diagnostic example; not installed or applied automatically.
+# Validate against the actual NavMeshFix release before use.
+[General]
+Enabled = true
+RepairRadius = 0.5

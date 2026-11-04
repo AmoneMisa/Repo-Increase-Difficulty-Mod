@@ -1,0 +1,52 @@
+{
+  "asset": "bomb",
+  "runtime": "v11_bomb.mesh.json",
+  "triangles_before": 5400,
+  "triangles_after": 5866,
+  "bounds_before_xyz": [
+    [
+      -1.7599999904632568,
+      -0.8399999737739563,
+      0.0
+    ],
+    [
+      1.1069999933242798,
+      0.8399999737739563,
+      1.6800000667572021
+    ]
+  ],
+  "bounds_after_xyz": [
+    [
+      -1.7599999904632568,
+      -0.8399999737739563,
+      0.0
+    ],
+    [
+      1.1069999933242798,
+      0.8399999737739563,
+      1.6800000667572021
+    ]
+  ],
+  "groups": [
+    "hull_Curved casing band",
+    "hull_Curved casing band.001",
+    "hull_Curved service panel",
+    "hull_bomb_MaterialGroup_00",
+    "hull_bomb_MaterialGroup_01",
+    "hull_bomb_MaterialGroup_01.001",
+    "hull_bomb_MaterialGroup_01.002",
+    "hull_bomb_MaterialGroup_01.003",
+    "hull_bomb_MaterialGroup_01.004",
+    "hull_bomb_MaterialGroup_01.005",
+    "hull_bomb_MaterialGroup_01.006",
+    "hull_bomb_MaterialGroup_01.007",
+    "hull_bomb_MaterialGroup_01.008",
+    "hull_bomb_MaterialGroup_02",
+    "hull_bomb_MaterialGroup_02.001",
+    "hull_bomb_MaterialGroup_02.002",
+    "hull_bomb_MaterialGroup_02.003",
+    "hull_bomb_MaterialGroup_02.004",
+    "hull_bomb_MaterialGroup_03"
+  ],
+  "runtime_bindings_preserved": true
+}

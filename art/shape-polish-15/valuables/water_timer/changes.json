@@ -1,0 +1,37 @@
+{
+  "asset": "water_timer",
+  "runtime": "v09_water_timer.mesh.json",
+  "triangles_before": 2258,
+  "triangles_after": 3154,
+  "bounds_before_xyz": [
+    [
+      -0.052000001072883606,
+      -0.0203000009059906,
+      0.0
+    ],
+    [
+      0.052000001072883606,
+      0.01899999938905239,
+      0.25999999046325684
+    ]
+  ],
+  "bounds_after_xyz": [
+    [
+      -0.052000001072883606,
+      -0.0203000009059906,
+      0.0
+    ],
+    [
+      0.052000001072883606,
+      0.01899999938905239,
+      0.25999999046325684
+    ]
+  ],
+  "groups": [
+    "bottom_pool",
+    "case",
+    "drop",
+    "top_pool"
+  ],
+  "runtime_bindings_preserved": true
+}
