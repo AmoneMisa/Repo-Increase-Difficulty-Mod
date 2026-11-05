@@ -28,7 +28,7 @@ ART = ROOT / 'art' / 'valuables' / 'corgi-whiskey-16'; ART.mkdir(parents=True, e
 
 # Interior volume the runtime liquid fills (Unity local space of the visual, before layout offset).
 BOTTLE_HALF = .27
-LIQUID = {'halfWidth': .238, 'bottom': .035, 'top': .80, 'fill': .78}
+LIQUID = {'halfWidth': .245, 'bottom': .03, 'top': .86, 'fill': .8}
 
 
 def reset():
@@ -79,6 +79,22 @@ def apply_transforms(ob):
     bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
 
 
+def ear_cone(name, base, radius, height, depth, mat, tilt):
+    """Rounded triangle ear: a cone flattened front-to-back, base centred at `base`, tilted outward."""
+    bpy.ops.mesh.primitive_cone_add(vertices=20, radius1=radius, radius2=radius * .12, depth=height,
+                                    location=(base[0], base[1], base[2] + height / 2))
+    ob = bpy.context.object; ob.name = name
+    ob.scale = (1, depth / radius, 1)
+    apply_transforms(ob)
+    bev = ob.modifiers.new('Soft', 'SUBSURF'); bev.levels = 2
+    bpy.ops.object.modifier_apply(modifier=bev.name)
+    ob.rotation_euler = (math.radians(-8), tilt, 0)
+    # Rotate about the ear base, not its middle.
+    pivot = Vector(base); ob.location = pivot + (Matrix.Rotation(tilt, 3, 'Y') @ Matrix.Rotation(math.radians(-8), 3, 'X')) @ Vector((0, 0, height / 2))
+    bpy.ops.object.shade_smooth()
+    return assign(ob, mat)
+
+
 # ------------------------------------------------------------------ corgi
 
 def corgi():
@@ -86,7 +102,7 @@ def corgi():
     white = material('Corgi cream', (.85, .78, .66), .97)
     pink = material('Corgi felt pink', (.72, .22, .26), .9)
     black = material('Corgi felt black', (.015, .013, .012), .45)
-    tilt = math.radians(18)
+    tilt = math.radians(28)
 
     def blobs(name, mat, elements, resolution=.009):
         mb = bpy.data.metaballs.new(name); mb.resolution = mb.render_resolution = resolution; mb.threshold = .6
@@ -110,31 +126,29 @@ def corgi():
         return (center, radius, tuple(h / (radius * .76) for h in half), rot)
 
     fur_parts = [
-        E((0, -.01, .2), (.16, .26, .14)),                       # long loaf body
+        E((0, -.01, .19), (.165, .27, .15)),                     # long loaf body (low, sits on the legs)
         E((0, -.2, .21), (.15, .13, .13)),                       # round rump
         E((0, .2, .29), (.11, .09, .1)),                         # neck
         E((0, .29, .36), (.13, .12, .115)),                      # head
         E((.07, .33, .325), (.07, .07, .06)), E((-.07, .33, .325), (.07, .07, .06)),        # cheeks
-        E((.085, .27, .49), (.065, .024, .065), tilt), E((-.085, .27, .49), (.065, .024, .065), -tilt),  # ear bases
-        E((.11, .27, .575), (.032, .017, .05), tilt), E((-.11, .27, .575), (.032, .017, .05), -tilt),    # ear tips
-        E((.1, .17, .07), (.055, .055, .07)), E((-.1, .17, .07), (.055, .055, .07)),         # stubby front legs
-        E((.1, -.2, .07), (.058, .058, .07)), E((-.1, -.2, .07), (.058, .058, .07)),         # back legs
+        E((.1, .17, .075), (.062, .062, .06)), E((-.1, .17, .075), (.062, .062, .06)),         # stubby front legs
+        E((.1, -.2, .075), (.066, .066, .06)), E((-.1, -.2, .075), (.066, .066, .06)),         # back legs
         E((0, -.35, .25), (.05, .05, .05)),                      # tail nub
     ]
     white_parts = [
         E((0, .22, .22), (.11, .075, .12)),                      # chest bib
         E((0, -.02, .1), (.12, .22, .06)),                       # belly
         E((0, .40, .31), (.07, .08, .055)),                      # tapered muzzle
-        E((0, .37, .445), (.028, .06, .055)),                    # forehead blaze
-        E((.1, .185, .028), (.05, .06, .03)), E((-.1, .185, .028), (.05, .06, .03)),
-        E((.1, -.19, .028), (.052, .06, .03)), E((-.1, -.19, .028), (.052, .06, .03)),
+        E((.1, .18, .03), (.056, .064, .03)), E((-.1, .18, .03), (.056, .064, .03)),
+        E((.1, -.2, .03), (.06, .066, .03)), E((-.1, -.2, .03), (.06, .066, .03)),
         E((0, -.39, .26), (.03, .03, .03)),                      # tail tip
     ]
     parts = [blobs('Corgi fur', fur, fur_parts), blobs('Corgi cream patches', white, white_parts)]
     # Felt details: small solid shapes (too thin for metaballs).
     for side in (1, -1):
-        ear = sphere('Corgi inner ear', (side * .092, .292, .515), (.038, .006, .07), pink, rot=(0, side * tilt, 0), segs=16, rings=10)
-        parts.append(ear)
+        # Big upright triangular ears: soft flattened cones sunk into the head.
+        parts.append(ear_cone('Corgi ear', (side * .08, .27, .42), .078, .15, .032, fur, side * tilt))
+        parts.append(ear_cone('Corgi inner ear', (side * .082, .293, .43), .05, .11, .006, pink, side * tilt))
         parts.append(sphere('Corgi eye', (side * .06, .397, .39), (.02, .012, .022), black, segs=16, rings=10))
     parts.append(sphere('Corgi nose', (0, .476, .33), (.028, .02, .02), black, segs=16, rings=10))
     parts.append(sphere('Corgi tongue', (0, .452, .268), (.026, .016, .011), pink, segs=16, rings=10))
@@ -180,43 +194,49 @@ def whiskey():
     label = material('Whiskey label', (1, 1, 1), .7, image='v11_whiskey_label.png')
     neck = material('Whiskey neck band', (1, 1, 1), .7, image='v11_whiskey_neck.png')
     hw = BOTTLE_HALF
-    rings = [(0, .232, 5), (.012, .258, 6), (.035, hw, 6), (.80, hw, 6), (.86, .258, 5), (.925, .205, 3.6),
-             (.985, .135, 2.5), (1.035, .088, 2), (1.10, .077, 2), (1.235, .074, 2), (1.25, .083, 2), (1.265, .078, 2)]
+    # Classic square whiskey bottle: crisp bevelled corners, high square shoulder, short thick neck.
+    P = 9
+    rings = [(0, .236, P), (.01, .262, P), (.03, hw, P), (.86, hw, P), (.895, .262, 7), (.935, .228, 5),
+             (.975, .17, 3.2), (1.005, .118, 2.2), (1.03, .100, 2), (1.19, .096, 2), (1.205, .104, 2), (1.215, .099, 2)]
     parts = [loft('Whiskey glass', rings, glass)]
+    # Shoulder sleeve: black neck label wrapping the shoulder and the neck, just outside the glass.
+    sleeve = [r for r in rings if .89 <= r[0] <= 1.17] + [(1.17, .096, 2)]
+    n = 48; verts = []; uvs = []; faces = []
+    for k, (z, w, pp) in enumerate(sleeve):
+        pts = superellipse(w * 1.012 + .0015, pp, n)
+        for j in range(n + 1):
+            x, y = pts[j % n]; verts.append((x, y, z)); uvs.append((j / n, (z - sleeve[0][0]) / (sleeve[-1][0] - sleeve[0][0])))
+    for k in range(len(sleeve) - 1):
+        for j in range(n):
+            q = k * (n + 1) + j; faces.append((q, q + 1, q + n + 2, q + n + 1))
+    parts.append(from_data('Whiskey shoulder sleeve', verts, faces, neck, uvs, smooth=True))
     # Ribbed screw cap.
     n = 40; verts = []; faces = []
-    for k, z in enumerate((1.225, 1.235, 1.405, 1.42)):
+    for k, z in enumerate((1.17, 1.18, 1.395, 1.41)):
         for j in range(n):
-            a = 2 * math.pi * j / n; r = (.088 if k in (1, 2) else .084) + (.0035 if j % 2 and k in (1, 2) else 0)
+            a = 2 * math.pi * j / n; r = (.108 if k in (1, 2) else .104) + (.0035 if j % 2 and k in (1, 2) else 0)
             verts.append((r * math.cos(a), r * math.sin(a), z))
     for k in range(3):
         for j in range(n):
             a = k * n + j; b = k * n + (j + 1) % n; faces.append((a, b, b + n, a + n))
-    top = len(verts); verts.append((0, 0, 1.426))
+    top = len(verts); verts.append((0, 0, 1.416))
     for j in range(n): faces.append((top, 3 * n + j, 3 * n + (j + 1) % n))
-    bottom = len(verts); verts.append((0, 0, 1.225))
+    bottom = len(verts); verts.append((0, 0, 1.17))
     for j in range(n): faces.append((bottom, (j + 1) % n, j))
     parts.append(from_data('Whiskey cap', verts, faces, cap, smooth=False))
     # Front label conforming to the flat-ish face, plus a matching back label.
-    for side, (z0, z1, half) in ((-1, (.22, .69, .21)), (1, (.30, .60, .15))):
-        cols, rows = 16, 2; verts = []; uvs = []; faces = []
+    for side, (z0, z1, half, arch) in ((-1, (.15, .70, .238, .06)), (1, (.30, .58, .16, 0))):
+        cols, rows = 24, 6; verts = []; uvs = []; faces = []
         for r in range(rows + 1):
             for c in range(cols + 1):
-                x = -half + 2 * half * c / cols; z = z0 + (z1 - z0) * r / rows
-                y = (face_y(x, hw, 6) - .0025) * (1 if side < 0 else -1)
+                x = -half + 2 * half * c / cols; u = c / cols
+                z = z0 + (z1 + arch * math.sin(math.pi * u) - z0) * r / rows
+                y = (face_y(x, hw, P) - .0025) * (1 if side < 0 else -1)
                 verts.append((x * (1 if side < 0 else -1), y, z)); uvs.append((c / cols, r / rows))
         for r in range(rows):
             for c in range(cols):
                 a = r * (cols + 1) + c; faces.append((a, a + 1, a + cols + 2, a + cols + 1))
         parts.append(from_data('Whiskey label' + (' back' if side > 0 else ''), verts, faces, label, uvs, smooth=True))
-    # Neck band wrapping the neck (texture repeats twice around).
-    n = 40; verts = []; uvs = []; faces = []
-    for k, z in enumerate((1.045, 1.105)):
-        for j in range(n + 1):
-            a = -math.pi / 2 + 2 * math.pi * j / n; r = .0835
-            verts.append((r * math.cos(a), r * math.sin(a), z)); uvs.append((2 * j / n, k))
-    for j in range(n): faces.append((j, j + 1, j + n + 2, j + n + 1))
-    parts.append(from_data('Whiskey neck band', verts, faces, neck, uvs, smooth=True))
     return parts
 
 
@@ -274,7 +294,7 @@ def export(key, parts, extra=None):
 def preview(key, parts, liquid=False, view=(1.05, -2.3, .75)):
     scene = bpy.context.scene
     if liquid:  # preview stand-in for the runtime liquid
-        amber = material('Preview whiskey', (.42, .14, .025), .12, trans=.55)
+        amber = material('Preview whiskey', (.30, .075, .01), .12, trans=.35)
         h = LIQUID['halfWidth']; z1 = LIQUID['bottom'] + (LIQUID['top'] - LIQUID['bottom']) * LIQUID['fill']
         bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0, (LIQUID['bottom'] + z1) / 2)); ob = bpy.context.object
         ob.scale = (2 * h, 2 * h, z1 - LIQUID['bottom']); assign(ob, amber)

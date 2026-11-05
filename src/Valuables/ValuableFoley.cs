@@ -7,8 +7,9 @@ namespace IncreaseHardMod.Valuables;
 
 internal sealed class ValuableFoley : MonoBehaviour
 {
-    internal const int Metal=0,Plastic=1,Glass=2,Bone=3,Paper=4,Roll=5,Motor=6,Flip=7,Drip=8,Tube=9,Porcelain=10;
-    private static readonly string[] Names={"metal","plastic","glass","bone","paper","roll","motor","flip","drip","tube","porcelain"};
+    internal const int Metal=0,Plastic=1,Glass=2,Bone=3,Paper=4,Roll=5,Motor=6,Flip=7,Drip=8,Tube=9,Porcelain=10,
+        Plush=11,DogBark=12,DogArf=13,DogWhine=14,DogYip=15;
+    private static readonly string[] Names={"metal","plastic","glass","bone","paper","roll","motor","flip","drip","tube","porcelain","plush","dog_bark","dog_arf","dog_whine","dog_yip"};
     private PhotonView _view;
     private int _impact;
     private float _last=-10;
@@ -17,7 +18,7 @@ internal sealed class ValuableFoley : MonoBehaviour
         _view=GetComponent<PhotonView>();string key=GetComponent<ValuableArtInstance>().assetKey;
         _impact=Impact(key);
     }
-    internal static int Impact(string key)=>key=="maneki_neko"?Porcelain:key=="crystal_skull"||key=="water_timer"?Glass:key=="skeleton"?Bone:key=="bath_gift_set"?Paper:key=="robot_vacuum"||key=="ram_pair"?Plastic:Metal;
+    internal static int Impact(string key)=>key=="plush_corgi"?Plush:key=="maneki_neko"?Porcelain:key=="crystal_skull"||key=="water_timer"||key=="whiskey_bottle"?Glass:key=="skeleton"?Bone:key=="bath_gift_set"?Paper:key=="robot_vacuum"||key=="ram_pair"?Plastic:Metal;
     internal static PhysAudio Preset(string key,PhysAudio donor)
     {
         var preset=UnityEngine.Object.Instantiate(donor);string cue="valuable_"+Names[Impact(key)];

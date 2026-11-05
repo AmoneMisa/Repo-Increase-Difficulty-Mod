@@ -105,6 +105,20 @@ internal static class InteractiveValuables
                 BoxCollider(go, "Cannon spade", new Vector3(0,.05f,1.17f), new Vector3(.34f,.09f,.23f));
                 go.AddComponent<CannonWheelMotion>();
             }
+            else if (key == "plush_corgi")
+            {
+                BoxCollider(go, "Corgi body", new Vector3(0,.17f,-.03f), new Vector3(.3f,.34f,.7f));
+                BoxCollider(go, "Corgi head", new Vector3(0,.37f,.33f), new Vector3(.27f,.24f,.3f));
+                BoxCollider(go, "Corgi ears", new Vector3(0,.5f,.27f), new Vector3(.25f,.15f,.05f));
+                go.AddComponent<CorgiVoice>();
+            }
+            else if (key == "whiskey_bottle")
+            {
+                BoxCollider(go, "Whiskey body", new Vector3(0,.43f,0), new Vector3(.54f,.86f,.54f));
+                BoxCollider(go, "Whiskey shoulder", new Vector3(0,.94f,0), new Vector3(.44f,.16f,.44f));
+                BoxCollider(go, "Whiskey neck", new Vector3(0,1.17f,0), new Vector3(.21f,.5f,.21f));
+                go.AddComponent<WhiskeyLiquid>();
+            }
             else if (key == "water_timer")
             {
                 BoxCollider(go, "Water watch collider", new Vector3(0,.13f,0),new Vector3(.104f,.26f,.038f));

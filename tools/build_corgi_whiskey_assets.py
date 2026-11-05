@@ -34,42 +34,79 @@ def centered(draw, y, text, face, fill, width):
     return y + (box[3] - box[1])
 
 
-def label():
-    w, h = 512, 576
-    img = Image.new('RGB', (w, h), (14, 13, 12))
+def arc_text(img, text, face, fill, cx, cy, radius, span):
+    """Text along an upward arch (centre cx,cy, radius, total angle span in degrees)."""
     d = ImageDraw.Draw(img)
-    cream = (232, 226, 210)
-    # Double frame with notched corners and a little filigree.
-    for inset, width in ((14, 4), (26, 2)):
-        d.rectangle((inset, inset, w - inset, h - inset), outline=cream, width=width)
-    for cx, cy in ((26, 26), (w - 26, 26), (26, h - 26), (w - 26, h - 26)):
-        d.ellipse((cx - 10, cy - 10, cx + 10, cy + 10), fill=(14, 13, 12), outline=cream, width=2)
-        d.ellipse((cx - 3, cy - 3, cx + 3, cy + 3), fill=cream)
-    y = centered(d, 52, 'OLD TRUCK', font('georgiab.ttf', 60), cream, w) + 18
-    d.line((70, y, w - 70, y), fill=cream, width=2)
-    y = centered(d, y + 10, 'TENNESSEE STYLE', font('georgia.ttf', 30), cream, w) + 18
-    # Big ornate number with a ring.
-    d.ellipse((w / 2 - 100, y, w / 2 + 100, y + 200), outline=cream, width=3)
-    d.ellipse((w / 2 - 89, y + 11, w / 2 + 89, y + 189), outline=cream, width=1)
-    ny = centered(d, y + 22, 'No.', font('georgiai.ttf', 34), cream, w)
-    centered(d, ny + 4, '9', font('georgiab.ttf', 124), cream, w)
-    y += 214
-    y = centered(d, y, 'SOUR MASH', font('georgiab.ttf', 36), cream, w) + 10
-    y = centered(d, y, 'WHISKEY', font('georgiab.ttf', 52), cream, w) + 18
-    d.line((110, y, w - 110, y), fill=cream, width=1)
-    centered(d, y + 10, '40% ALC./VOL.  ·  DISTILLED & AGED', font('georgia.ttf', 18), cream, w)
-    # Slight print softness and paper wear so it does not look like a screenshot.
-    img = img.filter(ImageFilter.GaussianBlur(.6))
+    widths = [d.textlength(ch, font=face) for ch in text]
+    total = sum(widths); angle = -span / 2
+    for ch, wch in zip(text, widths):
+        step = span * wch / total; a = math.radians(angle + step / 2)
+        size = int(face.size * 1.6)
+        tile = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+        ImageDraw.Draw(tile).text((size / 2, size / 2), ch, font=face, fill=fill, anchor='mm')
+        tile = tile.rotate(-math.degrees(a), resample=Image.BICUBIC)
+        x = cx + radius * math.sin(a); y = cy - radius * math.cos(a)
+        img.paste(tile, (int(x - size / 2), int(y - size / 2)), tile)
+        angle += step
+
+
+def filigree(d, box, cream):
+    """Scroll-work border: a row of small curls between two rules."""
+    x0, y0, x1, y1 = box
+    d.rectangle(box, outline=cream, width=3)
+    d.rectangle((x0 + 14, y0 + 14, x1 - 14, y1 - 14), outline=cream, width=1)
+    step = 18
+    for x in range(x0 + 16, x1 - 26, step):
+        for top in (True, False):
+            y = y0 + 7 if top else y1 - 7
+            d.arc((x, y - 5, x + 10, y + 5), 200 if top else 20, 340 if top else 160, fill=cream, width=1)
+    for y in range(y0 + 16, y1 - 26, step):
+        for left in (True, False):
+            x = x0 + 7 if left else x1 - 7
+            d.arc((x - 5, y, x + 5, y + 10), 110 if left else 290, 250 if left else 70, fill=cream, width=1)
+
+
+def label():
+    # Mapped onto an arched label: the top centre of the image is the arch peak.
+    w, h = 512, 640
+    ink = (12, 11, 10); cream = (236, 232, 220)
+    img = Image.new('RGB', (w, h), ink)
+    d = ImageDraw.Draw(img)
+    filigree(d, (10, 10, w - 11, h - 11), cream)
+    arc_text(img, 'OLD TRUCK', font('georgiab.ttf', 64), cream, w / 2, 330, 250, 92)
+    d = ImageDraw.Draw(img)
+    y = centered(d, 150, 'TENNESSEE STYLE', font('georgia.ttf', 26), cream, w) + 18
+    # Central medallion.
+    d.ellipse((w / 2 - 92, y, w / 2 + 92, y + 184), outline=cream, width=3)
+    d.ellipse((w / 2 - 82, y + 10, w / 2 + 82, y + 174), outline=cream, width=1)
+    for k in range(24):
+        a = 2 * math.pi * k / 24; r0, r1 = 96, 104
+        d.line((w / 2 + r0 * math.cos(a), y + 92 + r0 * math.sin(a), w / 2 + r1 * math.cos(a), y + 92 + r1 * math.sin(a)), fill=cream, width=2)
+    ny = centered(d, y + 26, 'Old No.', font('georgiai.ttf', 30), cream, w)
+    centered(d, ny + 2, '9', font('georgiab.ttf', 104), cream, w)
+    y += 206
+    y = centered(d, y, 'BRAND', font('georgia.ttf', 24), cream, w) + 14
+    d.line((90, y, w - 90, y), fill=cream, width=2); y += 12
+    y = centered(d, y, 'TENNESSEE', font('georgiab.ttf', 42), cream, w) + 10
+    y = centered(d, y, 'SOUR MASH WHISKEY', font('georgiab.ttf', 32), cream, w) + 16
+    d.line((130, y, w - 130, y), fill=cream, width=1)
+    centered(d, y + 8, '40% ALC./VOL.  ·  DISTILLED & AGED', font('georgia.ttf', 17), cream, w)
+    img = img.filter(ImageFilter.GaussianBlur(.55))
     rng = np.random.default_rng(9)
     a = np.asarray(img).astype(np.float32)
     a *= 1 - .05 * np.asarray(Image.fromarray((rng.random((h // 8, w // 8)) * 255).astype(np.uint8)).resize((w, h), Image.BILINEAR), np.float32)[..., None] / 255
     Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).save(ART / 'v11_whiskey_label.png')
 
-    # Neck band: repeating "OLD TRUCK No.9" on black.
-    nb = Image.new('RGB', (512, 96), (14, 13, 12))
-    nd = ImageDraw.Draw(nb)
-    nd.rectangle((0, 8, 511, 87), outline=cream, width=2)
-    centered(nd, 26, 'OLD TRUCK  No. 9', font('georgiab.ttf', 38), cream, 512)
+    # Shoulder sleeve: wraps once around (u from +X, counter-clockwise), v from shoulder (image bottom) to neck top.
+    nw, nh = 1024, 256
+    nb = Image.new('RGB', (nw, nh), ink); nd = ImageDraw.Draw(nb)
+    nd.line((0, 14, nw, 14), fill=cream, width=3); nd.line((0, 24, nw, 24), fill=cream, width=1)
+    nd.line((0, nh - 30, nw, nh - 30), fill=cream, width=2)
+    # Front (Blender -Y) is u = 0.75; back (+Y) is u = 0.25.
+    for cx in (nw * .75, nw * .25):
+        for text, face, y in (('OLD TRUCK', font('georgiab.ttf', 40), nh - 100), ('Old No. 9', font('georgiai.ttf', 28), nh - 150)):
+            box = nd.textbbox((0, 0), text, font=face)
+            nd.text((cx - (box[2] - box[0]) / 2 - box[0], y), text, font=face, fill=cream)
     nb.filter(ImageFilter.GaussianBlur(.5)).save(ART / 'v11_whiskey_neck.png')
 
 
