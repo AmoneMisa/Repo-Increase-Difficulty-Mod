@@ -67,6 +67,17 @@ internal static class CombatDamageUpgrades
         return whole + (Random.value < scaled - whole ? 1 : 0);
     }
 
+    private static readonly ConditionalWeakTable<HurtCollider, TumbleRef> TumbleOwners = new();
+    private sealed class TumbleRef { internal PlayerTumble Tumble; }
+
+    // The tumble's own hurt collider (PlayerTumble.hurtCollider), not anything a tumbling player touches.
+    private static PlayerTumble TumbleOf(HurtCollider collider) =>
+        TumbleOwners.GetValue(collider, c =>
+        {
+            var t = c.GetComponentInParent<PlayerTumble>();
+            return new TumbleRef { Tumble = t != null && t.hurtCollider == c ? t : null };
+        }).Tumble;
+
     private static ItemMelee MeleeOf(HurtCollider collider)
     {
         var entry = MeleeOwners.GetValue(collider, c => new MeleeRef { Melee = c.GetComponentInParent<ItemMelee>() });
@@ -89,6 +100,13 @@ internal static class CombatDamageUpgrades
         {
             __state = __instance.enemyDamage;
             if (__instance.enemyDamage <= 0) return;
+            // One hook for every player-caused monster hit, so a single saved value is always restored.
+            var tumble = TumbleOf(__instance);
+            if (tumble != null)
+            {
+                __instance.enemyDamage = Scale(__instance.enemyDamage, SurvivalUpgrades.TumbleDamageMultiplier(tumble));
+                return;
+            }
             var melee = MeleeOf(__instance);
             if (melee == null) return;
             __instance.enemyDamage = Scale(__instance.enemyDamage, Multiplier(MeleeId, Wielder(melee)));

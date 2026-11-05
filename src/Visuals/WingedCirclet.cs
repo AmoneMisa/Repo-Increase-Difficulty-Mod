@@ -65,7 +65,7 @@ internal sealed class WingedCirclet : MonoBehaviour
         _local = avatar.isLocal;
         BuildMeshes();
 
-        _root = new GameObject("IHM Winged Circlet").transform;
+        _root = new GameObject("IHM Winged Circlet", typeof(Decoration)).transform;
         _root.SetParent(anchor, false);
         float scale = ModConfig.CircletScale.Value;
         float lossy = Mathf.Max(.0001f, anchor.lossyScale.x);

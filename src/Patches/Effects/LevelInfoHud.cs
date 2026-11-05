@@ -550,6 +550,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
         (ModifierType.MonstersPitTanky, "Pit-Tanky Monsters"),
         (ModifierType.LightMonsters, "Light Monsters"),
         (ModifierType.HeavyMonsters, "Heavy Monsters"),
+        (ModifierType.MysteryBoxes, "Mystery Boxes"),
     };
 
     internal static string NameOf(ModifierType m)

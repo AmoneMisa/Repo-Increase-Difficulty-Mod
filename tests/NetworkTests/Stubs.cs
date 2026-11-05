@@ -34,6 +34,7 @@ namespace IncreaseHardMod.Modifiers {
  public static class ModifierManager {public static int Revision;public static LevelModifiers Current=new();public static void ApplyReceived(LevelModifiers m,long revision){}}
 }
 namespace IncreaseHardMod.Patches.Effects {
+ public static class MysteryBoxEffect {public const byte EventCode=199;public static int Received;public static void Tick(){}public static void HandleEvent(ExitGames.Client.Photon.EventData e){Received++;}}
  public static class LevelTimerController {public static int Applied;public static float Last;public static void Tick(float dt){}public static void ApplyNetworkState(float t,bool on){Applied++;Last=t;}}
  public static class RoundStats {public static void Tick(float dt){}public static void ApplyResults(List<PlayerRoundStat> r,RoundLootSummary s){}}
  public class PlayerRoundStat {public string Name;public int BrokenValue,BrokenCount,Delivered,Deaths,Revives;}
@@ -51,7 +52,7 @@ namespace IncreaseHardMod.Drones {public static class LinkManager {public static
 namespace IncreaseHardMod.Gear {
  public enum ShieldMode {DefenceDrone,ProtectionOrb,DefenceOrb}
  public class ShieldItem:UnityEngine.Component {public ShieldMode mode;public PlayerAvatar Target;public bool Covers(PlayerAvatar p)=>p==Target;}
- public static class GearEffects {public static void Tick(float dt){}}
+ public static class GearEffects {public const float NetBroken = -1f, NetExpired = -2f;public static void Tick(float dt){}}
  public static class PlayerFreezeEffect {public static void Apply(PlayerAvatar p,float seconds){}public static bool ReadSnapshot(object data,double time,string key,out int id,out float remaining){id=0;remaining=0;return false;}}
 }
 namespace IncreaseHardMod.Visuals {

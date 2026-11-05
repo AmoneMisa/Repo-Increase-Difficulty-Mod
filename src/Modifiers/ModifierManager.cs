@@ -27,6 +27,11 @@ public static class ModifierManager
     public static void RollForNextLevel(int levelsCompleted)
     {
         var rolled = ModifierRoller.Roll(levelsCompleted);
+        if (Testing.TestShortcuts.ForceMysteryBoxes.Value)
+        {
+            rolled.Active |= ModifierType.MysteryBoxes;
+            rolled.Active &= ~ModifierType.SpreadUpgrades;
+        }
         SetCurrent(rolled, "host rolled");
         ModNetwork.Instance?.BroadcastModifiers(rolled);
     }

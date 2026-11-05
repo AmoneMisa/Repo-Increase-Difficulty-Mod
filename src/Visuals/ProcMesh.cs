@@ -69,6 +69,16 @@ internal sealed class ProcMesh
     }
 }
 
+/// <summary>
+/// Marks the root of a purely decorative effect (hero aura, winged circlet) parented to an item or player.
+/// Anything that measures or outlines an object (ping silhouette, ping targeting, underglow footprint)
+/// must skip renderers under it, or the halo quads would be outlined as part of the object.
+/// </summary>
+internal sealed class Decoration : MonoBehaviour
+{
+    internal static bool Is(Renderer renderer) => renderer != null && renderer.GetComponentInParent<Decoration>(true) != null;
+}
+
 /// <summary>Procedural soft textures shared by the glow cosmetics.</summary>
 internal static class GlowTextures
 {
@@ -92,6 +102,23 @@ internal static class GlowTextures
         float fall = Mathf.Pow(1f - d, 1.6f);
         float core = Mathf.Pow(Mathf.Clamp01(1f - d * 2.4f), 2f);
         return Mathf.Clamp01(ray * fall + core);
+    });
+
+    private static Texture2D _strip;
+
+    // Neon strip: a soft rounded-rectangle outline (like an underglow LED tube) with a faint inner wash.
+    internal static Texture2D Strip => _strip ??= Make("IHM Glow Strip", 256, (x, y) =>
+    {
+        const float half = .78f, corner = .3f;
+        float qx = Mathf.Abs(x) - (half - corner), qy = Mathf.Abs(y) - (half - corner);
+        float outside = new Vector2(Mathf.Max(qx, 0f), Mathf.Max(qy, 0f)).magnitude;
+        float d = outside + Mathf.Min(Mathf.Max(qx, qy), 0f) - corner; // signed distance to the outline
+        float tube = Mathf.Exp(-(d / .045f) * (d / .045f));
+        float halo = Mathf.Exp(-Mathf.Abs(d) / .12f) * .45f;
+        float wash = d < 0f ? .12f : 0f;
+        // Fade to nothing at the quad's border so the halo never shows a hard square edge.
+        float edge = Mathf.Clamp01((1f - Mathf.Max(Mathf.Abs(x), Mathf.Abs(y))) / .14f);
+        return Mathf.Clamp01(tube + halo + wash) * edge * edge;
     });
 
     // Four-point sparkle.

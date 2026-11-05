@@ -15,7 +15,7 @@ namespace IncreaseHardMod.Testing;
 /// </summary>
 internal static class TestShortcuts
 {
-    internal static ConfigEntry<bool> SkipLevelsToShop, ForceFlameCart;
+    internal static ConfigEntry<bool> SkipLevelsToShop, ForceFlameCart, ForceMysteryBoxes;
     internal static ConfigEntry<int> ShopCurrency;
 
     internal static void Bind(ConfigFile cfg)
@@ -25,12 +25,14 @@ internal static class TestShortcuts
             "TESTING ONLY. Host: leaving the truck goes straight to the shop instead of a level, so shop items can be tried without playing.");
         ForceFlameCart = cfg.Bind(section, "ForceFlameCartInShop", false,
             "TESTING ONLY. Host: always put the Flamethrower C.A.R.T. in the shop (ignores price, rolls and purchase limits).");
+        ForceMysteryBoxes = cfg.Bind(section, "ForceMysteryBoxes", false,
+            "TESTING ONLY. Host: every run level gets the Mystery Boxes surprise, on top of whatever else rolled.");
         ShopCurrency = cfg.Bind(section, "ShopCurrencyK", 0,
             new ConfigDescription("TESTING ONLY. Host: when the shop opens, raise the team's money to at least this many K ($1000s). 0 = off.",
                 new AcceptableValueRange<int>(0, 100000)));
     }
 
-    internal static bool Any => SkipLevelsToShop.Value || ForceFlameCart.Value || ShopCurrency.Value > 0;
+    internal static bool Any => SkipLevelsToShop.Value || ForceFlameCart.Value || ForceMysteryBoxes.Value || ShopCurrency.Value > 0;
 
     [HarmonyPatch(typeof(RunManager), "ChangeLevel")]
     private static class SkipToShop

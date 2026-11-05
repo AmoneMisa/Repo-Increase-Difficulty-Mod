@@ -76,7 +76,7 @@ internal sealed class ItemAudioState : MonoBehaviour
                 // ShootRPC already plays locally on each peer. Replace, don't layer another gunshot.
                 var shot = ItemAudio.Cue(assetKey + "_shot", assetKey == "sticky" ? .24f : .65f);
                 var hit = ItemAudio.Cue(assetKey == "sticky" ? "sticky_hit" : assetKey == "ice" ? "ice_hit" :
-                    assetKey == "lightning" ? "lightning_hit" : "poison_hit",
+                    assetKey == "lightning" ? "lightning_hit" : assetKey == "net" ? "net_hit" : "poison_hit",
                     assetKey == "sticky" ? .12f : .3f);
                 gun.soundShoot = shot;
                 gun.soundShootGlobal = new Sound { Sounds = Array.Empty<AudioClip>() };

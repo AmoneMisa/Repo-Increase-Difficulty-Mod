@@ -187,7 +187,11 @@ internal sealed class WizardStaff : MonoBehaviour
         EnsureVisuals(points.Length - 1);
         for (int i = 1; i < points.Length; i++)
         {
-            if (i <= struck) _hit?.Play(points[i]);
+            if (i <= struck)
+            {
+                _hit?.Play(points[i]);
+                LightningImpact.Spawn(points[i], Material());
+            }
             var light = _lights[i - 1];
             light.transform.position = points[i];
             light.enabled = true;
@@ -214,13 +218,30 @@ internal sealed class WizardStaff : MonoBehaviour
             int s = i / 2;
             bool glow = i % 2 == 1;
             var start = s == 0 && _gun != null && _gun.gunMuzzle != null ? _gun.gunMuzzle.position : _points[s];
-            if (rejag) Jag(line, start, _points[s + 1], glow ? .09f : .06f);
-            float width = (glow ? .11f : .035f) * (.35f + .65f * fade);
+            if (rejag) Jag(line, start, _points[s + 1], glow ? .075f : .06f);
+            float width = (glow ? .15f : .03f) * (.35f + .65f * fade);
             line.startWidth = width;
             line.endWidth = width * .7f;
             var c = glow ? Glow : Core;
-            c.a = (glow ? .55f : 1f) * fade;
+            c.a = (glow ? .45f : 1f) * fade;
             line.startColor = line.endColor = c;
+        }
+        // Forks: thinner, fainter strands splitting off each segment's core, re-shaped with it.
+        for (int i = 0; i < _branches.Count; i++)
+        {
+            var branch = _branches[i];
+            int s = i / BranchesPerSegment;
+            bool used = on && s < segments;
+            branch.enabled = used && Random.value > .12f;
+            if (!used) continue;
+            if (rejag) Fork(branch, _lines[s * 2]);
+            float width = .02f * (.35f + .65f * fade);
+            branch.startWidth = width;
+            branch.endWidth = width * .25f;
+            var c = Core; c.a = .75f * fade;
+            branch.startColor = c;
+            c.a = 0f;
+            branch.endColor = c;
         }
         for (int i = 0; i < _lights.Count; i++)
         {
@@ -234,7 +255,7 @@ internal sealed class WizardStaff : MonoBehaviour
     {
         var delta = b - a;
         float length = delta.magnitude;
-        int count = Mathf.Clamp(Mathf.CeilToInt(length / .25f) + 1, 3, 24);
+        int count = Mathf.Clamp(Mathf.CeilToInt(length / .11f) + 1, 3, 48); // dense kinks, like real arcs
         line.positionCount = count;
         var side = Vector3.Cross(delta.normalized, Vector3.up);
         if (side.sqrMagnitude < .01f) side = Vector3.right;
@@ -253,8 +274,46 @@ internal sealed class WizardStaff : MonoBehaviour
         }
     }
 
+    private const int BranchesPerSegment = 3;
+    private readonly List<LineRenderer> _branches = new();
+
+    // A fork leaves the core strand at a random kink and wanders off sideways, fading at its tip.
+    private static void Fork(LineRenderer branch, LineRenderer core)
+    {
+        int count = core.positionCount;
+        if (count < 3) { branch.positionCount = 0; return; }
+        int at = Random.Range(1, count - 1);
+        var start = core.GetPosition(at);
+        var along = core.GetPosition(count - 1) - core.GetPosition(0);
+        float length = along.magnitude * Random.Range(.12f, .3f);
+        if (length < .05f) { branch.positionCount = 0; return; }
+        var dir = Quaternion.AngleAxis(Random.Range(-55f, 55f), Random.onUnitSphere) * along.normalized;
+        int points = 9;
+        branch.positionCount = points;
+        for (int i = 0; i < points; i++)
+        {
+            float t = i / (float)(points - 1);
+            var p = start + dir * length * t;
+            if (i > 0) p += Random.insideUnitSphere * length * .14f;
+            branch.SetPosition(i, p);
+        }
+    }
+
     private void EnsureVisuals(int segments)
     {
+        while (_branches.Count < segments * BranchesPerSegment)
+        {
+            var obj = new GameObject("IHM Staff Bolt Fork");
+            obj.transform.SetParent(transform, false);
+            var line = obj.AddComponent<LineRenderer>();
+            line.useWorldSpace = true;
+            line.sharedMaterial = Material();
+            line.numCapVertices = 1;
+            line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            line.receiveShadows = false;
+            line.enabled = false;
+            _branches.Add(line);
+        }
         while (_lines.Count < segments * 2)
         {
             var obj = new GameObject("IHM Staff Bolt");

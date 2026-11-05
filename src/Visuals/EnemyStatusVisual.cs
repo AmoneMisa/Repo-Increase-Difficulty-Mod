@@ -11,7 +11,14 @@ internal sealed class EnemyStatusVisual : MonoBehaviour
 {
     private Enemy _enemy;
     private Renderer[] _body;
-    private float _poisonUntil, _iceUntil;
+    private float _poisonUntil, _iceUntil, _netUntil;
+    private NetDrape _net;
+
+    private void EndNet(bool torn)
+    {
+        _netUntil = 0f;
+        if (_net != null) { _net.Release(torn); _net = null; }
+    }
     private ParticleSystem _cloud;
     private static Material _cloudMaterial;
     private bool _iceApplied;
@@ -25,13 +32,21 @@ internal sealed class EnemyStatusVisual : MonoBehaviour
 
     internal static void Apply(Enemy enemy, byte kind, float seconds)
     {
-        if (enemy == null || !enemy.isActiveAndEnabled || kind > 1 ||
-            float.IsNaN(seconds) || float.IsInfinity(seconds) || seconds <= 0f) return;
+        if (enemy == null || !enemy.isActiveAndEnabled || kind > 2 ||
+            float.IsNaN(seconds) || float.IsInfinity(seconds)) return;
         var visual = enemy.GetComponent<EnemyStatusVisual>();
+        if (kind == 2 && seconds < 0f)
+        {
+            // Net ended early (torn free) or ran out.
+            if (visual != null) visual.EndNet(seconds == Gear.GearEffects.NetBroken);
+            return;
+        }
+        if (seconds <= 0f) return;
         if (visual == null) visual = enemy.gameObject.AddComponent<EnemyStatusVisual>();
         visual.enabled = true;
         if (kind == 0) visual._poisonUntil = Time.time + Mathf.Min(seconds, 600f);
-        else visual._iceUntil = Time.time + Mathf.Min(seconds, 600f);
+        else if (kind == 1) visual._iceUntil = Time.time + Mathf.Min(seconds, 600f);
+        else visual._netUntil = Time.time + Mathf.Min(seconds, 600f);
     }
 
     private void Awake()
@@ -89,7 +104,12 @@ internal sealed class EnemyStatusVisual : MonoBehaviour
                 }
         }
         else if (_iceApplied) RestoreFrost();
-        if (!poisoned && _cloud == null && !_iceApplied) enabled = false;
+        if (Time.time < _netUntil)
+        {
+            if (_net == null && ModConfig.NetLauncherEnabled.Value) _net = NetDrape.Create(transform, BodyBounds());
+        }
+        else if (_net != null) { _net.Release(false); _net = null; }
+        if (!poisoned && _cloud == null && !_iceApplied && _net == null) enabled = false;
     }
 
     private void CreateCloud()
@@ -138,9 +158,17 @@ internal sealed class EnemyStatusVisual : MonoBehaviour
         _cloud.Play();
     }
 
+    private IceBlock _block;
+
     private void ApplyFrost()
     {
         _iceApplied = true;
+        if (ModConfig.IceBlockEnabled.Value && _block == null)
+        {
+            // Seeded from the enemy's network ID so everyone sees the same block.
+            var view = GetComponentInParent<Photon.Pun.PhotonView>();
+            _block = IceBlock.Create(transform, BodyBounds(), view != null ? view.ViewID : GetInstanceID(), _body);
+        }
         var texture = UpgradeIcons.LoadTexture("ice_frost.png");
         foreach (var renderer in _body)
         {
@@ -180,11 +208,13 @@ internal sealed class EnemyStatusVisual : MonoBehaviour
             foreach (var material in slot.Iced) if (material != null) Destroy(material);
         }
         _frost.Clear(); _iceApplied = false;
+        if (_block != null) { _block.Thaw(); _block = null; }
     }
 
     private void Clear()
     {
-        _poisonUntil = _iceUntil = 0f;
+        _poisonUntil = _iceUntil = _netUntil = 0f;
+        if (_net != null) { _net.Release(false); _net = null; }
         if (_cloud != null) { Destroy(_cloud.gameObject); _cloud = null; }
         RestoreFrost();
     }

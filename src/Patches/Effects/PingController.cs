@@ -17,7 +17,10 @@ internal enum PingType : byte
     Scooter = 6,
     Upgrade = 7,
     Player = 8,
+    Weapon = 9,
 }
+
+internal enum WeaponKind : byte { None, Gun, Melee, Grenade }
 
 /// <summary>Team pings with soft silhouette contours and large cyan location markers.
 /// Object IDs and world positions are shared with the team and the Map Suite mirror.
@@ -133,7 +136,7 @@ internal static class PingController
             if(type==PingType.Location || physical==null || camera==null)continue;
             bool visible=false;
             foreach(var renderer in physical.GetComponentsInChildren<Renderer>())
-                if((renderer is MeshRenderer || renderer is SkinnedMeshRenderer) && renderer.enabled && !renderer.forceRenderingOff && PingOutline.ProjectBounds(camera,renderer.bounds,out var bounds) &&
+                if((renderer is MeshRenderer || renderer is SkinnedMeshRenderer) && renderer.enabled && !renderer.forceRenderingOff && !Visuals.Decoration.Is(renderer) && PingOutline.ProjectBounds(camera,renderer.bounds,out var bounds) &&
                     bounds.Contains(HudProjection.DisplayRect(camera).center)) {visible=true;break;}
             if(!visible)continue;
             var direction=hit.point-ray.origin;
@@ -237,10 +240,11 @@ internal static class PingController
         {
             bool upgrade=Find<ItemUpgrade>(t,scope)!=null || (item.item!=null &&
                 (item.item.itemType==SemiFunc.itemType.player_upgrade || item.item.itemType==SemiFunc.itemType.item_upgrade));
-            type = upgrade ? PingType.Upgrade : PingType.Item;
+            var weapon = upgrade ? WeaponKind.None : WeaponOf(item);
+            type = upgrade ? PingType.Upgrade : weapon != WeaponKind.None ? PingType.Weapon : PingType.Item;
             physGrab ??= item.GetComponentInParent<PhysGrabObject>() ?? item.GetComponentInChildren<PhysGrabObject>(true);
             pos = physGrab != null ? physGrab.centerPoint : item.transform.position;
-            label = info ? ItemDisplayName.Get(item) : upgrade ? "Upgrade" : "Item";
+            label = info ? ItemDisplayName.Get(item) : upgrade ? "Upgrade" : weapon != WeaponKind.None ? "Weapon" : "Item";
             return;
         }
 
@@ -276,7 +280,7 @@ internal static class PingController
                            ?? pv.GetComponentInParent<PhysGrabObject>();
         }
 
-        if(type>(byte)PingType.Player) return;
+        if(type>(byte)PingType.Weapon) return;
         SpawnPing((PingType)type, pos, physGrab, local: false, sender, player);
         Announce(label, ColorFor((PingType)type), sender);
     }
@@ -302,6 +306,10 @@ internal static class PingController
             PingOutline.Create(physGrab, pos, ColorFor(type), duration);
         if (type == PingType.Location) graphic.AttachBeacon(duration);
         else if (type == PingType.Enemy) graphic.UseReticle();
+        else if (type == PingType.Weapon) graphic.UseWeaponCallout(WeaponOf(physGrab));
+        // Neon underglow in the ping colour for physical objects (loot, items, carts...), not monsters/players.
+        if (physGrab != null && player == null && type != PingType.Enemy && type != PingType.Location)
+            PingUnderglow.Attach(physGrab, ColorFor(type), duration, graphic);
 
         _pings.Add(new ActivePing
         {
@@ -407,6 +415,30 @@ internal static class PingController
         }
     }
 
+    /// <summary>Which weapon icon a pinged item gets (None = not a weapon).</summary>
+    internal static WeaponKind WeaponOf(ItemAttributes item)
+    {
+        if (item == null) return WeaponKind.None;
+        if (item.item != null)
+            switch (item.item.itemType)
+            {
+                case SemiFunc.itemType.gun:
+                case SemiFunc.itemType.launcher: return WeaponKind.Gun;
+                case SemiFunc.itemType.melee: return WeaponKind.Melee;
+                case SemiFunc.itemType.grenade:
+                case SemiFunc.itemType.mine: return WeaponKind.Grenade;
+            }
+        // Modded or re-typed items: fall back to the weapon behaviour they carry.
+        if (item.GetComponent<ItemGun>() != null) return WeaponKind.Gun;
+        if (item.GetComponent<ItemMelee>() != null) return WeaponKind.Melee;
+        if (item.GetComponent<ItemGrenade>() != null || item.GetComponent<ItemMine>() != null) return WeaponKind.Grenade;
+        return WeaponKind.None;
+    }
+
+    internal static WeaponKind WeaponOf(PhysGrabObject physGrab) =>
+        physGrab == null ? WeaponKind.None :
+        WeaponOf(physGrab.GetComponent<ItemAttributes>() ?? physGrab.GetComponentInParent<ItemAttributes>() ?? physGrab.GetComponentInChildren<ItemAttributes>(true));
+
     internal static Color ColorFor(PingType type) => type switch
     {
         PingType.Valuable => new Color(0.3f, 0.9f, 0.3f),   // green
@@ -417,6 +449,7 @@ internal static class PingController
         PingType.Cart => new Color(0.3f, 0.9f, 0.95f),      // cyan
         PingType.CosmeticBox => new Color(1f, 0.4f, 0.8f),  // pink
         PingType.Scooter => new Color(0.9f, 0.85f, 0.6f),   // beige
+        PingType.Weapon => new Color(1f, 0.28f, 0.86f),     // neon magenta
         _ => new Color(.45f,.82f,1f),                         // soft cyan location
     };
 

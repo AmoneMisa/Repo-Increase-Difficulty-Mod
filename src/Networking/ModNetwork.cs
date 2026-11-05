@@ -24,7 +24,9 @@ namespace IncreaseHardMod.Networking;
 public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 {
     // Our private event codes. Must not collide with REPO's (123/124/199) or PUN's
-    // reserved range (200+). 178/179 are free.
+    // reserved range (200+). In use: 178-179, 181-198 (197 = LevelInfoHud.StateEventCode, declared there);
+    // 180 is retired (old cart-upgrade state). 170-171 = HostRunControls (failed-level vote).
+    // Search every file for "EventCode" before adding one.
     public const byte ModifierEventCode = 178;
     public const byte LevelTimerEventCode = 179;
     // 180 previously carried cart-upgrade state; truck upgrades now sync via REPOLib per-player.
@@ -40,6 +42,9 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     public const byte BatteryDrainEventCode = 186;
     public const byte EnemyStatusEventCode = 187;
     public const byte PlayerFreezeEventCode = 192;
+    // 197 is LevelInfoHud.StateEventCode (level modifier / Map Suite state sync): never reuse it.
+    public const byte PlayerNetEventCode = 198;
+    // 199 is MysteryBoxEffect.EventCode (mystery box placement/state). 200+ is reserved by Photon.
     public const byte StickyTetherEventCode = 193;
 
     // Host broadcasts the authoritative team-quest set; any client asks the host to pay a personal reward.
@@ -103,6 +108,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         if (!inRoom) _enemyTuningSignature = null;
 
         LevelTimerController.Tick(Time.deltaTime);
+        MysteryBoxEffect.Tick();
         Quests.QuestManager.Tick(Time.deltaTime);
         RoundStats.Tick(Time.deltaTime);
         LateJoinController.Tick();
@@ -328,6 +334,26 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
     }
 
+    /// <summary>Host: a player is netted for seconds, or (NetBroken / NetExpired) their net ended.</summary>
+    internal static void BroadcastPlayerNet(PlayerAvatar avatar, float seconds)
+    {
+        if (avatar == null || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+        ApplyPlayerNet(avatar, seconds);
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient) return;
+        var view = avatar.GetComponent<PhotonView>();
+        if (view == null || view.ViewID == 0) return;
+        PhotonNetwork.RaiseEvent(PlayerNetEventCode,
+            new object[] { view.ViewID, seconds, PhotonNetwork.Time, FreezeLevelKey() },
+            new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
+    }
+
+    private static void ApplyPlayerNet(PlayerAvatar avatar, float seconds)
+    {
+        if (seconds == Gear.GearEffects.NetBroken || seconds == Gear.GearEffects.NetExpired)
+            Gear.PlayerNetEffect.End(avatar, seconds == Gear.GearEffects.NetBroken);
+        else Gear.PlayerNetEffect.Apply(avatar, seconds);
+    }
+
     internal static void BroadcastStickyTether(ItemGun gun, PhysGrabObject target, Vector3 point, float seconds)
     {
         if (!SemiFunc.IsMasterClientOrSingleplayer() || gun == null || target == null) return;
@@ -414,6 +440,26 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
                 targetView != null ? targetView.GetComponent<PhysGrabObject>() : null, new Vector3(x,y,z), remaining);
             return;
         }
+        if (photonEvent.Code == PlayerNetEventCode)
+        {
+            if (!PhotonNetwork.InRoom || PhotonNetwork.MasterClient == null ||
+                photonEvent.Sender != PhotonNetwork.MasterClient.ActorNumber ||
+                photonEvent.CustomData is not object[] packet || packet.Length != 4 ||
+                packet[0] is not int id || id <= 0 || packet[1] is not float seconds ||
+                packet[2] is not double sent || packet[3] is not string level || level != FreezeLevelKey() ||
+                float.IsNaN(seconds) || float.IsInfinity(seconds) || seconds > 30f || double.IsNaN(sent) || double.IsInfinity(sent)) return;
+            var avatar = PhotonView.Find(id)?.GetComponent<PlayerAvatar>();
+            bool end = seconds == Gear.GearEffects.NetBroken || seconds == Gear.GearEffects.NetExpired;
+            if (!end)
+            {
+                if (seconds <= 0f) return;
+                float age = (float)System.Math.Max(0d, PhotonNetwork.Time - sent);
+                if (age >= seconds) return;
+                seconds -= age;
+            }
+            ApplyPlayerNet(avatar, seconds);
+            return;
+        }
         if (photonEvent.Code == PlayerFreezeEventCode)
         {
             if (!PhotonNetwork.InRoom || PhotonNetwork.MasterClient == null ||
@@ -429,14 +475,18 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             if (!PhotonNetwork.InRoom || PhotonNetwork.MasterClient == null ||
                 photonEvent.Sender != PhotonNetwork.MasterClient.ActorNumber ||
                 photonEvent.CustomData is not object[] data || data.Length != 4 ||
-                data[0] is not int id || data[1] is not byte kind || kind > 1 ||
+                data[0] is not int id || data[1] is not byte kind || kind > 2 ||
                 data[2] is not float seconds || data[3] is not double sent ||
-                float.IsNaN(seconds) || float.IsInfinity(seconds) || seconds <= 0f || seconds > 600f ||
+                float.IsNaN(seconds) || float.IsInfinity(seconds) || seconds > 600f ||
                 double.IsNaN(sent) || double.IsInfinity(sent)) return;
-            float age = (float)System.Math.Max(0d, PhotonNetwork.Time - sent);
-            if (age >= seconds) return;
             var view = PhotonView.Find(id);
             var enemy = view != null ? view.GetComponentInChildren<Enemy>(true) : null;
+            // Net endings (torn free / expired) are signals, not durations.
+            bool netEnd = kind == 2 && (seconds == Gear.GearEffects.NetBroken || seconds == Gear.GearEffects.NetExpired);
+            if (netEnd) { Visuals.EnemyStatusVisual.Apply(enemy, kind, seconds); return; }
+            if (seconds <= 0f) return;
+            float age = (float)System.Math.Max(0d, PhotonNetwork.Time - sent);
+            if (age >= seconds) return;
             Visuals.EnemyStatusVisual.Apply(enemy, kind, seconds - age);
             return;
         }
@@ -456,6 +506,12 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             int revision = data.Length > 5 && data[5] is int value ? value : -1;
             long token = revision >= 0 ? ((long)photonEvent.Sender << 32) | (uint)revision : -1;
             ModifierManager.ApplyReceived(modifiers, token);
+            return;
+        }
+
+        if (photonEvent.Code == MysteryBoxEffect.EventCode)
+        {
+            if (HostSender(photonEvent)) MysteryBoxEffect.HandleEvent(photonEvent);
             return;
         }
 

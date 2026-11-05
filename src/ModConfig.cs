@@ -96,6 +96,8 @@ public static class ModConfig
     public static ConfigEntry<float> DangerousLootDamageFactor;
     public static ConfigEntry<float> SoulsExplodeHarderFactor;
     public static ConfigEntry<int> SpreadUpgradesCount;
+    public static ConfigEntry<int> MysteryBoxCount, MysteryBoxMoneyMin, MysteryBoxMoneyMax;
+    public static ConfigEntry<int> MysteryBoxWeightUpgrade, MysteryBoxWeightMoney, MysteryBoxWeightWeapon;
     public static ConfigEntry<string> SpreadUpgradesAllowed;
     public static ConfigEntry<bool> LogSpreadUpgradeNames;
     public static ConfigEntry<bool> AutoReviveAtCar;
@@ -113,7 +115,7 @@ public static class ModConfig
     // --- Ping ---
     // Press PingKey to mark whatever you're looking at (valuable/enemy/item/location).
     // The marker is broadcast to all players and shown as a world-anchored label.
-    public static ConfigEntry<bool> PingEnabled;
+    public static ConfigEntry<bool> PingEnabled, PingUnderglowEnabled;
     public static ConfigEntry<UnityEngine.KeyCode> PingKey;
     public static ConfigEntry<float> PingMaxDistance;
     public static ConfigEntry<float> PingDurationSeconds;
@@ -185,7 +187,13 @@ public static class ModConfig
     public static readonly Dictionary<int, ConfigEntry<bool>> StatModifierEnabled = new();
     public static ConfigEntry<bool> GearEnabled;
     // Cosmetics (local visuals only; nothing is networked).
-    public static ConfigEntry<bool> CircletEnabled, HeroAuraEnabled;
+    public static ConfigEntry<bool> CircletEnabled, HeroAuraEnabled, IceBlockEnabled, UpgradesListScaleEnabled;
+    // Armor / Overcharge upgrades and the Tumble Launch bonus (SurvivalUpgrades).
+    public static ConfigEntry<bool> ArmorEnabled, OverchargeEnabled, TumbleBonusEnabled;
+    public static ConfigEntry<bool> FailVoteEnabled, HostRunControlsEnabled;
+    public static ConfigEntry<float> ArmorPercentPerLevel, ArmorMaxReduction, OverchargeBuildupPerLevel, OverchargeRecoveryPerLevel;
+    public static ConfigEntry<float> TumbleDamagePerLevel, TumbleSelfDamageReductionPerLevel, TumbleSelfDamageMaxReduction;
+    public static ConfigEntry<int> ArmorMaxLevel, ArmorBasePrice, OverchargeMaxLevel, OverchargeBasePrice, TumbleMaxLevel, TumbleBasePrice;
     public static ConfigEntry<float> CircletScale;
     public static ConfigEntry<bool> DefenceOrbEnabled, DefenceDroneEnabled, ProtectionOrbEnabled;
     public static ConfigEntry<bool> PoisonCrossbowEnabled, DecoyGrenadeEnabled, IcePistolEnabled, StickyPistolEnabled;
@@ -194,7 +202,9 @@ public static class ModConfig
     public static ConfigEntry<int> FlameDamagePerTick, FlameBatteryDamage, FlameCartValueCap, FlameCartPriceMinK, FlameCartPriceMaxK;
     public static ConfigEntry<float> FlameTickSeconds, FlameRange, FlameConeAngle;
     // Wizard Staff: chain-lightning wand (handgun base, revolver price).
-    public static ConfigEntry<bool> StaffEnabled;
+    public static ConfigEntry<bool> StaffEnabled, NetLauncherEnabled;
+    public static ConfigEntry<float> NetSeconds, NetBreakChance;
+    public static ConfigEntry<int> NetShots;
     public static ConfigEntry<int> StaffDamage, StaffMaxTargets, StaffCharges;
     public static ConfigEntry<float> StaffRange, StaffChainRange, StaffAimAngle;
     public static ConfigEntry<int> DefenceAbsorb, ProtectionReductionPercent;
@@ -372,6 +382,7 @@ public static class ModConfig
         Modifiers.ModifierType.MonstersPitTanky   => "Monsters take less damage from death pits.",
         Modifiers.ModifierType.LightMonsters      => "Monsters weigh less and yield to a single player's grab without Strength upgrades. Native hold-time, mounted and freeze restrictions still apply.",
         Modifiers.ModifierType.HeavyMonsters      => "All monsters weigh more, so they're hard to shove around.",
+        Modifiers.ModifierType.MysteryBoxes       => "Mystery boxes appear around the map. Drop one monster soul into a box to roll a random upgrade, money, or a weapon/grenade for this level only. Each box takes one soul.",
         _                                         => $"The '{m}' surprise modifier.",
     };
 
@@ -440,6 +451,10 @@ public static class ModConfig
         FlameCartPriceMinK = BindInt(cfg, "Flamethrower", "ShopPriceMinK", 75, 1, 5000, "Lowest shop price, in K as the shop shows it (75 = $75K). Shop economy modifiers still apply on top.");
         FlameCartPriceMaxK = BindInt(cfg, "Flamethrower", "ShopPriceMaxK", 120, 1, 5000, "Highest shop price, in K as the shop shows it (120 = $120K).");
         StaffEnabled = Module(cfg, "Gear", "WizardStaffEnabled", true, "WizardStaff", "Sell the Wizard Staff (chain-lightning wand).");
+        NetLauncherEnabled = Module(cfg, "Gear", "NetLauncherEnabled", true, "NetLauncher", "Sell the Net Launcher (roots a monster to the floor).");
+        NetSeconds = BindFloat(cfg, "Net Launcher", "RootSeconds", 5f, 1f, 30f, "How long a net pins a monster to the floor. It can still turn and attack anyone in reach.");
+        NetBreakChance = BindFloat(cfg, "Net Launcher", "BreakChancePerSecond", .12f, 0f, 1f, "Chance each second that the monster tears the net and breaks free early (0.12 = about 45% over 5 seconds).");
+        NetShots = BindInt(cfg, "Net Launcher", "Shots", 8, 1, 20, "Nets per full battery (one battery bar per net).");
         StaffDamage = BindInt(cfg, "Wizard Staff", "BoltDamage", 75, 1, 1000, "Total lightning damage per bolt, split evenly between the monsters it strikes (75 = 75 to one, 38 + 37 to two, 25 each to three).");
         StaffRange = BindFloat(cfg, "Wizard Staff", "Range", 5f, 1f, 20f, "How far (metres) the first bolt reaches from the staff tip.");
         StaffMaxTargets = BindInt(cfg, "Wizard Staff", "MaxTargets", 3, 1, 10, "Most monsters one bolt can strike, including the first (the chain jumps to the nearest unstruck monster).");
@@ -449,11 +464,21 @@ public static class ModConfig
         CircletEnabled = Module(cfg, "Cosmetics", "WingedCircletEnabled", true, "WingedCirclet",
             "Show a floating winged circlet above every player's head, coloured to match the player's own colour (black, cyan, yellow, green, white, purple or red). Local visuals only: each player can turn it off for themselves.");
         CircletScale = BindFloat(cfg, "Cosmetics", "WingedCircletScale", 1f, .5f, 2f, "Size of the winged circlet (1 = default).");
+        IceBlockEnabled = Module(cfg, "Cosmetics", "IceBlockEnabled", true, "IceBlock",
+            "Monsters frozen by the Ice Pistol are encased in a see-through block of ice with crystal shards, cold mist and frost sparkles. Local visuals only.");
         HeroAuraEnabled = Module(cfg, "Cosmetics", "HeroAuraEnabled", true, "HeroAura",
             "Give this mod's own shop items (gear, drones, orbs, upgrades, Flamethrower C.A.R.T.) a golden hero aura: soft halo, light rays, sparkles and a warm light. Local visuals only. Applies on game restart.");
+        UpgradesListScaleEnabled = Module(cfg, "HUD", "UpgradesListScaleEnabled", true, "UpgradesListScale",
+            "Shrink the native UPGRADES list (names and level numbers together) just enough to fit on screen when a modded run has more upgrades than fit. Short lists stay full size. Local only.");
+        FailVoteEnabled = Module(cfg, "Run", "FailVoteEnabled", true, "FailVote",
+            "When everyone dies on a level, vote for 15 seconds: [1] restart the level or [2] a random map, instead of going to the death arena. Closes early when everyone has voted; a tie or no votes restarts. HOST-SIDE.");
+        HostRunControlsEnabled = Module(cfg, "Run", "HostRunControlsEnabled", true, "HostRunControls",
+            "Host-only Esc menu buttons: RESTART LEVEL (on levels) and RETURN TO LOBBY (keeps everyone together; saves first in the shop). Both ask for a second click.");
         Testing.TestShortcuts.Bind(cfg);
         LateJoinEnabled = Module(cfg, "Late Join", "Enabled", true, "LateJoin", "Host keeps the room/lobby joinable during a run/shop/truck (REPO normally seals it at run start) and re-syncs mod state to anyone who connects mid-game.");
         PingEnabled = Module(cfg, "Ping", "Enabled", true, "Ping", "Enable the ping system: press the ping key to mark what you're looking at for the whole team.");
+        PingUnderglowEnabled = Module(cfg, "Ping", "UnderglowEnabled", true, "PingUnderglow",
+            "Pinged loot, items, carts and other physical objects get a neon underglow in the ping colour: coloured light on the floor beneath them for as long as the ping lasts. Local visuals only.");
         ItemUnstuckEnabled = Module(cfg, "Item Unstuck", "Enabled", true, "ItemUnstuck", "Master switch for the valuable safety-net features (relocate stuck loot, invulnerable-until-grab, undamaged-value HUD). The relocate/invuln parts are HOST-SIDE (computed by the host).");
         var spectatorMap = SpectatorMapConfig.Bind(cfg);
         SpectatorMapEnabled = spectatorMap.Enabled;
@@ -509,7 +534,7 @@ public static class ModConfig
 
         RampStartLevel = BindInt(cfg,
             "General", "RampStartLevel", 4, 0, 30,
-            "Completed-level offset for the difficulty ramp. Steps = max(0, (levelsCompleted - RampStartLevel) / RampLevelsPerStep), using integer division. With start 4 and step 1, the first boost is at 5 completed levels (the sixth playable level).");
+            "Completed-level offset for the difficulty ramp. The first boost lands on the first completed level after RampStartLevel, then one more every RampLevelsPerStep levels (start 1, step 3: boosts at 2, 5, 8 completed levels). With start 4 and step 1, the first boost is at 5 completed levels (the sixth playable level).");
 
         RampLevelsPerStep = BindInt(cfg,
             "General", "RampLevelsPerStep", 1, 1, 10,
@@ -524,9 +549,9 @@ public static class ModConfig
             "Global upper cap on the depth HP multiplier, before level surprises. Per-enemy overrides take precedence. 3.0 = at most 3x native HP from the depth ramp.");
         // Free-form string (name:mult list) — REPOConfig can't render this sensibly, so hide it.
         EnemyHealthMaxPerEnemy = cfg.Bind(
-            "Enemies", "HealthMaxPerEnemy", "Elsa:1, Loom:1, Cleanup Crew:1.5, Tick:1.5",
+            "Enemies", "HealthMaxPerEnemy", "Elsa:1.75, Loom:1.75, Trudge:2.25",
             new ConfigDescription(
-                "Per-enemy HP cap overrides. Format: 'Name:multiplier, Name:multiplier'. Names match EnemyParent.enemyName (case-insensitive). A cap of 1 EXCLUDES that enemy from HP scaling (Elsa/Loom are excluded by default). Unlisted enemies use HealthMaxMultiplier. Enable LogEnemyNames to see exact names.",
+                "Per-enemy HP cap overrides. Format: 'Name:multiplier, Name:multiplier'. Names match EnemyParent.enemyName (case-insensitive). A cap of 1 EXCLUDES that enemy from HP scaling. Defaults: Elsa and Loom up to x1.75, Trudge up to x2.25. Unlisted enemies use HealthMaxMultiplier. Enable LogEnemyNames to see exact names.",
                 null, HideFromRepoConfig));
         LogEnemyNames = cfg.Bind(
             "Enemies", "LogEnemyNames", true,
@@ -543,7 +568,7 @@ public static class ModConfig
             "Enemies", "SpeedPerLevel", 0.06f, 0f, 1f,
             "Extra enemy movement speed per level past the ramp start. 0.06 = +6% per level.");
         EnemySpeedMax = BindFloat(cfg,
-            "Enemies", "SpeedMaxMultiplier", 1.75f, 1f, 4f,
+            "Enemies", "SpeedMaxMultiplier", 1.25f, 1f, 4f,
             "Upper cap on the enemy speed multiplier. Keep modest; too high makes enemies uncatchable/janky.");
 
         EnemyRespawnFasterPerLevel = BindFloat(cfg,
@@ -600,6 +625,24 @@ public static class ModConfig
         SpreadUpgradesCount = BindInt(cfg,
             "Modifier Tuning", "SpreadUpgradesCount", 3, 0, 10,
             "SpreadUpgrades: how many upgrade item pickups to scatter across the special level. They can't be used on that level, only once back in the truck.");
+        MysteryBoxCount = BindInt(cfg,
+            "Modifier Tuning", "MysteryBoxCount", 3, 1, 8,
+            "MysteryBoxes: how many mystery boxes are placed across the map. They use navigation points, never valuable spawn spots. Each box accepts one soul.");
+        MysteryBoxMoneyMin = BindInt(cfg,
+            "Modifier Tuning", "MysteryBoxMoneyMin", 3000, 1000, 100000,
+            "MysteryBoxes: smallest money prize in dollars, before depth scaling. Paid to the team wallet in whole $1K.");
+        MysteryBoxMoneyMax = BindInt(cfg,
+            "Modifier Tuning", "MysteryBoxMoneyMax", 9000, 1000, 200000,
+            "MysteryBoxes: largest money prize in dollars, before depth scaling (deeper levels pay a little more).");
+        MysteryBoxWeightUpgrade = BindInt(cfg,
+            "Modifier Tuning", "MysteryBoxWeightUpgrade", 35, 0, 100,
+            "MysteryBoxes: relative chance of a random upgrade pickup (maxed upgrades are skipped).");
+        MysteryBoxWeightMoney = BindInt(cfg,
+            "Modifier Tuning", "MysteryBoxWeightMoney", 30, 0, 100,
+            "MysteryBoxes: relative chance of a money prize.");
+        MysteryBoxWeightWeapon = BindInt(cfg,
+            "Modifier Tuning", "MysteryBoxWeightWeapon", 35, 0, 100,
+            "MysteryBoxes: relative chance of a weapon or grenade that only exists on this level (it is not added to your saved items).");
         SpreadUpgradesAllowed = cfg.Bind(
             "Modifier Tuning", "SpreadUpgradesAllowed", "",
             new ConfigDescription(
@@ -878,6 +921,29 @@ public static class ModConfig
         DroneBatteryBasePrice = BindInt(cfg,
             "Player Upgrades", "DroneBatteryBasePrice", 6000, 0, 1000000,
             "Drone Battery Life: approximate shop price of the first level.");
+        ArmorEnabled = Module(cfg, "Player Upgrades", "ArmorEnabled", true, "Armor", "Sell the Armor upgrade: less damage taken per level.");
+        ArmorPercentPerLevel = BindFloat(cfg, "Player Upgrades", "ArmorPercentPerLevel", .02f, .005f, .25f,
+            "Armor: damage reduction per level. 0.02 = 2% per level; the result is always rounded in the player's favour.");
+        ArmorMaxLevel = BindInt(cfg, "Player Upgrades", "ArmorMaxLevel", 10, 1, 20, "Armor: maximum purchasable level (10 x 2% = 20% less damage).");
+        ArmorMaxReduction = BindFloat(cfg, "Player Upgrades", "ArmorMaxReduction", .2f, .05f, .9f, "Armor: hard cap on total damage reduction (0.2 = 20%).");
+        ArmorBasePrice = BindInt(cfg, "Player Upgrades", "ArmorBasePrice", 9000, 0, 1000000, "Armor: approximate shop price of the first level.");
+        OverchargeEnabled = Module(cfg, "Player Upgrades", "OverchargeEnabled", true, "Overcharge", "Sell the Overcharge upgrade: hold monsters longer before your grab beam overloads.");
+        OverchargeBuildupPerLevel = BindFloat(cfg, "Player Upgrades", "OverchargeBuildupPerLevel", .1f, .02f, .3f,
+            "Overcharge: how much slower overcharge builds up per level while holding a monster. 0.1 = 10% slower per level (capped at 80%).");
+        OverchargeRecoveryPerLevel = BindFloat(cfg, "Player Upgrades", "OverchargeRecoveryPerLevel", .25f, 0f, 2f,
+            "Overcharge: extra drain speed per level once you stop holding a monster, as a share of the vanilla drain. 0.25 = +25% per level.");
+        OverchargeMaxLevel = BindInt(cfg, "Player Upgrades", "OverchargeMaxLevel", 5, 1, 10, "Overcharge: maximum purchasable level.");
+        OverchargeBasePrice = BindInt(cfg, "Player Upgrades", "OverchargeBasePrice", 8000, 0, 1000000, "Overcharge: approximate shop price of the first level.");
+        TumbleBonusEnabled = Module(cfg, "Player Upgrades", "TumbleDamageEnabled", true, "TumbleDamage",
+            "Sell the Tumble Damage upgrade: launching into a monster deals more damage and hurts you less. Host-side.");
+        TumbleMaxLevel = BindInt(cfg, "Player Upgrades", "TumbleDamageMaxLevel", 10, 1, 20, "Tumble Damage: maximum purchasable level.");
+        TumbleBasePrice = BindInt(cfg, "Player Upgrades", "TumbleDamageBasePrice", 7000, 0, 1000000, "Tumble Damage: approximate shop price of the first level.");
+        TumbleDamagePerLevel = BindFloat(cfg, "Player Upgrades", "TumbleDamagePercentPerLevel", .05f, 0f, 1f,
+            "Tumble Damage: extra monster damage per upgrade level, compounding (0.05 = x1.05 per level: x1.16 at 3, x1.63 at 10).");
+        TumbleSelfDamageReductionPerLevel = BindFloat(cfg, "Player Upgrades", "TumbleSelfDamageReductionPerLevel", .1f, 0f, 1f,
+            "Tumble Damage: less self-damage from launching into a monster, per upgrade level. 0.1 = 10% per level.");
+        TumbleSelfDamageMaxReduction = BindFloat(cfg, "Player Upgrades", "TumbleSelfDamageMaxReduction", 1f, 0f, 1f,
+            "Tumble Damage: maximum self-damage reduction (1 = none at all at 10 levels with the default 10%).");
         MeleeDamagePercentPerLevel = BindFloat(cfg,
             "Player Upgrades", "MeleeDamagePercentPerLevel", 0.05f, 0.01f, 0.5f,
             "Melee Damage: extra monster damage from your melee weapons per level. 0.05 = +5%/level.");

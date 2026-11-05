@@ -48,7 +48,7 @@ internal sealed class PingOutline : MaskableGraphic
         frame._root = root;
         frame.target = target;
         frame.HadTarget = target != null;
-        frame._renderers = target != null ? target.GetComponentsInChildren<Renderer>(true) : null;
+        frame._renderers = target != null ? System.Array.FindAll(target.GetComponentsInChildren<Renderer>(true), r => !Visuals.Decoration.Is(r)) : null;
         frame._point = point;
         frame._tint = tint;
         frame._until = Time.time + duration;
@@ -66,7 +66,7 @@ internal sealed class PingOutline : MaskableGraphic
         frame._hadPlayer = true;
         var renderers = new List<Renderer>();
         foreach (var renderer in player.GetComponentsInChildren<Renderer>(true))
-            if (renderer.GetComponentInParent<ItemAttributes>() == null) renderers.Add(renderer);
+            if (renderer.GetComponentInParent<ItemAttributes>() == null && !Visuals.Decoration.Is(renderer)) renderers.Add(renderer);
         frame._renderers = renderers.ToArray();
         return frame;
     }
@@ -89,6 +89,64 @@ internal sealed class PingOutline : MaskableGraphic
 
     private bool HasReticle => _reticleOuter != null;
 
+    // Weapon pings: a chamfered neon box with the weapon's icon, joined to the item by a leader line.
+    private RawImage _calloutIcon;
+    private Rect _calloutBox;        // in this graphic's local space (origin = the item's screen rect min)
+    private Vector2 _calloutDot;
+    private bool _calloutLeft;
+
+    internal void UseWeaponCallout(WeaponKind kind)
+    {
+        var go = new GameObject("Weapon Icon", typeof(RectTransform), typeof(CanvasRenderer));
+        go.transform.SetParent(_root.transform, false);
+        _calloutIcon = go.AddComponent<RawImage>();
+        _calloutIcon.texture = PingWeaponIcons.Get(kind);
+        _calloutIcon.raycastTarget = false;
+        _calloutIcon.maskable = false;
+        _calloutIcon.rectTransform.anchorMin = _calloutIcon.rectTransform.anchorMax = Vector2.zero;
+        _calloutIcon.rectTransform.pivot = new Vector2(.5f, .5f);
+        _calloutIcon.canvasRenderer.SetAlpha(0f);
+    }
+
+    private void PlaceCallout(Camera camera, Rect rectangle, float alpha)
+    {
+        if (_calloutIcon == null) return;
+        if (_pointMarker) { _calloutIcon.canvasRenderer.SetAlpha(0f); return; }
+        float s = Mathf.Clamp(Screen.height / 1080f, .8f, 2.5f) * ModConfig.PingMarkerScale.Value;
+        var size = new Vector2(118f, 60f) * s;
+        float gap = 46f * s;
+        var display = HudProjection.DisplayRect(camera);
+        // Right of the item by default; flip left when it would leave the screen.
+        _calloutLeft = rectangle.xMax + gap + size.x > display.xMax - 8f && rectangle.xMin - gap - size.x > display.xMin + 8f;
+        float x = _calloutLeft ? -gap - size.x : rectangle.width + gap;
+        float y = Mathf.Clamp(rectangle.height * .5f - size.y * .2f, -rectangle.yMin + 8f, display.yMax - rectangle.yMin - size.y - 8f);
+        _calloutBox = new Rect(x, y, size.x, size.y);
+        _calloutDot = new Vector2(rectangle.width * (_calloutLeft ? .3f : .7f), rectangle.height * .4f);
+        var icon = _calloutIcon.rectTransform;
+        icon.anchoredPosition = rectangle.min + _calloutBox.center;
+        icon.sizeDelta = new Vector2(size.x * .72f, size.x * .72f * .5f);
+        _calloutIcon.color = Color.white;
+        _calloutIcon.canvasRenderer.SetAlpha(alpha);
+    }
+
+    // Box with two cut corners (top-right, bottom-left), a leader line and a dot on the item.
+    private void Callout(VertexHelper vh, Color tint, float width)
+    {
+        if (_calloutIcon == null || _pointMarker || _calloutBox.width <= 0f) return;
+        var b = _calloutBox;
+        float cut = b.height * .28f;
+        var points = new[]
+        {
+            new Vector2(b.xMin, b.yMin + cut), new Vector2(b.xMin, b.yMax), new Vector2(b.xMax - cut, b.yMax),
+            new Vector2(b.xMax, b.yMax - cut), new Vector2(b.xMax, b.yMin), new Vector2(b.xMin + cut, b.yMin),
+        };
+        for (int i = 0; i < points.Length; i++) Segment(vh, points[i], points[(i + 1) % points.Length], width, tint);
+        var anchor = new Vector2(_calloutLeft ? b.xMax : b.xMin, b.center.y - b.height * .15f);
+        Segment(vh, _calloutDot, anchor, width, tint);
+        float r = 3.5f + width * .5f;
+        Segment(vh, _calloutDot - new Vector2(r, 0f), _calloutDot + new Vector2(r, 0f), r * 2f, tint);
+    }
+
     private RawImage ReticleImage(string texture)
     {
         var go = new GameObject("Reticle", typeof(RectTransform), typeof(CanvasRenderer));
@@ -108,6 +166,7 @@ internal sealed class PingOutline : MaskableGraphic
         canvasRenderer.SetAlpha(0f);
         if (_reticleOuter != null) _reticleOuter.canvasRenderer.SetAlpha(0f);
         if (_reticleInner != null) _reticleInner.canvasRenderer.SetAlpha(0f);
+        if (_calloutIcon != null) _calloutIcon.canvasRenderer.SetAlpha(0f);
     }
 
     private void PlaceReticle(Rect rectangle, float alpha)
@@ -171,6 +230,7 @@ internal sealed class PingOutline : MaskableGraphic
         float fade=Mathf.Clamp01((_until-Time.time)/.35f);
         canvasRenderer.SetAlpha(fade);
         if (HasReticle) PlaceReticle(rectangle, fade);
+        PlaceCallout(camera, rectangle, fade);
         SetVerticesDirty();
     }
 
@@ -332,6 +392,7 @@ internal sealed class PingOutline : MaskableGraphic
                     Segment(vh,new Vector2(edge.x/_maskWidth*_objectSize.x,edge.y/_maskHeight*_objectSize.y),
                         new Vector2(edge.z/_maskWidth*_objectSize.x,edge.w/_maskHeight*_objectSize.y),width,tint);
             Arrow(vh,tint,layer==widths.Length-1?0f:width*.4f);
+            Callout(vh,tint,width);
         }
     }
 

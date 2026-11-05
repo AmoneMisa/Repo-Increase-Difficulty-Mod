@@ -45,7 +45,7 @@ internal sealed class HeroAura : MonoBehaviour
             center = bounds.center;
             _radius = Mathf.Clamp(bounds.extents.magnitude, .15f, 1.1f);
         }
-        _root = new GameObject("IHM Hero Aura").transform;
+        _root = new GameObject("IHM Hero Aura", typeof(Decoration)).transform;
         _root.SetParent(transform, false);
         _root.position = center;
         _glow = Billboard("Glow", _glowMaterial, _radius * 2.6f);

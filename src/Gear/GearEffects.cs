@@ -43,6 +43,111 @@ internal static class GearEffects
 
     public static bool IsFrozen(Enemy e) => e != null && Frozen.TryGetValue(e, out var until) && until > Time.time;
 
+    // Net Launcher: a netted monster is pinned to an anchor on the floor. Unlike ice it is NOT frozen: its
+    // AI keeps running, so it can still turn and attack anyone in reach. Each second it may tear free.
+    private sealed class Net
+    {
+        public float Until, NextRoll;
+        public Vector3 Anchor;
+    }
+    private static readonly Dictionary<Enemy, Net> Netted = new();
+    private static readonly Dictionary<PlayerAvatar, Net> NettedPlayers = new();
+    private static readonly List<PlayerAvatar> PlayerScratch = new();
+
+    // Players caught by a net: the host times the hold and rolls the same break-free chance; the netted
+    // player's own client stops walking/jumping (PlayerNetEffect).
+    private static void ApplyPlayerNet(PlayerAvatar player)
+    {
+        if (player == null || player.isDisabled || player.deadSet) return;
+        float seconds = ModConfig.NetSeconds.Value;
+        if (!NettedPlayers.TryGetValue(player, out var net)) NettedPlayers[player] = net = new Net();
+        net.Until = Time.time + seconds;
+        net.NextRoll = Time.time + 1f;
+        ModNetwork.BroadcastPlayerNet(player, seconds);
+    }
+
+    public static bool IsNetted(Enemy e) => e != null && Netted.ContainsKey(e);
+
+    private static void ApplyNet(Enemy enemy)
+    {
+        float seconds = ModConfig.NetSeconds.Value;
+        if (!Netted.TryGetValue(enemy, out var net))
+        {
+            Netted[enemy] = net = new Net();
+            var body = enemy.HasRigidbody && enemy.Rigidbody != null && enemy.Rigidbody.rb != null ? enemy.Rigidbody.rb.position : enemy.transform.position;
+            net.Anchor = body;
+            // Flying monsters are dragged down to the floor under them.
+            if (Physics.Raycast(body + Vector3.up * .1f, Vector3.down, out var floor, 6f, SemiFunc.LayerMaskGetVisionObstruct(), QueryTriggerInteraction.Ignore) &&
+                body.y - floor.point.y > 1.3f)
+                net.Anchor = floor.point + Vector3.up * .7f;
+        }
+        net.Until = Time.time + seconds; // a second net refreshes the hold
+        net.NextRoll = Time.time + 1f;
+        ModNetwork.BroadcastEnemyStatus(enemy, 2, seconds);
+    }
+
+    private static void TickNets(float dt)
+    {
+        if (NettedPlayers.Count > 0)
+        {
+            PlayerScratch.Clear();
+            foreach (var kv in NettedPlayers)
+            {
+                var player = kv.Key; var net = kv.Value;
+                if (player == null || player.isDisabled || player.deadSet) { PlayerScratch.Add(player); continue; }
+                if (Time.time >= net.Until) { PlayerScratch.Add(player); ModNetwork.BroadcastPlayerNet(player, NetExpired); continue; }
+                if (Time.time >= net.NextRoll)
+                {
+                    net.NextRoll += 1f;
+                    if (Random.value < ModConfig.NetBreakChance.Value) { PlayerScratch.Add(player); ModNetwork.BroadcastPlayerNet(player, NetBroken); }
+                }
+            }
+            foreach (var p in PlayerScratch) NettedPlayers.Remove(p);
+        }
+        if (Netted.Count == 0) return;
+        Scratch.Clear();
+        foreach (var kv in Netted)
+        {
+            var enemy = kv.Key; var net = kv.Value;
+            bool dead = enemy == null || !enemy.isActiveAndEnabled || (enemy.HasHealth && enemy.Health != null && enemy.Health.dead);
+            if (dead) { Scratch.Add(enemy); continue; }
+            if (Time.time >= net.Until)
+            {
+                Scratch.Add(enemy);
+                ModNetwork.BroadcastEnemyStatus(enemy, 2, NetExpired);
+                continue;
+            }
+            if (Time.time >= net.NextRoll)
+            {
+                net.NextRoll += 1f;
+                if (Random.value < ModConfig.NetBreakChance.Value)
+                {
+                    Scratch.Add(enemy);
+                    ModNetwork.BroadcastEnemyStatus(enemy, 2, NetBroken);
+                    continue;
+                }
+            }
+            // Hold: cancel walking (the agent drives most monsters) and pull the body back onto the anchor.
+            if (enemy.HasNavMeshAgent && enemy.NavMeshAgent != null)
+            {
+                enemy.NavMeshAgent.Stop(.2f);
+                enemy.NavMeshAgent.ResetPath();
+            }
+            if (enemy.HasRigidbody && enemy.Rigidbody != null && enemy.Rigidbody.rb != null && !enemy.Rigidbody.rb.isKinematic)
+            {
+                var rb = enemy.Rigidbody.rb;
+                var to = net.Anchor - rb.position;
+                var v = rb.velocity;
+                // Firm horizontally, and never let it rise off the floor; it may still drop.
+                rb.velocity = new Vector3(to.x * 9f, Mathf.Min(v.y, to.y * 9f), to.z * 9f);
+            }
+        }
+        foreach (var e in Scratch) Netted.Remove(e);
+    }
+
+    /// <summary>EnemyStatus "seconds" values that end a net early: torn free, or simply expired.</summary>
+    internal const float NetBroken = -1f, NetExpired = -2f;
+
     public static void Tick(float dt)
     {
         if (!SemiFunc.IsMasterClientOrSingleplayer())
@@ -78,6 +183,8 @@ internal static class GearEffects
                 foreach (var k in done)
                     Poisoned.Remove(k);
         }
+
+        TickNets(dt);
 
         // Ice: enemies cannot be picked up while frozen.
         if (Frozen.Count > 0)
@@ -119,6 +226,12 @@ internal static class GearEffects
                 if (p.Remaining > 0f) ModNetwork.BroadcastEnemyStatus(p.Enemy, 0, p.Remaining);
             foreach (var ice in Frozen)
                 ModNetwork.BroadcastEnemyStatus(ice.Key, 1, ice.Value - Time.time);
+            foreach (var net in Netted)
+                if (net.Key != null && net.Value.Until > Time.time)
+                    ModNetwork.BroadcastEnemyStatus(net.Key, 2, net.Value.Until - Time.time);
+            foreach (var net in NettedPlayers)
+                if (net.Key != null && net.Value.Until > Time.time)
+                    ModNetwork.BroadcastPlayerNet(net.Key, net.Value.Until - Time.time);
             foreach (var ice in PlayerFreezeEffect.Active)
                 if (ice != null && ice.Remaining > 0f)
                     ModNetwork.BroadcastPlayerFreeze(ice.Avatar, ice.Remaining);
@@ -311,6 +424,10 @@ internal static class GearEffects
                 }
                 case GearKind.Sticky:
                     TryPull(hit, _shooterID, __instance);
+                    break;
+                case GearKind.Net:
+                    if (enemy != null) ApplyNet(enemy);
+                    else ApplyPlayerNet(PlayerAtHit(hit.collider));
                     break;
             }
         }

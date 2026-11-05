@@ -26,6 +26,8 @@ public static class ModifierRoller
         new[] { ModifierType.HeavyLoot, ModifierType.LightLoot },
         new[] { ModifierType.FragileLoot, ModifierType.ProtectedLoot },
         new[] { ModifierType.LightMonsters, ModifierType.HeavyMonsters },
+        // SpreadUpgrades blocks upgrade use on the level, which would waste a box's upgrade prize.
+        new[] { ModifierType.SpreadUpgrades, ModifierType.MysteryBoxes },
     };
 
 

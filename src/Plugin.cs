@@ -64,6 +64,7 @@ public class Plugin : BaseUnityPlugin
         DeathProtectionUpgrade.Register();
         BatteryLifeUpgrade.Register();
         CombatDamageUpgrades.Register();
+        SurvivalUpgrades.Register();
         AutoscanUpgrade.Register();
         MapUpgrade.Register();
         InventorySlotsUpgrade.Register();
@@ -136,6 +137,10 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<Visuals.WingedCircletDriver>();
         // Guest-side log of which level-generation step a mid-level joiner is waiting on.
         netObject.AddComponent<Patches.Effects.LateJoinDiagnostics>();
+        // Everyone uses the host's moon level (it gates grab overcharge and other moon mechanics).
+        netObject.AddComponent<Economy.MoonSync>();
+        // Failed-level vote (restart / random map) and the host's Esc-menu run controls.
+        netObject.AddComponent<Patches.Effects.HostRunControls>();
         Object.DontDestroyOnLoad(netObject);
         _runtimeObject = netObject;
 

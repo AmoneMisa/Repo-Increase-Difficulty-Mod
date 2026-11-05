@@ -18,9 +18,10 @@ public static class Difficulty
 
     /// <summary>
     /// How many "ramp steps" of difficulty currently apply.
-    /// 0 during the vanilla levels, then 1, 2, 3... after the start. When
-    /// RampLevelsPerStep &gt; 1 the depth is divided so a step only lands every
-    /// N levels (e.g. 2 = a new step every 2nd level past the start).
+    /// 0 up to and including the start level, then 1 on the very first level after it, and one more
+    /// every RampLevelsPerStep levels (start 1, step 3: steps at 2, 5, 8... completed levels).
+    /// Rounding UP matters: rounding down held the first boost back a whole interval (4, 7, 10...),
+    /// so monsters seemed not to get stronger at all after the configured start.
     /// </summary>
     public static int Steps
     {
@@ -32,7 +33,7 @@ public static class Difficulty
             int perStep = ModConfig.RampLevelsPerStep.Value;
             if (perStep < 1)
                 perStep = 1;
-            return depth / perStep;
+            return (depth + perStep - 1) / perStep;
         }
     }
 

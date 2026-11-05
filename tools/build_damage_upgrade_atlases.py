@@ -204,6 +204,80 @@ def grenade_pictogram():
     return img
 
 
+def armor_pictogram():
+    """Riveted steel shield with a raised centre plate: 'take less damage'."""
+    img = layer()
+    d = ImageDraw.Draw(img)
+    steel = (150, 158, 168, 255)
+    plate = (196, 204, 214, 255)
+    cx, top, bottom, half = 84, 22, 186, 64
+    shield = [(cx - half, top + 14), (cx, top), (cx + half, top + 14), (cx + half - 2, top + 80),
+              (cx + half - 18, top + 124), (cx, bottom - top), (cx - half + 18, top + 124), (cx - half + 2, top + 80)]
+    outlined_poly(d, shield, steel, 4.2)
+    inner = [(cx - 38, top + 30), (cx, top + 20), (cx + 38, top + 30), (cx + 36, top + 82), (cx + 24, top + 112),
+             (cx, top + 130), (cx - 24, top + 112), (cx - 36, top + 82)]
+    outlined_poly(d, inner, plate, 3.2)
+    d.line([P(cx, top + 26), P(cx, top + 124)], fill=INK, width=int(3 * S))          # centre ridge
+    d.line([P(cx - 30, top + 66), P(cx + 30, top + 66)], fill=INK, width=int(3 * S))  # cross band
+    for rx, ry in ((cx - 50, top + 26), (cx + 50, top + 26), (cx - 48, top + 84), (cx + 48, top + 84), (cx, top + 142)):
+        d.ellipse([P(rx - 5, ry - 5), P(rx + 5, ry + 5)], fill=INK)
+        d.ellipse([P(rx - 2.6, ry - 2.6), P(rx + 2.6, ry + 2.6)], fill=CREAM)
+    # Glancing-blow chips on the rim.
+    for x0, y0, x1, y1 in ((cx + 40, top + 6, cx + 62, top - 6), (cx - 66, top + 100, cx - 84, top + 92)):
+        d.line([P(x0, y0), P(x1, y1)], fill=INK, width=int(6 * S)); d.line([P(x0, y0), P(x1, y1)], fill=CREAM, width=int(3 * S))
+    up_badge(d, 146, 176)
+    return img
+
+
+def overcharge_pictogram():
+    """Grabber claw holding a crackling bolt: 'hold monsters longer'."""
+    img = layer()
+    d = ImageDraw.Draw(img)
+    claw = (120, 126, 136, 255)
+    bolt = (255, 214, 70, 255)
+    # Lightning bolt held in the claw.
+    outlined_poly(d, [(96, 18), (56, 98), (86, 98), (66, 168), (124, 80), (92, 80), (118, 18)], bolt, 4)
+    # Two claw fingers closing around it.
+    for side in (-1, 1):
+        x = 84 + side * 46
+        outlined_poly(d, [(x - 10, 128), (x + 10, 128), (x + 14 - side * 4, 82), (x - side * 20, 62), (x - side * 30, 70),
+                          (x - side * 6, 90), (x - 10, 128)], claw, 3.6)
+    thick_rect(d, (34, 126, 134, 150), claw, 3.6, 6)          # claw palm
+    thick_rect(d, (70, 150, 98, 196), (90, 96, 104, 255), 3.4, 4)  # wrist
+    # Charge sparks.
+    for a in (-150, -30, 200, -95):
+        r = math.radians(a)
+        x, y = 84 + math.cos(r) * 70, 96 + math.sin(r) * 70
+        d.line([P(x, y), P(x + math.cos(r) * 14, y + math.sin(r) * 14)], fill=INK, width=int(7 * S))
+        d.line([P(x, y), P(x + math.cos(r) * 14, y + math.sin(r) * 14)], fill=bolt, width=int(3.6 * S))
+    up_badge(d, 146, 176)
+    return img
+
+
+def tumble_pictogram():
+    """Curled-up tumbling robot with speed lines slamming into an impact star: 'tumble launch damage'."""
+    img = layer()
+    d = ImageDraw.Draw(img)
+    star(d, 132, 64, 40, 22, 9, rot=-70)
+    body = (214, 128, 64, 255)
+    # Speed lines trailing up-left.
+    for i, (x0, y0, length) in enumerate(((10, 70, 40), (14, 96, 52), (24, 122, 36))):
+        d.line([P(x0, y0), P(x0 + length, y0 + 10)], fill=INK, width=int(7 * S))
+        d.line([P(x0, y0), P(x0 + length, y0 + 10)], fill=CREAM, width=int(3.4 * S))
+    # Round tumbling body with a visor, tucked limbs, spin arrow.
+    cx, cy, r = 88, 108, 40
+    d.ellipse([P(cx - r, cy - r), P(cx + r, cy + r)], fill=INK)
+    d.ellipse([P(cx - r + 4, cy - r + 4), P(cx + r - 4, cy + r - 4)], fill=body)
+    outlined_poly(d, [(cx - 6, cy - 30), (cx + 24, cy - 22), (cx + 26, cy - 6), (cx - 4, cy - 10)], (60, 70, 80, 255), 3)
+    for ax, ay in ((cx - 30, cy + 26), (cx + 20, cy + 34)):
+        d.ellipse([P(ax - 11, ay - 11), P(ax + 11, ay + 11)], fill=INK)
+        d.ellipse([P(ax - 7, ay - 7), P(ax + 7, ay + 7)], fill=body)
+    d.arc([P(cx - r - 14, cy - r - 14), P(cx + r + 14, cy + r + 14)], start=200, end=320, fill=INK, width=int(7 * S))
+    d.arc([P(cx - r - 14, cy - r - 14), P(cx + r + 14, cy + r + 14)], start=202, end=318, fill=CREAM, width=int(3.4 * S))
+    up_badge(d, 146, 176)
+    return img
+
+
 def compose(name, hue, sat, val, picto):
     img = recolour(source, hue, sat, val)
     img = clear_front(img)
@@ -229,3 +303,6 @@ def compose(name, hue, sat, val, picto):
 
 compose('Upgrade_Melee-Damage.png', 352, 0.85, 0.82, melee_pictogram)
 compose('Upgrade_Grenade-Damage.png', 80, 0.48, 0.62, grenade_pictogram)
+compose('Upgrade_Armor.png', 215, 0.55, 0.7, armor_pictogram)
+compose('Upgrade_Overcharge.png', 48, 0.9, 0.95, overcharge_pictogram)
+compose('Upgrade_Tumble-Launch.png', 18, 0.95, 0.9, tumble_pictogram)

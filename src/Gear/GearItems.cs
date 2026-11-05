@@ -14,6 +14,7 @@ internal enum GearKind
     Ice,
     Sticky,
     Lightning,
+    Net,
 }
 
 internal enum ShieldMode
@@ -77,6 +78,9 @@ internal static class GearItems
                 if (ModConfig.IcePistolEnabled.Value)
                     MakeGun(pulseGun ?? gun, "Item Gun Ice Pulse", "Pulse Ice Pistol", GearKind.Ice, 11000f, 15000f, new Color(0.5f, 0.85f, 1f),
                         "Freezes monsters and players with visible ice. Players take no shot damage; works in the shop too. Frozen monsters cannot be lifted, take less firearm damage and 35% more melee damage.");
+                if (ModConfig.NetLauncherEnabled.Value)
+                    MakeGun(gun, "Item Gun Net Launcher", "Net Launcher", GearKind.Net, 14000f, 18000f, new Color(1f, .78f, .2f),
+                        $"Fires a weighted rope net that pins a monster to the floor for {ModConfig.NetSeconds.Value:0.#} seconds. It can still turn and attack anything in reach, and may tear free early. {ModConfig.NetShots.Value} nets per charge.");
                 if (ModConfig.StickyPistolEnabled.Value)
                     MakeGun(gun, "Item Gun Sticky", "Sticky Pistol", GearKind.Sticky, 9000f, 10000f, new Color(1f, 0.5f, 0.9f),
                         "Pulls a monster or object toward you without dealing damage, if you could lift it with one strength level less.");
@@ -204,6 +208,15 @@ internal static class GearItems
         var gun = go.GetComponent<ItemGun>();
         gun.numberOfBullets = 1;
         gun.gunRandomSpread = 0f;
+        if (kind == GearKind.Net)
+        {
+            // One battery bar per net.
+            gun.batteryDrainFullBar = true;
+            gun.batteryDrainFullBars = 1;
+            var battery = go.GetComponent<ItemBattery>();
+            if (battery != null) battery.batteryBars = Mathf.Max(1, ModConfig.NetShots.Value);
+            gun.gunRecoilForce *= .6f;
+        }
         if (kind == GearKind.Sticky)
         {
             gun.gunRecoilForce = 0f;
@@ -228,6 +241,17 @@ internal static class GearItems
                 if (kind == GearKind.Poison)
                 {
                     PoisonBoltDamage.Configure(hurt, ModConfig.PoisonHitDamage.Value);
+                }
+                else if (kind == GearKind.Net)
+                {
+                    // A net does no harm: it only pins the monster (GearEffects).
+                    hurt.playerLogic = false;
+                    hurt.playerDamage = 0;
+                    hurt.playerKill = false;
+                    hurt.enemyDamage = 0;
+                    hurt.enemyKill = false;
+                    hurt.enemyStun = false;
+                    NoKnockback(hurt);
                 }
                 else if (kind == GearKind.Sticky)
                 {

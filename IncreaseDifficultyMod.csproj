@@ -34,6 +34,7 @@
     <Compile Remove="unity\**\*.cs" />
     <!-- The standalone motion-rule fixture must not contribute generated assembly metadata. -->
     <Compile Remove="tools\ValuableMotionChecks\**\*.cs" />
+    <Compile Remove="tools\IceShaderBundle\**\*.cs" />
     <!-- Export packages contain review copies, not additional plugin compilation units. -->
     <Compile Remove="art\valuables\**\runtime-source\**\*.cs" />
     <None Include="_decompiled\**\*.cs" />
@@ -44,6 +45,7 @@
     <EmbeddedResource Include="src\Textures\*.png" />
     <EmbeddedResource Include="src\Art\*.png" />
     <EmbeddedResource Include="src\Art\*.mesh.json" />
+    <EmbeddedResource Include="src\Art\*.bundle" />
     <EmbeddedResource Include="src\Audio\*.wav" />
   </ItemGroup>
 

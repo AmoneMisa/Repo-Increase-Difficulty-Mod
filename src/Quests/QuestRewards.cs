@@ -127,13 +127,54 @@ public static class QuestRewards
             return null;
 
         Vector3 pos = point.transform.position + Vector3.up;
-        if (SemiFunc.IsMultiplayer())
-            PhotonNetwork.InstantiateRoomObject(item.prefab.ResourcePath, pos, Quaternion.identity, 0);
-        else
-            Object.Instantiate(item.prefab.Prefab, pos, Quaternion.identity);
+        return SpawnItemAt(item, pos, Quaternion.identity) ? item.name : null;
+    }
 
-        Plugin.Log.LogInfo($"[Quests] Reward: spawned item '{item.name}' at {pos}.");
-        return item.name;
+    /// <summary>Room-instantiate a catalogue Item at an exact spot (host only). Level-found items are
+    /// never added to StatsManager.itemsPurchased, so they do not carry over to the next level.</summary>
+    internal static bool SpawnItemAt(Item item, Vector3 pos, Quaternion rotation)
+    {
+        if (item == null || item.prefab == null || !SemiFunc.IsMasterClientOrSingleplayer())
+            return false;
+        if (SemiFunc.IsMultiplayer())
+            PhotonNetwork.InstantiateRoomObject(item.prefab.ResourcePath, pos, rotation, 0);
+        else
+            Object.Instantiate(item.prefab.Prefab, pos, rotation);
+        Plugin.Log.LogInfo($"[Rewards] Spawned item '{item.name}' at {pos}.");
+        return true;
+    }
+
+    /// <summary>A random upgrade item that is not already at its purchase cap, or null.</summary>
+    internal static Item PickAvailableUpgrade()
+    {
+        var upgrades = CollectUpgradeItems();
+        upgrades.RemoveAll(it => !IsUpgradeAvailable(it) || it.prefab == null);
+        return upgrades.Count > 0 ? upgrades[Random.Range(0, upgrades.Count)] : null;
+    }
+
+    /// <summary>A random weapon or grenade (guns, melee, launchers, grenades, mines), or null.</summary>
+    internal static Item PickWeaponOrGrenade()
+    {
+        var stats = StatsManager.instance;
+        if (stats == null)
+            return null;
+        var pool = new List<Item>();
+        foreach (var item in stats.itemDictionary.Values)
+        {
+            if (item == null || item.prefab == null || item.disabled)
+                continue;
+            switch (item.itemType)
+            {
+                case SemiFunc.itemType.gun:
+                case SemiFunc.itemType.melee:
+                case SemiFunc.itemType.launcher:
+                case SemiFunc.itemType.grenade:
+                case SemiFunc.itemType.mine:
+                    pool.Add(item);
+                    break;
+            }
+        }
+        return pool.Count > 0 ? pool[Random.Range(0, pool.Count)] : null;
     }
 
     /// <summary>

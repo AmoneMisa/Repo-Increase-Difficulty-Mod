@@ -46,4 +46,7 @@ public enum ModifierType
     // --- Added batch 3: monster weight ---
     LightMonsters      = 1 << 21, // reward: all monsters weigh at most LightMonsterMaxMass (easy to shove)
     HeavyMonsters      = 1 << 22, // punish: all monsters weigh at least HeavyMonsterMinMass (hard to shove)
+
+    // --- Added batch 4 ---
+    MysteryBoxes       = 1 << 23, // reward: a few mystery boxes trade one soul each for a random prize
 }

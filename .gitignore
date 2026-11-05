@@ -46,3 +46,12 @@ __pycache__/
 *.pyc
 *.blend1
 art/valuables/*.zip
+
+tools/IceShaderBundle/Library/
+tools/IceShaderBundle/Temp/
+tools/IceShaderBundle/Logs/
+tools/IceShaderBundle/UserSettings/
+tools/IceShaderBundle/Build/
+tools/IceShaderBundle/obj/
+tools/IceShaderBundle/*.csproj
+tools/IceShaderBundle/*.sln

@@ -141,15 +141,81 @@ internal static class LevelScalingPatches
 
     // ---- moon phases --------------------------------------------------------------------------
 
+    // ---- verification log --------------------------------------------------------------------
+
+    /// <summary>One line per level with the monster factors actually in force, to check the ramp in-game.</summary>
+    [HarmonyPatch(typeof(LevelGenerator), "GenerateDoneApply")]
+    private static class ScalingReport
+    {
+        [HarmonyPostfix]
+        private static void Postfix()
+        {
+            try
+            {
+                if (!SemiFunc.RunIsLevel()) return;
+                float count = ModConfig.ScaleEnemyCap.Value
+                    ? Mathf.Min(ModConfig.EnemyCapMax.Value, 1f + ModConfig.EnemyCapPerLevel.Value * Depth(ModConfig.EnemyCapStartLevel.Value)) : 1f;
+                Plugin.Log.LogInfo(
+                    $"[Scaling] Level {Difficulty.LevelsCompleted + 1} ({Difficulty.LevelsCompleted} completed, ramp step {Difficulty.Steps}" +
+                    $" = every {Mathf.Max(1, ModConfig.RampLevelsPerStep.Value)} level(s) after {ModConfig.RampStartLevel.Value}): " +
+                    $"monster HP x{EnemyBalance.Health(null):0.00}, damage x{EnemyBalance.Damage:0.00}, speed x{EnemyBalance.Speed:0.00}, " +
+                    $"respawn wait x{EnemyBalance.Respawn:0.00}, count x{count * EnemyBalance.Stat(Modifiers.StatAxis.EnemyCount):0.00}, moon {SemiFunc.MoonLevel()}" +
+                    (SemiFunc.IsMasterClientOrSingleplayer() ? " (host settings)." : " (from the host)."));
+            }
+            catch (System.Exception e) { Plugin.Log.LogWarning($"[Scaling] Report failed harmlessly: {e.Message}"); }
+        }
+    }
+
+    // The game computes the moon level separately on every client from levelsCompleted and never syncs it,
+    // and moon level gates client-side mechanics (grab overcharge starts at moon 2). With ScaleMoon set
+    // differently on the host and a guest, the two disagreed: e.g. guests were overcharged and the host
+    // was not. The host's value is now the one everyone uses (room property MoonProperty).
+    internal const string MoonProperty = "ihm_moon";
+
     [HarmonyPatch(typeof(RunManager), "CalculateMoonLevel")]
     private static class Moon
     {
         [HarmonyPostfix]
         private static void Postfix(int _levelsCompleted, ref int __result)
         {
-            if (!ModConfig.ScaleMoon.Value)
-                return;
-            __result = Mathf.Max(0, (_levelsCompleted + 1) / Mathf.Max(1, ModConfig.MoonLevelsPerPhase.Value));
+            if (ModConfig.ScaleMoon.Value)
+                __result = Mathf.Max(0, (_levelsCompleted + 1) / Mathf.Max(1, ModConfig.MoonLevelsPerPhase.Value));
+            if (!Photon.Pun.PhotonNetwork.InRoom) return;
+            if (Photon.Pun.PhotonNetwork.IsMasterClient) MoonSync.Publish(__result);
+            else if (MoonSync.HostMoon(out int host)) __result = host;
         }
+    }
+}
+
+/// <summary>Keeps every client on the host's moon level (see LevelScalingPatches.MoonProperty).</summary>
+internal sealed class MoonSync : MonoBehaviour
+{
+    private float _next;
+
+    internal static void Publish(int moon)
+    {
+        var room = Photon.Pun.PhotonNetwork.CurrentRoom;
+        if (room == null || (room.CustomProperties[LevelScalingPatches.MoonProperty] is int current && current == moon)) return;
+        room.SetCustomProperties(new ExitGames.Client.Photon.Hashtable { [LevelScalingPatches.MoonProperty] = moon });
+    }
+
+    internal static bool HostMoon(out int moon)
+    {
+        moon = 0;
+        var room = Photon.Pun.PhotonNetwork.CurrentRoom;
+        if (room == null || room.CustomProperties[LevelScalingPatches.MoonProperty] is not int value || value < 0 || value > 99) return false;
+        moon = value;
+        return true;
+    }
+
+    // The property can arrive after a guest already computed its own value: re-apply it once a second.
+    private void Update()
+    {
+        if (Time.unscaledTime < _next) return;
+        _next = Time.unscaledTime + 1f;
+        var run = RunManager.instance;
+        if (run == null || !Photon.Pun.PhotonNetwork.InRoom) return;
+        if (Photon.Pun.PhotonNetwork.IsMasterClient) { Publish(run.moonLevel); return; }
+        if (HostMoon(out int host) && run.moonLevel != host) run.moonLevel = host;
     }
 }
