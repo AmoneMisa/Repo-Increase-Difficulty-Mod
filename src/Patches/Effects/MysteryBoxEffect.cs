@@ -6,6 +6,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace IncreaseHardMod.Patches.Effects;
 
@@ -177,11 +178,12 @@ internal static class MysteryBoxEffect
         if (LevelGenerator.Instance == null || !LevelGenerator.Instance.Generated)
             return;
 
-        foreach (var b in Boxes)
+        for (int i = 0; i < Boxes.Count; i++)
         {
+            var b = Boxes[i];
             if (b.Visual == null)
             {
-                b.Visual = MysteryBoxVisual.Create(b.Pos, b.Yaw);
+                b.Visual = MysteryBoxVisual.Create(b.Pos, b.Yaw, i);
                 b.Visual.SetState(b.State, b.Label, animate: false);
             }
         }
@@ -192,14 +194,9 @@ internal static class MysteryBoxEffect
         if (Time.time >= _nextScan)
         {
             _nextScan = Time.time + 0.2f;
+            // Fallback sweep (e.g. a soul set down very gently inside); the trigger usually wins.
             foreach (var b in Boxes)
-                if (b.State == Ready && TryConsumeSoul(b))
-                {
-                    b.State = Rolling;
-                    b.GrantAt = Time.time + RollSeconds;
-                    b.Visual.SetState(Rolling, "", animate: true);
-                    _revision++;
-                }
+                if (b.State == Ready) TryConsumeSoul(b);
         }
 
         foreach (var b in Boxes)
@@ -215,6 +212,31 @@ internal static class MysteryBoxEffect
         Broadcast(force: false);
     }
 
+    /// <summary>Host: a collider entered a box's catch zone above its floor plate.</summary>
+    internal static void SoulTouched(int index, Collider c)
+    {
+        if (!SemiFunc.IsMasterClientOrSingleplayer() || index < 0 || index >= Boxes.Count || _key != LevelKey())
+            return;
+        var b = Boxes[index];
+        if (b.State == Ready) Consume(b, c);
+    }
+
+    // Consumes the soul the instant it crosses the rim, while it is still falling: a hard drop onto the
+    // floor plate would otherwise run the native impact/break logic (and the moon-4 soul explosion) first.
+    private static bool Consume(Box b, Collider c)
+    {
+        var soul = c != null ? c.GetComponentInParent<EnemyValuable>() : null;
+        var grab = soul != null ? soul.GetComponent<PhysGrabObject>() : null;
+        if (grab == null || grab.dead) return false;
+        grab.DestroyPhysGrabObject();
+        b.State = Rolling;
+        b.GrantAt = Time.time + RollSeconds;
+        if (b.Visual != null) b.Visual.SetState(Rolling, "", animate: true);
+        _revision++;
+        Plugin.Log.LogInfo($"[MysteryBox] Soul consumed by box at {b.Pos}.");
+        return true;
+    }
+
     private static bool TryConsumeSoul(Box b)
     {
         var rot = Quaternion.Euler(0f, b.Yaw, 0f);
@@ -222,15 +244,7 @@ internal static class MysteryBoxEffect
         var hits = Physics.OverlapBox(center, new Vector3(Size.x * 0.5f - 0.07f, Size.y * 0.5f, Size.z * 0.5f - 0.07f), rot,
             ~0, QueryTriggerInteraction.Ignore);
         foreach (var h in hits)
-        {
-            var soul = h != null ? h.GetComponentInParent<EnemyValuable>() : null;
-            if (soul == null) continue;
-            var grab = soul.GetComponent<PhysGrabObject>();
-            if (grab == null) continue;
-            grab.DestroyPhysGrabObject();
-            Plugin.Log.LogInfo($"[MysteryBox] Soul consumed by box at {b.Pos}.");
-            return true;
-        }
+            if (Consume(b, h)) return true;
         return false;
     }
 
@@ -355,12 +369,12 @@ internal sealed class MysteryBoxVisual : MonoBehaviour
     private float _rollStart = -10f, _openedAt = -10f;
     private Vector3 _markRest;
 
-    internal static MysteryBoxVisual Create(Vector3 floor, float yaw)
+    internal static MysteryBoxVisual Create(Vector3 floor, float yaw, int index)
     {
         var root = new GameObject("IHM Mystery Box");
         root.transform.SetPositionAndRotation(floor, Quaternion.Euler(0f, yaw, 0f));
         var v = root.AddComponent<MysteryBoxVisual>();
-        v.Build();
+        v.Build(index);
         return v;
     }
 
@@ -377,7 +391,7 @@ internal sealed class MysteryBoxVisual : MonoBehaviour
         return m;
     }
 
-    private void Build()
+    private void Build(int index)
     {
         var s = MysteryBoxEffect.Size;
         const float t = 0.07f;
@@ -418,6 +432,26 @@ internal sealed class MysteryBoxVisual : MonoBehaviour
         _text.alignment = TextAlignmentOptions.Center;
         _text.color = new Color(0.9f, 0.75f, 1f);
         _text.rectTransform.sizeDelta = new Vector2(1f, 1f);
+
+        // Catch zone: from just above the floor plate to a little over the rim. On "Ignore Raycast" so
+        // grab/ping/vision raycasts never hit it; trigger events still fire against the soul's rigidbody.
+        var zone = new GameObject("Catch Zone");
+        zone.transform.SetParent(transform, false);
+        int ignoreRaycast = LayerMask.NameToLayer("Ignore Raycast");
+        if (ignoreRaycast >= 0) zone.layer = ignoreRaycast;
+        var trigger = zone.AddComponent<BoxCollider>();
+        trigger.isTrigger = true;
+        trigger.center = new Vector3(0f, (t + s.y + 0.2f) * 0.5f + 0.02f, 0f);
+        trigger.size = new Vector3(s.x - 2 * t - 0.02f, s.y + 0.2f - t, s.z - 2 * t - 0.02f);
+        zone.AddComponent<MysteryBoxTrigger>().index = index;
+
+        // Monsters path around the crate instead of walking into it and grinding against a static wall.
+        var obstacle = gameObject.AddComponent<NavMeshObstacle>();
+        obstacle.shape = NavMeshObstacleShape.Box;
+        obstacle.center = new Vector3(0f, s.y * 0.5f, 0f);
+        obstacle.size = new Vector3(s.x, s.y, s.z);
+        obstacle.carving = true;
+        obstacle.carveOnlyStationary = true;
 
         var lightGo = new GameObject("Light");
         lightGo.transform.SetParent(transform, false);
@@ -510,4 +544,12 @@ internal sealed class MysteryBoxVisual : MonoBehaviour
                 _mark.rotation = Quaternion.LookRotation(to) * Quaternion.Euler(0f, Mathf.Sin(now * 1.5f) * 25f, 0f);
         }
     }
+}
+
+/// <summary>Forwards souls entering a crate's catch zone to the host logic.</summary>
+internal sealed class MysteryBoxTrigger : MonoBehaviour
+{
+    internal int index;
+    private void OnTriggerEnter(Collider other) => MysteryBoxEffect.SoulTouched(index, other);
+    private void OnTriggerStay(Collider other) => MysteryBoxEffect.SoulTouched(index, other);
 }
