@@ -47,9 +47,6 @@
     <EmbeddedResource Include="src\Art\*.mesh.json" />
     <EmbeddedResource Include="src\Art\*.bundle" />
     <EmbeddedResource Include="src\Audio\*.wav" />
-    <!-- Plush corgi is not shipped in 0.7.9 (see CollectionCatalog). -->
-    <EmbeddedResource Remove="src\Art\v11_plush_corgi.mesh.json" />
-    <EmbeddedResource Remove="src\Audio\valuable_dog_*.wav;src\Audio\valuable_plush.wav" />
   </ItemGroup>
 
   <ItemGroup>

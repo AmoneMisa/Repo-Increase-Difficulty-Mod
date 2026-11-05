@@ -51,6 +51,12 @@ internal static class ValuableVisuals
         }
         if (key == "water_timer") art.casePivot = Pivot(root.transform, "Water watch flip pivot", new Vector3(0f, .13f, 0f));
         if (key == "maneki_neko") art.beckonPivot = Pivot(root.transform,"Beckoning paw pivot",model.beckonPivot);
+        // Generic animated groups: the model names a pivot per group and those parts hang under it.
+        var groupPivots = new Dictionary<string, Transform>(StringComparer.Ordinal);
+        if (model.pivots != null)
+            foreach (var pivot in model.pivots)
+                if (!string.IsNullOrEmpty(pivot.group) && !groupPivots.ContainsKey(pivot.group))
+                    groupPivots[pivot.group] = Pivot(root.transform, ValuableArtInstance.PivotName(pivot.group), pivot.position);
         var bindings = new List<ValuablePartBinding>();
         var materials = model.materials.Select(m => Material(m, native)).ToArray();
         for (int i = 0; i < model.parts.Length; i++)
@@ -63,6 +69,7 @@ internal static class ValuableVisuals
             obj.AddComponent<MeshFilter>().sharedMesh = mesh;var renderer = obj.AddComponent<MeshRenderer>();renderer.sharedMaterial = materials[data.material];
             if (model.materials[data.material].transmission > .15f) renderer.shadowCastingMode = ShadowCastingMode.Off;
             Transform parent = data.group == "wheel_left" ? art.leftWheel : data.group == "wheel_right" ? art.rightWheel : data.group == "case" ? art.casePivot : data.group == "beckoning_paw" ? art.beckonPivot : null;
+            if (parent == null && data.group != null) groupPivots.TryGetValue(data.group, out parent);
             if (parent != null) obj.transform.SetParent(parent, true);
             bindings.Add(new ValuablePartBinding { node = obj.transform, group = data.group, phase = data.phase, rest = obj.transform.localPosition });
         }
@@ -109,8 +116,9 @@ internal static class ValuableVisuals
 }
 
 #pragma warning disable CS0649
-[Serializable] internal sealed class ValuableArtModel { public ValuableArtPart[] parts;public ValuableArtMaterial[] materials;public Vector3 beckonPivot;public ValuableArtPhysics physics;public ValuableArtLiquid liquid; }
-[Serializable] internal sealed class ValuableArtLiquid { public float halfWidth,bottom,top,fill; }
+[Serializable] internal sealed class ValuableArtModel { public ValuableArtPart[] parts;public ValuableArtMaterial[] materials;public Vector3 beckonPivot;public ValuableArtPhysics physics;public ValuableArtLiquid liquid;public ValuableArtPivot[] pivots; }
+[Serializable] internal sealed class ValuableArtPivot { public string group;public Vector3 position; }
+[Serializable] internal sealed class ValuableArtLiquid { public float halfWidth,bottom,top,fill,power; }
 [Serializable] internal sealed class ValuableArtPhysics { public Vector3 centerOfMass,motionMin,motionMax;public ValuableArtCollider[] colliders; }
 [Serializable] internal sealed class ValuableArtCollider { public string name;public bool moving;public Vector3[] vertices;public int[] triangles; }
 [Serializable] internal sealed class ValuableArtMaterial { public string name, texture;public Color color;public float transmission, emission, roughness,metallic; }

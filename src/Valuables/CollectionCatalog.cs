@@ -35,8 +35,7 @@ internal static class CollectionCatalog
         new CollectionEntry("monoblock_pc",LootMap.McJannek|LootMap.Museum|LootMap.Manor|LootMap.Sunstone,3,6000,8000),
         new CollectionEntry("gold_ingot",LootMap.Sunstone|LootMap.McJannek,3,3500,4800,LootFragility.Reinforced),
         new CollectionEntry("maneki_neko",LootMap.Museum|LootMap.Manor,6f,12000,16000,LootFragility.Fragile),
-        // Plush corgi is held back from 0.7.9; re-enable together with its resources in the csproj.
-        // new CollectionEntry("plush_corgi",LootMap.Manor|LootMap.Museum|LootMap.Sunstone|LootMap.McJannek,1.5f,3000,4000,LootFragility.Sturdy),
+        new CollectionEntry("plush_corgi",LootMap.Manor|LootMap.Museum|LootMap.Sunstone|LootMap.McJannek,1.5f,3000,4000,LootFragility.Sturdy),
         // Same mass as Swiftbroom's big potion bottles (PhysAttribute Medium+++ = 3 kg, about 1.4 m tall).
         new CollectionEntry("whiskey_bottle",LootMap.Swiftbroom|LootMap.Manor|LootMap.McJannek|LootMap.Museum,3f,5000,6500,LootFragility.Fragile)
     };

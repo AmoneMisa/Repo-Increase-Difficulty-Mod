@@ -10,6 +10,9 @@ internal sealed class ValuableArtInstance : MonoBehaviour
     public string assetKey;
     public Transform visualRoot, leftWheel, rightWheel, casePivot,beckonPivot;
     public ValuablePartBinding[] bindings;
+    /// <summary>Pivots of animated part groups declared by the model (group name to pivot).</summary>
+    internal readonly Dictionary<string,Transform> groupPivots=new(StringComparer.Ordinal);
+    internal static string PivotName(string group)=>"Pivot "+group;
     private bool _ready;
     private bool _reported;
     private void Awake(){EnsureBindings();}
@@ -42,6 +45,14 @@ internal sealed class ValuableArtInstance : MonoBehaviour
             var nodes=visualRoot.GetComponentsInChildren<Transform>(true).ToDictionary(t=>t.name,t=>t,StringComparer.Ordinal);
             leftWheel=Find(nodes,"Left wheel pivot");rightWheel=Find(nodes,"Right wheel pivot");casePivot=Find(nodes,"Water watch flip pivot");
             beckonPivot=Find(nodes,"Beckoning paw pivot");
+            groupPivots.Clear();
+            if(model.pivots!=null)
+                foreach(var pivot in model.pivots)
+                {
+                    var node=Find(nodes,PivotName(pivot.group));
+                    if(node==null)return Fail("pivot "+pivot.group+" is missing");
+                    groupPivots[pivot.group]=node;
+                }
             if(assetKey=="cannon"&&(leftWheel==null||rightWheel==null))return Fail("wheel pivots are missing");
             if(assetKey=="water_timer"&&casePivot==null)return Fail("flip pivot is missing");
             if(assetKey=="maneki_neko"&&beckonPivot==null)return Fail("beckoning paw pivot is missing");

@@ -1,7 +1,8 @@
 """Original label textures and synthesized sounds for the plush corgi and the whiskey bottle.
 
 python tools/build_corgi_whiskey_assets.py
-Writes src/Art/v11_whiskey_label.png, src/Art/v11_whiskey_neck.png and the cues
+Writes src/Art/v11_whiskey_label.png, src/Art/v11_whiskey_neck.png, src/Art/v11_corgi_bandana.png,
+src/Art/v11_corgi_felt_orange.png, src/Art/v11_corgi_felt_cream.png and the cues
 src/Audio/valuable_dog_bark.wav, valuable_dog_arf.wav, valuable_dog_whine.wav, valuable_dog_yip.wav,
 valuable_plush.wav. The brand is invented ("OLD TRUCK No. 9"); no real whiskey trademark is reproduced.
 Everything is generated here: no recorded or third-party audio is used.
@@ -194,7 +195,53 @@ def sounds():
     save('valuable_plush', thump * envelope(n, .003, .12) ** 2)
 
 
+
+def bandana():
+    """Red felt bandana flap (UV: u across, v from the tip up) with a white paw print and a stitched hem."""
+    S = 512; rng = np.random.default_rng(7)
+    base = np.array([150, 30, 26], float)
+    a = np.ones((S, S, 3)) * base
+    a += rng.normal(0, 7, (S, S, 1))                           # felt fibre noise
+    img = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(.8))
+    d = ImageDraw.Draw(img)
+    # Flap outline in UV space: a downward triangle, top edge at v=1 (image top), tip at v=0 (bottom).
+    left, right, top, tip = (14, 14), (S - 14, 14), None, (S // 2, S - 10)
+    for k in range(0, 40):                                     # dashed hem stitch along both slanted edges
+        for (x0, y0), (x1, y1) in ((left, tip), (right, tip)):
+            t0, t1 = k / 40, (k + .55) / 40
+            inset = 26 if x0 < S // 2 else -26
+            d.line([(x0 + (x1 - x0) * t0 + inset * (1 - t0), y0 + 14 + (y1 - y0 - 30) * t0),
+                    (x0 + (x1 - x0) * t1 + inset * (1 - t1), y0 + 14 + (y1 - y0 - 30) * t1)], fill=(205, 120, 105), width=4)
+    cream = (238, 228, 210)
+    cx, cy = S // 2, int(S * .56)                              # paw print, below the hanging tongue
+    d.ellipse([cx - 52, cy + 2, cx + 52, cy + 84], fill=cream)
+    d.ellipse([cx - 70, cy + 30, cx - 26, cy + 86], fill=cream); d.ellipse([cx + 26, cy + 30, cx + 70, cy + 86], fill=cream)
+    for dx, dy, r in ((-62, -22, 21), (-24, -50, 23), (24, -50, 23), (62, -22, 21)):
+        d.ellipse([cx + dx - r, cy + dy - r * 1.15, cx + dx + r, cy + dy + r * 1.15], fill=cream)
+    img.filter(ImageFilter.GaussianBlur(.6)).save(ART / 'v11_corgi_bandana.png')
+
+
+
+def felt(name, rgb, seed):
+    """Seamless felt: periodic multi-scale fibre noise (FFT-filtered, so it tiles) around a base colour."""
+    S = 512; rng = np.random.default_rng(seed)
+    fy, fx = np.meshgrid(np.fft.fftfreq(S), np.fft.fftfreq(S), indexing='ij')
+    f = np.hypot(fx, fy) + 1e-6
+    def band(lo, hi, aniso=1.):
+        spec = np.fft.fft2(rng.normal(size=(S, S)))
+        g = np.hypot(fx * aniso, fy) + 1e-6
+        mask = np.exp(-((np.log(g) - np.log((lo + hi) / 2)) ** 2) / .5)
+        n = np.real(np.fft.ifft2(spec * mask)); return n / n.std()
+    fuzz = .6 * band(.18, .35) + .22 * band(.06, .12, 1.6) + .07 * band(.015, .03)
+    shade = 1 + .075 * fuzz
+    a = np.clip(np.array(rgb, float)[None, None, :] * shade[..., None], 0, 255)
+    Image.fromarray(a.astype(np.uint8)).save(ART / name)
+
+
 if __name__ == '__main__':
     label()
+    bandana()
+    felt('v11_corgi_felt_orange.png', (203, 112, 24), 3)
+    felt('v11_corgi_felt_cream.png', (232, 210, 172), 4)
     sounds()
     print('ASSETS_COMPLETE')
