@@ -184,6 +184,9 @@ public static class ModConfig
     public static ConfigEntry<UnityEngine.KeyCode> BlackMarketKey;
     public static readonly Dictionary<int, ConfigEntry<bool>> StatModifierEnabled = new();
     public static ConfigEntry<bool> GearEnabled;
+    // Cosmetics (local visuals only; nothing is networked).
+    public static ConfigEntry<bool> CircletEnabled, HeroAuraEnabled;
+    public static ConfigEntry<float> CircletScale;
     public static ConfigEntry<bool> DefenceOrbEnabled, DefenceDroneEnabled, ProtectionOrbEnabled;
     public static ConfigEntry<bool> PoisonCrossbowEnabled, DecoyGrenadeEnabled, IcePistolEnabled, StickyPistolEnabled;
     // Flamethrower C.A.R.T.: wheeled flamethrower turret with the Hauler's loot storage box.
@@ -443,6 +446,11 @@ public static class ModConfig
         StaffChainRange = BindFloat(cfg, "Wizard Staff", "ChainRange", 5f, 1f, 20f, "Farthest jump (metres) from one struck monster to the next.");
         StaffAimAngle = BindFloat(cfg, "Wizard Staff", "AimAssistAngle", 20f, 0f, 60f, "If the aim line misses, the bolt still finds a monster within this many degrees of it (0 = exact aim only).");
         StaffCharges = BindInt(cfg, "Wizard Staff", "Charges", 8, 1, 20, "Bolts per full battery (one battery bar per bolt).");
+        CircletEnabled = Module(cfg, "Cosmetics", "WingedCircletEnabled", true, "WingedCirclet",
+            "Show a floating winged circlet above every player's head, coloured to match the player's own colour (black, cyan, yellow, green, white, purple or red). Local visuals only: each player can turn it off for themselves.");
+        CircletScale = BindFloat(cfg, "Cosmetics", "WingedCircletScale", 1f, .5f, 2f, "Size of the winged circlet (1 = default).");
+        HeroAuraEnabled = Module(cfg, "Cosmetics", "HeroAuraEnabled", true, "HeroAura",
+            "Give this mod's own shop items (gear, drones, orbs, upgrades, Flamethrower C.A.R.T.) a golden hero aura: soft halo, light rays, sparkles and a warm light. Local visuals only. Applies on game restart.");
         Testing.TestShortcuts.Bind(cfg);
         LateJoinEnabled = Module(cfg, "Late Join", "Enabled", true, "LateJoin", "Host keeps the room/lobby joinable during a run/shop/truck (REPO normally seals it at run start) and re-syncs mod state to anyone who connects mid-game.");
         PingEnabled = Module(cfg, "Ping", "Enabled", true, "Ping", "Enable the ping system: press the ping key to mark what you're looking at for the whole team.");

@@ -61,7 +61,7 @@ internal sealed class CollectionPhysics : MonoBehaviour
             collider.enabled=true;
             var p=new Part{node=node,parent=node.parent,rest=node.localPosition,rotation=node.localRotation,body=body,collider=collider};_parts.Add(p);
             node.gameObject.AddComponent<ValuableContact>().owner=_sound;
-            var marker=node.gameObject.AddComponent<PhysGrabObjectCollider>();marker.colliderID=_grab.colliders.Count;_grab.colliders.Add(node);
+            var marker=node.gameObject.AddComponent<PhysGrabObjectCollider>();GrabSurface.Mark(node.gameObject);marker.colliderID=_grab.colliders.Count;_grab.colliders.Add(node);
             if(_tubes)
             {
                 _slosh-=Time.fixedDeltaTime;

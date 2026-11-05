@@ -102,7 +102,7 @@ internal static class SpritzItems
                 gun.soundShoot = ItemAudio.Cue("spritz_shot", .35f);
                 gun.soundShootGlobal = new Sound { Sounds = Array.Empty<AudioClip>() };
                 gun.soundHit = ItemAudio.Cue("spritz_shot", .12f);
-                InventoryItemVisuals.Prepare(go);
+                InventoryItemVisuals.Prepare(go); HeroAura.Mark(go);
                 if (Items.RegisterItem(attributes) == null) throw new InvalidOperationException("REPOLib rejected Spritz.");
                 _built = true;
                 Plugin.Log.LogInfo("[Spritz] Registered: fixed $5,000, one close-range tranquilizer use.");
@@ -123,7 +123,7 @@ internal static class SpritzItems
         GameObject Part(string name,Vector3 center)
         {
             var child=new GameObject(name);child.transform.SetParent(visual,false);child.transform.localPosition=center;child.layer=layer>=0?layer:go.layer;
-            child.AddComponent<PhysGrabObjectCollider>();return child;
+            child.AddComponent<PhysGrabObjectCollider>();GrabSurface.Mark(child);return child;
         }
         var body=Part("Spritz barrel collision",new Vector3(0,0,-.295f)).AddComponent<CapsuleCollider>();body.direction=2;body.radius=.031f;body.height=.20f;
         var needle=Part("Spritz needle collision",new Vector3(0,0,-.095f)).AddComponent<CapsuleCollider>();needle.direction=2;needle.radius=.004f;needle.height=.19f;

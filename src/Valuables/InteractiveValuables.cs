@@ -206,7 +206,7 @@ internal static class InteractiveValuables
     {
         var child = new GameObject(name);child.transform.SetParent(root.transform,false);int layer = LayerMask.NameToLayer("PhysGrabObject");
         child.layer = layer >= 0 ? layer : root.layer;
-        child.AddComponent<PhysGrabObjectCollider>();return child;
+        child.AddComponent<PhysGrabObjectCollider>();GrabSurface.Mark(child);return child;
     }
 
     private static void BoxCollider(GameObject root, string name, Vector3 center, Vector3 size, Quaternion? rotation = null)

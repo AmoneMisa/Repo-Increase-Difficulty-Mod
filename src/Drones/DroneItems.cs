@@ -189,6 +189,7 @@ internal static class DroneItems
         ItemArt.Skin(go, artKey, orb: false);
         ItemAudio.Attach(go, artKey);
         InventoryItemVisuals.Prepare(go);
+        HeroAura.Mark(go);
 
         var prefabRef = Items.RegisterItem(attributes);
         if (prefabRef == null)

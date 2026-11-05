@@ -82,6 +82,7 @@ internal static class InventorySlotsUpgrade
             ActivatePath(icon.transform, clone.transform);
             ActivatePath(spot.noItem.transform, clone.transform);
             ActivatePath(battery.transform, clone.transform);
+            ResetBatteryWidget(battery, spots[0].batteryVisualLogic);
             spot.doNotDisable ??= new List<GameObject>();
             spot.inventorySpotIndex = index;
             spot.currentState = InventorySpot.SpotState.Empty;
@@ -133,6 +134,21 @@ internal static class InventorySlotsUpgrade
                 if(label!=null) label.text=BindingName(index);
             }
         return spots.Count >= wanted;
+    }
+
+    // BatteryVisualLogic.Awake records its CURRENT transform as the "original" it always returns to. The
+    // donor slot is usually empty, so its battery sits shrunk to scale 0 by BatteryOutro; a copy would wake
+    // up believing 0 is its normal size and could never be shown. Put the copy back to the donor's true
+    // rest pose before it wakes, and drop the donor's spawned bar segments (the copy does not track them,
+    // so BatteryBarsSet would never clear them).
+    private static void ResetBatteryWidget(BatteryVisualLogic copy, BatteryVisualLogic donor)
+    {
+        float scale = donor.targetScaleOriginal > .001f ? donor.targetScaleOriginal : 1f;
+        copy.transform.localScale = Vector3.one * scale;
+        copy.transform.localPosition = donor.targetPositionOriginal;
+        if (copy.batteryBarContainer != null)
+            for (int i = copy.batteryBarContainer.childCount - 1; i >= 0; i--)
+                Object.DestroyImmediate(copy.batteryBarContainer.GetChild(i).gameObject);
     }
 
     private static void ActivatePath(Transform child, Transform root)

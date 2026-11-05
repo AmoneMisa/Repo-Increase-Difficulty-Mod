@@ -238,6 +238,7 @@ internal static class PlayerUpgradeRegistry
         }
 
         // 5. Register with REPOLib (sets item.prefab, adds to StatsManager, enables shop roll).
+        Visuals.HeroAura.Mark(attributes.gameObject);
         var prefabRef = Items.RegisterItem(attributes);
         if (prefabRef == null)
         {

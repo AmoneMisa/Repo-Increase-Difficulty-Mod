@@ -154,15 +154,22 @@ internal static class GearEffects
     }
 
     // A poisoned monster is actively hostile: it is (re)pointed at a player - the one who shot it, else the
-    // nearest living one - and its chase is kept alive for as long as the poison lasts. This deliberately
-    // overrides the enemy's own "stop chasing" cooldown.
+    // nearest living one - for as long as the poison lasts, overriding its own "stop chasing" cooldown.
+    //
+    // Two kinds of monster AI need two paths. Generic chasers (Enemy.HasStateChase) are driven through
+    // SetChaseTarget and their chase timer. Most REPO monsters instead run their own state machine and only
+    // react to EnemyVision's "player seen" event, so SetChaseTarget alone did nothing to them (the old
+    // HasStateChase early-out skipped them entirely): they get the same vision event the game raises when
+    // they spot someone.
     private static void KeepAggressive(Poison p, float dt)
     {
         var e = p.Enemy;
-        if (e == null || !e.HasStateChase || e.IsStunned() || IsFrozen(e))
+        if (e == null || e.IsStunned() || IsFrozen(e))
             return;
 
-        if (e.CurrentState is EnemyState.ChaseBegin or EnemyState.Chase or EnemyState.ChaseSlow)
+        bool chaser = e.HasStateChase;
+        bool chasing = chaser && e.CurrentState is EnemyState.ChaseBegin or EnemyState.Chase or EnemyState.ChaseSlow;
+        if (chasing)
             e.SetChaseTimer(); // keeps the current chase from timing out
 
         p.AggroTimer -= dt;
@@ -170,14 +177,25 @@ internal static class GearEffects
             return;
         p.AggroTimer = 0.5f;
 
-        if (e.CurrentState is EnemyState.Chase or EnemyState.ChaseBegin)
+        if (chaser && e.CurrentState is EnemyState.Chase or EnemyState.ChaseBegin)
             return; // already after somebody
 
         var target = p.Shooter != null && !p.Shooter.isDisabled ? p.Shooter : NearestPlayer(e.transform.position);
-        if (target == null)
+        if (target == null || target.photonView == null)
             return;
-        e.DisableChaseTimer = 0f;
-        e.SetChaseTarget(target);
+        if (chaser)
+        {
+            e.DisableChaseTimer = 0f;
+            e.SetChaseTarget(target); // also raises the vision event
+            return;
+        }
+        if (!e.HasVision || e.Vision == null || e.Vision.DisableTimer > 0f)
+            return;
+        int id = target.photonView.ViewID;
+        // Same guard the game's own vision loop relies on: only players the vision tracks.
+        if (!e.Vision.VisionTriggered.ContainsKey(id) || !e.Vision.VisionsTriggered.ContainsKey(id))
+            return;
+        e.Vision.VisionTrigger(id, target, culled: false, playerNear: false);
     }
 
     private static PlayerAvatar NearestPlayer(Vector3 from)
