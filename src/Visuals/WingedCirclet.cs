@@ -149,6 +149,10 @@ internal sealed class WingedCirclet : MonoBehaviour
     private void LateUpdate()
     {
         if (_root == null) return;
+        // Only visible while this player is pinging (see PingController.RecentlyPinged).
+        bool show = Patches.Effects.PingController.RecentlyPinged(avatar);
+        if (_root.gameObject.activeSelf != show) _root.gameObject.SetActive(show);
+        if (!show) return;
         _check -= Time.deltaTime;
         if (_check <= 0f) { _check = 1f; Recolour(false); }
         float t = Time.time + GetInstanceID() * .37f;

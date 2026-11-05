@@ -94,9 +94,11 @@ internal sealed class PingOutline : MaskableGraphic
     private Rect _calloutBox;        // in this graphic's local space (origin = the item's screen rect min)
     private Vector2 _calloutDot;
     private bool _calloutLeft;
+    private bool _noContour;
 
-    internal void UseWeaponCallout(WeaponKind kind)
+    internal void UseWeaponCallout(WeaponKind kind, bool contour = true)
     {
+        _noContour = !contour; // upgrades: callout only, no silhouette border
         var go = new GameObject("Weapon Icon", typeof(RectTransform), typeof(CanvasRenderer));
         go.transform.SetParent(_root.transform, false);
         _calloutIcon = go.AddComponent<RawImage>();
@@ -209,7 +211,7 @@ internal sealed class PingOutline : MaskableGraphic
         if (found)
         {
             if (!ProjectBounds(camera,bounds,out rectangle)) {Hide();return;}
-            if (!HasReticle && !_pending && Time.unscaledTime>=_refreshAt)
+            if (!HasReticle && !_noContour && !_pending && Time.unscaledTime>=_refreshAt)
             {
                 _refreshAt=Time.unscaledTime+.1f;
                 CaptureMask(camera,rectangle);
@@ -387,7 +389,7 @@ internal sealed class PingOutline : MaskableGraphic
                         centre+new Vector2(Mathf.Cos(b)*radii.x,Mathf.Sin(b)*radii.y),width,tint);
                 }
             }
-            else if(_maskWidth>0 && _maskHeight>0)
+            else if(!_noContour && _maskWidth>0 && _maskHeight>0)
                 foreach(var edge in _contour)
                     Segment(vh,new Vector2(edge.x/_maskWidth*_objectSize.x,edge.y/_maskHeight*_objectSize.y),
                         new Vector2(edge.z/_maskWidth*_objectSize.x,edge.w/_maskHeight*_objectSize.y),width,tint);

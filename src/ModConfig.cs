@@ -467,7 +467,7 @@ public static class ModConfig
         IceBlockEnabled = Module(cfg, "Cosmetics", "IceBlockEnabled", true, "IceBlock",
             "Monsters frozen by the Ice Pistol are encased in a see-through block of ice with crystal shards, cold mist and frost sparkles. Local visuals only.");
         HeroAuraEnabled = Module(cfg, "Cosmetics", "HeroAuraEnabled", true, "HeroAura",
-            "Give this mod's own shop items (gear, drones, orbs, upgrades, Flamethrower C.A.R.T.) a golden hero aura: soft halo, light rays, sparkles and a warm light. Local visuals only. Applies on game restart.");
+            "Give enemy souls a red-purple aura (soft halo, light rays, sparkles and a light) while a ping is on the soul. Local visuals only. Applies on game restart.");
         UpgradesListScaleEnabled = Module(cfg, "HUD", "UpgradesListScaleEnabled", true, "UpgradesListScale",
             "Shrink the native UPGRADES list (names and level numbers together) just enough to fit on screen when a modded run has more upgrades than fit. Short lists stay full size. Local only.");
         FailVoteEnabled = Module(cfg, "Run", "FailVoteEnabled", true, "FailVote",

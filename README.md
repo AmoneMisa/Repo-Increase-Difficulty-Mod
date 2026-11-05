@@ -11,7 +11,7 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.7.9`
+- **Version:** `0.7.11`
 
 Version 0.7.4 fixes Ice Pistol freezing and Link Drone pulling ([details](release-notes/v0.7.4.md)).
 
@@ -162,7 +162,7 @@ count) and, like every number below, are configurable.
 | **Drone Battery Life** | 20 | Your drones' batteries last 5% longer per level (up to +100%). ~6,000 |
 | **Melee Damage** | 10 | Your melee weapons deal 5% more damage to monsters per level (up to +50%). ~7,000 |
 | **Grenade Damage** | 10 | Grenades you throw deal 5% more damage to monsters per level (up to +50%). ~7,000 |
-| **Gun Extra Shots** (one per gun type: bullet / laser / tranq) | 5 each | +1 shot from every battery charge per level (`GunExtraBulletsPerLevel`). Ice, Poison and Sticky pistols and Spritz use the tranq upgrade. ~6,000 |
+| **Gun Extra Shots** (one per gun type: bullet / laser / tranq) | 5 each | +1 shot from every battery charge per level (`GunExtraBulletsPerLevel`). Laser: Photon Blaster, Pulse Pistol, Boltzap and the Wizard Staff. Tranq: Tranq Gun, Ice, Poison and Sticky pistols and the Net Launcher. Bullet: every other gun. Each extra shot adds a battery bar. Spritz is a single-use item and is not affected. ~6,000 |
 | **Autoscan** | 5 | Automatically discovers valuables around you every second, 5 m further per level (5-25 m). ~8,000 |
 | **Map Suite** | 10 | One upgrade, ten map features: L1 alive-player count, L2 dead-player count, L3 active monsters, L4 respawning monsters, L5 quota heading and valuable tracker (found/total, haul), L6 team pings on the map, L7-L8 zoom the map out (zoom keys `-` / `=`), L9 cosmetic-box tracker, L10 monsters as dots. Replaces the vanilla *Map Player Count* upgrade by default. ~15,000 for the first level |
 | **Ping Info** | 1 | Addon for Ping Anywhere: adds valuable prices, rarity and exact target names. Cannot place pings alone. ~6,000 |
@@ -383,7 +383,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.7.9`
+- **Версия:** `0.7.11`
 
 В 0.7.4 исправлены заморозка Ледяного пистолета и подтягивание Link Drone ([подробности](release-notes/v0.7.4.md)).
 
@@ -531,7 +531,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 | **Drone Battery Life** | 20 | Батареи твоих дронов служат на 5% дольше за уровень (до +100%). ~6 000 |
 | **Melee Damage** | 10 | Твоё оружие ближнего боя наносит монстрам на 5% больше урона за уровень (до +50%). ~7 000 |
 | **Grenade Damage** | 10 | Твои гранаты наносят монстрам на 5% больше урона за уровень (до +50%). ~7 000 |
-| **Gun Extra Shots** (своё на каждый тип оружия: пули / лазер / транквилизатор) | по 5 | +1 выстрел с каждого заряда батареи за уровень (`GunExtraBulletsPerLevel`). Ледяной, ядовитый и липкий пистолеты и Spritz используют улучшение транквилизатора. ~6 000 |
+| **Gun Extra Shots** (своё на каждый тип оружия: пули / лазер / транквилизатор) | по 5 | +1 выстрел с каждого заряда батареи за уровень (`GunExtraBulletsPerLevel`). Лазер: Photon Blaster, Pulse Pistol, Boltzap и Wizard Staff. Транквилизатор: Tranq Gun, ледяной, ядовитый и липкий пистолеты и Net Launcher. Пули: всё остальное оружие. Каждый дополнительный выстрел добавляет деление батареи. Spritz — одноразовый предмет, улучшение на него не действует. ~6 000 |
 | **Autoscan** | 5 | Раз в секунду находит ценности вокруг, на 5 м дальше за уровень (5-25 м). ~8 000 |
 | **Map Suite** | 10 | Одно улучшение, десять функций карты: L1 число живых игроков, L2 число мёртвых, L3 активные монстры, L4 возрождающиеся монстры, L5 направление к квоте и трекер ценностей (найдено/всего, добыча), L6 командные пинги на карте, L7-L8 отдаление карты (клавиши `-` / `=`), L9 трекер косметических ящиков, L10 монстры точками. По умолчанию заменяет ванильное *Map Player Count*. ~15 000 за первый уровень |
 | **Ping Info** | 1 | Дополнение к Ping Anywhere: стоимость, редкость и точные названия. Само по себе не позволяет пинговать. ~6 000 |

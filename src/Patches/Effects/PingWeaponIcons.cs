@@ -4,7 +4,7 @@ using UnityEngine;
 namespace IncreaseHardMod.Patches.Effects;
 
 /// <summary>
-/// White weapon silhouettes for the weapon-ping callout (pistol, blade, grenade), drawn procedurally with
+/// White silhouettes for the item-ping callout (pistol, blade, grenade, upgrade arrow, drone), drawn procedurally with
 /// 3x3 supersampled edges so they stay crisp at any HUD scale. Tinted at draw time; nothing is shipped.
 /// </summary>
 internal static class PingWeaponIcons
@@ -20,6 +20,8 @@ internal static class PingWeaponIcons
         {
             WeaponKind.Melee => Blade,
             WeaponKind.Grenade => Grenade,
+            WeaponKind.Upgrade => Upgrade,
+            WeaponKind.Drone => Drone,
             _ => Pistol,
         };
         var pixels = new Color32[W * H];
@@ -100,5 +102,24 @@ internal static class PingWeaponIcons
                Box(x, y, 80, 68, 104, 80, 3) ||                                    // cap
                Capsule(x, y, new Vector2(104, 78), new Vector2(126, 46), 4.5f) ||  // spoon
                Ring(x, y, 66, 82, 11, 4);                                          // pin ring
+    }
+
+    // Upgrade: a bold up arrow with two stacked chevrons beside it.
+    private static bool Upgrade(float x, float y) =>
+        Poly(x, y, new Vector2(70, 58), new Vector2(96, 90), new Vector2(122, 58), new Vector2(106, 58), new Vector2(106, 6), new Vector2(86, 6), new Vector2(86, 58)) ||
+        Chevron(x, y, 148, 66) || Chevron(x, y, 148, 40) || Chevron(x, y, 44, 66) || Chevron(x, y, 44, 40);
+
+    private static bool Chevron(float x, float y, float cx, float cy) =>
+        Capsule(x, y, new Vector2(cx - 14, cy - 8), new Vector2(cx, cy + 6), 4.5f) ||
+        Capsule(x, y, new Vector2(cx, cy + 6), new Vector2(cx + 14, cy - 8), 4.5f);
+
+    // Drone, seen from above at a slant: body, four arms and four rotor rings.
+    private static bool Drone(float x, float y)
+    {
+        var c = new Vector2(96, 46);
+        if (Box(x, y, 78, 34, 114, 58, 8)) return true;
+        foreach (var r in new[] { new Vector2(52, 72), new Vector2(140, 72), new Vector2(52, 20), new Vector2(140, 20) })
+            if (Capsule(x, y, c, r, 4f) || Ring(x, y, r.x, r.y, 18f, 5f) || Disc(x, y, r.x, r.y, 4f)) return true;
+        return false;
     }
 }

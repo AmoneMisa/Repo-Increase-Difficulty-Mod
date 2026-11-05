@@ -178,7 +178,6 @@ internal static class GearItems
     private static void Register(ItemAttributes attributes, string name)
     {
         InventoryItemVisuals.Prepare(attributes.gameObject);
-        HeroAura.Mark(attributes.gameObject);
         if (Items.RegisterItem(attributes) == null)
             Plugin.Log.LogWarning($"[Gear] REPOLib refused to register {name}.");
         else

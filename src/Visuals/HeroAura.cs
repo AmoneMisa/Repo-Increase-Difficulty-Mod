@@ -4,14 +4,13 @@ using UnityEngine.Rendering;
 namespace IncreaseHardMod.Visuals;
 
 /// <summary>
-/// Golden "hero" aura on the mod's own shop items (gear, drones, orbs, upgrades, the Flamethrower C.A.R.T.):
-/// a soft halo, slowly turning light rays, twinkling sparkles and a warm point light around the item.
-/// Added to each prefab before registration, so every spawned copy carries it. Local visuals only.
-/// It hides while the item sits in an inventory slot and beyond 25 m.
+/// Red-purple aura on enemy souls: a soft halo, slowly turning light rays, twinkling sparkles and a point
+/// light around the soul. Shown only while a ping is on the soul (see SoulAuraPatch). Local visuals only.
+/// It hides beyond 25 m.
 /// </summary>
 internal sealed class HeroAura : MonoBehaviour
 {
-    private static readonly Color Gold = new(1f, .84f, .45f);
+    private static readonly Color Tint = new(.8f, .18f, .62f);
     private static Mesh _quad;
     private static Material _glowMaterial, _rayMaterial, _sparkMaterial;
 
@@ -20,11 +19,27 @@ internal sealed class HeroAura : MonoBehaviour
     private ParticleSystem _sparks;
     private ItemEquippable _equippable;
     private float _radius = .3f;
+    private bool _pingOnly;
 
-    /// <summary>Called on each custom item prefab right before it is registered with REPOLib.</summary>
-    internal static void Mark(GameObject prefab)
+    /// <summary>Adds the aura to a prefab. With <paramref name="pingOnly"/> it shows only while a ping is on it.</summary>
+    internal static void Mark(GameObject prefab, bool pingOnly = false)
     {
-        if (prefab != null && prefab.GetComponent<HeroAura>() == null) prefab.AddComponent<HeroAura>();
+        if (prefab == null) return;
+        var aura = prefab.GetComponent<HeroAura>() ?? prefab.AddComponent<HeroAura>();
+        aura._pingOnly = pingOnly;
+    }
+
+    // True while a live ping sits on (or very close to) this object's position.
+    private bool Pinged()
+    {
+        var pings = Patches.Effects.PingController.Active;
+        Vector3 p = _root.position;
+        for (int i = 0; i < pings.Count; i++)
+        {
+            var ping = pings[i];
+            if (ping.Expire > Time.time && (ping.Pos - p).sqrMagnitude < 2.25f) return true;
+        }
+        return false;
     }
 
     private void Start()
@@ -35,8 +50,8 @@ internal sealed class HeroAura : MonoBehaviour
         _glowMaterial ??= GlowTextures.Sprite(GlowTextures.Soft, "IHM Aura Glow");
         _rayMaterial ??= GlowTextures.Sprite(GlowTextures.Rays, "IHM Aura Rays", 3101);
         _sparkMaterial ??= GlowTextures.Sprite(GlowTextures.Star, "IHM Aura Sparkle", 3102);
-        _glowMaterial.color = new Color(Gold.r, Gold.g, Gold.b, .32f);
-        _rayMaterial.color = new Color(1f, .93f, .7f, .2f);
+        _glowMaterial.color = new Color(Tint.r, Tint.g, Tint.b, .32f);
+        _rayMaterial.color = new Color(.95f, .6f, .85f, .2f);
         _sparkMaterial.color = Color.white;
 
         var center = transform.position;
@@ -54,7 +69,7 @@ internal sealed class HeroAura : MonoBehaviour
         _light = new GameObject("Light").AddComponent<Light>();
         _light.transform.SetParent(_root, false);
         _light.type = LightType.Point;
-        _light.color = Gold;
+        _light.color = Tint;
         _light.intensity = .65f;
         _light.range = _radius * 2.5f + .8f;
         _light.shadows = LightShadows.None;
@@ -103,7 +118,7 @@ internal sealed class HeroAura : MonoBehaviour
         main.startSpeed = new ParticleSystem.MinMaxCurve(.02f, .12f);
         main.startSize = new ParticleSystem.MinMaxCurve(_radius * .12f, _radius * .26f);
         main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
-        main.startColor = new ParticleSystem.MinMaxGradient(Color.white, Gold);
+        main.startColor = new ParticleSystem.MinMaxGradient(Color.white, Tint);
         main.gravityModifier = -.02f;
         main.maxParticles = 40;
         var emission = ps.emission;
@@ -157,7 +172,7 @@ internal sealed class HeroAura : MonoBehaviour
         var cam = Camera.main;
         bool stowed = _equippable != null && _equippable.IsEquipped();
         bool near = cam != null && (cam.transform.position - _root.position).sqrMagnitude < 25f * 25f;
-        bool show = !stowed && near;
+        bool show = !stowed && near && (!_pingOnly || Pinged());
         if (_root.gameObject.activeSelf != show) _root.gameObject.SetActive(show);
         if (!show) return;
         var facing = Quaternion.LookRotation(_root.position - cam.transform.position, cam.transform.up);

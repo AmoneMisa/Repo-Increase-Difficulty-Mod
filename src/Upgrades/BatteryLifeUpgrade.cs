@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using HarmonyLib;
+using IncreaseHardMod.Gear;
 using UnityEngine;
 using RepoUpgrades = REPOLib.Modules.Upgrades;
 
@@ -41,6 +42,9 @@ internal static class BatteryLifeUpgrade
     {
         public float PrevLife = float.NaN;
         public Category Category = (Category)(-1); // -1 = not yet resolved
+        public int BaseBars = -1;       // the gun's native bar count, captured before we add any
+        public int Level;               // last known upgrade level of the gun's user
+        public float BarsCheckTimer;
     }
 
     private static readonly ConditionalWeakTable<ItemBattery, State> _states = new();
@@ -94,9 +98,20 @@ internal static class BatteryLifeUpgrade
             return Category.Drone;
         if (go.GetComponent<ItemGun>() != null)
         {
+            // Spritz is built on the tranq gun but is a single-use dose, not a gun: no Extra Shots, no extra bars.
+            if (go.GetComponent<SpritzDose>() != null)
+                return Category.None;
+            // This mod's gear guns: the clone step strips ItemGunTranq, so map them by their marker.
+            var gear = go.GetComponent<GearGun>();
+            if (gear != null)
+                return gear.kind == GearKind.Lightning ? Category.GunLaser : Category.GunTranq; // Wizard Staff = laser; Ice/Poison/Net/Sticky = tranq
             if (go.GetComponent<ItemGunTranq>() != null)
                 return Category.GunTranq;
             if (go.GetComponent<ItemGunLaser>() != null)
+                return Category.GunLaser;
+            // Energy pistols without a laser script: Pulse Pistol ("Item Gun Shockwave") and Boltzap ("Item Gun Stun").
+            string asset = go.GetComponent<ItemAttributes>()?.item?.name ?? go.name;
+            if (asset.Contains("Gun Shockwave") || asset.Contains("Gun Stun"))
                 return Category.GunLaser;
             return Category.GunBullet; // any other gun defaults to the bullet catch-all
         }
@@ -112,15 +127,77 @@ internal static class BatteryLifeUpgrade
         _ => null,
     };
 
-    // Shots one full battery gives a gun, before the upgrade: whole bars for bar-per-shot guns, else 100 / drain.
-    private static float BaseShots(ItemBattery battery)
+    // The HUD/world battery widget draws one segment per ItemBattery.batteryBars, so extra shots must add
+    // real bars or the upgrade is invisible. Upper bound keeps very high configured levels readable.
+    private const int MaxGunBars = 40;
+
+    private static int BaseBars(ItemBattery battery, State state)
     {
-        var gun = battery.GetComponent<ItemGun>();
-        if (gun == null) return 0f;
+        if (state.BaseBars < 1) state.BaseBars = Mathf.Max(1, battery.batteryBars);
+        return state.BaseBars;
+    }
+
+    // Shots one full battery gives a gun, before the upgrade: whole bars for bar-per-shot guns, else 100 / drain.
+    private static float BaseShots(ItemGun gun, int baseBars)
+    {
         float shots = gun.batteryDrainFullBar
-            ? battery.batteryBars / (float)Mathf.Max(1, gun.batteryDrainFullBars)
-            : 100f / Mathf.Max(1f, gun.batteryDrain);
+            ? baseBars / (float)Mathf.Max(1, gun.batteryDrainFullBars)
+            : 100f / Mathf.Max(0.01f, gun.batteryDrain);
         return Mathf.Max(1f, shots);
+    }
+
+    private static float ExtraShots(int level) => level * Mathf.Max(0f, ModConfig.GunExtraBulletsPerLevel.Value);
+
+    // Bars the widget should show: one more segment per extra shot for bar-per-shot guns, and the same
+    // proportional growth for continuous-drain guns (laser) so a fuller bar still reads as "more shots".
+    private static int TargetGunBars(ItemGun gun, int baseBars, int level)
+    {
+        if (level <= 0) return baseBars;
+        float baseShots = BaseShots(gun, baseBars);
+        float scaled = baseBars * (baseShots + ExtraShots(level)) / baseShots;
+        return Mathf.Clamp(Mathf.RoundToInt(scaled), baseBars, Mathf.Max(baseBars, MaxGunBars));
+    }
+
+    private static int LevelOf(PlayerAvatar user, Category category)
+    {
+        if (user == null || string.IsNullOrEmpty(user.steamID)) return -1;
+        int cap = EffectiveMaxLevel(category == Category.Drone);
+        return Mathf.Clamp(RepoUpgrades.GetUpgrade(UpgradeIdFor(category))?.GetLevel(user.steamID) ?? 0, 0, Mathf.Max(0, cap));
+    }
+
+    private static bool IsGun(Category c) => c is Category.GunBullet or Category.GunLaser or Category.GunTranq;
+    private static bool HasUpgradeBars(Category c) => IsGun(c) || c == Category.Drone;
+
+    // Drones: "+X% battery life" draws X% more segments (drain is already slowed by the same factor).
+    private static int TargetDroneBars(int baseBars, int level)
+    {
+        if (level <= 0) return baseBars;
+        float scaled = baseBars * (1f + Mathf.Clamp01(ModConfig.DroneBatteryPercentPerLevel.Value * level));
+        return Mathf.Clamp(Mathf.RoundToInt(scaled), baseBars, Mathf.Max(baseBars, MaxGunBars));
+    }
+
+    // Runs on every client: upgrade levels are synced by REPOLib, and each peer draws its own widget.
+    // The charge percentage is preserved; only the number of segments it is split into changes.
+    private static void SyncUpgradeBars(ItemBattery battery, State state)
+    {
+        if (!HasUpgradeBars(state.Category)) return;
+        var gun = IsGun(state.Category) ? battery.GetComponent<ItemGun>() : null;
+        if (IsGun(state.Category) && gun == null) return;
+        int baseBars = BaseBars(battery, state);
+        int level = LevelOf(UserOf(battery), state.Category);
+        if (level >= 0) state.Level = level; // nobody using it: keep the last user's bars
+        int target = !ModConfig.PlayerUpgradesEnabled.Value ? baseBars
+            : gun != null ? TargetGunBars(gun, baseBars, state.Level)
+            : TargetDroneBars(baseBars, state.Level);
+        if (target == battery.batteryBars) return;
+
+        battery.batteryBars = target;
+        battery.BatteryStateInitialize();          // recompute batteryLifeInt and the change-detection baselines
+        battery.currentBars = battery.batteryLifeInt;
+        var visual = battery.batteryVisualLogic;
+        if (visual != null) visual.BatteryBarsSet();
+        var ui = BatteryUI.instance != null ? BatteryUI.instance.batteryVisualLogic : null;
+        if (ui != null && ui.itemBattery == battery) ui.BatteryBarsSet();
     }
 
     // Who is using this item. PhysGrabObject.lastPlayerGrabbing only tracks physical grabs and clears ~3 s after
@@ -151,23 +228,38 @@ internal static class BatteryLifeUpgrade
         if (!ModConfig.PlayerUpgradesEnabled.Value || !SemiFunc.IsMasterClientOrSingleplayer() || battery == null) return 1f;
         var category = Resolve(battery);
         if (category == Category.None) return 1f;
-        var user = UserOf(battery);
-        if (user == null || string.IsNullOrEmpty(user.steamID)) return 1f;
-        int cap = EffectiveMaxLevel(category == Category.Drone);
-        int level = Mathf.Clamp(RepoUpgrades.GetUpgrade(UpgradeIdFor(category))?.GetLevel(user.steamID) ?? 0, 0, Mathf.Max(0, cap));
+        int level = LevelOf(UserOf(battery), category);
         if (category == Category.Drone)
-            return 1f / (1f + Mathf.Clamp01(ModConfig.DroneBatteryPercentPerLevel.Value * level));
-        // Guns: +N bullets per level, expressed as a cheaper drain so the native bar/charge logic is untouched.
-        float shots = BaseShots(battery);
-        if (shots <= 0f) return 1f;
-        return shots / (shots + level * Mathf.Max(0f, ModConfig.GunExtraBulletsPerLevel.Value));
+        {
+            var droneState = _states.GetOrCreateValue(battery);
+            if ((int)droneState.Category == -1) droneState.Category = category;
+            if (level >= 0) droneState.Level = level;
+            SyncUpgradeBars(battery, droneState);
+            return level <= 0 ? 1f : 1f / (1f + Mathf.Clamp01(ModConfig.DroneBatteryPercentPerLevel.Value * level));
+        }
+
+        // Guns: the bar count already grew with the level (SyncUpgradeBars), so a bar-per-shot gun's native
+        // RemoveFullBar is usually exact. Whatever the bars don't cover (laser drain, the MaxGunBars cap,
+        // fractional config values) is settled as a cheaper drain: desired cost / native cost.
+        var gun = battery.GetComponent<ItemGun>();
+        if (gun == null) return 1f;
+        var state = _states.GetOrCreateValue(battery);
+        if ((int)state.Category == -1) state.Category = category;
+        if (level >= 0) state.Level = level;
+        SyncUpgradeBars(battery, state);
+        int baseBars = BaseBars(battery, state);
+        float desiredCost = 100f / (BaseShots(gun, baseBars) + ExtraShots(state.Level));
+        float nativeCost = gun.batteryDrainFullBar
+            ? Mathf.Max(1, gun.batteryDrainFullBars) * 100f / Mathf.Max(1, battery.batteryBars)
+            : Mathf.Max(0.01f, gun.batteryDrain);
+        return Mathf.Clamp(desiredCost / nativeCost, 0.01f, 1f);
     }
 
     private static void SetDrainResult(ItemBattery battery, float before, float rawCost)
     {
         float multiplier = DrainMultiplier(battery);
         if (battery.batteryLife >= before) return;
-        if (multiplier < 1f)
+        if (multiplier < 0.999f)
         {
             battery.batteryLife = Mathf.Clamp(before - Mathf.Max(0f, rawCost) * multiplier, 0f, 100f);
             battery.batteryLifeInt = battery.BatteryBarsGet();
@@ -213,6 +305,17 @@ internal static class BatteryLifeUpgrade
         {
             var state = _states.GetOrCreateValue(__instance);
             if (float.IsNaN(state.PrevLife)) state.PrevLife = __instance.batteryLife;
+
+            if ((int)state.Category == -1)
+            {
+                state.Category = Resolve(__instance);
+                if (HasUpgradeBars(state.Category)) BaseBars(__instance, state); // capture native bars before any change
+            }
+            if (!HasUpgradeBars(state.Category)) return;
+            state.BarsCheckTimer -= Time.deltaTime;
+            if (state.BarsCheckTimer > 0f) return;
+            state.BarsCheckTimer = 0.25f;
+            SyncUpgradeBars(__instance, state);
         }
 
         [HarmonyPostfix]

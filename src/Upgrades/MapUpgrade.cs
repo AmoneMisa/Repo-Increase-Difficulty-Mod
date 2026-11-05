@@ -420,7 +420,7 @@ internal static class MapUpgrade
                     var mc = proxy.AddComponent<MapCustom>();
                     mc.autoAdd = false;
                     mc.sprite = sprite;
-                    mc.color = PingController.ColorFor(ping.Type);
+                    mc.color = PingController.ColorFor(ping.Type, ping.Kind);
                     try { mc.Add(); } catch { /* not addable this frame; retry below */ }
                     _pingProxies[ping] = proxy;
                     continue;

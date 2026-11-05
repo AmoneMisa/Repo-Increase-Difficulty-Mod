@@ -102,7 +102,7 @@ def corgi():
     white = material('Corgi cream', (.85, .78, .66), .97)
     pink = material('Corgi felt pink', (.72, .22, .26), .9)
     black = material('Corgi felt black', (.015, .013, .012), .45)
-    tilt = math.radians(28)
+    tilt = math.radians(20)
 
     def blobs(name, mat, elements, resolution=.009):
         mb = bpy.data.metaballs.new(name); mb.resolution = mb.render_resolution = resolution; mb.threshold = .6
@@ -125,33 +125,37 @@ def corgi():
         radius = max(half) / .76
         return (center, radius, tuple(h / (radius * .76) for h in half), rot)
 
+    # Pembroke proportions: a long low loaf on very short stub legs (belly ~8 cm off the floor), a fox-like
+    # head with a wedge muzzle, big upright ears, no tail and the round "corgi butt".
     fur_parts = [
-        E((0, -.01, .19), (.165, .27, .15)),                     # long loaf body (low, sits on the legs)
-        E((0, -.2, .21), (.15, .13, .13)),                       # round rump
-        E((0, .2, .29), (.11, .09, .1)),                         # neck
-        E((0, .29, .36), (.13, .12, .115)),                      # head
-        E((.07, .33, .325), (.07, .07, .06)), E((-.07, .33, .325), (.07, .07, .06)),        # cheeks
-        E((.1, .17, .075), (.062, .062, .06)), E((-.1, .17, .075), (.062, .062, .06)),         # stubby front legs
-        E((.1, -.2, .075), (.066, .066, .06)), E((-.1, -.2, .075), (.066, .066, .06)),         # back legs
-        E((0, -.35, .25), (.05, .05, .05)),                      # tail nub
+        E((0, -.02, .18), (.155, .28, .12)),                      # long loaf body
+        E((0, .14, .225), (.15, .12, .13)),                      # deep chest
+        E((0, -.19, .21), (.155, .12, .125)),                    # hindquarters
+        E((.06, -.28, .2), (.085, .065, .1)), E((-.06, -.28, .2), (.085, .065, .1)),    # fluffy butt cheeks
+        E((0, .23, .31), (.105, .09, .11)),                      # neck rising into the head
+        E((0, .3, .4), (.12, .105, .105)),                       # skull
+        E((0, .39, .37), (.055, .07, .045)),                     # muzzle top (fur bridge)
+        E((.095, .16, .07), (.06, .06, .07)), E((-.095, .16, .07), (.06, .06, .07)),     # stub front legs
+        E((.095, -.19, .07), (.064, .064, .07)), E((-.095, -.19, .07), (.064, .064, .07)),   # stub back legs
     ]
     white_parts = [
-        E((0, .22, .22), (.11, .075, .12)),                      # chest bib
-        E((0, -.02, .1), (.12, .22, .06)),                       # belly
-        E((0, .40, .31), (.07, .08, .055)),                      # tapered muzzle
-        E((.1, .18, .03), (.056, .064, .03)), E((-.1, .18, .03), (.056, .064, .03)),
-        E((.1, -.2, .03), (.06, .066, .03)), E((-.1, -.2, .03), (.06, .066, .03)),
-        E((0, -.39, .26), (.03, .03, .03)),                      # tail tip
+        E((0, .24, .22), (.1, .075, .11)),                       # chest bib
+        E((0, -.02, .11), (.1, .2, .045)),                       # belly
+        E((0, .405, .345), (.058, .08, .045)),                   # wedge muzzle
+        E((.045, .37, .335), (.05, .045, .04)), E((-.045, .37, .335), (.05, .045, .04)),  # lower cheeks
+        E((0, .37, .435), (.016, .03, .045)),                   # blaze between the eyes
+        E((.095, .175, .025), (.06, .068, .028)), E((-.095, .175, .025), (.06, .068, .028)),     # white socks
+        E((.095, -.18, .025), (.064, .07, .028)), E((-.095, -.18, .025), (.064, .07, .028)),
     ]
     parts = [blobs('Corgi fur', fur, fur_parts), blobs('Corgi cream patches', white, white_parts)]
     # Felt details: small solid shapes (too thin for metaballs).
     for side in (1, -1):
-        # Big upright triangular ears: soft flattened cones sunk into the head.
-        parts.append(ear_cone('Corgi ear', (side * .08, .27, .42), .078, .15, .032, fur, side * tilt))
-        parts.append(ear_cone('Corgi inner ear', (side * .082, .293, .43), .05, .11, .006, pink, side * tilt))
-        parts.append(sphere('Corgi eye', (side * .06, .397, .39), (.02, .012, .022), black, segs=16, rings=10))
-    parts.append(sphere('Corgi nose', (0, .476, .33), (.028, .02, .02), black, segs=16, rings=10))
-    parts.append(sphere('Corgi tongue', (0, .452, .268), (.026, .016, .011), pink, segs=16, rings=10))
+        # Big upright triangular ears set wide on the skull: soft flattened cones sunk into the head.
+        parts.append(ear_cone('Corgi ear', (side * .075, .29, .46), .07, .15, .03, fur, side * tilt))
+        parts.append(ear_cone('Corgi inner ear', (side * .077, .306, .47), .044, .11, .006, pink, side * tilt))
+        parts.append(sphere('Corgi eye', (side * .052, .384, .418), (.017, .009, .019), black, segs=16, rings=10))
+    parts.append(sphere('Corgi nose', (0, .484, .36), (.026, .02, .019), black, segs=16, rings=10))
+    parts.append(sphere('Corgi tongue', (0, .462, .312), (.022, .014, .009), pink, segs=16, rings=10))
     for ob in parts: apply_transforms(ob)
     return parts
 
@@ -315,6 +319,10 @@ def preview(key, parts, liquid=False, view=(1.05, -2.3, .75)):
     cam.rotation_euler = (mid - cam_loc).to_track_quat('-Z', 'Y').to_euler(); cam.data.lens = 55; scene.camera = cam
     scene.render.resolution_x = 900; scene.render.resolution_y = 900
     scene.render.filepath = str(ART / (key + '.png')); bpy.ops.render.render(write_still=True)
+    if key == 'plush_corgi':  # side view: checks the low loaf and leg length
+        cam.location = mid + Vector((1, .15, .25)).normalized() * size * 2.5
+        cam.rotation_euler = (mid - cam.location).to_track_quat('-Z', 'Y').to_euler()
+        scene.render.filepath = str(ART / (key + '_side.png')); bpy.ops.render.render(write_still=True)
     bpy.ops.wm.save_as_mainfile(filepath=str(ART / (key + '.blend')))
 
 

@@ -102,7 +102,7 @@ internal static class SpritzItems
                 gun.soundShoot = ItemAudio.Cue("spritz_shot", .35f);
                 gun.soundShootGlobal = new Sound { Sounds = Array.Empty<AudioClip>() };
                 gun.soundHit = ItemAudio.Cue("spritz_shot", .12f);
-                InventoryItemVisuals.Prepare(go); HeroAura.Mark(go);
+                InventoryItemVisuals.Prepare(go);
                 if (Items.RegisterItem(attributes) == null) throw new InvalidOperationException("REPOLib rejected Spritz.");
                 _built = true;
                 Plugin.Log.LogInfo("[Spritz] Registered: fixed $5,000, one close-range tranquilizer use.");

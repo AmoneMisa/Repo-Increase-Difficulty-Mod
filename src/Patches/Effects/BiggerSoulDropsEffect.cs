@@ -41,7 +41,7 @@ internal static class BiggerSoulDropsEffect
     /// objects carry a "(Clone)" suffix, so we compare against the prefab names
     /// with StartsWith.
     /// </summary>
-    private static bool IsEnemyValuable(ValuableObject obj)
+    internal static bool IsEnemyValuable(ValuableObject obj)
     {
         var am = AssetManager.instance;
         if (am == null)

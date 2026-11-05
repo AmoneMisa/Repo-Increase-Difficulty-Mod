@@ -20,7 +20,8 @@ internal enum PingType : byte
     Weapon = 9,
 }
 
-internal enum WeaponKind : byte { None, Gun, Melee, Grenade }
+/// <summary>Callout icon for item pings. Derived locally from the pinged object, so it needs no network field.</summary>
+internal enum WeaponKind : byte { None, Gun, Melee, Grenade, Upgrade, Drone }
 
 /// <summary>Team pings with soft silhouette contours and large cyan location markers.
 /// Object IDs and world positions are shared with the team and the Map Suite mirror.
@@ -30,6 +31,7 @@ internal static class PingController
     internal sealed class ActivePing
     {
         public PingType Type;
+        public WeaponKind Kind;              // callout icon/colour for item pings (None = plain contour)
         public Vector3 Pos;                  // updated each Tick so the map marker follows moving targets
         public float Expire;                 // Time.time when it should disappear
         public bool Local;                   // placed by this client (counts toward the local cap)
@@ -39,7 +41,21 @@ internal static class PingController
 
     private static readonly List<ActivePing> _pings = new();
 
+    // Last ping time per sender name (Photon nickname, or "You" for the local player), so the
+    // winged circlet can appear only while its player is pinging.
+    private static readonly Dictionary<string, float> _lastPingBy = new();
+
     internal static IReadOnlyList<ActivePing> Active => _pings;
+
+    /// <summary>True while this player's most recent ping is still within the ping duration.</summary>
+    internal static bool RecentlyPinged(PlayerAvatar avatar)
+    {
+        if (avatar == null) return false;
+        string key = avatar.isLocal ? LocalName()
+            : avatar.photonView != null && avatar.photonView.Owner != null ? avatar.photonView.Owner.NickName : null;
+        if (string.IsNullOrEmpty(key) || !_lastPingBy.TryGetValue(key, out float at)) return false;
+        return Time.time < at + ModConfig.PingDurationSeconds.Value;
+    }
 
     /// <summary>Fire a ping at whatever the local player is looking at.</summary>
     public static void PingFromAim()
@@ -96,8 +112,8 @@ internal static class PingController
 
         string sender = LocalName();
         var player = type == PingType.Player ? PlayerAt(hit.collider) : null;
-        SpawnPing(type, pos, physGrab, local: true, sender, player);
-        Announce(label, ColorFor(type), sender);
+        var tint = SpawnPing(type, pos, physGrab, local: true, sender, player);
+        Announce(label, tint, sender);
 
         int viewID = player != null && player.photonView != null ? player.photonView.ViewID :
             physGrab != null && physGrab.photonView != null ? physGrab.photonView.ViewID : 0;
@@ -281,15 +297,17 @@ internal static class PingController
         }
 
         if(type>(byte)PingType.Weapon) return;
-        SpawnPing((PingType)type, pos, physGrab, local: false, sender, player);
-        Announce(label, ColorFor((PingType)type), sender);
+        var tint = SpawnPing((PingType)type, pos, physGrab, local: false, sender, player);
+        Announce(label, tint, sender);
     }
 
     // Spawn (and track) the native highlight for a ping. If we have no object to frame (Location, or a
     // remote object that despawned), build a tiny invisible proxy at the position so there's something
     // for the graphic to bound.
-    private static void SpawnPing(PingType type, Vector3 pos, PhysGrabObject physGrab, bool local, string sender, PlayerAvatar player = null)
+    private static Color SpawnPing(PingType type, Vector3 pos, PhysGrabObject physGrab, bool local, string sender, PlayerAvatar player = null)
     {
+        var kind = player != null ? WeaponKind.None : CalloutOf(type, physGrab);
+        var tint = ColorFor(type, kind);
         // Refresh a repeated mark instead of stacking rings/contours at the same place.
         for(int i=_pings.Count-1;i>=0;i--)
         {
@@ -302,18 +320,20 @@ internal static class PingController
         EnforceGlobalCap();
 
         float duration = ModConfig.PingDurationSeconds.Value;
-        var graphic = player != null ? PingOutline.CreatePlayer(player, pos, ColorFor(type), duration) :
-            PingOutline.Create(physGrab, pos, ColorFor(type), duration);
+        _lastPingBy[sender] = Time.time;
+        var graphic = player != null ? PingOutline.CreatePlayer(player, pos, tint, duration) :
+            PingOutline.Create(physGrab, pos, tint, duration);
         if (type == PingType.Location) graphic.AttachBeacon(duration);
         else if (type == PingType.Enemy) graphic.UseReticle();
-        else if (type == PingType.Weapon) graphic.UseWeaponCallout(WeaponOf(physGrab));
+        else if (kind != WeaponKind.None) graphic.UseWeaponCallout(kind, contour: kind != WeaponKind.Upgrade);
         // Neon underglow in the ping colour for physical objects (loot, items, carts...), not monsters/players.
         if (physGrab != null && player == null && type != PingType.Enemy && type != PingType.Location)
-            PingUnderglow.Attach(physGrab, ColorFor(type), duration, graphic);
+            PingUnderglow.Attach(physGrab, tint, duration, graphic);
 
         _pings.Add(new ActivePing
         {
             Type = type,
+            Kind = kind,
             Pos = physGrab != null ? physGrab.centerPoint : pos,
             Expire = Time.time + duration,
             Local = local,
@@ -321,6 +341,7 @@ internal static class PingController
             Graphic = graphic,
         });
         PingAudio.Play(type);
+        return tint;
     }
 
     // Keep at most MaxLocationPings local Location pings alive: drop the oldest to make room.
@@ -435,6 +456,31 @@ internal static class PingController
         return WeaponKind.None;
     }
 
+    /// <summary>Which callout a ping gets: upgrades and drones get their own icon, weapons theirs.</summary>
+    internal static WeaponKind CalloutOf(PingType type, PhysGrabObject physGrab)
+    {
+        if (type == PingType.Upgrade) return WeaponKind.Upgrade;
+        if (type != PingType.Weapon && type != PingType.Item) return WeaponKind.None;
+        var kind = WeaponOf(physGrab);
+        if (kind != WeaponKind.None) return kind;
+        if (physGrab == null) return WeaponKind.None;
+        var item = physGrab.GetComponent<ItemAttributes>() ?? physGrab.GetComponentInParent<ItemAttributes>() ?? physGrab.GetComponentInChildren<ItemAttributes>(true);
+        bool drone = (item != null && item.item != null && item.item.itemType == SemiFunc.itemType.drone) ||
+                     physGrab.GetComponentInChildren<ItemDrone>(true) != null;
+        return drone ? WeaponKind.Drone : WeaponKind.None;
+    }
+
+    /// <summary>Ping colour, with a distinct colour per callout category.</summary>
+    internal static Color ColorFor(PingType type, WeaponKind kind) => kind switch
+    {
+        WeaponKind.Gun => ColorFor(PingType.Weapon),                // neon magenta
+        WeaponKind.Melee => new Color(1f, .58f, .14f),             // orange
+        WeaponKind.Grenade => new Color(.72f, 1f, .2f),            // acid lime
+        WeaponKind.Upgrade => new Color(1f, .84f, .25f),           // gold
+        WeaponKind.Drone => new Color(.6f, .45f, 1f),              // violet
+        _ => ColorFor(type),
+    };
+
     internal static WeaponKind WeaponOf(PhysGrabObject physGrab) =>
         physGrab == null ? WeaponKind.None :
         WeaponOf(physGrab.GetComponent<ItemAttributes>() ?? physGrab.GetComponentInParent<ItemAttributes>() ?? physGrab.GetComponentInChildren<ItemAttributes>(true));
@@ -442,8 +488,8 @@ internal static class PingController
     internal static Color ColorFor(PingType type) => type switch
     {
         PingType.Valuable => new Color(0.3f, 0.9f, 0.3f),   // green
-        PingType.Item => new Color(0.4f, 0.6f, 1f),         // blue
-        PingType.Upgrade => new Color(.5f,.85f,1f),
+        PingType.Item => new Color(0.61f, 0.96f, 0.61f),    // green, sampled from the reference ping image
+        PingType.Upgrade => new Color(0.64f, 0.75f, 0.94f), // blue, sampled from the reference ping image
         PingType.Player => new Color(.4f,.85f,1f),
         PingType.Enemy => new Color(1f, 0.35f, 0.35f),      // red
         PingType.Cart => new Color(0.3f, 0.9f, 0.95f),      // cyan

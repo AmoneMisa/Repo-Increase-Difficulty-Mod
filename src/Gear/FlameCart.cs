@@ -146,7 +146,6 @@ internal static class FlameCartItem
                 Plugin.Log.LogWarning("[Flame] Native flamethrower effect unavailable; using the fallback particle jet.");
 
             InventoryItemVisuals.Prepare(go);
-            HeroAura.Mark(go);
             if (Items.RegisterItem(go.GetComponent<ItemAttributes>()) == null)
                 Plugin.Log.LogWarning($"[Flame] REPOLib refused to register {AssetName}.");
             else

@@ -107,9 +107,9 @@ internal static class InteractiveValuables
             }
             else if (key == "plush_corgi")
             {
-                BoxCollider(go, "Corgi body", new Vector3(0,.17f,-.03f), new Vector3(.3f,.34f,.7f));
-                BoxCollider(go, "Corgi head", new Vector3(0,.37f,.33f), new Vector3(.27f,.24f,.3f));
-                BoxCollider(go, "Corgi ears", new Vector3(0,.5f,.27f), new Vector3(.25f,.15f,.05f));
+                BoxCollider(go, "Corgi body", new Vector3(0,.16f,-.03f), new Vector3(.3f,.32f,.66f));
+                BoxCollider(go, "Corgi head", new Vector3(0,.4f,.35f), new Vector3(.25f,.2f,.3f));
+                BoxCollider(go, "Corgi ears", new Vector3(0,.53f,.29f), new Vector3(.26f,.14f,.05f));
                 go.AddComponent<CorgiVoice>();
             }
             else if (key == "whiskey_bottle")
