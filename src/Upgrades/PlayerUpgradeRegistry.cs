@@ -56,7 +56,15 @@ internal static class PlayerUpgradeRegistry
         // upgrade instead of an embedded PNG. Used by Map Suite, which replaces that vanilla upgrade
         // and reuses its map-themed art. Takes precedence over IconFile.
         public bool UseVanillaMapIcon = false;
+        // Replaces the level increment when the item is used (host side), e.g. the Skill Point grants a point.
+        public Action<PlayerAvatar> OnUse;
+        // How many copies one shop may stock.
+        public int ShopCopies = 1;
     }
+
+    // Upgrades that now live in the skill tree keep their REPOLib level storage (old saves are read once for
+    // migration) but get no shop item, so the shop and quest rewards stop offering them.
+    private static bool LivesInSkillTree(string id) => Skills.SkillMigration.IsTreeCovered(id);
 
     // REPO shop costs are in THOUSANDS-of-dollars units: ShopCostUI shows the total as
     // "-$" + totalCost + "K", currency (StatGetRunCurrency) is likewise in K-units, and the
@@ -88,7 +96,8 @@ internal static class PlayerUpgradeRegistry
             var stats = StatsManager.instance;
             if (stats == null) return;
             foreach (var upgrade in RepoUpgrades.PlayerUpgrades)
-                if (FindDefinition(upgrade.UpgradeId) != null && stats.dictionaryOfDictionaries.TryGetValue("playerUpgrade" + upgrade.UpgradeId, out var saved))
+                if ((FindDefinition(upgrade.UpgradeId) != null || upgrade.UpgradeId.StartsWith(Skills.SkillStore.Prefix, StringComparison.Ordinal)) &&
+                    stats.dictionaryOfDictionaries.TryGetValue("playerUpgrade" + upgrade.UpgradeId, out var saved))
                     upgrade.PlayerDictionary = saved;
         }
     }
@@ -178,6 +187,13 @@ internal static class PlayerUpgradeRegistry
 
     private static bool BuildAndRegister(Definition def, GameObject template, Item templateItem)
     {
+        if (LivesInSkillTree(def.Id))
+        {
+            RepoUpgrades.RegisterUpgrade(def.Id, null, def.StartAction, def.UpgradeAction == null ? null : (avatar, level) => def.UpgradeAction(avatar, level));
+            Plugin.Log.LogInfo($"[Upgrades] '{def.Id}' moved to the skill tree: stored, not sold.");
+            return true;
+        }
+
         // 1. Clone under the inactive holder so no Awake/networking runs on the template.
         var clone = UnityEngine.Object.Instantiate(template, _templateHolder.transform);
         clone.name = "IHM_Upgrade_" + def.Id;
@@ -214,7 +230,7 @@ internal static class PlayerUpgradeRegistry
         item.colorPreset = templateItem.colorPreset;
         item.value = value;
         item.maxAmount = Mathf.Max(1, def.MaxLevel);
-        item.maxAmountInShop = 1;
+        item.maxAmountInShop = Mathf.Max(1, def.ShopCopies);
         // Leveled upgrades cap total lifetime purchases at MaxLevel so the shop stops
         // offering them once maxed. Consumables have NO lifetime cap so they keep
         // reappearing to be re-bought after each use.

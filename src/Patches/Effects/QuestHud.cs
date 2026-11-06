@@ -21,7 +21,7 @@ internal sealed class QuestHud : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (!LevelInfoHud.InfoReady || SafeMenuLevel() || !SafeRunIsLevel())
+        if (!LevelInfoHud.InfoReady || LevelInfoHud.MenuOpen || LevelInfoHud.TabOpen || SafeMenuLevel() || !SafeRunIsLevel())
         {
             Hide();
             return;
@@ -82,6 +82,9 @@ internal sealed class QuestHud : MonoBehaviour
         foreach (var vital in new Component[] { HealthUI.instance, EnergyUI.instance })
             if (_surface.NativeBounds(vital, out var bounds) && bounds.center.x < canvas.center.x)
                 top = Mathf.Min(top, bounds.yMin - 18f);
+        // Toolkit cards at the left (frozen, netted...) stack below the vitals: start below them too.
+        float cards = HudStack.LowestScreenEdge(HudCorner.TopLeft);
+        if (cards >= 0f) top = Mathf.Min(top, _surface.ScreenToLocalY(cards) - 18f);
         if (_surface.NativeBounds(StatsUI.instance, out var upgrades, true) && upgrades.center.x < canvas.center.x)
         {
             // Choose the larger free interval above/below the complete visible upgrade group.
@@ -121,10 +124,11 @@ internal sealed class QuestHud : MonoBehaviour
 
     private static string Entry(ActiveQuest q, string prefix)
     {
-        string colour = q.Completed ? "#7CFF7C" : q.Failed ? "#FF6B6B" : "#FFFFFF";
+        // Special contracts stand out in pink (their reward is a quest-only skill tree perk).
+        string colour = q.Completed ? "#7CFF7C" : q.Failed ? "#FF6B6B" : q.Special ? "#FF9ED8" : "#FFFFFF";
         string title = Clean(q.Title);
         string line = $"<color={colour}>[{QuestRankInfo.Label(q.Rank)}] {prefix}{title}  {StatusText(q)}</color>\n";
-        if (!q.Failed) line += $"<size=90%><color=#FFD24D>{Clean(QuestManager.RewardLabel(q))}</color></size>\n";
+        if (!q.Failed) line += $"<size=90%><color={(q.Special ? "#FF9ED8" : "#FFD24D")}>{Clean(QuestManager.RewardLabel(q))}</color></size>\n";
         return line;
     }
 
@@ -137,8 +141,10 @@ internal sealed class QuestHud : MonoBehaviour
         return q.Objective switch
         {
             ObjectiveType.NoDeaths or ObjectiveType.NoDamage or ObjectiveType.NoGunKills => "...",
-            ObjectiveType.ExtractionRush => FormatClock(Mathf.Max(0, q.Target - q.Progress)),
-            ObjectiveType.ReachHaul => $"${Mathf.RoundToInt(q.Progress / 1000f)}K/${Mathf.RoundToInt(q.Target / 1000f)}K",
+            ObjectiveType.ExtractionRush or ObjectiveType.FastOpener => FormatClock(Mathf.Max(0, q.Target - q.Progress)),
+            ObjectiveType.ReachHaul or ObjectiveType.Oops => $"${q.Progress / 1000f:0.#}K/${q.Target / 1000f:0.#}K",
+            ObjectiveType.TalkItOut or ObjectiveType.LightsOut or ObjectiveType.MonsterHugger => $"{q.Progress}s/{q.Target}s",
+            ObjectiveType.CrownJewel or ObjectiveType.Ballerina or ObjectiveType.PayRespects => "...",
             _ => $"{q.Progress}/{q.Target}",
         };
     }

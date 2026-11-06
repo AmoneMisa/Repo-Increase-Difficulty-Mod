@@ -118,15 +118,6 @@ internal static class BatteryLifeUpgrade
         return Category.None;
     }
 
-    private static string UpgradeIdFor(Category c) => c switch
-    {
-        Category.GunBullet => BulletId,
-        Category.GunLaser => LaserId,
-        Category.GunTranq => TranqId,
-        Category.Drone => DroneId,
-        _ => null,
-    };
-
     // The HUD/world battery widget draws one segment per ItemBattery.batteryBars, so extra shots must add
     // real bars or the upgrade is invisible. Upper bound keeps very high configured levels readable.
     private const int MaxGunBars = 40;
@@ -199,11 +190,31 @@ internal static class BatteryLifeUpgrade
         return Mathf.Clamp(Mathf.RoundToInt(scaled), baseBars, Mathf.Max(baseBars, MaxGunBars));
     }
 
+    private static string NodeFor(Category c) => c switch
+    {
+        Category.GunBullet => Skills.SkillCatalog.BulletShots,
+        Category.GunLaser => Skills.SkillCatalog.LaserShots,
+        Category.GunTranq => Skills.SkillCatalog.TranqShots,
+        Category.Drone => Skills.SkillCatalog.DroneBattery,
+        _ => null,
+    };
+
+    // Technician root perk: drones last this much longer.
+    private const float TechnicianDroneBonus = .10f;
+
+    // Skill tree levels on the old ladder, plus the branch root: Gunsmith gives every gun one extra level's worth
+    // of shots, Technician adds TechnicianDroneBonus to drones.
     private static int LevelOf(PlayerAvatar user, Category category)
     {
         if (user == null || string.IsNullOrEmpty(user.steamID)) return -1;
-        int cap = EffectiveMaxLevel(category == Category.Drone);
-        return Mathf.Clamp(RepoUpgrades.GetUpgrade(UpgradeIdFor(category))?.GetLevel(user.steamID) ?? 0, 0, Mathf.Max(0, cap));
+        bool drone = category == Category.Drone;
+        int cap = EffectiveMaxLevel(drone);
+        int level = Mathf.RoundToInt(Skills.SkillEffects.Equivalent(user, NodeFor(category), cap));
+        int bonus = drone
+            ? (Skills.SkillEffects.Has(user, Skills.SkillCatalog.Technician)
+                ? Mathf.Max(1, Mathf.RoundToInt(TechnicianDroneBonus / Mathf.Clamp(ModConfig.DroneBatteryPercentPerLevel.Value, .01f, .5f))) : 0)
+            : (Skills.SkillEffects.Has(user, Skills.SkillCatalog.Gunsmith) ? 1 : 0);
+        return Mathf.Clamp(level, 0, Mathf.Max(0, cap)) + bonus;
     }
 
     private static bool IsGun(Category c) => c is Category.GunBullet or Category.GunLaser or Category.GunTranq;

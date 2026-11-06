@@ -16,6 +16,29 @@ internal static class HudIcons
     /// <summary>Heater shield (Armor row).</summary>
     internal static Sprite Shield => Silhouette("shield", ShieldInside);
 
+    /// <summary>Mouse pointer for full-screen mod menus, tip at the top left (pivot it at (0, 1)).</summary>
+    internal static Sprite Pointer => Silhouette("pointer", PointerInside, 64);
+
+    private static bool PointerInside(float u, float v)
+    {
+        float x = (u + 1f) / 2f; // 0..1 left to right; v is 0..1 top to bottom
+        bool head = InTriangle(x, v, .06f, .04f, .06f, .78f, .62f, .58f);
+        // A short tail along the arrow's axis.
+        float ax = .2f, ay = .55f, bx = .42f, by = .95f, w = .09f;
+        float dx = bx - ax, dy = by - ay, t = Mathf.Clamp01(((x - ax) * dx + (v - ay) * dy) / (dx * dx + dy * dy));
+        float px = ax + t * dx - x, py = ay + t * dy - v;
+        return head || px * px + py * py < w * w;
+    }
+
+    private static bool InTriangle(float x, float y, float ax, float ay, float bx, float by, float cx, float cy)
+    {
+        float d1 = (x - bx) * (ay - by) - (ax - bx) * (y - by);
+        float d2 = (x - cx) * (by - cy) - (bx - cx) * (y - cy);
+        float d3 = (x - ax) * (cy - ay) - (cx - ax) * (y - ay);
+        bool negative = d1 < 0 || d2 < 0 || d3 < 0, positive = d1 > 0 || d2 > 0 || d3 > 0;
+        return !(negative && positive);
+    }
+
     internal static Sprite Silhouette(string name, Func<float, float, bool> inside, int size = 128)
     {
         if (Cache.TryGetValue(name, out var cached) && cached != null) return cached;

@@ -14,7 +14,7 @@ public static class PluginInfo
     // Keep the identity stable across the rename: existing config and integrations use it.
     public const string PLUGIN_GUID = "com.kubai.increasehardmod";
     public const string PLUGIN_NAME = "IncreaseDifficultyMod";
-    public const string PLUGIN_VERSION = "0.7.12";
+    public const string PLUGIN_VERSION = "0.8.0";
 }
 
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -70,6 +70,7 @@ public class Plugin : BaseUnityPlugin
         InventorySlotsUpgrade.Register();
         PingUpgrades.Register();
         TruckUpgrades.Register();
+        Skills.SkillStore.Register();
         // Wing cosmetics register from MetaManager.Awake (see WingCosmetics), not here.
 
         if (ModConfig.DiagnosticDisableRuntimeObjects.Value)
@@ -145,6 +146,9 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<Economy.MoonSync>();
         // Failed-level vote (restart / random map) and the host's Esc-menu run controls.
         netObject.AddComponent<Patches.Effects.HostRunControls>();
+        netObject.AddComponent<Skills.SkillStore.HostController>();
+        netObject.AddComponent<Skills.SkillEffects.StaminaController>();
+        netObject.AddComponent<Skills.SkillTreeScreen>();
         Object.DontDestroyOnLoad(netObject);
         _runtimeObject = netObject;
 

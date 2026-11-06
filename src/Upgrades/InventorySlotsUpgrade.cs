@@ -29,7 +29,7 @@ internal static class InventorySlotsUpgrade
     internal static int SlotCount(PlayerAvatar avatar)
     {
         if (avatar == null || string.IsNullOrEmpty(avatar.steamID) || !ModConfig.PlayerUpgradesEnabled.Value || !ModConfig.InventorySlotsEnabled.Value) return BaseSlots;
-        int level = RepoUpgrades.GetUpgrade(Id)?.GetLevel(avatar) ?? 0;
+        int level = Skills.SkillEffects.Level(avatar, Skills.SkillCatalog.InventorySlot); // skill tree
         return BaseSlots + Mathf.Clamp(level, 0, MaxLevel);
     }
 
@@ -42,6 +42,7 @@ internal static class InventorySlotsUpgrade
     internal static bool InventoryInputActive()
     {
         if (SemiFunc.InputDown(InputKey.Inventory1) || SemiFunc.InputDown(InputKey.Inventory2) || SemiFunc.InputDown(InputKey.Inventory3)) return true;
+        if (Skills.SkillTreeScreen.IsOpen) return false; // number keys turn tree pages
         for (int i=BaseSlots;i<MaxSlots;i++) if (SlotKey(i) != KeyCode.None && Input.GetKeyDown(SlotKey(i))) return true;
         return false;
     }
@@ -217,7 +218,7 @@ internal static class InventorySlotsUpgrade
         {
             int index = __instance.inventorySpotIndex;
             if (index < BaseSlots || index >= MaxSlots || SlotKey(index) == KeyCode.None ||
-                !Input.GetKeyDown(SlotKey(index)) || !SemiFunc.NoTextInputsActive()) return;
+                !Input.GetKeyDown(SlotKey(index)) || !SemiFunc.NoTextInputsActive() || Skills.SkillTreeScreen.IsOpen) return;
             // A retained occupied slot can always be emptied after an administrative downgrade.
             if (index < SlotCount(SemiFunc.PlayerAvatarLocal()) || __instance.IsOccupied()) __instance.HandleInput();
         }

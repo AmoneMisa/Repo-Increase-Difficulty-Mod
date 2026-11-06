@@ -63,4 +63,48 @@ Check(queue.Visible(12.5f).Count == 0, "A status disappears about half a second 
 queue.Show("s", "again", "", .5f, 20f);
 Check(Near(queue.Visible(20f)[0].Shown, 20f), "An expired key comes back with a fresh fade-in");
 
+// ---------------------------------------------------------------- condition timer
+var timer = new HudConditionTimer();
+Check(!timer.Active(0f) && Near(timer.Alpha(0f), 0f), "A condition that never started is invisible");
+timer.Refresh(4f, 1f);
+Check(timer.Active(1f) && Near(timer.Fraction(1f), 1f) && Near(timer.Alpha(1f), 0f), "Refresh starts the condition with a full bar and a fade-in");
+Check(Near(timer.Alpha(1.25f), 1f) && Near(timer.Fraction(3f), .5f), "Fade-in completes and the bar drains with time");
+timer.Refresh(2f, 3f);
+Check(Near(timer.Fraction(3f), .5f), "Refreshing keeps the longest duration as the bar's full length");
+timer.End(3.5f);
+Check(!timer.Active(3.5f) && Near(timer.Alpha(3.5f), 1f) && timer.Alpha(3.8f) < 1f && Near(timer.Alpha(4f), 0f), "Ending fades the overlay out");
+timer.Start(5f, 10f);
+Check(timer.Active(14f) && !timer.Active(15.1f) && Near(timer.RemainingSeconds(12f), 3f), "A fixed-length start runs for its seconds");
+timer.Start(5f, 12f);
+Check(Near(timer.Fraction(12f), 1f) && Near(timer.Alpha(12f), 1f), "A repeat hit restarts the bar without a new fade-in");
+
+// ---------------------------------------------------------------- level results: starting loot
+var ledger = new IncreaseHardMod.Patches.Effects.RoundLootLedger();
+ledger.Register(1, 1000, false, false);   // priced before it was known to be starting loot
+ledger.Register(1, 1200, true, false);    // generation finished: marked initial, value settled
+ledger.Register(2, 500, true, true);      // a soul is never starting loot
+ledger.SealInitial();
+ledger.Register(3, 800, false, false);    // spawned later
+var start = ledger.Snapshot();
+Check(start.InitialValue == 1200 && start.InitialCount == 1, "Starting loot counts generated valuables even when they were priced first");
+
+// ---------------------------------------------------------------- tree view layout
+var tree = new[]
+{
+    new HudTreeItem("root", null, "A"), new HudTreeItem("a1", "root", "A"), new HudTreeItem("a2", "a1", "A"),
+    new HudTreeItem("b1", "root", "A"), new HudTreeItem("c1", "root", "A"),
+    new HudTreeItem("solo", null, "B"),
+    new HudTreeItem("x", null, "C"), new HudTreeItem("y", null, "C"),
+};
+var slots = HudTreeLayout.Layout(tree, 2, out var rows, out int depth);
+HudTreeSlot S(string id) => slots.First(s => s.Id == id && !s.Title);
+HudTreeSlot T(string g) => slots.First(s => s.Id == g && s.Title);
+Check(T("A").Row == 0 && S("root").Row == 1 && S("root").Depth == 0, "A group title sits above its first node");
+Check(S("a1").Row == 1 && S("a2").Row == 1 && S("a2").Depth == 2, "A first child continues its parent's row");
+Check(S("b1").Row == 2 && S("c1").Row == 3 && S("b1").Depth == 1, "Further children open new rows");
+Check(T("B").Column == 1 && S("solo").Row == 1, "The next group goes to the shorter column");
+Check(T("C").Column == 1 && T("C").Row == 2 && S("x").Row == 3 && S("y").Row == 4, "Several roots in a group each take a row");
+Check(rows[0] == 4 && rows[1] == 5 && depth == 3, "Column heights and deepest chain are reported");
+Check(slots.Count(s => !s.Title) == tree.Length, "Every node is placed once");
+
 Console.WriteLine("HUD_TOOLKIT_PASS: " + checks);

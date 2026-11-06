@@ -155,6 +155,9 @@ public static class ModConfig
     public static ConfigEntry<int> QuestCompletionsStoSS;
     public static ConfigEntry<int> QuestCompletionsSStoSSS;
     public static ConfigEntry<int> QuestMoneyBase;
+    public static ConfigEntry<int> QuestSkillPoints, QuestSkillPointsHighRank;
+    public static ConfigEntry<float> QuestSkillPointChance, QuestContractChance;
+    public static ConfigEntry<bool> QuestFunnyEnabled;
     public static ConfigEntry<bool> QuestItemRewardsEnabled;
     public static ConfigEntry<bool> QuestCosmeticRewardsEnabled;
     public static ConfigEntry<bool> QuestExactUpgradeRewardsEnabled;
@@ -204,6 +207,7 @@ public static class ModConfig
     // Wizard Staff: chain-lightning wand (handgun base, revolver price).
     public static ConfigEntry<bool> StaffEnabled, NetLauncherEnabled;
     public static ConfigEntry<bool> WingCosmeticsEnabled;
+    public static ConfigEntry<bool> ScreenEffectsEnabled;
     public static ConfigEntry<bool> GuaranteedStrengthEnabled;
     public static ConfigEntry<float> NetSeconds, NetBreakChance;
     public static ConfigEntry<int> NetShots;
@@ -309,7 +313,14 @@ public static class ModConfig
     public static ConfigEntry<UnityEngine.KeyCode> MapZoomOutKey;
     public static ConfigEntry<float> MapZoomStep;
     // When true, the vanilla "Map Player Count" upgrade is removed from the shop (Map Suite replaces it).
-    public static ConfigEntry<bool> MapSuiteReplacesVanilla;
+
+    // Skill tree (src/Skills, docs/skill-tree-plan.md).
+    public static ConfigEntry<bool> SkillSpendAnywhere;
+    public static ConfigEntry<int> SkillRespecCost;
+    public static ConfigEntry<int> SkillPointBasePrice;
+    public static ConfigEntry<UnityEngine.KeyCode> SkillTreeKey;
+    public static ConfigEntry<float> SkillRootBonus, SkillWeaponDamageMax, SkillStatusRootSeconds, SkillSecondWindPerLevel,
+        SkillSurvivorStamina, SkillFlashRange, SkillFlashWidthPerLevel, SkillFlashBrightnessPerLevel;
 
     // --- Level Info panel ---
     // Right-side overlay logging each level change (number + name + rolled surprises),
@@ -384,6 +395,10 @@ public static class ModConfig
         Modifiers.ModifierType.MonstersPitTanky   => "Monsters take less damage from death pits.",
         Modifiers.ModifierType.LightMonsters      => "Monsters weigh less and yield to a single player's grab without Strength upgrades. Native hold-time, mounted and freeze restrictions still apply.",
         Modifiers.ModifierType.HeavyMonsters      => "All monsters weigh more, so they're hard to shove around.",
+        Modifiers.ModifierType.SilentNight        => "Everything players do makes 40% less noise: footsteps, voices and dropped loot alert fewer monsters.",
+        Modifiers.ModifierType.LoudFacility       => "The acoustics are terrible: monsters hear every footstep, voice and bump 50% farther away.",
+        Modifiers.ModifierType.GreasedWheels      => "Freshly oiled wheels: C.A.R.T.s are much easier to push, even full and uphill.",
+        Modifiers.ModifierType.ShortMemory        => "Monsters forget quickly: once they lose sight of you, they give up the chase sooner.",
         Modifiers.ModifierType.MysteryBoxes       => "Mystery boxes appear around the map. Drop one monster soul into a box to roll a random upgrade, money, or a weapon/grenade for this level only. Each box takes one soul.",
         _                                         => $"The '{m}' surprise modifier.",
     };
@@ -455,6 +470,7 @@ public static class ModConfig
         StaffEnabled = Module(cfg, "Gear", "WizardStaffEnabled", true, "WizardStaff", "Sell the Wizard Staff (chain-lightning wand).");
         NetLauncherEnabled = Module(cfg, "Gear", "NetLauncherEnabled", true, "NetLauncher", "Sell the Net Launcher (roots a monster to the floor).");
         GuaranteedStrengthEnabled = Module(cfg, "Shop", "GuaranteedStrength", true, "GuaranteedStrength", "When MoreStandsForShops is installed, the shop always offers at least one Strength (grab strength) upgrade, while the team can still buy it. Host setting.");
+        ScreenEffectsEnabled = Module(cfg, "Screen Effects", "Enabled", true, "ScreenEffects", "When you are frozen, poisoned, sedated (tranquilized) or netted, show a themed frame around the screen edges and a status card at the left with a time bar. Local only.");
         WingCosmeticsEnabled = Module(cfg, "Cosmetics", "WingsEnabled", true, "WingCosmetics", "Add three Rare back-wing cosmetics (Astral Night, Solar Seraph, Prism Chime) to the Body Top slot. Everyone in the lobby needs this setting to see them. Takes effect on restart.");
         NetSeconds = BindFloat(cfg, "Net Launcher", "RootSeconds", 5f, 1f, 30f, "How long a net pins a monster to the floor. It can still turn and attack anyone in reach.");
         NetBreakChance = BindFloat(cfg, "Net Launcher", "BreakChancePerSecond", .12f, 0f, 1f, "Chance each second that the monster tears the net and breaks free early (0.12 = about 45% over 5 seconds).");
@@ -743,6 +759,16 @@ public static class ModConfig
         QuestMoneyBase = BindInt(cfg,
             "Quests", "MoneyRewardBase", 3000, 0, 1000000,
             "Base money reward for a quest at rank F / one player. It scales up with team size (+25% per extra player), day, and rank.");
+        QuestSkillPoints = BindInt(cfg, "Quests", "SkillPointReward", 1, 0, 10,
+            "Skill points every finished quest gives on top of its normal reward. Team quests give them to every player, personal quests to you. 0 = none.");
+        QuestSkillPointsHighRank = BindInt(cfg, "Quests", "SkillPointRewardSSPlus", 2, 0, 10,
+            "Skill points a finished quest gives at contract rank SS and SSS instead.");
+        QuestSkillPointChance = BindFloat(cfg, "Quests", "SkillPointChance", .35f, 0f, 1f,
+            "Chance that a quest comes with skill points at rank F; +5% per contract rank, at most 75%. Funny quests and contracts never give points.");
+        QuestContractChance = BindFloat(cfg, "Quests", "ContractChance", .35f, 0f, 1f,
+            "Chance per level of a special CONTRACT quest: harder, and it gives every player a level of a quest-only skill tree perk (Contracts page).");
+        QuestFunnyEnabled = cfg.Bind("Quests", "FunnyQuests", true,
+            "Allow silly side-quests (talk to yourself, spin around, pay respects...). At most one per level, small cash reward, no skill points.");
         QuestItemRewardsEnabled = cfg.Bind(
             "Quests", "ItemRewardsEnabled", true,
             "Allow higher-rank quests (rank C and above) to sometimes pay out a random upgrade item on the level instead of money.");
@@ -1002,9 +1028,30 @@ public static class ModConfig
         MapZoomStep = BindFloat(cfg,
             "Player Upgrades", "MapZoomStep", 6f, 1f, 30f,
             "Map Suite L7+: how much field-of-view each zoom-hotkey press adds/removes on top of the level's default FOV.");
-        MapSuiteReplacesVanilla = cfg.Bind(
-            "Player Upgrades", "MapSuiteReplacesVanilla", true,
-            "Remove the vanilla 'Map Player Count' upgrade from the shop so Map Suite replaces it (Map Suite already includes live player counts).");
+        SkillSpendAnywhere = cfg.Bind("Skill Tree", "SpendAnywhere", false,
+            "Allow spending skill points during a level. Off: points can be spent only in the shop and the truck between levels (the host decides).");
+        SkillRespecCost = BindInt(cfg, "Skill Tree", "RespecCostK", 10, 0, 1000,
+            "Run money (in $K, the shop's unit) to refund all of your spent skill points. Paid from the team's money, in the shop or truck only. 0 = free.");
+        SkillPointBasePrice = BindInt(cfg, "Skill Tree", "SkillPointBasePrice", 6000, 500, 1000000,
+            "Approximate shop price of the first Skill Point; the game raises it with each one the team buys, like any upgrade. Takes effect on restart.");
+        SkillTreeKey = cfg.Bind("Skill Tree", "OpenKey", UnityEngine.KeyCode.K,
+            "Key that opens and closes the skill tree during a run (the Esc menu also has a SKILL TREE button).");
+        SkillRootBonus = BindFloat(cfg, "Skill Tree", "RootDamageBonus", .05f, 0f, .5f,
+            "Brawler and Marksman root perks: extra damage on every weapon of their branch (0.05 = +5%).");
+        SkillWeaponDamageMax = BindFloat(cfg, "Skill Tree", "WeaponDamageMaxBonus", .40f, 0f, 3f,
+            "Arsenal weapon damage perks: bonus at max level for each weapon, spread evenly over its levels (0.40 = +40%).");
+        SkillStatusRootSeconds = BindFloat(cfg, "Skill Tree", "StatusLabSeconds", .5f, 0f, 3f,
+            "Status Lab root perk: seconds every status from your weapons moves toward the 8-second cap.");
+        SkillSecondWindPerLevel = BindFloat(cfg, "Skill Tree", "SecondWindPerLevel", .15f, 0f, 1f,
+            "Second Wind: faster stamina recovery per level (0.15 = +15%).");
+        SkillSurvivorStamina = BindFloat(cfg, "Skill Tree", "SurvivorStamina", 5f, 0f, 50f,
+            "Survivor root perk: extra max stamina (vanilla stamina upgrades give 10 each).");
+        SkillFlashRange = BindFloat(cfg, "Skill Tree", "FlashlightTuningRange", .15f, 0f, 1f,
+            "Flashlight Tuning root perk: longer beam (0.15 = +15% range).");
+        SkillFlashWidthPerLevel = BindFloat(cfg, "Skill Tree", "BeamWidthPerLevel", .10f, 0f, .5f,
+            "Beam Width: wider cone per level (0.10 = +10% angle).");
+        SkillFlashBrightnessPerLevel = BindFloat(cfg, "Skill Tree", "BrightnessPerLevel", .15f, 0f, 1f,
+            "Brightness: brighter and slightly longer beam per level (0.15 = +15%).");
 
         // --- Surprise / special-level system ---
                 SpecialLevelChancePercent = BindInt(cfg,

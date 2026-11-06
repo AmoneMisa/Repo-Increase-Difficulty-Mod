@@ -123,17 +123,46 @@ internal static class HudVitals
 
         // Swap the lightning icon, wherever the row keeps it. Only images that carry an icon (a sprite or
         // texture) change; plain panels or fills are left alone.
+        // The energy row's only visible graphic is its bolt icon. Other images in the copy (hidden flashes and
+        // backings the native SemiUI script normally keeps transparent) are switched off; tinting them made a
+        // big shape and a dark square appear. The icon is the smallest visible image with a sprite.
         var icon = row.Spec.Icon?.Invoke();
-        if (icon != null)
+        Image bolt = null;
+        float best = float.MaxValue;
+        foreach (var image in clone.GetComponentsInChildren<Image>(true))
         {
-            foreach (var image in clone.GetComponentsInChildren<Image>(true))
-                if (image.sprite != null) { image.sprite = icon; image.color = row.Spec.ValueColor; image.preserveAspect = true; }
-            foreach (var raw in clone.GetComponentsInChildren<RawImage>(true))
-                if (raw.texture != null) { raw.texture = icon.texture; raw.color = row.Spec.ValueColor; }
+            float area = Mathf.Abs(image.rectTransform.rect.width * image.rectTransform.rect.height);
+            if (image.sprite != null && image.color.a > .1f && image.enabled && area > 0f && area < best) { best = area; bolt = image; }
         }
+        foreach (var image in clone.GetComponentsInChildren<Image>(true))
+            if (image != bolt) image.enabled = false;
+        foreach (var raw in clone.GetComponentsInChildren<RawImage>(true)) raw.enabled = false;
+        if (bolt != null && icon != null)
+        {
+            var colour = row.Spec.ValueColor;
+            colour.a = bolt.color.a;
+            bolt.sprite = icon;
+            bolt.color = colour;
+            bolt.preserveAspect = true;
+        }
+        LogLayoutOnce(source);
         row.Clone = clone;
         row.Slot = -1;
         row.ShownValue = row.ShownMax = null;
+    }
+
+    private static bool _layoutLogged;
+
+    // One line describing the native energy row's graphics, to check the icon choice against a real game.
+    private static void LogLayoutOnce(GameObject energy)
+    {
+        if (_layoutLogged) return;
+        _layoutLogged = true;
+        var parts = new List<string>();
+        foreach (var image in energy.GetComponentsInChildren<Graphic>(true))
+            parts.Add($"{image.name}:{image.GetType().Name} sprite={(image is Image i && i.sprite != null ? i.sprite.name : "-")} " +
+                      $"size={image.rectTransform.rect.size} alpha={image.color.a:0.##} on={image.enabled && image.gameObject.activeInHierarchy}");
+        Plugin.Log?.LogInfo("[HUD] Energy row graphics: " + string.Join(" | ", parts));
     }
 
     // Child of the energy row: its local origin is the energy row, so slot n is n row-steps straight down.

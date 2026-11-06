@@ -10,7 +10,8 @@ namespace IncreaseHardMod.Gear;
 /// Wizard Staff: a carved wand that throws chain lightning (built in <see cref="GearItems"/> from the
 /// handgun, priced like the revolver, one battery bar per bolt).
 ///
-/// Firing uses the native gun path end to end (trigger, battery bar, recoil, sound, aim). Only the bullet
+/// Firing uses the native gun path end to end (trigger, battery bar, sound, aim; a melee-like strike replaces
+/// the recoil kick). Only the bullet
 /// is replaced: <see cref="GearEffects"/> skips the native ShootBulletRPC for this kind and calls
 /// <see cref="HostFire"/> on the host, which picks the targets, deals the damage and broadcasts the bolt
 /// path; every client then draws the same jagged bolt.
@@ -42,15 +43,48 @@ internal sealed class WizardStaff : MonoBehaviour
 
     // ------------------------------------------------------------------ host
 
+    // Cast motion, like a pan swing rather than a gun's recoil: the tip dips forward and down and the
+    // whole staff jabs forward a little; the native aim torque then brings it back to the crosshair.
+    // Host-side physics, so every client sees the same motion.
+    private const float StrikeDip = .55f, StrikeJab = .35f;
+
+    private void Strike()
+    {
+        var rb = _gun.physGrabObject != null ? _gun.physGrabObject.rb : null;
+        if (rb == null || rb.isKinematic) return;
+        var muzzle = _gun.gunMuzzle;
+        var down = Vector3.ProjectOnPlane(-transform.up, muzzle.forward).normalized;
+        rb.AddForceAtPosition(down * StrikeDip, muzzle.position, ForceMode.Impulse);
+        rb.AddForce(muzzle.forward * StrikeJab, ForceMode.Impulse);
+    }
+
+    // The native empty click also kicks the tip back and up; cancel it exactly for the staff.
+    [HarmonyLib.HarmonyPatch(typeof(ItemGun), "DryFireRPC")]
+    private static class NoDryFireKick
+    {
+        [HarmonyLib.HarmonyPostfix]
+        private static void Postfix(ItemGun __instance)
+        {
+            if (!SemiFunc.IsMasterClientOrSingleplayer() || __instance == null || __instance.gunMuzzle == null ||
+                __instance.GetComponent<WizardStaff>() == null) return;
+            var rb = __instance.physGrabObject != null ? __instance.physGrabObject.rb : null;
+            // ItemGun applies -forward * 1 at the muzzle right after this RPC runs locally; this is its opposite.
+            if (rb != null && !rb.isKinematic)
+                rb.AddForceAtPosition(__instance.gunMuzzle.forward * 1f, __instance.gunMuzzle.position, ForceMode.Impulse);
+        }
+    }
+
     internal void HostFire(Vector3 aimEnd, int shooterId)
     {
         if (!SemiFunc.IsMasterClientOrSingleplayer() || _gun == null || _gun.gunMuzzle == null) return;
+        Strike();
         var origin = _gun.gunMuzzle.position;
         var forward = _gun.gunMuzzle.forward;
         var shooter = shooterId >= 0 ? SemiFunc.PlayerAvatarGetFromPhotonID(shooterId) : null;
         float range = ModConfig.StaffRange.Value;
         int max = Mathf.Max(1, ModConfig.StaffMaxTargets.Value);
-        int damage = ModConfig.StaffDamage.Value;
+        // Skill tree: Marksman + Wizard Staff Damage.
+        int damage = Mathf.RoundToInt(ModConfig.StaffDamage.Value * Skills.SkillEffects.WeaponMultiplier(shooter, Skills.SkillEffects.Weapon.WizardStaff));
 
         var struck = new List<Enemy>();
         var points = new List<Vector3> { origin };

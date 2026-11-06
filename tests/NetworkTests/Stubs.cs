@@ -8,13 +8,13 @@ namespace UnityEngine {
  public static class Mathf {public static float Max(float a,float b)=>Math.Max(a,b);public static int Max(int a,int b)=>Math.Max(a,b);public static float Min(float a,float b)=>Math.Min(a,b);public static float Clamp(float v,float a,float b)=>Math.Clamp(v,a,b);}
 }
 namespace ExitGames.Client.Photon {public class EventData {public byte Code;public int Sender;public object CustomData;} public struct SendOptions {public static SendOptions SendReliable,SendUnreliable;}}
-namespace Photon.Realtime {public interface IOnEventCallback {void OnEvent(ExitGames.Client.Photon.EventData e);}public enum ReceiverGroup {All,Others,MasterClient}public class RaiseEventOptions {public ReceiverGroup Receivers;}public class Player {public int ActorNumber;}public class Room {public string Name="room";public int PlayerCount=3;}}
+namespace Photon.Realtime {public interface IOnEventCallback {void OnEvent(ExitGames.Client.Photon.EventData e);}public enum ReceiverGroup {All,Others,MasterClient}public class RaiseEventOptions {public ReceiverGroup Receivers;public int[] TargetActors;}public class Player {public int ActorNumber;}public class Room {public string Name="room";public int PlayerCount=3;}}
 namespace Photon.Pun {
- public class PhotonView:UnityEngine.Component {public int ViewID,OwnerActorNr;public static Dictionary<int,PhotonView> All=new();public static PhotonView Find(int id)=>All.TryGetValue(id,out var v)?v:null;}
- public static class PhotonNetwork {public static bool InRoom=true,IsMasterClient;public static double Time=10;public static Photon.Realtime.Player MasterClient=new(){ActorNumber=1},LocalPlayer=new(){ActorNumber=2};public static Photon.Realtime.Room CurrentRoom=new();public static void AddCallbackTarget(object o){}public static void RemoveCallbackTarget(object o){}public static List<(byte Code,Photon.Realtime.ReceiverGroup Receivers)> Sent=new();public static void RaiseEvent(byte code,object data,Photon.Realtime.RaiseEventOptions o,ExitGames.Client.Photon.SendOptions s){Sent.Add((code,o.Receivers));}}
+ public class PhotonView:UnityEngine.Component {public int ViewID,OwnerActorNr;public Photon.Realtime.Player Owner;public static Dictionary<int,PhotonView> All=new();public static PhotonView Find(int id)=>All.TryGetValue(id,out var v)?v:null;}
+ public static class PhotonNetwork {public static bool InRoom=true,IsMasterClient;public static double Time=10;public static Photon.Realtime.Player MasterClient=new(){ActorNumber=1},LocalPlayer=new(){ActorNumber=2};public static Photon.Realtime.Room CurrentRoom=new();public static void AddCallbackTarget(object o){}public static void RemoveCallbackTarget(object o){}public static List<(byte Code,Photon.Realtime.ReceiverGroup Receivers)> Sent=new();public static List<(byte Code,object Data,int[] Targets)> SentData=new();public static void RaiseEvent(byte code,object data,Photon.Realtime.RaiseEventOptions o,ExitGames.Client.Photon.SendOptions s){Sent.Add((code,o.Receivers));SentData.Add((code,data,o.TargetActors));}}
 }
 public class GameDirector {public static GameDirector instance=new();public List<PlayerAvatar> PlayerList=new();}
-public class PlayerAvatar:UnityEngine.Component {public Photon.Pun.PhotonView photonView;}
+public class PlayerAvatar:UnityEngine.Component {public Photon.Pun.PhotonView photonView;public bool isLocal;public string steamID;}
 public class Enemy:UnityEngine.Component {}
 public class EnemyParent:UnityEngine.Component {}
 public class ItemGun:UnityEngine.Component {}
@@ -23,7 +23,7 @@ public class ItemBattery:UnityEngine.Component {public float batteryLife=100;}
 public class ValuableObject:UnityEngine.Component {public float dollarValueCurrent=50,dollarValueOriginal=100;}
 public class Level {public string name="level";}
 public class RunManager {public static RunManager instance=new();public Level levelCurrent=new();public int levelsCompleted=1;}
-public static class SemiFunc {public static bool IsMasterClientOrSingleplayer()=>Photon.Pun.PhotonNetwork.IsMasterClient;}
+public static class SemiFunc {public static bool IsMasterClientOrSingleplayer()=>Photon.Pun.PhotonNetwork.IsMasterClient;public static List<PlayerAvatar> Players=new();public static List<PlayerAvatar> PlayerGetList()=>Players;}
 namespace IncreaseHardMod {
  public class Setting<T> {public T Value;public Setting(T v){Value=v;}}
  public static class ModConfig {public static Setting<string> EnemyHealthMaxPerEnemy=new("");public static Setting<bool> SurprisesEnabled=new(true),RoundResultsEnabled=new(true),QuestsEnabled=new(true);}
@@ -69,3 +69,7 @@ namespace IncreaseHardMod.Quests {
 }
 namespace IncreaseHardMod.Patches.Effects { public static class LateJoinNetworkDiagnostics { public static void Tick(){} } }
 namespace IncreaseHardMod.Patches.Effects { public static class LevelInfoHud { public const byte StateEventCode=197; public static int Calls; public static void HandleStateEvent(ExitGames.Client.Photon.EventData e){Calls++;} } }
+
+namespace IncreaseHardMod.Hud{public enum PlayerCondition{Frozen,Poisoned,Sedated,Netted}public static class HudConditions{public static int Started;public static PlayerCondition Last;public static float Seconds;public static void Start(PlayerCondition c,float s){Started++;Last=c;Seconds=s;}}}
+
+namespace IncreaseHardMod.Skills{public enum BuyBlock:byte{None=0,UnknownNode,Maxed,MissingPrerequisite,NotEnoughPoints,BadCount,WrongPlace,NotReady,NoMoney,NothingSpent}public static class SkillStore{public const byte OpBuy=0,OpRespec=1;public static List<(string Steam,byte Op,string Node,int Count)> Handled=new();public static BuyBlock Answer=BuyBlock.None;public static BuyBlock HostHandle(string steam,byte op,string node,int count){Handled.Add((steam,op,node,count));return Answer;}public static List<(byte Op,BuyBlock Block,string Node)> Reports=new();public static void Report(byte op,BuyBlock b,string node){Reports.Add((op,b,node));}}}

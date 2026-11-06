@@ -21,6 +21,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
     private TextMeshProUGUI _descriptionLabel;
     private readonly List<string> _descriptions = new();
     private readonly List<string> _effectDescriptions = new();
+    private readonly List<string> _effectColors = new();
     private readonly Vector3[] _corners = new Vector3[4];
     private bool _suppressed;
     private TextMeshProUGUI _detailsPageLabel;
@@ -54,6 +55,9 @@ internal sealed class LevelInfoHud : MonoBehaviour
          GameDirector.instance.currentState == GameDirector.gameState.Death) &&
         (LoadingUI.instance == null || !LoadingUI.instance.gameObject.activeInHierarchy) &&
         HUDCanvas.instance != null && HUDCanvas.instance.gameObject.activeInHierarchy;
+    // In gameplay MenuManager has no current page; any open page (Esc, settings, cosmetics...) covers the
+    // HUD, so the mod's HUD text hides with it instead of drawing over the menu.
+    internal static bool MenuOpen => MenuManager.instance != null && MenuManager.instance.currentMenuPage != null;
     internal static bool TabOpen => (MapToolController.instance != null && MapToolController.instance.Active) ||
         (Map.Instance != null && Map.Instance.Active);
     // Guests wait briefly for the host's HUD snapshot, then fall back to the modifiers, economy and shop
@@ -167,13 +171,15 @@ internal sealed class LevelInfoHud : MonoBehaviour
     private void ReportHiddenOnce(string mapInfo)
     {
         if (_modsLabel == null || _mapLabel == null) return;
-        bool wantMods = !string.IsNullOrEmpty(_modsLabel.text);
+        bool wantMods = !TabOpen && !string.IsNullOrEmpty(_modsLabel.text);
+        bool wantDetails = TabOpen && _descriptions.Count > 0;
+        if (wantDetails && !_descriptionLabel.enabled) wantMods = true; // report it through the same line
         bool wantMap = TabOpen && SafeRunIsLevel() && !string.IsNullOrEmpty(mapInfo);
         if (!(wantMods && !_modsLabel.enabled) && !(wantMap && !_mapLabel.enabled)) return;
         string key = LevelKey;
         if (_reportedFor == key) return;
         _reportedFor = key;
-        Plugin.Log.LogWarning($"[LevelInfo] Text hidden by layout (mods={wantMods}/{_modsLabel.enabled}, map={wantMap}/{_mapLabel.enabled}, " +
+        Plugin.Log.LogWarning($"[LevelInfo] Text hidden by layout (mods={wantMods}/{_modsLabel.enabled}, details={wantDetails}/{_descriptionLabel.enabled}, map={wantMap}/{_mapLabel.enabled}, " +
                               $"font={_modsLabel.fontSize:0}/{_modsLabel.fontSizeMin:0}): canvas={_layoutArea}, quota={_layoutQuota}, " +
                               $"quotaVisible={_layoutQuotaVisible}, haulVisible={_layoutHaulVisible}, level={_layoutHeading}/{_layoutNumber}, " +
                               $"levelBelow={_layoutLevelBelow}, top={_layoutTop:0}, bottom={_layoutBottom:0}, available={_layoutAvailable:0}.");
@@ -192,7 +198,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
             return;
         }
         RefreshState();
-        if (!InfoReady) { HideAll(); return; }
+        if (!InfoReady || MenuOpen) { HideAll(); return; }
         if (SemiFunc.NoTextInputsActive() && Input.GetKeyDown(ModConfig.LevelInfoToggleKey.Value))
             _suppressed = !_suppressed;
         bool showModifiers = ModConfig.LevelInfoEnabled.Value && !_suppressed;
@@ -230,6 +236,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
         {
             _parts.Clear();
             _effectDescriptions.Clear();
+            _effectColors.Clear();
             if (special)
                 BuildParts(mods);
             if (econ != null)
@@ -240,6 +247,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
             {
                 _parts.Add($"[{ModConfig.BlackMarketKey.Value}] Black Market");
                 _effectDescriptions.Add("");
+                _effectColors.Add("FFFFFF");
             }
             _modsLabel.text = string.Join("\n", _parts);
             _descriptionLabel.text = "";
@@ -249,11 +257,11 @@ internal sealed class LevelInfoHud : MonoBehaviour
         {
             _parts.Clear();
             _effectDescriptions.Clear();
+            _effectColors.Clear();
             _modsLabel.text = "";
             _descriptionLabel.text = "";
         }
         PositionMods(mapInfo);
-        ReportHiddenOnce(mapInfo);
         if (_modsLabel.enabled)
         {
             _modsLabel.overflowMode = TextOverflowModes.Page;
@@ -263,6 +271,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
                 _modsLabel.pageToDisplay = _modsLabel.pageToDisplay % pages + 1;
         }
         RenderDetails();
+        ReportHiddenOnce(mapInfo);
     }
 
     // Create (or recreate) the native labels once the HUD canvas and a font template exist.
@@ -294,8 +303,17 @@ internal sealed class LevelInfoHud : MonoBehaviour
         if (_modsLabel == null)
         {
             var heading = StatsUI.instance != null ? StatsUI.instance.upgradesHeader : null;
-            _modsLabel = CreateLabel("IHM_LevelMods", heading != null ? heading : template, ModColor,
+            var source = heading != null ? heading : template;
+            _modsLabel = CreateLabel("IHM_LevelMods", source, ModColor,
                 TextAlignmentOptions.TopRight, new Vector2(1f, 1f), Vector2.zero, 300f);
+            // Our label hangs directly off the HUD canvas, while the native heading sits inside a scaled
+            // group: copying its raw size drew names larger than the "UPGRADES" heading itself. Match the
+            // heading's on-screen size, then step down to list-entry size (native body rows are ~55% of it).
+            _modsLabel.fontSize = source.fontSize * OnScreenScale(source) * ModNameScale;
+            // Hard bounds from the HUD's own height (native list rows are about 2.6% of it), in case the
+            // heading reports an auto-sized or animated size.
+            float hudHeight = HUDCanvas.instance.rect.rect.height;
+            if (hudHeight > 1f) _modsLabel.fontSize = Mathf.Clamp(_modsLabel.fontSize, hudHeight * .02f, hudHeight * .034f);
             ConfigureModifierLabel(_modsLabel);
         }
         if (_descriptionLabel == null)
@@ -344,9 +362,11 @@ internal sealed class LevelInfoHud : MonoBehaviour
         _mapPage = Mathf.Clamp(_mapPage, 1, mapPages);
         _mapLabel.pageToDisplay = _mapPage;
 
+        // Descriptions only, each in its modifier's colour (good / mixed / bad); the Black Market hint has none.
         _descriptions.Clear();
-        for (int i = 0; i < _parts.Count; i++)
-            _descriptions.Add(_parts[i] + "\n" + _effectDescriptions[i]);
+        for (int i = 0; i < _effectDescriptions.Count; i++)
+            if (!string.IsNullOrEmpty(_effectDescriptions[i]))
+                _descriptions.Add($"<color=#{_effectColors[i]}>{_effectDescriptions[i]}</color>");
         _descriptionLabel.text = string.Join("\n\n", _descriptions);
         _descriptionLabel.enableAutoSizing = false;
         _descriptionLabel.overflowMode = TextOverflowModes.Page;
@@ -407,6 +427,18 @@ internal sealed class LevelInfoHud : MonoBehaviour
         rt.sizeDelta = new Vector2(width, 40f);
         rt.anchoredPosition = offset;
         return tmp;
+    }
+
+    private const float ModNameScale = .55f;
+
+    // How much larger or smaller a native label renders than one parented straight to the HUD canvas.
+    private static float OnScreenScale(TextMeshProUGUI native)
+    {
+        var canvas = HUDCanvas.instance != null ? HUDCanvas.instance.transform : null;
+        if (native == null || canvas == null) return 1f;
+        float own = native.transform.lossyScale.y, root = canvas.lossyScale.y;
+        if (own <= 0f || root <= 0f) return 1f;
+        return Mathf.Clamp(own / root, .3f, 1.5f);
     }
 
     private static void ConfigureModifierLabel(TextMeshProUGUI label)
@@ -519,6 +551,8 @@ internal sealed class LevelInfoHud : MonoBehaviour
         available = Mathf.Max(0f, top - bottom);
         float nameHeight = _modsLabel.GetPreferredValues(_modsLabel.text, width, Mathf.Infinity).y;
         SetBlock(_modsLabel, right, top, width, Mathf.Min(nameHeight, available * 0.45f));
+        // Tab shows the descriptions only: no names, no Black Market hint; the descriptions take their place.
+        if (TabOpen) _modsLabel.enabled = false;
         // TMP's visual glyph edge (including native font bearings) follows the animated quota
         // edge exactly, rather than a percentage-based screen inset.
         if (_modsLabel.enabled)
@@ -610,6 +644,10 @@ internal sealed class LevelInfoHud : MonoBehaviour
         (ModifierType.LightMonsters, "Light Monsters"),
         (ModifierType.HeavyMonsters, "Heavy Monsters"),
         (ModifierType.MysteryBoxes, "Mystery Boxes"),
+        (ModifierType.SilentNight, "Silent Night"),
+        (ModifierType.LoudFacility, "Loud Facility"),
+        (ModifierType.GreasedWheels, "Greased Wheels"),
+        (ModifierType.ShortMemory, "Short Memory"),
     };
 
     internal static string NameOf(ModifierType m)
@@ -630,6 +668,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
         };
         _parts.Add($"<color=#{color}>{name}</color>");
         _effectDescriptions.Add(description);
+        _effectColors.Add(color);
     }
 
     private void BuildParts(LevelModifiers mods)

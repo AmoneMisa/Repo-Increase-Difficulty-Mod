@@ -73,12 +73,9 @@ internal static class HpRegenUpgrade
                 return;
             }
 
-            var upgrade = RepoUpgrades.GetUpgrade(Id);
-            if (upgrade == null)
-                return;
-
-            int level = Mathf.Clamp(upgrade.GetLevel(avatar.steamID), 0, ModConfig.RegenMaxLevel.Value);
-            if (level <= 0)
+            // Skill tree: HP Regeneration, on the old ladder of RegenMaxLevel levels.
+            float level = Mathf.Clamp(Skills.SkillEffects.Equivalent(avatar, Skills.SkillCatalog.HpRegen, ModConfig.RegenMaxLevel.Value), 0f, ModConfig.RegenMaxLevel.Value);
+            if (level <= 0f)
             {
                 _accumulated = 0f;
                 return;

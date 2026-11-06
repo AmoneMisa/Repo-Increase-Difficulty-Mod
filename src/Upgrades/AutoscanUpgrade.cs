@@ -44,9 +44,10 @@ internal static class AutoscanUpgrade
                 ValuableDirector.instance == null || ValuableDiscover.instance == null || Map.Instance == null) return;
             var avatar = SemiFunc.PlayerAvatarLocal();
             if (avatar == null || avatar.isDisabled || string.IsNullOrEmpty(avatar.steamID)) return;
-            var upgrade = RepoUpgrades.GetUpgrade(Id);
-            int level = Mathf.Clamp(upgrade != null ? upgrade.GetLevel(avatar.steamID) : 0, 0, Mathf.Clamp(ModConfig.AutoscanMaxLevel.Value, 1, 20));
-            if (level == 0) return;
+            // Skill tree: Autoscan, on the old ladder of AutoscanMaxLevel levels.
+            int max = Mathf.Clamp(ModConfig.AutoscanMaxLevel.Value, 1, 20);
+            float level = Mathf.Clamp(Skills.SkillEffects.Equivalent(avatar, Skills.SkillCatalog.Autoscan, max), 0f, max);
+            if (level <= 0f) return;
 
             _timer -= Time.deltaTime;
             if (_timer > 0f) return;

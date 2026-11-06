@@ -15,6 +15,17 @@ public static class QuestRewards
 {
     public static void GrantMoney(int amount) => QuestMoney.Grant(amount);
 
+    /// <summary>Host: a finished team quest gives every player in the run its skill points.</summary>
+    public static void GrantSkillPointsToAll(int points, string quest)
+    {
+        if (points <= 0 || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+        var players = SemiFunc.PlayerGetList();
+        if (players == null) return;
+        foreach (var player in players)
+            if (player != null && !string.IsNullOrEmpty(player.steamID))
+                Skills.SkillStore.GrantPoints(player.steamID, points, "team quest: " + quest);
+    }
+
     /// <summary>
     /// Heal the whole squad. HealOther is owner-authoritative but RPCs to everyone, so the host
     /// may call it on any avatar and each player's own client applies it.
@@ -259,9 +270,13 @@ public static class QuestRewards
         {
             if (item == null)
                 continue;
-            if (item.itemType == SemiFunc.itemType.item_upgrade ||
-                item.itemType == SemiFunc.itemType.player_upgrade)
-                result.Add(item);
+            if (item.itemType != SemiFunc.itemType.item_upgrade &&
+                item.itemType != SemiFunc.itemType.player_upgrade)
+                continue;
+            // The skill tree owns these vanilla upgrades now. (Tree-covered custom upgrades have no item at all.)
+            if (ModConfig.PlayerUpgradesEnabled.Value && Skills.SkillShopPatch.IsTreeOwnedVanilla(item))
+                continue;
+            result.Add(item);
         }
         return result;
     }

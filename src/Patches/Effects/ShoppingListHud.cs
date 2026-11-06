@@ -24,7 +24,7 @@ internal sealed class ShoppingListHud : MonoBehaviour
     private void Update()
     {
         var shop = ShopManager.instance;
-        if (!ModConfig.ShoppingListEnabled.Value || !SafeRunIsShop() || shop == null ||
+        if (!ModConfig.ShoppingListEnabled.Value || !SafeRunIsShop() || shop == null || LevelInfoHud.MenuOpen ||
             shop.shoppingList == null || shop.shoppingList.Count == 0)
         {
             _list?.Hide();

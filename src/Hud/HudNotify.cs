@@ -61,6 +61,7 @@ internal static class HudNotify
     {
         float now = Time.unscaledTime;
         var visible = channel.Queue.Visible(now);
+        if (LevelInfoHud.MenuOpen) visible = System.Array.Empty<HudMessageQueue<Color>.Message>(); // menus cover the HUD
         for (int i = 0; i < Mathf.Max(visible.Count, channel.Slots.Count); i++)
         {
             string id = "notify." + channel.Name + "." + i;

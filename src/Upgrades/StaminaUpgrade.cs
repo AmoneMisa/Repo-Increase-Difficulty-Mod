@@ -32,19 +32,19 @@ internal static class StaminaUpgrade
         });
     }
 
-    internal static float DrainMultiplier(float percent, int level)
+    internal static float DrainMultiplier(float percent, float level)
     {
         float keep = 1f - Mathf.Clamp(percent, 0f, .5f);
-        int cappedLevel = Mathf.Clamp(level, 0, Mathf.Clamp(ModConfig.StaminaMaxLevel.Value, 1, 20));
+        float cappedLevel = Mathf.Clamp(level, 0f, Mathf.Clamp(ModConfig.StaminaMaxLevel.Value, 1, 20));
         return Mathf.Pow(keep, cappedLevel);
     }
 
     internal static float SpendSprintEnergy(float current, float rawDrain, PlayerController controller)
     {
         var avatar = controller != null ? controller.playerAvatarScript : null;
-        var upgrade = ModConfig.PlayerUpgradesEnabled.Value && avatar != null && avatar.isLocal
-            ? RepoUpgrades.GetUpgrade(Id) : null;
-        int level = upgrade != null ? upgrade.GetLevel(avatar.steamID) : 0;
+        // Skill tree: Stamina Efficiency, on the old ladder of StaminaMaxLevel levels.
+        float level = avatar != null && avatar.isLocal
+            ? Skills.SkillEffects.Equivalent(avatar, Skills.SkillCatalog.StaminaEfficiency, ModConfig.StaminaMaxLevel.Value) : 0f;
         if (controller == null || level <= 0 || rawDrain <= 0f || float.IsNaN(rawDrain) || float.IsInfinity(rawDrain))
         {
             if (controller != null) States.Remove(controller);

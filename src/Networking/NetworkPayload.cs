@@ -44,16 +44,26 @@ internal static class NetworkPayload
     internal static bool QuestBuff(object raw, out object[] data) => Envelope(raw, 2, 2, out data) &&
         data[0] is byte stat && Enum.IsDefined(typeof(Quests.StatKind), stat) && data[1] is int amount && amount > 0;
 
+    // Skill tree: [op (0 buy, 1 respec, 2 personal-quest points), node id, level count] from a client; [op, result, node id] back from the host.
+    internal static bool SkillRequest(object raw, out object[] data) => Envelope(raw, 3, 3, out data) &&
+        data[0] is byte op && op <= 2 && Text(data[1], 64) && data[2] is int count && count >= 1 && count <= 10;
+
+    internal static bool SkillResult(object raw, out object[] data) => Envelope(raw, 3, 3, out data) &&
+        data[0] is byte op && op <= 2 && data[1] is byte result && result <= 20 && Text(data[2], 64);
+
     internal static bool QuestState(object raw, out object[] data)
     {
-        if (!Envelope(raw, 1, 66, out data) || data[0] is not int count || count < 0 || count > 5 ||
-            data.Length != 1 + count * 13) return false;
-        for (int i = 1; i < data.Length; i += 13)
+        // 15 values per quest: ..., title, flags (1 done, 2 failed, 4 contract), skill points, contract perk (255 none).
+        const int fields = 15;
+        if (!Envelope(raw, 1, 1 + 5 * fields, out data) || data[0] is not int count || count < 0 || count > 5 ||
+            data.Length != 1 + count * fields) return false;
+        for (int i = 1; i < data.Length; i += fields)
             if (data[i] is not int || data[i + 1] is not byte || data[i + 2] is not byte ||
                 data[i + 3] is not byte || data[i + 4] is not int || data[i + 5] is not int ||
                 !Text(data[i + 6], 256) || data[i + 7] is not byte || data[i + 8] is not int ||
                 data[i + 9] is not byte || data[i + 10] is not byte || !Text(data[i + 11], 512) ||
-                data[i + 12] is not byte flags || flags > 3) return false;
+                data[i + 12] is not byte flags || flags > 7 || data[i + 13] is not byte points || points > 10 ||
+                data[i + 14] is not byte) return false;
         return true;
     }
 }

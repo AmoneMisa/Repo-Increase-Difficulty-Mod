@@ -11,7 +11,7 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.7.12`
+- **Version:** `0.8.0`
 
 Version 0.7.12 adds the plush corgi, three Rare wing cosmetics, an Armor HUD row, cleaner pings and a set of shop, HUD and multiplayer fixes ([details](release-notes/v0.7.12.md)).
 
@@ -149,26 +149,23 @@ the result through the game's normal sync.
 Level economy events also avoid clashing with the surprise modifiers already on the level (for example no
 pay cut together with *Money Loss on Death*, no heavy quota on a *Timed Level*).
 
-#### Shop upgrades (via REPOLib)
+#### Skill tree and shop upgrades (via REPOLib)
 
-All of these are sold in the normal shop. Prices are approximate (the game scales them with player
-count) and, like every number below, are configurable.
+**Skill tree (0.8.0).** The personal upgrades are perks in a skill tree: press **K** during a run, or use
+**SKILL TREE** in the Esc menu. Click a perk to learn a level; each perk needs the one before it. Points are spent
+only in the shop or truck (the host checks every purchase), and **Refund All** returns them for $10K.
 
-**Personal upgrades** - each player buys and levels their own:
+- **Points:** the shop's **Skill Point** upgrade (at least one per shop, rising price) and some quests.
+- **Pages:** Recon (map, ping, flashlight), Combat (melee / grenade / tumble damage, gun shots, drones,
+  Overcharge), Survival (stamina, Second Wind, Armor, HP regeneration), Utility (inventory slots, Autoscan, vanilla
+  Death Head Battery and Tumble Wings), Arsenal (damage per weapon, longer status effects) and Contracts
+  (quest-only perks from special contract quests: Cart Handling, Gentle Hands, Calm Presence, Soft Steps).
+- **Old saves:** bought upgrades are converted into matching perks the first time a save loads.
+- The full design, costs and balance are in [docs/skill-tree-plan.md](docs/skill-tree-plan.md). Every number is in
+  the `Skill Tree` and `Player Upgrades` config sections.
 
-| Upgrade | Levels | What it does |
-| --- | --- | --- |
-| **Slower Stamina Use** | 5 | Each level multiplies sprint stamina drain by 0.95 (compounding), so it approaches zero but never reaches it. ~4,000 |
-| **HP Regeneration** | 3 | Heals about 0.07% of max HP per second per level, but only until you are back to 30% of max HP - it is an emergency trickle, not a full heal. ~20,000 |
-| **Death Protection** | 1 charge | Survive one lethal hit with 1 HP. The charge is spent when it saves you; re-buy to restore it. ~50,000 |
-| **Drone Battery Life** | 20 | Your drones' batteries last 5% longer per level (up to +100%). ~6,000 |
-| **Melee Damage** | 10 | Your melee weapons deal 5% more damage to monsters per level (up to +50%). ~7,000 |
-| **Grenade Damage** | 10 | Grenades you throw deal 5% more damage to monsters per level (up to +50%). ~7,000 |
-| **Gun Extra Shots** (one per gun type: bullet / laser / tranq) | 5 each | More shots from every battery charge, scaled to the gun's own ammo: the Handgun gets +1 shot per level (`GunExtraBulletsPerLevel`), and every other gun gets the same share of its own battery, so guns with fewer shots per charge (like the shotgun) get proportionally less and every gun gains the same percentage. Laser: Photon Blaster, Pulse Pistol, Boltzap and the Wizard Staff. Tranq: Tranq Gun, Ice, Poison and Sticky pistols and the Net Launcher. Bullet: every other gun. Battery bars grow in the same proportion. Spritz is a single-use item and is not affected. ~6,000 |
-| **Autoscan** | 5 | Automatically discovers valuables around you every second, 5 m further per level (5-25 m). ~8,000 |
-| **Map Suite** | 10 | One upgrade, ten map features: L1 alive-player count, L2 dead-player count, L3 active monsters, L4 respawning monsters, L5 quota heading and valuable tracker (found/total, haul), L6 team pings on the map, L7-L8 zoom the map out (zoom keys `-` / `=`), L9 cosmetic-box tracker, L10 monsters as dots. Replaces the vanilla *Map Player Count* upgrade by default. ~15,000 for the first level |
-| **Ping Info** | 1 | Addon for Ping Anywhere: adds valuable prices, rarity and exact target names. Cannot place pings alone. ~6,000 |
-| **Ping Anywhere** | 1 | Unlocks team pings for players, monsters, valuables, carts, items and surfaces (limited live markers). ~6,000 |
+**Still sold in the shop:** the Skill Point and Death Protection (1 charge: survive one lethal hit with 1 HP; re-buy
+after it saves you, ~50,000).
 
 **Truck upgrades** - bought once, they apply to the whole team:
 
@@ -277,7 +274,8 @@ only on a successful extraction.
 | Hide / show Level Info | `F8` | Level Info |
 | Reset local audio and voice | `Left Ctrl + F9` | Voice Recovery |
 | Spectator map (hold) | `Tab` | Spectator Map |
-| Map zoom in / out (Map Suite L7+) | `-` / `=` | Player Upgrades |
+| Map zoom in / out (Map Zoom perks) | `-` / `=` | Player Upgrades |
+| Open / close the skill tree | `K` (pages `1`–`6`, `Q` / `E`) | Skill Tree |
 | Map vote | `NumPad 1–6` or click | Map Vote |
 | Extra inventory slots | `4`–`7` | Inventory Slots |
 
@@ -385,7 +383,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.7.12`
+- **Версия:** `0.8.0`
 
 В 0.7.12 добавлены плюшевый корги, три редких крыла, строка брони на HUD, более чистые пинги и исправления магазина, HUD и мультиплеера ([подробности](release-notes/v0.7.12.md)).
 
@@ -520,26 +518,23 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 События экономики уровня также избегают конфликтов с уже выпавшими модификаторами (например, нет
 урезанной оплаты вместе с *Money Loss on Death* и тяжёлой квоты на *Timed Level*).
 
-#### Улучшения в магазине (через REPOLib)
+#### Дерево навыков и улучшения в магазине (через REPOLib)
 
-Всё продаётся в обычном магазине. Цены примерные (игра сама масштабирует их по числу игроков) и,
-как и все числа ниже, настраиваются.
+**Дерево навыков (0.8.0).** Личные улучшения стали перками дерева навыков: нажми **K** во время забега или
+кнопку **SKILL TREE** в меню Esc. Нажми на перк, чтобы изучить уровень; каждому перку нужен предыдущий. Очки
+тратятся только в магазине или грузовике (каждую покупку проверяет хост), а **Refund All** возвращает их за $10K.
 
-**Личные улучшения** - каждый игрок покупает и качает свои:
+- **Очки:** улучшение **Skill Point** в магазине (хотя бы одно в каждом магазине, цена растёт) и некоторые задания.
+- **Страницы:** Разведка (карта, пинг, фонарик), Бой (урон в ближнем бою, гранатами и кувырком, выстрелы, дроны,
+  Overcharge), Выживание (выносливость, Second Wind, броня, регенерация HP), Снаряжение (слоты инвентаря, Autoscan,
+  ванильные Death Head Battery и Tumble Wings), Арсенал (урон каждого оружия, более долгие статусы) и Контракты
+  (перки только из особых заданий-контрактов: Cart Handling, Gentle Hands, Calm Presence, Soft Steps).
+- **Старые сохранения:** купленные улучшения переводятся в подходящие перки при первой загрузке сохранения.
+- Полный дизайн, стоимость и баланс — в [docs/skill-tree-plan.md](docs/skill-tree-plan.md). Все числа настраиваются
+  в разделах конфига `Skill Tree` и `Player Upgrades`.
 
-| Улучшение | Уровни | Что делает |
-| --- | --- | --- |
-| **Slower Stamina Use** | 5 | Каждый уровень умножает расход выносливости на бег на 0,95 (с накоплением): расход стремится к нулю, но не достигает его. ~4 000 |
-| **HP Regeneration** | 3 | Лечит около 0,07% максимума здоровья в секунду за уровень, но только пока здоровье не поднимется до 30% от максимума - это аварийная струйка, а не полное лечение. ~20 000 |
-| **Death Protection** | 1 заряд | Переживаешь один смертельный удар с 1 HP. Заряд тратится, когда он тебя спас; купи снова, чтобы восстановить. ~50 000 |
-| **Drone Battery Life** | 20 | Батареи твоих дронов служат на 5% дольше за уровень (до +100%). ~6 000 |
-| **Melee Damage** | 10 | Твоё оружие ближнего боя наносит монстрам на 5% больше урона за уровень (до +50%). ~7 000 |
-| **Grenade Damage** | 10 | Твои гранаты наносят монстрам на 5% больше урона за уровень (до +50%). ~7 000 |
-| **Gun Extra Shots** (своё на каждый тип оружия: пули / лазер / транквилизатор) | по 5 | Больше выстрелов с каждого заряда с учётом собственного боезапаса оружия: Handgun получает +1 выстрел за уровень (`GunExtraBulletsPerLevel`), остальное оружие — ту же долю своей батареи, поэтому оружие с меньшим числом выстрелов на заряд (например, дробовик) получает пропорционально меньше, а прирост в процентах у всех одинаковый. Лазер: Photon Blaster, Pulse Pistol, Boltzap и Wizard Staff. Транквилизатор: Tranq Gun, ледяной, ядовитый и липкий пистолеты и Net Launcher. Пули: всё остальное оружие. Деления батареи растут в той же пропорции. Spritz — одноразовый предмет, улучшение на него не действует. ~6 000 |
-| **Autoscan** | 5 | Раз в секунду находит ценности вокруг, на 5 м дальше за уровень (5-25 м). ~8 000 |
-| **Map Suite** | 10 | Одно улучшение, десять функций карты: L1 число живых игроков, L2 число мёртвых, L3 активные монстры, L4 возрождающиеся монстры, L5 направление к квоте и трекер ценностей (найдено/всего, добыча), L6 командные пинги на карте, L7-L8 отдаление карты (клавиши `-` / `=`), L9 трекер косметических ящиков, L10 монстры точками. По умолчанию заменяет ванильное *Map Player Count*. ~15 000 за первый уровень |
-| **Ping Info** | 1 | Дополнение к Ping Anywhere: стоимость, редкость и точные названия. Само по себе не позволяет пинговать. ~6 000 |
-| **Ping Anywhere** | 1 | Открывает пинги игроков, монстров, ценностей, тележек, предметов и поверхностей. ~6 000 |
+**По-прежнему продаются в магазине:** Skill Point и Death Protection (1 заряд: переживаешь один смертельный удар
+с 1 HP; после срабатывания купи снова, ~50 000).
 
 **Улучшения грузовика** - покупаются один раз и действуют на всю команду:
 
@@ -646,7 +641,8 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 | Скрыть / показать Level Info | `F8` | Level Info |
 | Сбросить локальный звук и голос | `Left Ctrl + F9` | Voice Recovery |
 | Карта наблюдателя (удержание) | `Tab` | Spectator Map |
-| Зум карты + / − (Map Suite ур. 7+) | `-` / `=` | Player Upgrades |
+| Зум карты + / − (перки Map Zoom) | `-` / `=` | Player Upgrades |
+| Открыть / закрыть дерево навыков | `K` (страницы `1`–`6`, `Q` / `E`) | Skill Tree |
 | Голосование за карту | `NumPad 1–6` или мышь | Map Vote |
 | Дополнительные слоты | `4`–`7` | Inventory Slots |
 

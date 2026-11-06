@@ -93,5 +93,20 @@ internal sealed class WheeledSpawnPose:MonoBehaviour
         if(body==null||grab==null)yield break;
         WheeledPropPhysics.AlignAtSpawn(body);
         grab.Teleport(body.position,body.rotation);
+        // Settling after spawn (a slope, a ledge, a neighbour's collider) can still tip it onto its nose or side.
+        // For the first seconds, while nobody holds it, a tipped prop is set back on its wheels once it is still.
+        float until=Time.time+5f;int fixes=0;
+        while(Time.time<until&&fixes<3&&this!=null&&body!=null)
+        {
+            yield return new WaitForSeconds(.5f);
+            if(body==null||body.isKinematic||grab.grabbed)continue;
+            float tilt=Vector3.Angle(body.transform.up,Vector3.up);
+            if(tilt<35f||body.velocity.sqrMagnitude>.05f||body.angularVelocity.sqrMagnitude>.2f)continue;
+            body.velocity=Vector3.zero;body.angularVelocity=Vector3.zero;
+            WheeledPropPhysics.AlignAtSpawn(body);
+            grab.Teleport(body.position,body.rotation);
+            fixes++;
+            Plugin.Log.LogInfo($"[Valuables] {name} tipped {tilt:0} deg after spawning at {body.position}; set upright.");
+        }
     }
 }

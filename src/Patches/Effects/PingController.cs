@@ -87,6 +87,7 @@ internal static class PingController
         if (TryAim(ray, maxDist, out hit))
         {
             ClassifyHit(hit, info, out type, out pos, out physGrab, out label);
+            label = AddSkillInfo(label, type, hit.collider, physGrab);
         }
         else
         {
@@ -105,7 +106,7 @@ internal static class PingController
             }
             else
             {
-                Announce("Requires 'Ping Anywhere' upgrade", Color.gray, "");
+                Announce("Requires the Ping Anywhere perk", Color.gray, "");
                 return;
             }
         }
@@ -325,11 +326,13 @@ internal static class PingController
             PingOutline.Create(physGrab, pos, tint, duration);
         if (type == PingType.Location) graphic.AttachBeacon(duration);
         else if (type == PingType.Enemy) graphic.UseReticle();
-        else if (kind != WeaponKind.None && kind != WeaponKind.Soul) graphic.UseWeaponCallout(kind, contour: kind != WeaponKind.Upgrade && kind != WeaponKind.Drone);
-        // Loot, carts and vehicles get no silhouette outline (locator arrow and underglow only). Souls get only
-        // the underglow and their red-velvet aura (HeroAura soul style), nothing on screen.
+        // No pinged object gets a silhouette outline: weapons, upgrades and drones get their icon callout, and
+        // every object (loot, items, carts, vehicles, cosmetic boxes too) the locator arrow and underglow.
+        if (type != PingType.Location && type != PingType.Enemy && kind != WeaponKind.None && kind != WeaponKind.Soul)
+            graphic.UseWeaponCallout(kind, contour: false);
+        // Souls get only the underglow and their red-velvet aura (HeroAura soul style), nothing on screen.
         if (kind == WeaponKind.Soul) graphic.HideMarker();
-        else if (type is PingType.Valuable or PingType.Cart or PingType.Scooter) graphic.HideContour();
+        else if (player == null && physGrab != null && type != PingType.Enemy) graphic.HideContour();
         // Neon underglow in the ping colour for physical objects (loot, items, carts...), not monsters/players.
         if (physGrab != null && player == null && type != PingType.Enemy && type != PingType.Location)
             PingUnderglow.Attach(physGrab, tint, duration, graphic);
@@ -539,6 +542,32 @@ internal static class PingController
 
     private static bool OwnsPingAnywhere() => PingUpgrades.OwnsPingAnywhere();
     private static bool OwnsPingInfo() => PingUpgrades.OwnsPingInfo();
+
+    // Skill tree Ping add-ons, decided by the player who pings: the extra facts ride along in the label,
+    // so every teammate sees them on that ping.
+    private static string AddSkillInfo(string label, PingType type, Collider collider, PhysGrabObject physGrab)
+    {
+        var parts = new List<string>(3);
+        if (type == PingType.Enemy)
+        {
+            var enemy = collider != null ? collider.GetComponentInParent<EnemyParent>() : null;
+            if (enemy == null && physGrab != null) enemy = physGrab.GetComponentInParent<EnemyParent>();
+            var health = enemy != null && enemy.Enemy != null && enemy.Enemy.HasHealth ? enemy.Enemy.Health : null;
+            if (health != null && PingUpgrades.OwnsEnemyHp())
+                parts.Add($"HP {Mathf.Max(0, health.healthCurrent)}/{Mathf.Max(1, health.health)}");
+            if (enemy != null && PingUpgrades.OwnsThreat())
+                parts.Add($"Tier {(int)enemy.difficulty + 1}");
+        }
+        else if (type == PingType.Valuable && PingUpgrades.OwnsLootCondition())
+        {
+            var valuable = physGrab != null ? physGrab.GetComponent<ValuableObject>() : collider != null ? collider.GetComponentInParent<ValuableObject>() : null;
+            if (valuable != null && valuable.dollarValueOriginal > 0f)
+                parts.Add($"{Mathf.Clamp(Mathf.RoundToInt(100f * valuable.dollarValueCurrent / valuable.dollarValueOriginal), 0, 100)}% value");
+        }
+        if (type != PingType.Enemy && type != PingType.Player && type != PingType.Location && physGrab != null && physGrab.rb != null && PingUpgrades.OwnsWeight())
+            parts.Add($"{physGrab.rb.mass:0.#} kg");
+        return parts.Count == 0 ? label : label + " | " + string.Join(" | ", parts);
+    }
     // True when the local player owns at least one ping upgrade (the gate for pinging at all).
 
 
@@ -550,7 +579,7 @@ internal static class PingController
         return "You";
     }
 
-    private static string Clean(string name)
+    internal static string Clean(string name)
     {
         if (string.IsNullOrEmpty(name))
             return "Object";

@@ -49,14 +49,24 @@ internal static class MapUpgrade
         });
     }
 
-    /// <summary>The LOCAL player's current Map Suite level (0 if unowned).</summary>
+    /// <summary>
+    /// How many of the old Map Suite features the LOCAL player has unlocked in the skill tree (0 = none).
+    /// The features are separate Map perks now, so check each one with <see cref="Feature"/>.
+    /// </summary>
     internal static int LocalLevel()
     {
-        var avatar = SemiFunc.PlayerAvatarLocal();
-        if (avatar == null)
-            return 0;
-        var up = RepoUpgrades.GetUpgrade(Id);
-        return up != null ? up.GetLevel(avatar.steamID) : 0;
+        int owned = 0;
+        for (int feature = 1; feature <= Levels; feature++) if (Feature(feature)) owned++;
+        return owned;
+    }
+
+    /// <summary>Old ladder feature N (1 = live players ... 10 = monster dots) is unlocked by its Map perk.</summary>
+    internal static bool Feature(int n)
+    {
+        if (n < 1 || n > Skills.SkillMigration.MapLadder.Length) return false;
+        foreach (var node in Skills.SkillMigration.MapLadder[n - 1])
+            if (!Skills.SkillEffects.LocalHas(node)) return false;
+        return true;
     }
 
     /// <summary>
@@ -139,7 +149,7 @@ internal static class MapUpgrade
         // configured keys plus the natural alternates ([ / ] and the keypad +/-) so any layout works.
         private static void HandleZoomKeys(int level)
         {
-            if (level < 7)
+            if (!Feature(7))
                 return;
 
             bool zoomIn = Input.GetKeyDown(ModConfig.MapZoomInKey.Value)
@@ -162,10 +172,10 @@ internal static class MapUpgrade
         // zoom-hotkey offset is layered on top and clamped to a sane FOV range.
         private static void ApplyZoom(int level)
         {
-            if (level < 7 || CameraZoom.Instance == null)
+            if (!Feature(7) || CameraZoom.Instance == null)
                 return;
 
-            float fov = level >= 8 ? ModConfig.MapZoomFovLevel8.Value : ModConfig.MapZoomFovLevel7.Value;
+            float fov = Feature(8) ? ModConfig.MapZoomFovLevel8.Value : ModConfig.MapZoomFovLevel7.Value;
             fov = Mathf.Clamp(fov + _zoomOffset, 30f, 140f);
             CameraZoom.Instance.OverrideZoomSet(fov, 0.1f, 2f, 2f, CameraZoom.Instance.gameObject, 99);
         }
@@ -187,14 +197,14 @@ internal static class MapUpgrade
                     else
                         alive++;
                 }
-                if (level >= 1)
+                if (Feature(1))
                     sb.Append("Players alive: ").Append(alive).Append('\n');
-                if (level >= 2)
+                if (Feature(2))
                     sb.Append("Players dead: ").Append(dead > 0 ? $"<color=#FF4545>{dead}</color>" : "0").Append('\n');
             }
 
             var enemyDir = EnemyDirector.instance;
-            if (enemyDir != null && enemyDir.enemiesSpawned != null && (level >= 3 || level >= 4))
+            if (enemyDir != null && enemyDir.enemiesSpawned != null && (Feature(3) || Feature(4)))
             {
                 int active = 0, respawning = 0;
                 foreach (var ep in enemyDir.enemiesSpawned)
@@ -206,17 +216,17 @@ internal static class MapUpgrade
                     else
                         respawning++;
                 }
-                if (level >= 3)
+                if (Feature(3))
                     sb.Append("Monsters active: ").Append(active).Append('\n');
-                if (level >= 4)
+                if (Feature(4))
                     sb.Append("Monsters respawning: ").Append(respawning).Append('\n');
             }
 
-            if (level >= 5)
-            {
+            // Quota Heading and Valuable Tracker are separate perks now (both were old level 5).
+            if (Skills.SkillEffects.LocalHas(Skills.SkillCatalog.QuotaHeading))
                 sb.Append(BuildQuotaLine()).Append('\n');
+            if (Skills.SkillEffects.LocalHas(Skills.SkillCatalog.ValuableTracker))
                 sb.Append(BuildValuableLines());
-            }
 
             return sb.ToString().TrimEnd('\n');
         }
@@ -346,11 +356,10 @@ internal static class MapUpgrade
                 return;
             }
 
-            int level = LocalLevel();
 
             // L6: mirror active pings onto the map. Runs every frame (unthrottled) so the proxies
             // track moving pings smoothly and expired pings are cleared promptly.
-            if (level >= 6)
+            if (Feature(6))
                 UpdatePingMarkers();
             else
                 ClearPingMarkers();
@@ -361,15 +370,15 @@ internal static class MapUpgrade
                 return;
             _timer = SweepInterval;
 
-            if (level < 9)
+            if (!Feature(9) && !Feature(10))
                 return;
 
             if (MarkerSprite() == null)
                 return;
 
-            if (level >= 9)
+            if (Feature(9))
                 SweepCosmetics();
-            if (level >= 10)
+            if (Feature(10))
                 SweepMonsters();
         }
 

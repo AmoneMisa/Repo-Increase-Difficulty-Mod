@@ -42,7 +42,10 @@ internal sealed class RoundLootLedger
         if (!_items.TryGetValue(id, out var entry))
             _items[id] = entry = new Entry { Original = Math.Max(0, original), Initial = initial && !soul, Soul = soul };
         else if (!_sealed && !entry.Collected)
+        {
             entry.Original = Math.Max(0, original); // generation-time value multipliers settle before sealing
+            entry.Initial |= initial && !soul;      // registered before it was known to be starting loot
+        }
     }
 
     internal void SealInitial() => _sealed = true;

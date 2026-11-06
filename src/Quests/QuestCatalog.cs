@@ -18,6 +18,8 @@ public sealed class QuestContext
     public int Towers;                     // extraction points that can host the moon's judging
     public int HaulGoal;                   // RoundDirector.haulGoal for extraction quests
     public int ValuableCount;              // how many ValuableObjects are on the level (intact-extract gating)
+    public string CrownJewel;              // display name of the level's most valuable item (Crown Jewel quest)
+    public int CrownJewelValue;            // its original dollar value
     public readonly List<string> EnemyNames = new();
     public readonly List<int> EnemyTiers = new();  // distinct EnemyParent.Difficulty indices present
 }
@@ -51,8 +53,28 @@ public static class QuestCatalog
     private static readonly StatKind[] TempStatPool =
         { StatKind.Stamina, StatKind.SprintSpeed, StatKind.ExtraJump, StatKind.GrabStrength };
 
+    /// <summary>Skill points a finished quest of this rank pays, on top of its normal reward.</summary>
+    public static int SkillPointsFor(QuestRank rank) =>
+        Mathf.Max(0, rank >= QuestRank.SS ? ModConfig.QuestSkillPointsHighRank.Value : ModConfig.QuestSkillPoints.Value);
+
+    /// <summary>Chance that a quest of this rank comes with skill points: the base chance, +5% per rank, at most 75%.</summary>
+    public static float SkillPointChance(QuestRank rank) =>
+        Mathf.Clamp(ModConfig.QuestSkillPointChance.Value + .05f * (int)rank, 0f, .75f);
+
+    // Only some quests give skill points (more often at higher ranks); funny ones and contracts never do.
+    private static int RollSkillPoints(ActiveQuest q) =>
+        q.Category == QuestCategory.Funny || q.Special || Random.value >= SkillPointChance(q.Rank) ? 0 : SkillPointsFor(q.Rank);
+
     private static void AssignReward(ActiveQuest q, QuestContext ctx)
     {
+        q.RewardPoints = RollSkillPoints(q);
+        // Funny quests pay a little cash and nothing fancy.
+        if (q.Category == QuestCategory.Funny)
+        {
+            q.RewardType = RewardType.Money;
+            q.RewardAmount = Mathf.Max(100, Mathf.RoundToInt(MoneyReward(ctx) * .5f / 100f) * 100);
+            return;
+        }
         // Easy quests (below rank C) always pay cash. From C upward a "special" reward becomes
         // possible, with tighter gates on the fancier payouts:
         //   - upgrade items (random + tiered): rank C+
@@ -125,6 +147,21 @@ public static class QuestCatalog
             builders.Add(() => BuildSoulExtract(ctx));
         if (ctx.HaulGoal > 0)
             builders.Add(() => BuildExtractionRush(ctx));
+        builders.Add(() => BuildHatTrick(ctx, special: false));
+        builders.Add(() => BuildFastOpener(ctx, special: false));
+        builders.Add(() => BuildLightsOut(ctx));
+        if (!string.IsNullOrEmpty(ctx.CrownJewel))
+            builders.Add(() => BuildCrownJewel(ctx, special: false));
+        // Funny ones: at most one per level (see the loop below).
+        if (ModConfig.QuestFunnyEnabled.Value)
+        {
+            builders.Add(() => BuildOops(ctx));
+            builders.Add(() => BuildRagdollOlympics(ctx));
+            builders.Add(() => BuildTalkItOut(ctx));
+            builders.Add(() => BuildBallerina(ctx));
+            builders.Add(() => BuildPayRespects(ctx));
+            builders.Add(() => BuildMonsterHugger(ctx));
+        }
 
         if (ctx.EnemyNames.Count > 0)
             builders.Add(() => BuildKillType(ctx));
@@ -157,14 +194,161 @@ public static class QuestCatalog
                 continue;
             if (result.Exists(existing => existing.Signature() == sig))
                 continue;
+            if (q.Category == QuestCategory.Funny && result.Exists(existing => existing.Category == QuestCategory.Funny))
+                continue;
 
             AssignReward(q, ctx);
             q.Id = result.Count + 1;
             result.Add(q);
         }
 
+        // Special contract: a harder extra quest that rewards a quest-only skill tree perk.
+        if (ModConfig.PlayerUpgradesEnabled.Value && Random.value < ModConfig.QuestContractChance.Value)
+        {
+            var contract = BuildContract(ctx, usedSignatures, result);
+            if (contract != null)
+            {
+                contract.Id = result.Count + 1;
+                result.Add(contract);
+            }
+        }
+
         return result;
     }
+
+    private static ActiveQuest BuildContract(QuestContext ctx, HashSet<string> used, List<ActiveQuest> taken)
+    {
+        var options = new List<System.Func<ActiveQuest>>
+        {
+            () => Harder(BuildKillAny(ctx), 1.6f, q => $"Kill {q.Target} enemies"),
+            () => BuildHatTrick(ctx, special: true),
+            () => BuildFastOpener(ctx, special: true),
+        };
+        if (ctx.ValuableCount > 0) options.Add(() => Harder(BuildIntactExtract(ctx), 1.5f, q => $"Extract {q.Target} valuables undamaged"));
+        if (!string.IsNullOrEmpty(ctx.CrownJewel)) options.Add(() => BuildCrownJewel(ctx, special: true));
+        if (ctx.HaulGoal > 0) options.Add(() => BuildExtractionRush(ctx));
+        int perks = 0;
+        foreach (var node in Skills.SkillCatalog.All) if (node.QuestOnly) perks++;
+        while (options.Count > 0 && perks > 0)
+        {
+            int pick = Random.Range(0, options.Count);
+            var q = options[pick]();
+            options.RemoveAt(pick);
+            if (q == null) continue;
+            string sig = q.Signature();
+            if (used.Contains(sig) || taken.Exists(t => t.Signature() == sig)) continue;
+            q.Special = true;
+            q.Title = "CONTRACT: " + q.Title;
+            q.RewardType = RewardType.QuestPerk;
+            q.RewardAmount = 1;
+            q.RewardPoints = 0;
+            q.RewardPerk = Random.Range(0, perks);
+            return q;
+        }
+        return null;
+    }
+
+    private static ActiveQuest Harder(ActiveQuest q, float factor, System.Func<ActiveQuest, string> title)
+    {
+        if (q == null) return null;
+        q.Target = Mathf.Max(q.Target + 1, Mathf.RoundToInt(q.Target * factor));
+        q.Title = title(q);
+        return q;
+    }
+
+    // ---- newer quests -----------------------------------------------------------------------------------
+
+    private static ActiveQuest BuildHatTrick(QuestContext ctx, bool special)
+    {
+        int kills = special ? 4 : 3;
+        int seconds = Mathf.Max(8, (special ? 14 : 20) - (int)ctx.Rank);
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team, Category = QuestCategory.Combat, Objective = ObjectiveType.HatTrick, Rank = ctx.Rank,
+            Target = kills, Param = seconds.ToString(),
+            Title = $"Hat trick: kill {kills} monsters within {seconds} seconds",
+        };
+    }
+
+    private static ActiveQuest BuildCrownJewel(QuestContext ctx, bool special) => new()
+    {
+        Scope = QuestScope.Team, Category = QuestCategory.Extraction, Objective = ObjectiveType.CrownJewel, Rank = ctx.Rank,
+        Target = 1, Param = special ? "100" : "75",
+        Title = special ? $"Crown jewel: extract the {ctx.CrownJewel} (${ctx.CrownJewelValue / 1000f:0.#}K) without a scratch"
+                        : $"Crown jewel: extract the {ctx.CrownJewel} (${ctx.CrownJewelValue / 1000f:0.#}K) with 75% of its value",
+    };
+
+    private static ActiveQuest BuildFastOpener(QuestContext ctx, bool special)
+    {
+        int seconds = Mathf.Max(special ? 120 : 150, (special ? 210 : 300) - 15 * (int)ctx.Rank);
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team, Category = QuestCategory.Extraction, Objective = ObjectiveType.FastOpener, Rank = ctx.Rank,
+            Target = seconds, Param = seconds.ToString(),
+            Title = $"Fast opener: close the first extraction within {seconds / 60}:{seconds % 60:00}",
+        };
+    }
+
+    private static ActiveQuest BuildLightsOut(QuestContext ctx)
+    {
+        int seconds = 120 + 30 * Mathf.Max(0, ctx.Players - 1);
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team, Category = QuestCategory.Environment, Objective = ObjectiveType.LightsOut, Rank = ctx.Rank,
+            Target = seconds,
+            Title = $"Lights out: explore with flashlights off for {seconds / 60}:{seconds % 60:00} in total",
+        };
+    }
+
+    private static ActiveQuest BuildOops(QuestContext ctx)
+    {
+        int dollars = Mathf.Max(1000, Mathf.RoundToInt(ctx.HaulGoal * .08f / 500f) * 500);
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team, Category = QuestCategory.Funny, Objective = ObjectiveType.Oops, Rank = ctx.Rank,
+            Target = dollars, Title = $"Oops! Smash ${dollars / 1000f:0.#}K worth of valuables (we will not tell anyone)",
+        };
+    }
+
+    private static ActiveQuest BuildRagdollOlympics(QuestContext ctx)
+    {
+        int tumbles = 8 + 4 * Mathf.Max(0, ctx.Players - 1);
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team, Category = QuestCategory.Funny, Objective = ObjectiveType.RagdollOlympics, Rank = ctx.Rank,
+            Target = tumbles, Title = $"Ragdoll Olympics: tumble {tumbles} times",
+        };
+    }
+
+    private static ActiveQuest BuildTalkItOut(QuestContext ctx)
+    {
+        int seconds = ctx.Players <= 1 ? 30 : 45 + 15 * (ctx.Players - 1);
+        return new ActiveQuest
+        {
+            Scope = QuestScope.Team, Category = QuestCategory.Funny, Objective = ObjectiveType.TalkItOut, Rank = ctx.Rank,
+            Target = seconds,
+            Title = ctx.Players <= 1 ? $"Talk it out: talk to yourself for {seconds} seconds (totally normal)"
+                                     : $"Talk it out: chat for {seconds} seconds in total",
+        };
+    }
+
+    private static ActiveQuest BuildBallerina(QuestContext ctx) => new()
+    {
+        Scope = QuestScope.Team, Category = QuestCategory.Funny, Objective = ObjectiveType.Ballerina, Rank = ctx.Rank,
+        Target = 1, Title = "Ballerina: spin around 5 times within 6 seconds",
+    };
+
+    private static ActiveQuest BuildPayRespects(QuestContext ctx) => new()
+    {
+        Scope = QuestScope.Team, Category = QuestCategory.Funny, Objective = ObjectiveType.PayRespects, Rank = ctx.Rank,
+        Target = 1, Title = "Pay respects: crouch for 3 seconds where a monster died",
+    };
+
+    private static ActiveQuest BuildMonsterHugger(QuestContext ctx) => new()
+    {
+        Scope = QuestScope.Team, Category = QuestCategory.Funny, Objective = ObjectiveType.MonsterHugger, Rank = ctx.Rank,
+        Target = 8, Title = "Monster hugger: stand right next to a living monster for 8 seconds",
+    };
 
     public static ActiveQuest BuildPersonal(QuestContext ctx)
     {
@@ -181,6 +365,7 @@ public static class QuestCatalog
         };
         q.RewardType = RewardType.Money;
         q.RewardAmount = MoneyReward(ctx);
+        q.RewardPoints = RollSkillPoints(q);
         q.Id = 100;
         return q;
     }

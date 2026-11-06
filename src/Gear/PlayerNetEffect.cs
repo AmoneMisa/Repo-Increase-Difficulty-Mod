@@ -88,7 +88,7 @@ internal sealed class PlayerNetEffect : MonoBehaviour
         }
         if (!IsLocal) return;
         // HUD toolkit status line, refreshed every frame while it lasts.
-        Hud.HudNotify.Status("ihm.netted", $"NETTED  {remaining:0.0}s", Hud.HudStyle.Caution);
+        Hud.HudConditions.Refresh(Hud.PlayerCondition.Netted, remaining);
     }
 
     private Bounds VisualBounds()
@@ -101,7 +101,7 @@ internal sealed class PlayerNetEffect : MonoBehaviour
     {
         Active.Remove(this);
         if (_net != null) { _net.Release(false); _net = null; }
-        if (IsLocal) Hud.HudNotify.Clear("ihm.netted");
+        if (IsLocal) Hud.HudConditions.End(Hud.PlayerCondition.Netted);
     }
 
     private void OnDestroy() => OnDisable();

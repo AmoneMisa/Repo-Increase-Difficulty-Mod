@@ -104,7 +104,7 @@ internal sealed class PingOutline : MaskableGraphic
 
     internal void UseWeaponCallout(WeaponKind kind, bool contour = true)
     {
-        _noContour = !contour; // upgrades and drones: callout only, no silhouette border
+        _noContour = !contour; // callout only, no silhouette border (every ping kind now)
         var go = new GameObject("Weapon Icon", typeof(RectTransform), typeof(CanvasRenderer));
         go.transform.SetParent(_root.transform, false);
         _calloutIcon = go.AddComponent<RawImage>();

@@ -16,6 +16,7 @@ public enum QuestCategory : byte
     Extraction = 1,
     Survival = 2,
     Environment = 3,
+    Funny = 4,        // silly side-quests: small reward, at most one per level, never skill points
 }
 
 /// <summary>
@@ -45,6 +46,16 @@ public enum ObjectiveType : byte
     StunEnemies = 16,   // stun N enemies (team)
     Revive = 17,        // revive N teammates (team)
     ExtractionRush = 18, // close every extraction point within Target seconds; Progress = elapsed seconds (team)
+    HatTrick = 19,       // kill Target monsters within Param seconds of each other; Progress = best streak (team)
+    CrownJewel = 20,     // extract the level's most valuable item with at least 75% of its value; Param = its name (team)
+    FastOpener = 21,     // close the first extraction point within Target seconds; Progress = elapsed seconds (team)
+    Oops = 22,           // (funny) break valuables worth Target dollars in total, on purpose or not (team)
+    RagdollOlympics = 23, // (funny) tumble Target times in total (team)
+    TalkItOut = 24,      // (funny) talk into voice chat for Target seconds in total (team)
+    Ballerina = 25,      // (funny) one player spins around 5 times within 6 seconds (team)
+    PayRespects = 26,    // (funny) crouch for 3 seconds where a monster died (team)
+    MonsterHugger = 27,  // (funny) spend Target seconds right next to living monsters (team)
+    LightsOut = 28,      // spend Target seconds in total with flashlights off while moving (team)
 }
 
 /// <summary>Which kind of weapon dealt the killing blow, for weapon-restricted quests.</summary>
@@ -71,6 +82,7 @@ public enum RewardType : byte
     TempStat = 4,      // grants every player a temporary stat buff for THIS level only
     ShopItem = 5,      // spawns a random general shop item (grenade/health-pack/tool/etc.)
     ExactUpgrade = 6,  // spawns a SPECIFIC upgrade item (chosen by RewardStat)
+    QuestPerk = 7,     // special contract: every player gets a level of a quest-only skill tree perk (RewardPerk)
 }
 
 /// <summary>
@@ -172,6 +184,9 @@ public sealed class ActiveQuest
     public StatKind RewardStat;    // which stat (TempStat reward only)
     public UpgradeTier RewardTier; // upgrade quality band (ExactUpgrade reward only)
     public string RewardItem = ""; // item display name once granted (for the HUD)
+    public int RewardPoints;       // skill points on top of the reward (only some quests have them)
+    public int RewardPerk = -1;    // QuestPerk reward: index into SkillCatalog.QuestPerks
+    public bool Special;           // a special contract: harder, and rewards a quest-only perk
     public string Title = "";      // human-readable objective line
     public bool Completed;
     public bool Failed;            // survival quests flip this on the disqualifying event

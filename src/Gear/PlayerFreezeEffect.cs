@@ -98,7 +98,7 @@ internal sealed class PlayerFreezeEffect : MonoBehaviour
         var controller = PlayerController.instance;
         if (controller == null || controller.playerAvatarScript != Avatar) return;
         // HUD toolkit status line, refreshed every frame while it lasts.
-        Hud.HudNotify.Status("ihm.frozen", $"FROZEN  {remaining:0.0}s", Hud.HudStyle.Ice);
+        Hud.HudConditions.Refresh(Hud.PlayerCondition.Frozen, remaining);
     }
 
     private List<Renderer> BodyRenderers(out Bounds bounds) => PlayerBody.Renderers(Avatar, out bounds);
@@ -110,7 +110,7 @@ internal sealed class PlayerFreezeEffect : MonoBehaviour
         _frost.Clear();
         _coated = false;
         if (_block != null) { _block.Thaw(); _block = null; }
-        if (IsLocalPlayer()) Hud.HudNotify.Clear("ihm.frozen");
+        if (IsLocalPlayer()) Hud.HudConditions.End(Hud.PlayerCondition.Frozen);
     }
 
     private void OnDestroy() => OnDisable();

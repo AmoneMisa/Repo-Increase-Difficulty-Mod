@@ -9,6 +9,13 @@ internal sealed class NativeHudPanel : MonoBehaviour
 {
     internal RectTransform Panel;
     internal Rect Viewport => _canvasRect.rect;
+
+    /// <summary>A screen y (pixels from the bottom) in this canvas's local coordinates (same space as Viewport).</summary>
+    internal float ScreenToLocalY(float screenY)
+    {
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRect, new Vector2(0f, screenY), null, out var point);
+        return point.y;
+    }
     internal bool HasCurrentOwner => _owner != null && _owner == HUDCanvas.instance;
     private RectTransform _canvasRect;
     private TMP_FontAsset _font;

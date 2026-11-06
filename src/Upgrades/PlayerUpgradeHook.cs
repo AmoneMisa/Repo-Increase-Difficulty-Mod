@@ -46,6 +46,14 @@ internal sealed class PlayerUpgradeHook : MonoBehaviour
         if (avatar == null || !SemiFunc.IsMasterClientOrSingleplayer())
             return;
 
+        // Items that give something other than a level (the Skill Point) handle themselves.
+        var custom = PlayerUpgradeRegistry.FindDefinition(UpgradeId);
+        if (custom?.OnUse != null)
+        {
+            custom.OnUse(avatar);
+            return;
+        }
+
         if (RepoUpgrades.TryGetUpgrade(UpgradeId, out var upgrade))
         {
             var definition = PlayerUpgradeRegistry.FindDefinition(UpgradeId);
@@ -75,6 +83,7 @@ internal sealed class PlayerUpgradeHook : MonoBehaviour
             var definition = PlayerUpgradeRegistry.FindDefinition(hook.UpgradeId);
             var upgrade = RepoUpgrades.GetUpgrade(hook.UpgradeId);
             if (avatar == null || definition == null || upgrade == null) return false;
+            if (definition.OnUse != null) return true; // no level, so no cap
             int current = TruckUpgrades.IsShared(hook.UpgradeId) ? TruckUpgrades.TeamLevel(hook.UpgradeId) : upgrade.GetLevel(avatar);
             if (current < definition.MaxLevel) return true;
             if (avatar.isLocal && MissionUI.instance != null && Time.unscaledTime >= _nextHint)

@@ -24,6 +24,8 @@ internal static class GearEffects
         public Enemy Enemy;
         public PlayerAvatar Shooter;
         public float Remaining;
+        // Damage per second: the full PoisonTotalDamage over this poison's own length (Fast Poison shortens it).
+        public float Rate;
         public float Carry;
         public float AggroTimer;
     }
@@ -68,9 +70,9 @@ internal static class GearEffects
 
     public static bool IsNetted(Enemy e) => e != null && Netted.ContainsKey(e);
 
-    private static void ApplyNet(Enemy enemy)
+    private static void ApplyNet(Enemy enemy, PlayerAvatar shooter)
     {
-        float seconds = ModConfig.NetSeconds.Value;
+        float seconds = Skills.SkillEffects.StatusSeconds(shooter, Skills.SkillEffects.Status.Net, ModConfig.NetSeconds.Value);
         if (!Netted.TryGetValue(enemy, out var net))
         {
             Netted[enemy] = net = new Net();
@@ -169,7 +171,7 @@ internal static class GearEffects
                 KeepAggressive(p, dt);
                 float step = Mathf.Min(dt, p.Remaining);
                 p.Remaining -= step;
-                p.Carry += rate * step;
+                p.Carry += (p.Rate > 0f ? p.Rate : rate) * step;
                 if (p.Carry >= 4f || (p.Remaining <= 0f && p.Carry > 0f))
                 {
                     // Round the final fraction so frame-time accumulation cannot lose the last
@@ -399,9 +401,17 @@ internal static class GearEffects
                     {
                         if (!Poisoned.TryGetValue(enemy.Health, out var p))
                             Poisoned[enemy.Health] = p = new Poison { Health = enemy.Health, Enemy = enemy };
-                        p.Remaining = ModConfig.PoisonSeconds.Value; // refresh, never stack
                         p.Shooter = SemiFunc.PlayerAvatarGetFromPhotonID(_shooterID);
+                        // Refresh, never stack. Fast Poison deals the same total in less time (never under 8 s).
+                        p.Remaining = Skills.SkillEffects.StatusSeconds(p.Shooter, Skills.SkillEffects.Status.Poison, ModConfig.PoisonSeconds.Value);
+                        p.Rate = ModConfig.PoisonTotalDamage.Value / Mathf.Max(0.1f, p.Remaining);
                         ModNetwork.BroadcastEnemyStatus(enemy, 0, p.Remaining);
+                    }
+                    else
+                    {
+                        // The bolt's direct damage already landed; show the hit player the toxic screen frame.
+                        var player = PlayerAtHit(hit.collider);
+                        if (player != null) ModNetwork.BroadcastPlayerStatus(player, ModNetwork.StatusPoisoned, PlayerPoisonScreenSeconds);
                     }
                     break;
                 }
@@ -409,7 +419,8 @@ internal static class GearEffects
                 {
                     if (enemy != null)
                     {
-                        float t = ModConfig.IceFreezeSeconds.Value;
+                        float t = Skills.SkillEffects.StatusSeconds(SemiFunc.PlayerAvatarGetFromPhotonID(_shooterID),
+                            Skills.SkillEffects.Status.Freeze, ModConfig.IceFreezeSeconds.Value);
                         enemy.Freeze(t);
                         Frozen[enemy] = Time.time + t;
                         ModNetwork.BroadcastEnemyStatus(enemy, 1, t);
@@ -426,10 +437,42 @@ internal static class GearEffects
                     TryPull(hit, _shooterID, __instance);
                     break;
                 case GearKind.Net:
-                    if (enemy != null) ApplyNet(enemy);
+                    if (enemy != null) ApplyNet(enemy, SemiFunc.PlayerAvatarGetFromPhotonID(_shooterID));
                     else ApplyPlayerNet(PlayerAtHit(hit.collider));
                     break;
             }
+        }
+    }
+
+    private const float PlayerPoisonScreenSeconds = 4f;
+
+    // Native tranq shots (Tranq Gun, Spritz) knock a hit player out; tell that player so their screen shows it.
+    // Host-side, after the native bullet resolved: the player nearest the hit point within a small radius.
+    [HarmonyPatch(typeof(ItemGun), "ShootBulletRPC")]
+    private static class TranqPlayerHit
+    {
+        [HarmonyPostfix]
+        private static void Postfix(ItemGun __instance, Vector3 _endPosition, bool _hit)
+        {
+            if (!_hit || __instance == null || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+            bool tranq = __instance.GetComponent<ItemGunTranq>() != null || __instance.GetComponent<SpritzDose>() != null;
+            if (!tranq || __instance.GetComponent<GearGun>() != null) return;
+            PlayerAvatar target = null;
+            float best = .6f * .6f;
+            foreach (var player in SemiFunc.PlayerGetList())
+            {
+                if (player == null || player.isDisabled) continue;
+                var body = player.PlayerVisionTarget != null ? player.PlayerVisionTarget.VisionTransform.position : player.transform.position + Vector3.up;
+                float d = Mathf.Min((player.transform.position + Vector3.up * .5f - _endPosition).sqrMagnitude, (body - _endPosition).sqrMagnitude);
+                if (d < best) { best = d; target = player; }
+            }
+            if (target == null) return;
+            // Only when the shot really knocks players out (stun or tumble on its hit collider); the screen
+            // lasts as long as that knock-out.
+            var hurt = __instance.bulletPrefab != null ? __instance.bulletPrefab.GetComponentInChildren<HurtCollider>(true) : null;
+            float knockOut = hurt != null ? Mathf.Max(hurt.playerStunTime, hurt.playerTumbleTime) : 0f;
+            if (knockOut <= 0f) return;
+            ModNetwork.BroadcastPlayerStatus(target, ModNetwork.StatusSedated, Mathf.Clamp(knockOut, 1.5f, 15f));
         }
     }
 

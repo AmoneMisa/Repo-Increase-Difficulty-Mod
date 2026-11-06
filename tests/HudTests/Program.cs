@@ -126,24 +126,31 @@ foreach(float width in new[]{533f,712f,933f})
     HaulUI.instance.uiText.textBounds=new(){min=new(width/2-100,188),max=new(width/2-15,199)};
     LevelUI.instance.uiText.textBounds=LevelUI.instance.textNumber.textBounds=
         new(){min=new(width/2-100,-100),max=new(width/2-15,-80)};
-    // Existing labels retain their native size, and names/details remain disjoint.
+    // In Tab only the descriptions show (no names, no Black Market hint), below Map Suite.
     Tick();
     var names=Field<TextMeshProUGUI>("_modsLabel");
     var mapData=Field<TextMeshProUGUI>("_mapLabel");
     var details=Field<TextMeshProUGUI>("_descriptionLabel");
-    Check(names.enabled&&details.enabled,"Names and Tab details fit native HUD width " + width);
+    Check(!names.enabled&&details.enabled,"Tab shows descriptions without modifier names at HUD width " + width);
     Check(mapData.enabled&&mapData.rectTransform.anchoredPosition.y < 160-200 &&
-        names.rectTransform.anchoredPosition.y <= mapData.rectTransform.anchoredPosition.y-mapData.rectTransform.rect.height,
-        "Order is haul, extraction count, Map Suite, modifier names at width " + width);
-    Check(details.rectTransform.anchoredPosition.y <= names.rectTransform.anchoredPosition.y-names.rectTransform.rect.height,
-        "Descriptions do not overlap modifier names at width " + width);
+        details.rectTransform.anchoredPosition.y <= mapData.rectTransform.anchoredPosition.y-mapData.rectTransform.rect.height,
+        "Order is haul, extraction count, Map Suite, descriptions at width " + width);
 }
 
 IncreaseHardMod.Upgrades.MapUpgrade.HudInfo="Alive: 4\nDead: 1\nActive: 8\nRespawning: 2\nQuota: ahead\nFound: 20/30\nHaul: 1000/5000\nSecured: 2";Tick();
-Check(Field<TextMeshProUGUI>("_mapLabel").enabled&&Field<TextMeshProUGUI>("_modsLabel").enabled&&Field<TextMeshProUGUI>("_descriptionLabel").enabled,
-    "Full Map Suite statistics leave visible space for names and descriptions");
-IncreaseHardMod.Upgrades.MapUpgrade.HudInfo="";Tick();
-Check(!Field<TextMeshProUGUI>("_mapLabel").enabled&&Field<TextMeshProUGUI>("_modsLabel").enabled,
-    "Without Map Suite there is no empty map block above modifier names");
+Check(Field<TextMeshProUGUI>("_mapLabel").enabled&&Field<TextMeshProUGUI>("_descriptionLabel").enabled,
+    "Full Map Suite statistics leave visible space for descriptions");
+var tabDetails=Field<TextMeshProUGUI>("_descriptionLabel").text;
+Check(!tabDetails.Contains("Black Market")&&!tabDetails.Contains("POOR FACILITY")&&!tabDetails.Contains("SHOP SALE"),"Tab details hold descriptions only, never names or the Black Market hint");
+IncreaseHardMod.Upgrades.MapUpgrade.HudInfo="";MapToolController.instance.Active=false;Tick();
+Check(!Field<TextMeshProUGUI>("_mapLabel").enabled&&Field<TextMeshProUGUI>("_modsLabel").enabled&&!Field<TextMeshProUGUI>("_descriptionLabel").enabled,
+    "Outside Tab the names show and the descriptions hide");
+
+MenuManager.instance=new(){currentMenuPage=new object()};Tick();
+Check(!Field<TextMeshProUGUI>("_modsLabel").enabled&&!Field<TextMeshProUGUI>("_descriptionLabel").enabled,"An open menu page (Esc) hides modifier names and details");
+MenuManager.instance.currentMenuPage=null;Tick();
+Check(Field<TextMeshProUGUI>("_modsLabel").enabled,"Closing the menu brings the modifier names back");
+var namesLabel=Field<TextMeshProUGUI>("_modsLabel");
+Check(namesLabel.fontSize<StatsUI.instance.upgradesHeader.fontSize,"Modifier names are smaller than the native UPGRADES heading");
 
 Console.WriteLine($"HUD_CHECKS_PASSED: {checks}");

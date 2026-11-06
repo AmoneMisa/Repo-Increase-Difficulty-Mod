@@ -9,7 +9,7 @@ namespace IncreaseHardMod.Hud;
 /// the panel is visible (after setting its size) and <see cref="Release"/> when it hides. Lower order sits
 /// closer to the corner. Panels drawn on the native HUD canvas (the modifier list) ask
 /// <see cref="LowestScreenEdge"/> where the top-right stack ends and start below it.
-/// Orders in use: 100 Shopping List.
+/// Orders in use: top right 100 Shopping List; top left 10-13 player condition cards.
 /// </summary>
 internal static class HudStack
 {
@@ -17,7 +17,7 @@ internal static class HudStack
     private static readonly Dictionary<HudCorner, HudStackLayout> Layouts = new()
     {
         [HudCorner.TopRight] = new HudStackLayout(100f, HudStyle.Gap),   // below the native currency / quota line
-        [HudCorner.TopLeft] = new HudStackLayout(200f, HudStyle.Gap),    // below health and energy
+        [HudCorner.TopLeft] = new HudStackLayout(300f, HudStyle.Gap),    // below health, energy and a vitals row or two
         [HudCorner.UpperCentre] = new HudStackLayout(270f, 8f),          // status messages (frozen, netted)
         [HudCorner.BottomCentre] = new HudStackLayout(180f, 6f),         // toasts, above the inventory bar
     };

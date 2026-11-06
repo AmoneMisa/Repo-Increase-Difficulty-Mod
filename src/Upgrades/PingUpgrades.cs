@@ -46,19 +46,11 @@ internal static class PingUpgrades
         if (upgrade != null) upgrade.PlayerDictionary = merged;
     }
 
-    public static bool OwnsPingAnywhere()
-    {
-        MigrateLegacyPins();
-        return OwnsLocal(PingAnywhereId);
-    }
-    public static bool OwnsPingInfo() => OwnsLocal(PingInfoId);
-
-    private static bool OwnsLocal(string id)
-    {
-        if (!ModConfig.PlayerUpgradesEnabled.Value) return false;
-        var avatar = SemiFunc.PlayerAvatarLocal();
-        if (avatar == null || string.IsNullOrEmpty(avatar.steamID)) return false;
-        var upgrade = RepoUpgrades.GetUpgrade(id);
-        return upgrade != null && upgrade.GetLevel(avatar.steamID) > 0;
-    }
+    // Skill tree: the Ping branch (root + info add-ons).
+    public static bool OwnsPingAnywhere() => Skills.SkillEffects.LocalHas(Skills.SkillCatalog.Ping);
+    public static bool OwnsPingInfo() => Skills.SkillEffects.LocalHas(Skills.SkillCatalog.TargetInfo);
+    public static bool OwnsEnemyHp() => Skills.SkillEffects.LocalHas(Skills.SkillCatalog.EnemyHp);
+    public static bool OwnsLootCondition() => Skills.SkillEffects.LocalHas(Skills.SkillCatalog.LootCondition);
+    public static bool OwnsWeight() => Skills.SkillEffects.LocalHas(Skills.SkillCatalog.Weight);
+    public static bool OwnsThreat() => Skills.SkillEffects.LocalHas(Skills.SkillCatalog.Threat);
 }

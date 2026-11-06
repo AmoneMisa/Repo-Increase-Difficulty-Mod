@@ -24,9 +24,11 @@ namespace IncreaseHardMod.Networking;
 public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 {
     // Our private event codes. Must not collide with REPO's (123/124/199) or PUN's
-    // reserved range (200+). In use: 178-179, 181-198 (197 = LevelInfoHud.StateEventCode, declared there);
+    // reserved range (200+). In use: 172-173 (skill tree), 177-179, 181-198 (197 = LevelInfoHud.StateEventCode, declared there);
     // 180 is retired (old cart-upgrade state). 170-171 = HostRunControls (failed-level vote).
     // Search every file for "EventCode" before adding one.
+    // Host: a player was poisoned or sedated (screen effect on that player's own client only).
+    public const byte PlayerStatusEventCode = 177;
     public const byte ModifierEventCode = 178;
     public const byte LevelTimerEventCode = 179;
     // 180 previously carried cart-upgrade state; truck upgrades now sync via REPOLib per-player.
@@ -51,6 +53,36 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     public const byte QuestStateEventCode = 194;
     public const byte QuestMoneyRequestEventCode = 195;
     public const byte QuestBuffEventCode = 196;
+
+    // Skill tree: a client asks the host to buy a perk or refund its points; the host answers that client only.
+    public const byte SkillRequestEventCode = 172;
+    public const byte SkillResultEventCode = 173;
+
+    /// <summary>A non-host client asks the host to spend points (<see cref="Skills.SkillStore.OpBuy"/>) or refund them.</summary>
+    internal void SendSkillRequest(byte op, string nodeId, int count)
+    {
+        if (!PhotonNetwork.InRoom) return;
+        var data = new object[] { op, nodeId ?? "", count };
+        if (!NetworkPayload.SkillRequest(data, out _)) return;
+        PhotonNetwork.RaiseEvent(SkillRequestEventCode, data,
+            new RaiseEventOptions { Receivers = ReceiverGroup.MasterClient }, SendOptions.SendReliable);
+    }
+
+    private static void HandleSkillRequest(EventData message)
+    {
+        if (!PhotonNetwork.IsMasterClient || message.Sender <= 0 || !NetworkPayload.SkillRequest(message.CustomData, out var data)) return;
+        PlayerAvatar sender = null;
+        var players = SemiFunc.PlayerGetList();
+        if (players != null)
+            foreach (var player in players)
+                if (player != null && player.photonView != null && player.photonView.Owner != null && player.photonView.Owner.ActorNumber == message.Sender)
+                { sender = player; break; }
+        byte op = (byte)data[0];
+        string nodeId = (string)data[1];
+        var block = sender != null ? Skills.SkillStore.HostHandle(sender.steamID, op, nodeId, (int)data[2]) : Skills.BuyBlock.NotReady;
+        PhotonNetwork.RaiseEvent(SkillResultEventCode, new object[] { op, (byte)block, nodeId },
+            new RaiseEventOptions { TargetActors = new[] { message.Sender } }, SendOptions.SendReliable);
+    }
 
     public static ModNetwork Instance { get; private set; }
 
@@ -336,6 +368,27 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
     }
 
+    internal const byte StatusPoisoned = 0, StatusSedated = 1;
+
+    /// <summary>Host: a player was poisoned or sedated for seconds; only their own client shows it.</summary>
+    internal static void BroadcastPlayerStatus(PlayerAvatar avatar, byte kind, float seconds)
+    {
+        if (avatar == null || seconds <= 0f || kind > StatusSedated || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+        ApplyPlayerStatus(avatar, kind, seconds);
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient || avatar.isLocal) return;
+        var view = avatar.GetComponent<PhotonView>();
+        if (view == null || view.ViewID == 0) return;
+        PhotonNetwork.RaiseEvent(PlayerStatusEventCode,
+            new object[] { view.ViewID, kind, seconds, PhotonNetwork.Time, FreezeLevelKey() },
+            new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
+    }
+
+    private static void ApplyPlayerStatus(PlayerAvatar avatar, byte kind, float seconds)
+    {
+        if (avatar == null || !avatar.isLocal) return;
+        Hud.HudConditions.Start(kind == StatusPoisoned ? Hud.PlayerCondition.Poisoned : Hud.PlayerCondition.Sedated, seconds);
+    }
+
     /// <summary>Host: a player is netted for seconds, or (NetBroken / NetExpired) their net ended.</summary>
     internal static void BroadcastPlayerNet(PlayerAvatar avatar, float seconds)
     {
@@ -460,6 +513,19 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
                 seconds -= age;
             }
             ApplyPlayerNet(avatar, seconds);
+            return;
+        }
+        if (photonEvent.Code == PlayerStatusEventCode)
+        {
+            if (!PhotonNetwork.InRoom || PhotonNetwork.MasterClient == null ||
+                photonEvent.Sender != PhotonNetwork.MasterClient.ActorNumber ||
+                photonEvent.CustomData is not object[] packet || packet.Length != 5 ||
+                packet[0] is not int id || id <= 0 || packet[1] is not byte kind || kind > StatusSedated ||
+                packet[2] is not float seconds || packet[3] is not double sent || packet[4] is not string level || level != FreezeLevelKey() ||
+                float.IsNaN(seconds) || float.IsInfinity(seconds) || seconds <= 0f || seconds > 30f || double.IsNaN(sent) || double.IsInfinity(sent)) return;
+            float age = (float)System.Math.Max(0d, PhotonNetwork.Time - sent);
+            if (age >= seconds) return;
+            ApplyPlayerStatus(PhotonView.Find(id)?.GetComponent<PlayerAvatar>(), kind, seconds - age);
             return;
         }
         if (photonEvent.Code == PlayerFreezeEventCode)
@@ -634,6 +700,19 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             if (ModConfig.QuestsEnabled.Value && HostSender(photonEvent) &&
                 NetworkPayload.QuestState(photonEvent.CustomData, out var data))
                 Quests.QuestManager.ReceiveTeamState(data);
+            return;
+        }
+
+        if (photonEvent.Code == SkillRequestEventCode)
+        {
+            HandleSkillRequest(photonEvent);
+            return;
+        }
+
+        if (photonEvent.Code == SkillResultEventCode)
+        {
+            if (HostSender(photonEvent) && NetworkPayload.SkillResult(photonEvent.CustomData, out var data))
+                Skills.SkillStore.Report((byte)data[0], (Skills.BuyBlock)(byte)data[1], (string)data[2]);
             return;
         }
 

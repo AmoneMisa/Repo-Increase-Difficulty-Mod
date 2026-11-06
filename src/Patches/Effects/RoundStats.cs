@@ -282,6 +282,12 @@ internal static class RoundStats
         private static void Postfix()
         {
             if (!_tracking) return;
+            // Everything the generator placed is starting loot. ValuableObject.Start can run after the level
+            // reports Generated (it did in v0.5.1), so the Start hook alone left the start total at $0.
+            var director = ValuableDirector.instance;
+            if (director != null)
+                foreach (var v in director.valuableList)
+                    if (v != null && v.GetComponent<EnemyValuable>() == null) InitialIds.Add(v.GetInstanceID());
             RefreshLoot();
             _loot.SealInitial();
             var list = GameDirector.instance != null ? GameDirector.instance.PlayerList : null;

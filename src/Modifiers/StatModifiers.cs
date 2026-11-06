@@ -91,6 +91,15 @@ internal static class StatModifiers
         Add("Compact Facility", EconomyTier.Mixed, StatCategory.Environment, "A 20% smaller level with 15% fewer monsters.", (StatAxis.LevelSize, 0.8f), (StatAxis.EnemyCount, 0.85f));
         Add("Extra Dock", EconomyTier.Good, StatCategory.Environment, "One more extraction point.", (StatAxis.Extractions, 1f));
         Add("Cramped Dock", EconomyTier.Bad, StatCategory.Environment, "One fewer extraction point.", (StatAxis.Extractions, -1f));
+        // ---- batch 2 (appended: ids are positions, so existing ones keep theirs) ----
+        Add("Gold Rush", EconomyTier.Mixed, StatCategory.Loot, "Valuables are worth 40% more, and 25% more monsters guard them.", (StatAxis.LootValue, 1.4f), (StatAxis.EnemyCount, 1.25f));
+        Add("Bargain Bin", EconomyTier.Mixed, StatCategory.Loot, "Valuables are worth 30% less, and the quota is 30% lower.", (StatAxis.LootValue, .7f), (StatAxis.Quota, .7f));
+        Add("Skeleton Crew", EconomyTier.Good, StatCategory.Enemy, "40% fewer monsters, but the quota is 15% higher.", (StatAxis.EnemyCount, .6f), (StatAxis.Quota, 1.15f));
+        Add("Glass Jaw Monsters", EconomyTier.Mixed, StatCategory.Enemy, "Monsters have 40% less health but hit 30% harder.", (StatAxis.EnemyHealth, .6f), (StatAxis.EnemyDamage, 1.3f));
+        Add("Blitz", EconomyTier.Bad, StatCategory.Enemy, "Monsters are 30% faster and come back 30% sooner, with 20% less health.", (StatAxis.EnemySpeed, 1.3f), (StatAxis.EnemyRespawn, .7f), (StatAxis.EnemyHealth, .8f));
+        Add("Marathon", EconomyTier.Mixed, StatCategory.Environment, "A 40% bigger level with one more extraction point.", (StatAxis.LevelSize, 1.4f), (StatAxis.Extractions, 1f));
+        Add("Field Hospital", EconomyTier.Good, StatCategory.Player, "Healing is 60% stronger, but players take 10% more damage.", (StatAxis.Healing, 1.6f), (StatAxis.PlayerDamage, 1.1f));
+        Add("Iron Lungs", EconomyTier.Good, StatCategory.Player, "Players take 30% less damage, but the quota is 20% higher.", (StatAxis.PlayerDamage, .7f), (StatAxis.Quota, 1.2f));
     }
 
     public static StatModifier Get(int id) => id >= 1 && id <= All.Count ? All[id - 1] : null;

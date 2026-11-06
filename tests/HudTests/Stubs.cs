@@ -5,14 +5,14 @@ namespace UnityEngine {
  public class Component:Object { public GameObject gameObject; public Transform transform=>gameObject.transform; public T GetComponent<T>() where T:class=>gameObject.GetComponent<T>(); }
  public class MonoBehaviour:Component { }
  public class GameObject:Object {public string name;public int layer;public bool activeInHierarchy=true;public Transform transform;Dictionary<Type,object> parts=new();public GameObject(string n=""){name=n;transform=new RectTransform{gameObject=this};}public T AddComponent<T>() where T:Component,new(){var t=new T{gameObject=this};parts[typeof(T)]=t;return t;}public T GetComponent<T>() where T:class=>parts.TryGetValue(typeof(T),out var o)?o as T:null;}
- public class Transform:Component {public Transform parent;public void SetParent(Transform p,bool world){parent=p;}public Vector3 TransformPoint(Vector3 p)=>p;public Vector3 InverseTransformPoint(Vector3 p)=>p;}
+ public class Transform:Component {public Transform parent;public void SetParent(Transform p,bool world){parent=p;}public Vector3 TransformPoint(Vector3 p)=>p;public Vector3 lossyScale=new(1,1,1);public Vector3 InverseTransformPoint(Vector3 p)=>p;}
  public class RectTransform:Transform {public Vector2 anchorMin,anchorMax,pivot,sizeDelta=new(300,80),anchoredPosition;public Rect rect=>new(-sizeDelta.x/2,-sizeDelta.y/2,sizeDelta.x,sizeDelta.y);public void GetWorldCorners(Vector3[] a){a[0]=new(-200,0);a[1]=new(-200,50);a[2]=new(200,50);a[3]=new(200,0);}}
  public struct Vector2 {public float x,y;public Vector2(float a,float b){x=a;y=b;}public static Vector2 zero=>new(0,0);public static Vector2 Min(Vector2 a,Vector2 b)=>new(Math.Min(a.x,b.x),Math.Min(a.y,b.y));public static Vector2 Max(Vector2 a,Vector2 b)=>new(Math.Max(a.x,b.x),Math.Max(a.y,b.y));public static Vector2 operator+(Vector2 a,Vector2 b)=>new(a.x+b.x,a.y+b.y);public static implicit operator Vector2(Vector3 a)=>new(a.x,a.y);}
  public struct Vector3 {public float x,y,z;public Vector3(float a,float b,float c=0){x=a;y=b;z=c;}public static implicit operator Vector3(Vector2 a)=>new(a.x,a.y);}
  public struct Rect {public float xMin,yMin,width,height;public float x=>xMin;public float y=>yMin;public float xMax=>xMin+width;public float yMax=>yMin+height;public Rect(float x,float y,float w,float h){xMin=x;yMin=y;width=w;height=h;}public static Rect MinMaxRect(float x,float y,float a,float b)=>new(x,y,a-x,b-y);}
  public struct Bounds {public Vector3 min,max;}
  public struct Color {public Color(float r,float g,float b,float a=1){}public static Color white=>new(1,1,1);}
- public static class Mathf {public const float Infinity=float.PositiveInfinity;public static float Max(float a,float b)=>Math.Max(a,b);public static int Max(int a,int b)=>Math.Max(a,b);public static float Min(float a,float b)=>Math.Min(a,b);public static int Clamp(int a,int b,int c)=>Math.Clamp(a,b,c);}
+ public static class Mathf {public const float Infinity=float.PositiveInfinity;public static float Max(float a,float b)=>Math.Max(a,b);public static int Max(int a,int b)=>Math.Max(a,b);public static float Min(float a,float b)=>Math.Min(a,b);public static int Clamp(int a,int b,int c)=>Math.Clamp(a,b,c);public static float Clamp(float a,float b,float c)=>Math.Clamp(a,b,c);}
  public enum KeyCode {Comma,Period,Home,End,LeftArrow,RightArrow,F8}
  public static class Time {public static float unscaledTime;}
  public class Canvas:Component {}
@@ -65,3 +65,4 @@ namespace IncreaseHardMod.Patches.Effects{public static class LevelTimerControll
 public class HaulUI{public static HaulUI instance;public TMPro.TextMeshProUGUI uiText;public bool isHidden;}
 
 namespace IncreaseHardMod.Hud{internal static class HudStack{public static float Edge=-1f;public static float LowestScreenEdge(HudCorner c)=>c==HudCorner.TopRight?Edge:-1f;}}
+public class MenuManager{public static MenuManager instance;public object currentMenuPage;}

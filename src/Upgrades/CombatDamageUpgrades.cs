@@ -52,9 +52,11 @@ internal static class CombatDamageUpgrades
         if (!ModConfig.PlayerUpgradesEnabled.Value || player == null || string.IsNullOrEmpty(player.steamID)) return 1f;
         bool melee = id == MeleeId;
         int cap = Mathf.Clamp(melee ? ModConfig.MeleeDamageMaxLevel.Value : ModConfig.GrenadeDamageMaxLevel.Value, 1, 100);
-        int level = Mathf.Clamp(RepoUpgrades.GetUpgrade(id)?.GetLevel(player.steamID) ?? 0, 0, cap);
+        // Skill tree: the node on the old ladder of `cap` levels, plus Brawler's small bonus.
+        float level = Mathf.Clamp(Skills.SkillEffects.Equivalent(player, melee ? Skills.SkillCatalog.MeleeDamage : Skills.SkillCatalog.GrenadeDamage, cap), 0f, cap);
         float percent = Mathf.Clamp(melee ? ModConfig.MeleeDamagePercentPerLevel.Value : ModConfig.GrenadeDamagePercentPerLevel.Value, 0f, 1f);
-        return 1f + percent * level;
+        float root = Skills.SkillEffects.Has(player, Skills.SkillCatalog.Brawler) ? Skills.SkillEffects.RootBonus : 0f;
+        return 1f + percent * level + root;
     }
 
     // Small weapon damage values would lose a +5% bonus to integer rounding; round up with the
@@ -96,9 +98,19 @@ internal static class CombatDamageUpgrades
     private static class MeleeEnemyHurt
     {
         [HarmonyPrefix]
-        private static void Prefix(HurtCollider __instance, out int __state)
+        private static void Prefix(HurtCollider __instance, out (int Damage, float Stun) __state)
         {
-            __state = __instance.enemyDamage;
+            __state = (__instance.enemyDamage, __instance.enemyStunTime);
+            // Guns and cart weapons: the Arsenal perks (damage per weapon, longer tranquilizer stun).
+            var weapon = Skills.SkillEffects.WeaponHit(__instance, out var shooter, out bool tranq);
+            if (weapon != Skills.SkillEffects.Weapon.None)
+            {
+                if (tranq && __instance.enemyStun && __instance.enemyStunTime > 0f)
+                    __instance.enemyStunTime = Skills.SkillEffects.StatusSeconds(shooter, Skills.SkillEffects.Status.Tranq, __instance.enemyStunTime);
+                if (__instance.enemyDamage > 0)
+                    __instance.enemyDamage = Scale(__instance.enemyDamage, Skills.SkillEffects.WeaponMultiplier(shooter, weapon));
+                return;
+            }
             if (__instance.enemyDamage <= 0) return;
             // One hook for every player-caused monster hit, so a single saved value is always restored.
             var tumble = TumbleOf(__instance);
@@ -113,7 +125,11 @@ internal static class CombatDamageUpgrades
         }
 
         [HarmonyPostfix]
-        private static void Postfix(HurtCollider __instance, int __state) => __instance.enemyDamage = __state;
+        private static void Postfix(HurtCollider __instance, (int Damage, float Stun) __state)
+        {
+            __instance.enemyDamage = __state.Damage;
+            __instance.enemyStunTime = __state.Stun;
+        }
     }
 
     [HarmonyPatch(typeof(ParticleScriptExplosion), nameof(ParticleScriptExplosion.Spawn))]

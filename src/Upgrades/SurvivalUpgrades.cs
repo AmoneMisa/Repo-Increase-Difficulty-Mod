@@ -63,14 +63,15 @@ internal static class SurvivalUpgrades
     internal static float ArmorReduction(PlayerAvatar player)
     {
         if (!ModConfig.ArmorEnabled.Value) return 0f;
-        int level = Level(ArmorId, player, ModConfig.ArmorMaxLevel.Value);
-        return level > 0 ? Mathf.Min(ArmorCap, ModConfig.ArmorPercentPerLevel.Value * level) : 0f;
+        float level = Level(ArmorId, player, ModConfig.ArmorMaxLevel.Value);
+        return level > 0f ? Mathf.Min(ArmorCap, ModConfig.ArmorPercentPerLevel.Value * level) : 0f;
     }
 
-    private static int Level(string id, PlayerAvatar player, int max)
+    // Skill tree: the old upgrade's node, expressed on its old ladder of `max` levels.
+    private static float Level(string id, PlayerAvatar player, int max)
     {
-        if (!ModConfig.PlayerUpgradesEnabled.Value || player == null || string.IsNullOrEmpty(player.steamID)) return 0;
-        return Mathf.Clamp(RepoUpgrades.GetUpgrade(id)?.GetLevel(player.steamID) ?? 0, 0, Mathf.Max(1, max));
+        string node = id == ArmorId ? Skills.SkillCatalog.Armor : id == TumbleId ? Skills.SkillCatalog.TumbleDamage : Skills.SkillCatalog.Overcharge;
+        return Mathf.Clamp(Skills.SkillEffects.Equivalent(player, node, max), 0f, Mathf.Max(1, max));
     }
 
     // ------------------------------------------------------------------ Armor + tumble self-damage
@@ -94,8 +95,8 @@ internal static class SurvivalUpgrades
             if (damage <= 0) return;
             if (_tumbleSelfScale < 1f) damage = Mathf.FloorToInt(damage * _tumbleSelfScale);
             if (hurtByHeal || !ModConfig.ArmorEnabled.Value || __instance.playerAvatar == null) return;
-            int level = Level(ArmorId, __instance.playerAvatar, ModConfig.ArmorMaxLevel.Value);
-            if (level > 0) damage = Reduce(damage, Mathf.Min(ArmorCap, ModConfig.ArmorPercentPerLevel.Value * level));
+            float level = Level(ArmorId, __instance.playerAvatar, ModConfig.ArmorMaxLevel.Value);
+            if (level > 0f) damage = Reduce(damage, Mathf.Min(ArmorCap, ModConfig.ArmorPercentPerLevel.Value * level));
         }
     }
 
@@ -118,8 +119,8 @@ internal static class SurvivalUpgrades
         {
             _tumbleSelfScale = 1f;
             if (!ModConfig.TumbleBonusEnabled.Value || __instance == null) return true;
-            int level = Level(TumbleId, __instance.playerAvatar, ModConfig.TumbleMaxLevel.Value);
-            if (level <= 0) return true;
+            float level = Level(TumbleId, __instance.playerAvatar, ModConfig.TumbleMaxLevel.Value);
+            if (level <= 0f) return true;
             float reduction = Mathf.Min(ModConfig.TumbleSelfDamageMaxReduction.Value, ModConfig.TumbleSelfDamageReductionPerLevel.Value * level);
             if (reduction >= 1f) return false; // fully protected: no self-damage at all
             _tumbleSelfScale = 1f - Mathf.Max(0f, reduction);
@@ -134,16 +135,17 @@ internal static class SurvivalUpgrades
     internal static float TumbleDamageMultiplier(PlayerTumble tumble)
     {
         if (!ModConfig.TumbleBonusEnabled.Value || tumble == null) return 1f;
-        int level = Level(TumbleId, tumble.playerAvatar, ModConfig.TumbleMaxLevel.Value);
-        // Compounding: each level multiplies the previous one (x1.05 per level by default).
-        return level <= 0 ? 1f : Mathf.Pow(1f + Mathf.Max(0f, ModConfig.TumbleDamagePerLevel.Value), level);
+        float level = Level(TumbleId, tumble.playerAvatar, ModConfig.TumbleMaxLevel.Value);
+        float root = Skills.SkillEffects.Has(tumble.playerAvatar, Skills.SkillCatalog.Brawler) ? Skills.SkillEffects.RootBonus : 0f;
+        // Compounding: each level multiplies the previous one (x1.05 per level by default); Brawler adds on top.
+        return (level <= 0f ? 1f : Mathf.Pow(1f + Mathf.Max(0f, ModConfig.TumbleDamagePerLevel.Value), level)) + root;
     }
 
     // ------------------------------------------------------------------ Overcharge
 
-    private static int OverchargeLevel(PhysGrabber grabber) =>
+    private static float OverchargeLevel(PhysGrabber grabber) =>
         grabber != null && grabber.isLocal && ModConfig.OverchargeEnabled.Value
-            ? Level(OverchargeId, grabber.playerAvatar, ModConfig.OverchargeMaxLevel.Value) : 0;
+            ? Level(OverchargeId, grabber.playerAvatar, ModConfig.OverchargeMaxLevel.Value) : 0f;
 
     [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.PhysGrabOverCharge))]
     private static class OverchargeBuildup
@@ -151,7 +153,7 @@ internal static class SurvivalUpgrades
         [HarmonyPrefix]
         private static void Prefix(PhysGrabber __instance, ref float _amount, ref float _multiplier)
         {
-            int level = OverchargeLevel(__instance);
+            float level = OverchargeLevel(__instance);
             if (level <= 0) return;
             float slow = 1f - Mathf.Min(.8f, ModConfig.OverchargeBuildupPerLevel.Value * level);
             _amount *= slow;
@@ -161,7 +163,7 @@ internal static class SurvivalUpgrades
         [HarmonyPostfix]
         private static void Postfix(PhysGrabber __instance)
         {
-            int level = OverchargeLevel(__instance);
+            float level = OverchargeLevel(__instance);
             if (level <= 0) return;
             // Shorter pause before the bar starts draining once you stop holding a monster.
             float shorter = 1f - Mathf.Min(.7f, .1f * level);
@@ -175,7 +177,7 @@ internal static class SurvivalUpgrades
         [HarmonyPostfix]
         private static void Postfix(PhysGrabber __instance)
         {
-            int level = OverchargeLevel(__instance);
+            float level = OverchargeLevel(__instance);
             if (level <= 0 || __instance.physGrabBeamOverChargeTimer > 0f || __instance.physGrabBeamOverchargeDecreaseCooldown > 0f ||
                 __instance.physGrabBeamOverChargeFloat <= 0f) return;
             // Vanilla drains 0.1/s; each level adds OverchargeRecoveryPerLevel of that.

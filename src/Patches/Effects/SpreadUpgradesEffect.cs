@@ -96,6 +96,8 @@ internal static class SpreadUpgradesEffect
                 if (item.itemType != SemiFunc.itemType.item_upgrade &&
                     item.itemType != SemiFunc.itemType.player_upgrade)
                     continue;
+                if (ModConfig.PlayerUpgradesEnabled.Value && Skills.SkillShopPatch.IsTreeOwnedVanilla(item))
+                    continue; // the skill tree owns it now
 
                 if (ModConfig.LogSpreadUpgradeNames.Value)
                     Plugin.Log.LogInfo($"[SpreadUpgrades] Upgrade item available: '{item.name}'.");

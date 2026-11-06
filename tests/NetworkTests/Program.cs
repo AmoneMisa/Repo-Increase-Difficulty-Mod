@@ -54,10 +54,13 @@ Check(codes.Distinct().Count()==codes.Length,"Quest event IDs do not collide wit
 foreach(byte code in new[]{ModNetwork.QuestStateEventCode,ModNetwork.QuestBuffEventCode,ModNetwork.QuestMoneyRequestEventCode})
  foreach(var raw in new object[]{null,42,"wrong",Array.Empty<object>(),new object[]{-1},new object[]{"bad",null}})
  {Send(code,raw);Check(true,"Malformed quest payload ignored, event "+code);}
-object[] quest={1,10,(byte)0,(byte)0,(byte)0,10,1,"",(byte)0,3000,(byte)0,(byte)0,"Quest",(byte)0};
+object[] quest={1,10,(byte)0,(byte)0,(byte)0,10,1,"",(byte)0,3000,(byte)0,(byte)0,"Quest",(byte)0,(byte)1,(byte)255};
 Send(ModNetwork.QuestStateEventCode,quest,3);Check(IncreaseHardMod.Quests.QuestManager.States==0,"Peer cannot replace authoritative quest state");
 Send(ModNetwork.QuestStateEventCode,quest);Check(IncreaseHardMod.Quests.QuestManager.States==1,"Valid host quest snapshot remains supported");
 Send(ModNetwork.QuestStateEventCode,new object[]{1});Check(IncreaseHardMod.Quests.QuestManager.States==1,"Truncated quest row rejected before deserialization");
+{ var contract=(object[])quest.Clone();contract[13]=(byte)4;Check(NetworkPayload.QuestState(contract,out _),"A contract quest flag is accepted");
+  var greedy=(object[])quest.Clone();greedy[14]=(byte)50;Check(!NetworkPayload.QuestState(greedy,out _),"An oversized skill point reward is rejected");
+  var old=new object[14];System.Array.Copy(quest,old,14);Check(!NetworkPayload.QuestState(old,out _),"The old 13-value quest layout is rejected"); }
 Send(ModNetwork.QuestBuffEventCode,new object[]{(byte)1,2},3);Check(IncreaseHardMod.Quests.QuestManager.Buffs==0,"Peer cannot grant team quest buffs");
 Send(ModNetwork.QuestBuffEventCode,new object[]{(byte)1,2});Check(IncreaseHardMod.Quests.QuestManager.Buffs==1,"Valid host quest buff accepted");
 Send(ModNetwork.QuestBuffEventCode,new object[]{(byte)255,2});Check(IncreaseHardMod.Quests.QuestManager.Buffs==1,"Unknown quest buff kind rejected");
@@ -79,4 +82,59 @@ Check(NetworkPayload.Ping(new object[]{(byte)8,1f,2f,3f,"Player","Sender",313},o
 Check(!NetworkPayload.Ping(new object[]{(byte)9,1f,2f,3f,"unknown","Sender",0},out _),"Undefined ping kind remains rejected");
 Check(!NetworkPayload.Ping(new object[]{(byte)8,1f,2f,3f,"Player","Sender",-1},out _),"Player ping rejects a negative view ID");
 int hudCalls=LevelInfoHud.Calls; Send(LevelInfoHud.StateEventCode,new object[]{"request"}); Check(LevelInfoHud.Calls==hudCalls+1,"HUD snapshot event routes to its scoped handler");
+// Poisoned / sedated screen status: host only, local avatar only, current level only, bounded duration.
+{
+    bool wasMaster=PhotonNetwork.IsMasterClient;PhotonNetwork.IsMasterClient=false;
+    var statusObject=new GameObject();var statusView=new PhotonView{ViewID=70};statusObject.Add(statusView);
+    var statusAvatar=new PlayerAvatar{isLocal=true};statusObject.Add(statusAvatar);PhotonView.All[70]=statusView;
+    string level=RunManager.instance.levelsCompleted+":"+RunManager.instance.levelCurrent.name;
+    int started=IncreaseHardMod.Hud.HudConditions.Started;
+    Send(ModNetwork.PlayerStatusEventCode,new object[]{70,(byte)0,4f,PhotonNetwork.Time,level},3);
+    Check(IncreaseHardMod.Hud.HudConditions.Started==started,"Peer cannot put a status on a player");
+    Send(ModNetwork.PlayerStatusEventCode,new object[]{70,(byte)1,4f,PhotonNetwork.Time,"0:old level"});
+    Check(IncreaseHardMod.Hud.HudConditions.Started==started,"Status from another level is ignored");
+    Send(ModNetwork.PlayerStatusEventCode,new object[]{70,(byte)1,500f,PhotonNetwork.Time,level});
+    Check(IncreaseHardMod.Hud.HudConditions.Started==started,"Oversized status duration is rejected");
+    Send(ModNetwork.PlayerStatusEventCode,new object[]{70,(byte)5,4f,PhotonNetwork.Time,level});
+    Check(IncreaseHardMod.Hud.HudConditions.Started==started,"Unknown status kind is rejected");
+    Send(ModNetwork.PlayerStatusEventCode,new object[]{70,(byte)1,4f,PhotonNetwork.Time,level});
+    Check(IncreaseHardMod.Hud.HudConditions.Started==started+1&&IncreaseHardMod.Hud.HudConditions.Last==IncreaseHardMod.Hud.PlayerCondition.Sedated,"Host sedated status reaches the local player");
+    statusAvatar.isLocal=false;
+    Send(ModNetwork.PlayerStatusEventCode,new object[]{70,(byte)0,4f,PhotonNetwork.Time,level});
+    Check(IncreaseHardMod.Hud.HudConditions.Started==started+1,"A status for another player shows nothing here");
+    PhotonNetwork.IsMasterClient=wasMaster;
+}
+// Skill tree requests: only the host handles them, for the sender's own avatar, and answers only that sender.
+{
+    bool wasMaster=PhotonNetwork.IsMasterClient;PhotonNetwork.IsMasterClient=true;
+    var S=IncreaseHardMod.Skills.SkillStore.Handled;S.Clear();PhotonNetwork.SentData.Clear();
+    var guest=new PlayerAvatar{steamID="guest",photonView=new PhotonView{Owner=new Photon.Realtime.Player{ActorNumber=5}}};
+    SemiFunc.Players.Clear();SemiFunc.Players.Add(guest);
+    IncreaseHardMod.Skills.SkillStore.Answer=IncreaseHardMod.Skills.BuyBlock.NotEnoughPoints;
+    Send(ModNetwork.SkillRequestEventCode,new object[]{(byte)0,"IHM_ST_Armor",1},5);
+    Check(S.Count==1&&S[0].Steam=="guest"&&S[0].Node=="IHM_ST_Armor"&&S[0].Count==1,"Host handles a buy request for the sender's own avatar");
+    var reply=PhotonNetwork.SentData.LastOrDefault(e=>e.Code==ModNetwork.SkillResultEventCode);
+    Check(reply.Targets!=null&&reply.Targets.Length==1&&reply.Targets[0]==5&&reply.Data is object[] r&&(byte)r[1]==(byte)IncreaseHardMod.Skills.BuyBlock.NotEnoughPoints,"Result goes back to the sender only");
+    Send(ModNetwork.SkillRequestEventCode,new object[]{(byte)0,"IHM_ST_Armor",50},5);
+    Send(ModNetwork.SkillRequestEventCode,new object[]{(byte)7,"IHM_ST_Armor",1},5);
+    Send(ModNetwork.SkillRequestEventCode,new object[]{(byte)0,new string('x',200),1},5);
+    Check(S.Count==1,"Malformed skill requests are dropped");
+    Send(ModNetwork.SkillRequestEventCode,new object[]{(byte)2,"",1},5);
+    Check(S.Count==2&&S[1].Op==2&&S[1].Steam=="guest","A personal-quest point request reaches the host for the sender");
+    Send(ModNetwork.SkillRequestEventCode,new object[]{(byte)3,"",1},5);
+    Check(S.Count==2,"Unknown skill request kinds are dropped");
+    S.RemoveAt(1);
+    PhotonNetwork.SentData.Clear();
+    Send(ModNetwork.SkillRequestEventCode,new object[]{(byte)1,"",1},9);
+    Check(S.Count==1&&PhotonNetwork.SentData.Count==1,"A request from an actor without an avatar is answered but never applied");
+    PhotonNetwork.IsMasterClient=false;
+    Send(ModNetwork.SkillRequestEventCode,new object[]{(byte)0,"IHM_ST_Armor",1},5);
+    Check(S.Count==1,"Only the host handles skill requests");
+    var R=IncreaseHardMod.Skills.SkillStore.Reports;R.Clear();
+    Send(ModNetwork.SkillResultEventCode,new object[]{(byte)0,(byte)0,"IHM_ST_Armor"},5);
+    Check(R.Count==0,"A peer cannot fake a skill result");
+    Send(ModNetwork.SkillResultEventCode,new object[]{(byte)0,(byte)0,"IHM_ST_Armor"},1);
+    Check(R.Count==1&&R[0].Node=="IHM_ST_Armor","The host's skill result is shown");
+    PhotonNetwork.IsMasterClient=wasMaster;SemiFunc.Players.Clear();
+}
 Console.WriteLine("NETWORK_AUDIT_PASS: "+checks);

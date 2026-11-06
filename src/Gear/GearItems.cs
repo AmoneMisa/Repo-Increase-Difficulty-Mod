@@ -306,7 +306,9 @@ internal static class GearItems
         gun.numberOfBullets = 1;
         gun.gunRandomSpread = 0f;
         gun.gunRange = ModConfig.StaffRange.Value;
-        gun.gunRecoilForce *= .35f;
+        // No gun recoil: the native kick pushes the tip back and up. The staff swings forward and down
+        // like a melee strike instead (WizardStaff.Strike).
+        gun.gunRecoilForce = 0f;
         gun.cameraShakeMultiplier = .35f;
         gun.batteryDrainFullBar = true;
         gun.batteryDrainFullBars = 1;

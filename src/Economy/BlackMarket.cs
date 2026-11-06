@@ -50,6 +50,8 @@ internal static class BlackMarket
         { ModifierType.ExtraSouls, EconomyTier.Good }, { ModifierType.AutoRevive, EconomyTier.VeryGood },
         { ModifierType.MoreGachaCubes, EconomyTier.Good }, { ModifierType.BiggerSoulDrops, EconomyTier.Good },
         { ModifierType.LightMonsters, EconomyTier.Good }, { ModifierType.MysteryBoxes, EconomyTier.Good },
+        { ModifierType.SilentNight, EconomyTier.Good }, { ModifierType.LoudFacility, EconomyTier.Bad },
+        { ModifierType.GreasedWheels, EconomyTier.Good }, { ModifierType.ShortMemory, EconomyTier.Good },
     };
 
     internal static EconomyTier TierOfModifier(ModifierType m) => ModifierTiers.TryGetValue(m, out var t) ? t : EconomyTier.Mixed;

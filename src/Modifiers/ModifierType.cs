@@ -49,4 +49,10 @@ public enum ModifierType
 
     // --- Added batch 4 ---
     MysteryBoxes       = 1 << 23, // reward: a few mystery boxes trade one soul each for a random prize
+
+    // --- Added batch 5 (share the skill tree's quest-perk hooks) ---
+    SilentNight        = 1 << 24, // reward: everything players do makes less noise
+    LoudFacility       = 1 << 25, // punish: monsters hear players from much farther away
+    GreasedWheels      = 1 << 26, // reward: C.A.R.T.s are easier to push
+    ShortMemory        = 1 << 27, // reward: monsters give up chases sooner once they lose sight of you
 }

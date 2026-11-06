@@ -26,6 +26,20 @@ public static class QuestManager
     private static readonly List<ActiveQuest> _teamQuests = new();
     private static ActiveQuest _personal;
 
+    // ---- host state for the newer quests (reset each level) --------------------------------------------
+    private static readonly List<float> _killTimes = new();            // Hat Trick
+    private static int _crownJewelId;                                  // Crown Jewel: instance id of the target valuable
+    private static readonly List<Vector3> _deathSpots = new();         // Pay Respects
+    private static readonly Dictionary<PlayerAvatar, PlayerWatch> _watch = new();
+    private static float _observeTimer;
+    private static bool _firstExtractionDone;
+
+    private sealed class PlayerWatch
+    {
+        public bool Tumbling;
+        public float LastYaw, Spin, SpinClock, Crouch;
+    }
+
     // Signatures completed earlier in THIS run, so we don't re-offer the same quest.
     private static readonly HashSet<string> _usedSignatures = new();
 
@@ -73,6 +87,12 @@ public static class QuestManager
         _autoRevived.Clear();
         _levelActive = true;
         _extractedThisLevel.Clear();
+        _killTimes.Clear();
+        _deathSpots.Clear();
+        _watch.Clear();
+        _observeTimer = 0f;
+        _firstExtractionDone = false;
+        _crownJewelId = 0;
 
         var ctx = BuildContext();
 
@@ -163,12 +183,29 @@ public static class QuestManager
         string name = enemyParent != null ? enemyParent.enemyName : null;
         int tier = enemyParent != null ? (int)enemyParent.difficulty : -1;
 
+        // Pay Respects remembers where monsters fell; Hat Trick keeps the recent kill times.
+        if (enemyParent != null && enemyParent.Enemy != null)
+        {
+            _deathSpots.Add(enemyParent.Enemy.transform.position);
+            if (_deathSpots.Count > 12) _deathSpots.RemoveAt(0);
+        }
+        _killTimes.Add(Time.time);
+
         foreach (var q in _teamQuests)
         {
             switch (q.Objective)
             {
                 case ObjectiveType.KillAny:
                     Advance(q, 1);
+                    break;
+                case ObjectiveType.HatTrick:
+                    if (!q.Completed && int.TryParse(q.Param, out int window))
+                    {
+                        int streak = 0;
+                        foreach (float t in _killTimes) if (Time.time - t <= window) streak++;
+                        if (streak > q.Progress) { q.Progress = Mathf.Min(streak, q.Target); _dirty = true; }
+                        if (streak >= q.Target) CompleteTeamQuest(q);
+                    }
                     break;
                 case ObjectiveType.KillType:
                     if (name != null && string.Equals(name, q.Param, System.StringComparison.OrdinalIgnoreCase))
@@ -269,8 +306,12 @@ public static class QuestManager
         if (rd == null)
             return;
 
+        bool first = !_firstExtractionDone;
+        _firstExtractionDone = true;
         foreach (var q in _teamQuests)
         {
+            if (q.Objective == ObjectiveType.FastOpener && first && !q.Completed && !q.Failed && _levelSeconds < q.Target)
+                CompleteTeamQuest(q);
             if (q.Objective == ObjectiveType.ExtractionRush && !q.Completed && !q.Failed && rd.allExtractionPointsCompleted)
                 CompleteTeamQuest(q);
             if (q.Objective == ObjectiveType.ReachHaul && !q.Completed)
@@ -298,7 +339,7 @@ public static class QuestManager
         bool anyLive = false;
         foreach (var q in _teamQuests)
             if (q.Objective is ObjectiveType.IntactExtract or ObjectiveType.ExtractCount or ObjectiveType.HighValueExtract
-                    or ObjectiveType.SoulExtract &&
+                    or ObjectiveType.SoulExtract or ObjectiveType.CrownJewel &&
                 !q.Completed && !q.Failed)
             {
                 anyLive = true;
@@ -329,8 +370,117 @@ public static class QuestManager
                     if (int.TryParse(q.Param, out int minimum) && valuable.dollarValueOriginal >= minimum)
                         Advance(q, 1);
                     break;
+                case ObjectiveType.CrownJewel:
+                    if (q.Completed || q.Failed || valuable.GetInstanceID() != _crownJewelId) break;
+                    // Param is the share of its value it must keep (75, or 100 for the contract).
+                    float keep = int.TryParse(q.Param, out int percent) ? percent / 100f : .75f;
+                    if (valuable.dollarValueCurrent >= valuable.dollarValueOriginal * keep - IntactValueEpsilon) CompleteTeamQuest(q);
+                    else { q.Failed = true; _dirty = true; }
+                    break;
             }
         }
+    }
+
+    /// <summary>Host: a valuable broke completely (Oops counts it; losing the Crown Jewel fails that quest).</summary>
+    public static void OnValuableDestroyed(ValuableObject valuable)
+    {
+        if (!ModConfig.QuestsEnabled.Value || !SemiFunc.IsMasterClientOrSingleplayer() || valuable == null || !_levelActive)
+            return;
+        foreach (var q in _teamQuests)
+        {
+            if (q.Completed || q.Failed) continue;
+            if (q.Objective == ObjectiveType.Oops)
+                Advance(q, Mathf.RoundToInt(valuable.dollarValueOriginal));
+            else if (q.Objective == ObjectiveType.CrownJewel && valuable.GetInstanceID() == _crownJewelId)
+            {
+                q.Failed = true;
+                _dirty = true;
+            }
+        }
+    }
+
+    // Host: the quests that watch what players do (about five times a second).
+    private static void TickObservers(float dt)
+    {
+        if (!_levelActive || !ModConfig.QuestsEnabled.Value || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+        bool any = false;
+        foreach (var q in _teamQuests)
+            if (!q.Completed && !q.Failed && q.Objective is ObjectiveType.RagdollOlympics or ObjectiveType.TalkItOut or ObjectiveType.Ballerina
+                    or ObjectiveType.PayRespects or ObjectiveType.MonsterHugger or ObjectiveType.LightsOut or ObjectiveType.FastOpener)
+            { any = true; break; }
+        if (!any) return;
+        _observeTimer += dt;
+        if (_observeTimer < .2f) return;
+        float step = _observeTimer;
+        _observeTimer = 0f;
+
+        int tumbles = 0, talking = 0, lightsOff = 0, hugging = 0;
+        bool spun = false, respects = false;
+        var players = SemiFunc.PlayerGetList();
+        var enemies = EnemyDirector.instance != null ? EnemyDirector.instance.enemiesSpawned : null;
+        if (players != null)
+            foreach (var p in players)
+            {
+                if (p == null || p.isDisabled) continue;
+                if (!_watch.TryGetValue(p, out var w)) _watch[p] = w = new PlayerWatch { LastYaw = p.transform.eulerAngles.y };
+                // Tumbles: count each new one.
+                if (p.isTumbling && !w.Tumbling) tumbles++;
+                w.Tumbling = p.isTumbling;
+                if (p.voiceChat != null && p.voiceChat.isTalking) talking++;
+                // Ballerina: total turning within a rolling 6-second window.
+                float yaw = p.transform.eulerAngles.y;
+                w.Spin += Mathf.Abs(Mathf.DeltaAngle(w.LastYaw, yaw));
+                w.LastYaw = yaw;
+                w.SpinClock += step;
+                if (w.Spin >= 5f * 360f) spun = true;
+                if (w.SpinClock >= 6f) { w.Spin = 0f; w.SpinClock = 0f; }
+                // Lights Out: walking around with the flashlight off.
+                var light = p.flashlightController;
+                if (light != null && !light.LightActive && p.rbVelocityRaw.sqrMagnitude > .25f) lightsOff++;
+                // Pay Respects: crouched near where a monster died.
+                bool nearGrave = false;
+                foreach (var spot in _deathSpots) if ((spot - p.transform.position).sqrMagnitude < 9f) { nearGrave = true; break; }
+                w.Crouch = p.isCrouching && nearGrave ? w.Crouch + step : 0f;
+                if (w.Crouch >= 3f) respects = true;
+                // Monster Hugger: right next to a living, active monster.
+                if (enemies != null)
+                    foreach (var ep in enemies)
+                        if (ep != null && ep.Spawned && ep.Enemy != null && (!ep.Enemy.HasHealth || !ep.Enemy.Health.dead) &&
+                            (ep.Enemy.transform.position - p.transform.position).sqrMagnitude < 2.5f * 2.5f)
+                        { hugging++; break; }
+            }
+
+        foreach (var q in _teamQuests)
+        {
+            if (q.Completed || q.Failed) continue;
+            switch (q.Objective)
+            {
+                case ObjectiveType.RagdollOlympics: if (tumbles > 0) Advance(q, tumbles); break;
+                case ObjectiveType.Ballerina: if (spun) Advance(q, 1); break;
+                case ObjectiveType.PayRespects: if (respects) Advance(q, 1); break;
+                case ObjectiveType.TalkItOut: AddSeconds(q, talking * step); break;
+                case ObjectiveType.LightsOut: AddSeconds(q, lightsOff * step); break;
+                case ObjectiveType.MonsterHugger: AddSeconds(q, hugging * step); break;
+                case ObjectiveType.FastOpener:
+                    if (_firstExtractionDone) break;
+                    if (_levelSeconds >= q.Target) { q.Progress = q.Target; q.Failed = true; _dirty = true; }
+                    else if (Mathf.FloorToInt(_levelSeconds) != q.Progress) { q.Progress = Mathf.FloorToInt(_levelSeconds); _dirty = true; }
+                    break;
+            }
+        }
+    }
+
+    // Seconds-based quests keep the fraction privately so short ticks still add up.
+    private static readonly Dictionary<ActiveQuest, float> _seconds = new();
+
+    private static void AddSeconds(ActiveQuest q, float seconds)
+    {
+        if (seconds <= 0f) return;
+        _seconds.TryGetValue(q, out float total);
+        total += seconds;
+        _seconds[q] = total;
+        int whole = Mathf.FloorToInt(total);
+        if (whole > q.Progress) Advance(q, whole - q.Progress);
     }
 
     /// <summary>Local client: our character took damage -> our personal "no damage" quest fails.</summary>
@@ -358,6 +508,7 @@ public static class QuestManager
         q.Completed = true;
         _usedSignatures.Add(q.Signature());
         GrantReward(q);                 // host-authoritative payout
+        QuestRewards.GrantSkillPointsToAll(q.RewardPoints, q.Title);
         CreditLocalCompletion(q);       // host credits its own rank + popup
         Broadcast();
         Plugin.Log.LogInfo($"[Quests] Completed team quest: {q.Title}");
@@ -376,12 +527,34 @@ public static class QuestManager
             else
                 ModNetwork.Instance?.RequestQuestMoney(q.RewardAmount);
         }
+        // Skill points: the host pays its own; a guest asks the host (which caps how many it pays per level).
+        if (q.RewardPoints > 0) Skills.SkillStore.RequestQuestPoints(q.RewardPoints);
+    }
+
+    // A special contract gives every player a level of its quest-only perk; anyone who already maxed it gets
+    // two skill points instead.
+    private static void GrantContractPerk(ActiveQuest q)
+    {
+        var perk = Skills.SkillCatalog.QuestPerk(q.RewardPerk);
+        if (perk == null || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+        q.RewardItem = perk.Name;
+        var players = SemiFunc.PlayerGetList();
+        if (players == null) return;
+        foreach (var player in players)
+        {
+            if (player == null || string.IsNullOrEmpty(player.steamID)) continue;
+            if (!Skills.SkillStore.GrantQuestPerk(player.steamID, perk.Id))
+                Skills.SkillStore.GrantPoints(player.steamID, 2, "contract (perk already maxed): " + q.Title);
+        }
     }
 
     private static void GrantReward(ActiveQuest q)
     {
         switch (q.RewardType)
         {
+            case RewardType.QuestPerk:
+                GrantContractPerk(q);
+                break;
             case RewardType.Money:
                 QuestRewards.GrantMoney(q.RewardAmount);
                 break;
@@ -442,6 +615,11 @@ public static class QuestManager
         string id = LocalSteamId();
         bool rankUp = QuestRankProgress.AddCompletion(id);
         ShowPopup(q, rankUp);
+        // Every player sees what the quest added to their skill tree (the host pays it).
+        if (q.Special && ModConfig.PlayerUpgradesEnabled.Value && Skills.SkillCatalog.QuestPerk(q.RewardPerk) is { } perk)
+            Hud.HudNotify.Toast($"Contract done: +1 {perk.Name} (skill tree, page 6)", new Color(1f, .62f, .85f), 5f, "quest.contract." + q.Id);
+        if (q.RewardPoints > 0 && ModConfig.PlayerUpgradesEnabled.Value)
+            Hud.HudNotify.Toast($"+{q.RewardPoints} skill point{(q.RewardPoints == 1 ? "" : "s")}: {q.Title}", Hud.HudStyle.Good, 4f, "quest.points." + q.Id);
     }
 
     private static void ShowPopup(ActiveQuest q, bool rankUp)
@@ -456,7 +634,12 @@ public static class QuestManager
         catch { /* MissionUI signature guard */ }
     }
 
-    private static string RewardText(ActiveQuest q) => q.RewardType switch
+    private static string RewardText(ActiveQuest q) => BaseRewardText(q) + PointsText(q);
+
+    private static string PointsText(ActiveQuest q) =>
+        q.RewardPoints <= 0 ? "" : $" + {q.RewardPoints} skill point{(q.RewardPoints == 1 ? "" : "s")}";
+
+    private static string BaseRewardText(ActiveQuest q) => q.RewardType switch
     {
         RewardType.Money => $"${QuestMoney.WalletUnits(q.RewardAmount)}K",
         RewardType.Cosmetic => "cosmetic box",
@@ -464,13 +647,14 @@ public static class QuestManager
         RewardType.TempStat => $"+{q.RewardAmount} {StatKindInfo.Label(q.RewardStat)} (level)",
         RewardType.ShopItem => "shop item",
         RewardType.ExactUpgrade => $"{UpgradeTierInfo.Label(q.RewardTier)} upgrade",
+        RewardType.QuestPerk => $"perk: {Skills.SkillCatalog.QuestPerk(q.RewardPerk)?.Name ?? "contract perk"}",
         _ => "upgrade item",
     };
 
-    public static string RewardLabel(ActiveQuest q)
+    public static string RewardLabel(ActiveQuest q) => q == null ? "" : BaseRewardLabel(q) + PointsText(q);
+
+    private static string BaseRewardLabel(ActiveQuest q)
     {
-        if (q == null)
-            return "";
         switch (q.RewardType)
         {
             case RewardType.Item:
@@ -487,6 +671,8 @@ public static class QuestManager
                 return string.IsNullOrEmpty(q.RewardItem)
                     ? $"Reward: {UpgradeTierInfo.Label(q.RewardTier)} upgrade"
                     : $"Reward: {q.RewardItem}";
+            case RewardType.QuestPerk:
+                return $"Reward: +1 {Skills.SkillCatalog.QuestPerk(q.RewardPerk)?.Name ?? "contract perk"} (skill tree, everyone)";
             default:
                 return $"Reward: ${QuestMoney.WalletUnits(q.RewardAmount)}K";
         }
@@ -511,6 +697,18 @@ public static class QuestManager
 
         var valuables = Object.FindObjectsOfType<ValuableObject>();
         ctx.ValuableCount = valuables != null ? valuables.Length : 0;
+        // Crown Jewel: the most valuable item on the level (monster souls don't count).
+        ValuableObject jewel = null;
+        if (valuables != null)
+            foreach (var v in valuables)
+                if (v != null && v.GetComponent<EnemyValuable>() == null && (jewel == null || v.dollarValueOriginal > jewel.dollarValueOriginal))
+                    jewel = v;
+        if (jewel != null && jewel.dollarValueOriginal >= 1000f)
+        {
+            _crownJewelId = jewel.GetInstanceID();
+            ctx.CrownJewel = Patches.Effects.PingController.Clean(jewel.name);
+            ctx.CrownJewelValue = Mathf.RoundToInt(jewel.dollarValueOriginal);
+        }
 
         // Which monster types and tiers are actually on this level.
         var enemies = Object.FindObjectsOfType<EnemyParent>();
@@ -552,6 +750,7 @@ public static class QuestManager
     public static void Tick(float dt)
     {
         TickRush(dt);
+        TickObservers(dt);
         if (!SemiFunc.IsMasterClientOrSingleplayer() || !SemiFunc.IsMultiplayer())
             return;
         if (!_dirty)
@@ -607,7 +806,7 @@ public static class QuestManager
     private static object[] Serialize()
     {
         int n = _teamQuests.Count;
-        var data = new object[1 + n * 13];
+        var data = new object[1 + n * QuestFields];
         data[0] = n;
         int i = 1;
         foreach (var q in _teamQuests)
@@ -626,10 +825,15 @@ public static class QuestManager
             data[i++] = q.Title ?? "";
             // Pack completed/failed into one byte. Cast to byte so Photon boxes it AS a byte
             // (a bitwise-or promotes to int, which would then fail to unbox as byte on receipt).
-            data[i++] = (byte)((q.Completed ? 1 : 0) | (q.Failed ? 2 : 0));
+            data[i++] = (byte)((q.Completed ? 1 : 0) | (q.Failed ? 2 : 0) | (q.Special ? 4 : 0));
+            data[i++] = (byte)Mathf.Clamp(q.RewardPoints, 0, 10);
+            data[i++] = (byte)(q.RewardPerk < 0 ? 255 : Mathf.Min(q.RewardPerk, 254));
         }
         return data;
     }
+
+    /// <summary>Values per quest in the team snapshot (NetworkPayload.QuestState checks the same layout).</summary>
+    internal const int QuestFields = 15;
 
     /// <summary>Clients rebuild the team set from the host snapshot and credit any new completions.</summary>
     public static void ReceiveTeamState(object[] data)
@@ -644,7 +848,7 @@ public static class QuestManager
 
         _teamQuests.Clear();
         int i = 1;
-        for (int k = 0; k < n && i + 13 <= data.Length; k++)
+        for (int k = 0; k < n && i + QuestFields <= data.Length; k++)
         {
             var q = new ActiveQuest
             {
@@ -665,6 +869,10 @@ public static class QuestManager
             byte flags = (byte)data[i++];
             q.Completed = (flags & 1) != 0;
             q.Failed = (flags & 2) != 0;
+            q.Special = (flags & 4) != 0;
+            q.RewardPoints = (byte)data[i++];
+            byte perk = (byte)data[i++];
+            q.RewardPerk = perk == 255 ? -1 : perk;
             _teamQuests.Add(q);
 
             // Newly completed since our last snapshot -> credit our own rank + popup.

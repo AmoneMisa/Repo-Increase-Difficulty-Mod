@@ -164,3 +164,115 @@ internal sealed class HudMessageQueue<TColor>
         return Math.Max(0f, Math.Min(1f, Math.Min(fadeIn, fadeOut)));
     }
 }
+
+/// <summary>
+/// Timing of one on-screen player condition (frozen, poisoned...). Owners either refresh the remaining time
+/// every frame (<see cref="Refresh"/>) or start a fixed timer once (<see cref="Start"/>). The bar shows the
+/// share left of the longest duration seen since the condition began, and the overlay fades in and out.
+/// </summary>
+internal sealed class HudConditionTimer
+{
+    internal const float FadeIn = .25f, FadeOut = .45f;
+
+    private float _until = -1f, _total, _since;
+
+    internal bool Active(float now) => now < _until;
+
+    /// <summary>The condition has this many seconds left (called every frame while it lasts).</summary>
+    internal void Refresh(float remaining, float now)
+    {
+        if (remaining <= 0f) { End(now); return; }
+        if (!Active(now)) { _since = now; _total = 0f; }
+        _total = Math.Max(_total, remaining);
+        _until = now + remaining;
+    }
+
+    /// <summary>A fixed-length condition starting now (a repeat hit restarts it).</summary>
+    internal void Start(float seconds, float now)
+    {
+        if (seconds <= 0f) return;
+        if (!Active(now)) _since = now;
+        _total = seconds;
+        _until = now + seconds;
+    }
+
+    internal void End(float now) { if (Active(now)) _until = now; }
+
+    internal float RemainingSeconds(float now) => Math.Max(0f, _until - now);
+
+    /// <summary>Share of the condition left, 0..1.</summary>
+    internal float Fraction(float now) => _total <= 0f ? 0f : Math.Max(0f, Math.Min(1f, (_until - now) / _total));
+
+    /// <summary>Opacity 0..1: fades in from the start and out after the end.</summary>
+    internal float Alpha(float now)
+    {
+        if (_until < 0f || now < _since) return 0f;
+        float fadeIn = Math.Min(1f, (now - _since) / FadeIn);
+        float fadeOut = now < _until ? 1f : 1f - (now - _until) / FadeOut;
+        return Math.Max(0f, Math.Min(fadeIn, fadeOut));
+    }
+}
+
+/// <summary>One node of a tree view: an id, its parent (null for a root) and the panel (group) it sits in.</summary>
+internal sealed class HudTreeItem
+{
+    public string Id, Parent, Group;
+    public HudTreeItem(string id, string parent, string group) { Id = id; Parent = parent; Group = group; }
+}
+
+/// <summary>Where a tree node or a group title goes: column, row inside that column, and depth (left to right).</summary>
+internal readonly struct HudTreeSlot
+{
+    public readonly string Id, Group;
+    public readonly int Column, Row, Depth;
+    public readonly bool Title;
+    public HudTreeSlot(string id, string group, int column, int row, int depth, bool title)
+    { Id = id; Group = group; Column = column; Row = row; Depth = depth; Title = title; }
+}
+
+/// <summary>
+/// Lays out skill-tree style pages: each group gets a title row, then its nodes as a left-to-right tree in which a
+/// node's first child shares its row and every further child opens a new row below (so the rows a group takes equal
+/// its number of leaves). Groups fill the column that is shortest so far, in the order they first appear.
+/// </summary>
+internal static class HudTreeLayout
+{
+    internal static List<HudTreeSlot> Layout(IReadOnlyList<HudTreeItem> items, int columns, out int[] rowsPerColumn, out int maxDepth)
+    {
+        columns = Math.Max(1, columns);
+        rowsPerColumn = new int[columns];
+        maxDepth = 0;
+        var slots = new List<HudTreeSlot>();
+        var groups = new List<string>();
+        foreach (var item in items) if (!groups.Contains(item.Group)) groups.Add(item.Group);
+
+        foreach (var group in groups)
+        {
+            var members = new List<HudTreeItem>();
+            foreach (var item in items) if (item.Group == group) members.Add(item);
+            int column = 0;
+            for (int c = 1; c < columns; c++) if (rowsPerColumn[c] < rowsPerColumn[column]) column = c;
+
+            int row = rowsPerColumn[column];
+            slots.Add(new HudTreeSlot(group, group, column, row, 0, true));
+            row++;
+            var placed = new HashSet<string>(StringComparer.Ordinal);
+            int depthSeen = 0;
+            void Place(HudTreeItem node, int depth, bool newRow)
+            {
+                if (!placed.Add(node.Id)) return;
+                if (newRow) row++;
+                slots.Add(new HudTreeSlot(node.Id, group, column, row - 1, depth, false));
+                depthSeen = Math.Max(depthSeen, depth + 1);
+                bool first = true;
+                foreach (var child in members)
+                    if (child.Parent == node.Id) { Place(child, depth + 1, !first); first = false; }
+            }
+            foreach (var node in members)
+                if (node.Parent == null || !members.Exists(m => m.Id == node.Parent)) Place(node, 0, true);
+            maxDepth = Math.Max(maxDepth, depthSeen);
+            rowsPerColumn[column] = row;
+        }
+        return slots;
+    }
+}
