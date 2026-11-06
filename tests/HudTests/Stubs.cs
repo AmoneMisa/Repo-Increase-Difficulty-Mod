@@ -61,5 +61,7 @@ namespace IncreaseHardMod.Economy {
  public static class BlackMarket{public static EconomyTier TierOfModifier(IncreaseHardMod.Modifiers.ModifierType t)=>EconomyTier.Mixed;}
 }
 namespace IncreaseHardMod.Upgrades{public static class MapUpgrade{public static string HudInfo="";}}
-namespace IncreaseHardMod.Patches.Effects{public static class LevelTimerController{public static bool Running;public static float Remaining;}public static class ShoppingListHud{public static float PanelBottomScreenY=-1f;}public static class HudProjection{public static UnityEngine.Camera CanvasCamera(UnityEngine.Canvas c)=>null;public static UnityEngine.Rect DisplayRect(UnityEngine.Camera c)=>new(0,0,1920,1080);}}
+namespace IncreaseHardMod.Patches.Effects{public static class LevelTimerController{public static bool Running;public static float Remaining;}public static class HudProjection{public static UnityEngine.Camera CanvasCamera(UnityEngine.Canvas c)=>null;public static UnityEngine.Rect DisplayRect(UnityEngine.Camera c)=>new(0,0,1920,1080);}}
 public class HaulUI{public static HaulUI instance;public TMPro.TextMeshProUGUI uiText;public bool isHidden;}
+
+namespace IncreaseHardMod.Hud{internal static class HudStack{public static float Edge=-1f;public static float LowestScreenEdge(HudCorner c)=>c==HudCorner.TopRight?Edge:-1f;}}

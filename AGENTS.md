@@ -30,3 +30,9 @@ voting, shopping lists, Black Market, results, modifier descriptions and notific
 
 This is the required target for future work, not a claim that all existing UI already
 matches it. Do not distribute extracted proprietary game font assets in the mod package.
+
+## HUD toolkit
+
+Build new HUD on the shared toolkit in [src/Hud](src/Hud/README.md): vitals rows, corner stacks, list panels,
+paging and notifications. Extend the toolkit rather than adding another one-off panel, so HUD elements
+stack instead of overlapping and keep the native text style.

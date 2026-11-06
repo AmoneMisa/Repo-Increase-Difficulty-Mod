@@ -1,14 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
+using IncreaseHardMod.Hud;
 
 namespace IncreaseHardMod.Patches.Effects;
 
 /// <summary>Shared shop cart, rendered in the native game font on a scaled screen canvas.</summary>
 internal sealed class ShoppingListHud : MonoBehaviour
 {
-    private static readonly Color TitleColor = new(1f, 0.85f, 0.4f);
-
     // Aggregated row: one distinct item name, its running count and summed value.
     private sealed class Row
     {
@@ -18,16 +16,9 @@ internal sealed class ShoppingListHud : MonoBehaviour
         public Color Color;
     }
 
-    // Canvas distance from the top to the cart's bottom edge, or 0 while hidden. Other top-right HUD uses this to stack below it.
-    internal static float PanelBottom;
-    // The cart's bottom edge in screen pixels (from the bottom of the screen), or -1 while hidden.
-    internal static float PanelBottomScreenY = -1f;
-    private static readonly Vector3[] Corners = new Vector3[4];
-
-    private NativeHudPanel _surface;
-    private TextMeshProUGUI _title, _footer;
-    private readonly List<(TextMeshProUGUI name, TextMeshProUGUI price)> _labels = new();
+    private HudListPanel _list;
     private readonly List<Row> _rows = new();
+    private readonly List<HudListRow> _lines = new();
     private readonly Dictionary<string, Row> _byName = new();
 
     private void Update()
@@ -36,72 +27,28 @@ internal sealed class ShoppingListHud : MonoBehaviour
         if (!ModConfig.ShoppingListEnabled.Value || !SafeRunIsShop() || shop == null ||
             shop.shoppingList == null || shop.shoppingList.Count == 0)
         {
-            if (_surface != null) _surface.gameObject.SetActive(false);
-            PanelBottom = 0f;
-            PanelBottomScreenY = -1f;
+            _list?.Hide();
             return;
         }
-        if (_surface == null)
-        {
-            _surface = NativeHudPanel.Create("IHM_ShoppingList", new Vector2(460f, 200f),
-                new Vector2(1f, 1f), new Vector2(-24f, -100f), 0f);
-            if (_surface == null) return;
-            _labels.Clear();
-            _title = _surface.Label("Title", 26f, TextAlignmentOptions.TopLeft);
-            _title.text = "SHOPPING LIST";
-            _title.color = TitleColor;
-            _footer = _surface.Label("Total", 24f, TextAlignmentOptions.TopLeft);
-        }
-        _surface.gameObject.SetActive(true);
+        // Built on the HUD toolkit: a native-font list stacked at the top right (order 100), so the
+        // modifier list and Black Market hint start below it instead of drawing over it.
+        _list ??= new HudListPanel("shopping", HudCorner.TopRight, order: 100) { Title = "SHOPPING LIST", PageKeys = false };
         Aggregate(shop);
-        const float rowHeight = 30f;
         int total = 0;
-        for (int i = 0; i < _rows.Count; i++)
+        _lines.Clear();
+        foreach (var row in _rows)
         {
-            if (i == _labels.Count)
-                _labels.Add((_surface.Label("Item", 22f, TextAlignmentOptions.TopLeft),
-                    _surface.Label("Price", 22f, TextAlignmentOptions.TopRight)));
-            var (name, price) = _labels[i];
-            name.gameObject.SetActive(true);
-            price.gameObject.SetActive(true);
-            name.richText = price.richText = false;
-            name.text = $"{_rows[i].Count}x {_rows[i].Name}";
-            price.text = $"${_rows[i].Sum:N0}K";
-            name.color = price.color = _rows[i].Color;
-            Place(name, 16f, 54f + i * rowHeight, 316f, rowHeight);
-            Place(price, 338f, 54f + i * rowHeight, 106f, rowHeight);
-            total += _rows[i].Sum;
+            _lines.Add(new HudListRow($"{row.Count}x {row.Name}", $"${row.Sum:N0}K", row.Color));
+            total += row.Sum;
         }
-        for (int i = _rows.Count; i < _labels.Count; i++)
-        {
-            _labels[i].name.gameObject.SetActive(false);
-            _labels[i].price.gameObject.SetActive(false);
-        }
+        _list.SetRows(_lines);
         int currency = SafeCurrency(shop);
-        _footer.color = currency < 0 || total <= currency ? new Color(0.5f, 1f, 0.5f) : new Color(1f, 0.45f, 0.45f);
-        _footer.text = currency >= 0 ? $"TOTAL  ${total:N0}K / ${currency:N0}K" : $"TOTAL  ${total:N0}K";
-        Place(_title, 16f, 12f, 428f, 36f);
-        Place(_footer, 16f, 64f + _rows.Count * rowHeight, 428f, 34f);
-        _surface.Panel.sizeDelta = new Vector2(460f, 112f + _rows.Count * rowHeight);
-        _surface.Fit();
-        PanelBottom = 100f + 112f + _rows.Count * rowHeight;
-        // Overlay canvas: world space is screen pixels. Lowest corner = the panel's bottom edge on screen.
-        _surface.Panel.GetWorldCorners(Corners);
-        PanelBottomScreenY = Mathf.Min(Corners[0].y, Corners[3].y);
+        _list.FooterColor = currency < 0 || total <= currency ? HudStyle.Good : HudStyle.Bad;
+        _list.Footer = currency >= 0 ? $"TOTAL  ${total:N0}K / ${currency:N0}K" : $"TOTAL  ${total:N0}K";
+        _list.Show();
     }
 
-    private static void Place(TextMeshProUGUI label, float x, float y, float width, float height)
-    {
-        var rt = label.rectTransform;
-        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
-        rt.anchoredPosition = new Vector2(x, -y);
-        rt.sizeDelta = new Vector2(width, height);
-    }
-
-    private void OnDestroy()
-    {
-        if (_surface != null) Destroy(_surface.gameObject);
-    }
+    private void OnDestroy() => _list?.Destroy();
 
     // Collapse the flat shopping list into distinct-name rows with counts + summed value,
     // preserving first-seen order.

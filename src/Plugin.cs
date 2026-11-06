@@ -113,7 +113,9 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<SpectatorMapHud>();
         // Quest tracker from remote master.
         netObject.AddComponent<QuestHud>();
-        netObject.AddComponent<ArmorHud>();
+        // HUD toolkit (src/Hud): drives vitals rows and notifications; the Armor row is registered on it.
+        netObject.AddComponent<Hud.HudRuntime>();
+        ArmorHud.Register();
         // End-of-level MVP / OOPS CHAMP scoreboard (stats recorded host-side by RoundStats).
         netObject.AddComponent<RoundResultsHud>();
         // Black Market (shop): pay to block unwanted modifiers / economies. Keyboard driven.

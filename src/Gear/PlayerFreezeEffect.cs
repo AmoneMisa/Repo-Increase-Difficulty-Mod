@@ -14,13 +14,12 @@ internal sealed class PlayerFreezeEffect : MonoBehaviour
 {
     internal static readonly List<PlayerFreezeEffect> Active = new();
     internal PlayerAvatar Avatar;
+    private bool IsLocalPlayer() => PlayerController.instance != null && PlayerController.instance.playerAvatarScript == Avatar;
     private float _until;
     private Scene _scene;
     private readonly FrostCoating _frost = new();
     private bool _coated;
     private IceBlock _block;
-    private NativeHudPanel _note;
-    private TextMeshProUGUI _label;
 
     internal float Remaining => Avatar != null && Avatar.isActiveAndEnabled && !Avatar.isDisabled && !Avatar.deadSet &&
         _scene == SceneManager.GetActiveScene() ? Mathf.Max(0f, _until - Time.time) : 0f;
@@ -98,20 +97,8 @@ internal sealed class PlayerFreezeEffect : MonoBehaviour
         _frost.Tick();
         var controller = PlayerController.instance;
         if (controller == null || controller.playerAvatarScript != Avatar) return;
-        if (_note == null)
-        {
-            _note = NativeHudPanel.Create("IHM_PlayerFrozen", new Vector2(310f, 58f),
-                new Vector2(.5f, .75f), Vector2.zero, .65f);
-            if (_note == null) return;
-            _label = _note.Label("Frozen", 26f, TextAlignmentOptions.Center);
-            _label.color = new Color(.45f, .8f, 1f);
-            _label.rectTransform.anchorMin = Vector2.zero;
-            _label.rectTransform.anchorMax = Vector2.one;
-            _label.rectTransform.offsetMin = new Vector2(8f, 4f);
-            _label.rectTransform.offsetMax = new Vector2(-8f, -4f);
-        }
-        _label.text = $"FROZEN  {remaining:0.0}s";
-        _note.Fit();
+        // HUD toolkit status line, refreshed every frame while it lasts.
+        Hud.HudNotify.Status("ihm.frozen", $"FROZEN  {remaining:0.0}s", Hud.HudStyle.Ice);
     }
 
     private List<Renderer> BodyRenderers(out Bounds bounds) => PlayerBody.Renderers(Avatar, out bounds);
@@ -123,8 +110,7 @@ internal sealed class PlayerFreezeEffect : MonoBehaviour
         _frost.Clear();
         _coated = false;
         if (_block != null) { _block.Thaw(); _block = null; }
-        if (_note != null) Destroy(_note.gameObject);
-        _note = null;
+        if (IsLocalPlayer()) Hud.HudNotify.Clear("ihm.frozen");
     }
 
     private void OnDestroy() => OnDisable();

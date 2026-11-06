@@ -20,8 +20,6 @@ internal sealed class PlayerNetEffect : MonoBehaviour
     private float _until;
     private Scene _scene;
     private NetDrape _net;
-    private NativeHudPanel _note;
-    private TextMeshProUGUI _label;
 
     internal float Remaining => Avatar != null && Avatar.isActiveAndEnabled && !Avatar.isDisabled && !Avatar.deadSet &&
         _scene == SceneManager.GetActiveScene() ? Mathf.Max(0f, _until - Time.time) : 0f;
@@ -89,19 +87,8 @@ internal sealed class PlayerNetEffect : MonoBehaviour
                 $"{(bounds.center - Avatar.transform.position).magnitude:0.00} m from the avatar, local={IsLocal}.");
         }
         if (!IsLocal) return;
-        if (_note == null)
-        {
-            _note = NativeHudPanel.Create("IHM_PlayerNetted", new Vector2(310f, 58f), new Vector2(.5f, .75f), Vector2.zero, .65f);
-            if (_note == null) return;
-            _label = _note.Label("Netted", 26f, TextAlignmentOptions.Center);
-            _label.color = new Color(1f, .8f, .3f);
-            _label.rectTransform.anchorMin = Vector2.zero;
-            _label.rectTransform.anchorMax = Vector2.one;
-            _label.rectTransform.offsetMin = new Vector2(8f, 4f);
-            _label.rectTransform.offsetMax = new Vector2(-8f, -4f);
-        }
-        _label.text = $"NETTED  {remaining:0.0}s";
-        _note.Fit();
+        // HUD toolkit status line, refreshed every frame while it lasts.
+        Hud.HudNotify.Status("ihm.netted", $"NETTED  {remaining:0.0}s", Hud.HudStyle.Caution);
     }
 
     private Bounds VisualBounds()
@@ -114,8 +101,7 @@ internal sealed class PlayerNetEffect : MonoBehaviour
     {
         Active.Remove(this);
         if (_net != null) { _net.Release(false); _net = null; }
-        if (_note != null) Destroy(_note.gameObject);
-        _note = null;
+        if (IsLocal) Hud.HudNotify.Clear("ihm.netted");
     }
 
     private void OnDestroy() => OnDisable();

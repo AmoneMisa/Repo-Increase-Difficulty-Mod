@@ -479,14 +479,15 @@ internal sealed class LevelInfoHud : MonoBehaviour
         float right = quota.xMax;
         float width = Mathf.Min(area.width * 0.23f, 360f);
         float top = quota.yMin - gap;
-        // In the shop the cart list sits at the top right on its own overlay canvas: stack below it
-        // (the Black Market hint and shop economy would otherwise be drawn over the list).
-        if (ShoppingListHud.PanelBottomScreenY >= 0f && SafeRunIsShop())
+        // Toolkit panels stacked at the top right (the shop's cart list) live on their own overlay canvases:
+        // start below them, or the Black Market hint and shop economy would be drawn over the list.
+        float stackBottom = Hud.HudStack.LowestScreenEdge(Hud.HudCorner.TopRight);
+        if (stackBottom >= 0f)
         {
             var display = HudProjection.DisplayRect(HudProjection.CanvasCamera(_modsLabel.canvas));
             if (display.height > 1f)
             {
-                float listBottom = area.yMin + (ShoppingListHud.PanelBottomScreenY - display.y) / display.height * area.height;
+                float listBottom = area.yMin + (stackBottom - display.y) / display.height * area.height;
                 top = Mathf.Min(top, listBottom - gap);
             }
         }

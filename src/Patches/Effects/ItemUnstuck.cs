@@ -24,17 +24,12 @@ internal sealed class ItemUnstuckController : MonoBehaviour
     private const float EnsureInterval = 1f;
     private float _ensureTimer;
 
-    private NativeHudPanel _flash;
-    private TextMeshProUGUI _flashText;
-
-    // Brief on-screen note when the host relocates a stuck valuable.
-    private static string _relocText;
-    private static float _relocUntil;
-
+    // Brief on-screen note when the host relocates a stuck valuable (HUD toolkit toast; one line, replaced
+    // rather than stacked when several valuables are relocated in a row).
     internal static void NotifyRelocated(ValuableObject v)
     {
-        _relocText = $"Relocated stuck loot: {Clean(v != null ? v.name : "valuable")}";
-        _relocUntil = Time.time + 3f;
+        if (!ModConfig.ItemUnstuckEnabled.Value) return;
+        Hud.HudNotify.Toast($"Relocated stuck loot: {Clean(v != null ? v.name : "valuable")}", Hud.HudStyle.Info, 3f, "unstuck");
     }
 
     private void Update()
@@ -68,32 +63,6 @@ internal sealed class ItemUnstuckController : MonoBehaviour
         }
     }
 
-    private void LateUpdate()
-    {
-        if (!ModConfig.ItemUnstuckEnabled.Value || _relocText == null || Time.time >= _relocUntil)
-        {
-            if (_flash != null) _flash.gameObject.SetActive(false);
-            return;
-        }
-        if (_flash == null)
-        {
-            _flash = NativeHudPanel.Create("IHM_UnstuckNote", new Vector2(720f, 52f),
-                new Vector2(0.5f, 0f), new Vector2(0f, 180f), 0f);
-            if (_flash == null) return;
-            _flashText = _flash.Label("Message", 22f, TextAlignmentOptions.Center);
-            _flashText.richText = false;
-            _flashText.color = new Color(0.5f, 0.9f, 1f);
-            _flashText.rectTransform.anchorMin = Vector2.zero;
-            _flashText.rectTransform.anchorMax = Vector2.one;
-            _flashText.rectTransform.offsetMin = new Vector2(12f, 4f);
-            _flashText.rectTransform.offsetMax = new Vector2(-12f, -4f);
-        }
-        _flash.gameObject.SetActive(true);
-        _flashText.text = _relocText;
-        _flash.Fit();
-    }
-
-    private void OnDestroy() { if (_flash != null) Destroy(_flash.gameObject); }
 
     internal static string Clean(string name)
     {

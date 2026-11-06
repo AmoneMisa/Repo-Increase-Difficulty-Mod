@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using IncreaseHardMod.Hud;
 using IncreaseHardMod.Quests;
 using TMPro;
 using UnityEngine;
@@ -38,8 +39,8 @@ internal sealed class QuestHud : MonoBehaviour
         BuildText();
         if (_pages.Count > 1)
         {
-            if (SemiFunc.NoTextInputsActive() && Input.GetKeyDown(KeyCode.PageDown)) _page = (_page + 1) % _pages.Count;
-            if (SemiFunc.NoTextInputsActive() && Input.GetKeyDown(KeyCode.PageUp)) _page = (_page + _pages.Count - 1) % _pages.Count;
+            if (SemiFunc.NoTextInputsActive() && Input.GetKeyDown(KeyCode.PageDown)) _page = HudPaging.Step(_page, _pages.Count, 1);
+            if (SemiFunc.NoTextInputsActive() && Input.GetKeyDown(KeyCode.PageUp)) _page = HudPaging.Step(_page, _pages.Count, -1);
         }
         _page = Mathf.Clamp(_page, 0, Mathf.Max(0, _pages.Count - 1));
         _label.text = Header() + _pages[_page] + (_pages.Count > 1 ? $"\n<size=80%>PGUP / PGDN  {_page + 1}/{_pages.Count}</size>" : "");
@@ -103,7 +104,6 @@ internal sealed class QuestHud : MonoBehaviour
     private void BuildText()
     {
         _pages.Clear();
-        var body = new StringBuilder();
         var entries = new List<string>();
         if (ShowQuests)
         {
@@ -114,17 +114,9 @@ internal sealed class QuestHud : MonoBehaviour
         if (entries.Count == 0) entries.Add("NO QUESTS THIS LEVEL.\n");
         float width = _surface.Panel.sizeDelta.x;
         float height = _surface.Panel.sizeDelta.y;
-        foreach (string entry in entries)
-        {
-            string candidate = Header() + body + entry + "\n<size=80%>PGUP / PGDN  1/6</size>";
-            if (body.Length > 0 && _label.GetPreferredValues(candidate, width, Mathf.Infinity).y > height)
-            {
-                _pages.Add(body.ToString());
-                body.Clear();
-            }
-            body.Append(entry);
-        }
-        if (body.Length > 0) _pages.Add(body.ToString());
+        // HUD toolkit paging: whole quests per page, measured with the header and the page footer.
+        _pages.AddRange(HudPaging.Paginate(entries, text => _label.GetPreferredValues(text, width, Mathf.Infinity).y, height,
+            Header(), "\n<size=80%>PGUP / PGDN  1/6</size>"));
     }
 
     private static string Entry(ActiveQuest q, string prefix)
