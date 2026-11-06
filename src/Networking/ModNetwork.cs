@@ -24,7 +24,7 @@ namespace IncreaseHardMod.Networking;
 public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 {
     // Our private event codes. Must not collide with REPO's (123/124/199) or PUN's
-    // reserved range (200+). In use: 172-173 (skill tree), 177-179, 181-198 (197 = LevelInfoHud.StateEventCode, declared there);
+    // reserved range (200+). In use: 172-173 (skill tree), 174 (quest level end), 177-179, 181-198 (197 = LevelInfoHud.StateEventCode, declared there);
     // 180 is retired (old cart-upgrade state). 170-171 = HostRunControls (failed-level vote).
     // Search every file for "EventCode" before adding one.
     // Host: a player was poisoned or sedated (screen effect on that player's own client only).
@@ -79,9 +79,23 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
                 { sender = player; break; }
         byte op = (byte)data[0];
         string nodeId = (string)data[1];
-        var block = sender != null ? Skills.SkillStore.HostHandle(sender.steamID, op, nodeId, (int)data[2]) : Skills.BuyBlock.NotReady;
+        // A request sent as the level ends can arrive after the sender's avatar is gone: fall back to the Steam id
+        // the host remembered for that player.
+        string steamId = sender != null ? sender.steamID : Skills.SkillStore.SteamIdOfActor(message.Sender);
+        var block = !string.IsNullOrEmpty(steamId) ? Skills.SkillStore.HostHandle(steamId, op, nodeId, (int)data[2]) : Skills.BuyBlock.NotReady;
         PhotonNetwork.RaiseEvent(SkillResultEventCode, new object[] { op, (byte)block, nodeId },
             new RaiseEventOptions { TargetActors = new[] { message.Sender } }, SendOptions.SendReliable);
+    }
+
+    // The game ends a level on the host only, so guests never finish their personal quests by themselves:
+    // the host tells everyone (true = the level was completed).
+    public const byte QuestLevelEndEventCode = 174;
+
+    internal void BroadcastQuestLevelEnd(bool completed)
+    {
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient) return;
+        PhotonNetwork.RaiseEvent(QuestLevelEndEventCode, new object[] { completed },
+            new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
     }
 
     public static ModNetwork Instance { get; private set; }
@@ -706,6 +720,14 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         if (photonEvent.Code == SkillRequestEventCode)
         {
             HandleSkillRequest(photonEvent);
+            return;
+        }
+
+        if (photonEvent.Code == QuestLevelEndEventCode)
+        {
+            if (ModConfig.QuestsEnabled.Value && !PhotonNetwork.IsMasterClient && HostSender(photonEvent) &&
+                NetworkPayload.QuestLevelEnd(photonEvent.CustomData, out bool completed))
+                Quests.QuestManager.OnLevelCompleted(completed);
             return;
         }
 

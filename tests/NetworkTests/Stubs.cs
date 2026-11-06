@@ -63,7 +63,7 @@ namespace IncreaseHardMod.Visuals {
 
 namespace IncreaseHardMod.Quests {
  public enum StatKind:byte {Health,Stamina,SprintSpeed,GrabStrength,GrabRange,ThrowStrength,ExtraJump,TumbleLaunch}
- public static class QuestManager {public static int States,Buffs;public static void Tick(float dt){}public static void ReceiveTeamState(object[] d){States++;}public static void ApplyTempBuff(StatKind stat,int amount){Buffs++;}}
+ public static class QuestManager {public static int States,Buffs;public static void Tick(float dt){}public static void ReceiveTeamState(object[] d){States++;}public static void ApplyTempBuff(StatKind stat,int amount){Buffs++;}public static int LevelEnds;public static bool LastCompleted;public static void OnLevelCompleted(bool c){LevelEnds++;LastCompleted=c;}}
  public static class QuestRewards {public static int Money;public static void GrantMoney(int amount){Money+=amount;}}
  public static class QuestRankProgress {public static void PublishSave(){}}
 }
@@ -72,4 +72,4 @@ namespace IncreaseHardMod.Patches.Effects { public static class LevelInfoHud { p
 
 namespace IncreaseHardMod.Hud{public enum PlayerCondition{Frozen,Poisoned,Sedated,Netted}public static class HudConditions{public static int Started;public static PlayerCondition Last;public static float Seconds;public static void Start(PlayerCondition c,float s){Started++;Last=c;Seconds=s;}}}
 
-namespace IncreaseHardMod.Skills{public enum BuyBlock:byte{None=0,UnknownNode,Maxed,MissingPrerequisite,NotEnoughPoints,BadCount,WrongPlace,NotReady,NoMoney,NothingSpent}public static class SkillStore{public const byte OpBuy=0,OpRespec=1;public static List<(string Steam,byte Op,string Node,int Count)> Handled=new();public static BuyBlock Answer=BuyBlock.None;public static BuyBlock HostHandle(string steam,byte op,string node,int count){Handled.Add((steam,op,node,count));return Answer;}public static List<(byte Op,BuyBlock Block,string Node)> Reports=new();public static void Report(byte op,BuyBlock b,string node){Reports.Add((op,b,node));}}}
+namespace IncreaseHardMod.Skills{public enum BuyBlock:byte{None=0,UnknownNode,Maxed,MissingPrerequisite,NotEnoughPoints,BadCount,WrongPlace,NotReady,NoMoney,NothingSpent}public static class SkillStore{public const byte OpBuy=0,OpRespec=1,OpQuestPoints=2;public static Dictionary<int,string> Actors=new();public static string SteamIdOfActor(int a)=>Actors.TryGetValue(a,out var s)?s:null;public static List<(string Steam,byte Op,string Node,int Count)> Handled=new();public static BuyBlock Answer=BuyBlock.None;public static BuyBlock HostHandle(string steam,byte op,string node,int count){Handled.Add((steam,op,node,count));return Answer;}public static List<(byte Op,BuyBlock Block,string Node)> Reports=new();public static void Report(byte op,BuyBlock b,string node){Reports.Add((op,b,node));}}}

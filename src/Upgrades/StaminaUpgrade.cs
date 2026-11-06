@@ -25,10 +25,7 @@ internal static class StaminaUpgrade
         {
             Id = Id,
             DisplayName = "Slower Stamina Use",
-            Description = "Each level reduces the remaining sprint stamina drain by the configured percentage. Reductions multiply; sprinting never becomes free.",
             MaxLevel = ModConfig.StaminaMaxLevel.Value,
-            BaseShopPrice = ModConfig.StaminaBasePrice.Value,
-            IconFile = "Upgrade_Slower_Stamina_Use.png",
         });
     }
 

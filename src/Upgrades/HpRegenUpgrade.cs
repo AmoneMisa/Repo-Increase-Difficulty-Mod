@@ -30,12 +30,9 @@ internal static class HpRegenUpgrade
         {
             Id = Id,
             DisplayName = "HP Regeneration",
-            Description = "Slowly regenerate health, but only up to a fraction of your max HP.",
             MaxLevel = ModConfig.RegenMaxLevel.Value,
-            BaseShopPrice = ModConfig.RegenBasePrice.Value,
             StartAction = null,
             UpgradeAction = null,
-            IconFile = "Upgrade_HP-Regen.png",
         });
     }
 

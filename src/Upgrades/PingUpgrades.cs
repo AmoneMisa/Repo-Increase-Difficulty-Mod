@@ -16,16 +16,12 @@ internal static class PingUpgrades
         PlayerUpgradeRegistry.Define(new PlayerUpgradeRegistry.Definition
         {
             Id = PingAnywhereId, DisplayName = "Ping Anywhere",
-            Description = "Unlocks team pings for players, monsters, valuables, items, carts and any surface, visible through walls. Markers expire after the configured duration; live markers are limited. Includes the former Pin unlock.",
-            MaxLevel = 1, BaseShopPrice = ModConfig.PingAnywhereBasePrice.Value,
-            IconFile = "Upgrade_Ping.png",
+            MaxLevel = 1,
         });
         PlayerUpgradeRegistry.Define(new PlayerUpgradeRegistry.Definition
         {
             Id = PingInfoId, DisplayName = "Ping Info",
-            Description = "Information addon for Ping Anywhere: adds valuable prices, cosmetic rarity, player and monster names, and exact item names. Requires Ping Anywhere to place any ping.",
-            MaxLevel = 1, BaseShopPrice = ModConfig.PingInfoBasePrice.Value,
-            IconFile = "Upgrade_Ping_Info.png",
+            MaxLevel = 1,
         });
     }
 

@@ -31,19 +31,13 @@ internal static class CombatDamageUpgrades
         {
             Id = MeleeId,
             DisplayName = "Melee Damage",
-            Description = $"Each level adds +{ModConfig.MeleeDamagePercentPerLevel.Value * 100f:0.#}% to the damage your melee weapons deal to monsters.",
             MaxLevel = ModConfig.MeleeDamageMaxLevel.Value,
-            BaseShopPrice = ModConfig.MeleeDamageBasePrice.Value,
-            IconFile = "Upgrade_Melee-Damage.png",
         });
         PlayerUpgradeRegistry.Define(new PlayerUpgradeRegistry.Definition
         {
             Id = GrenadeId,
             DisplayName = "Grenade Damage",
-            Description = $"Each level adds +{ModConfig.GrenadeDamagePercentPerLevel.Value * 100f:0.#}% to the damage your grenades deal to monsters.",
             MaxLevel = ModConfig.GrenadeDamageMaxLevel.Value,
-            BaseShopPrice = ModConfig.GrenadeDamageBasePrice.Value,
-            IconFile = "Upgrade_Grenade-Damage.png",
         });
     }
 

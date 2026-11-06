@@ -124,6 +124,11 @@ public static class QuestManager
             return;
         _levelActive = false;
 
+        // The game changes level on the host only: tell the guests, so they finish their own personal quest
+        // (and ask the host for its money and points) and drop this level's temp buffs.
+        if (SemiFunc.IsMasterClientOrSingleplayer() && SemiFunc.IsMultiplayer())
+            ModNetwork.Instance?.BroadcastQuestLevelEnd(completed);
+
         // Any temp-stat buffs granted this level expire now (each client reverts its own player).
         QuestTempStats.RevertAll();
 

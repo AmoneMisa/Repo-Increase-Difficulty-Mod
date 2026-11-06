@@ -41,19 +41,15 @@ internal static class PingController
 
     private static readonly List<ActivePing> _pings = new();
 
-    // Last ping time per sender name (Photon nickname, or "You" for the local player), so the
-    // winged circlet can appear only while its player is pinging.
-    private static readonly Dictionary<string, float> _lastPingBy = new();
+    // When each pinged player was last marked, so the winged circlet shows over the player who was pinged.
+    private static readonly Dictionary<PlayerAvatar, float> _pingedPlayers = new();
 
     internal static IReadOnlyList<ActivePing> Active => _pings;
 
-    /// <summary>True while this player's most recent ping is still within the ping duration.</summary>
+    /// <summary>True while someone's ping on this player is still within the ping duration (the winged circlet).</summary>
     internal static bool RecentlyPinged(PlayerAvatar avatar)
     {
-        if (avatar == null) return false;
-        string key = avatar.isLocal ? LocalName()
-            : avatar.photonView != null && avatar.photonView.Owner != null ? avatar.photonView.Owner.NickName : null;
-        if (string.IsNullOrEmpty(key) || !_lastPingBy.TryGetValue(key, out float at)) return false;
+        if (avatar == null || !_pingedPlayers.TryGetValue(avatar, out float at)) return false;
         return Time.time < at + ModConfig.PingDurationSeconds.Value;
     }
 
@@ -321,7 +317,12 @@ internal static class PingController
         EnforceGlobalCap();
 
         float duration = ModConfig.PingDurationSeconds.Value;
-        _lastPingBy[sender] = Time.time;
+        if (type == PingType.Player && player != null)
+        {
+            if (_pingedPlayers.Count > 16)
+                foreach (var gone in new List<PlayerAvatar>(_pingedPlayers.Keys)) if (gone == null) _pingedPlayers.Remove(gone);
+            _pingedPlayers[player] = Time.time;
+        }
         var graphic = player != null ? PingOutline.CreatePlayer(player, pos, tint, duration) :
             PingOutline.Create(physGrab, pos, tint, duration);
         if (type == PingType.Location) graphic.AttachBeacon(duration);

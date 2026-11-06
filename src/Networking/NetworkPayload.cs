@@ -51,6 +51,14 @@ internal static class NetworkPayload
     internal static bool SkillResult(object raw, out object[] data) => Envelope(raw, 3, 3, out data) &&
         data[0] is byte op && op <= 2 && data[1] is byte result && result <= 20 && Text(data[2], 64);
 
+    internal static bool QuestLevelEnd(object raw, out bool completed)
+    {
+        completed = false;
+        if (!Envelope(raw, 1, 1, out var data) || data[0] is not bool value) return false;
+        completed = value;
+        return true;
+    }
+
     internal static bool QuestState(object raw, out object[] data)
     {
         // 15 values per quest: ..., title, flags (1 done, 2 failed, 4 contract), skill points, contract perk (255 none).

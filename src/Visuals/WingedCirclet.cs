@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 namespace IncreaseHardMod.Visuals;
 
 /// <summary>
-/// A floating winged circlet above every player's head: a gold bar with a centre gem, two feathered wings
+/// The player ping marker: a floating winged circlet above a pinged player's head, a gold bar with a centre gem, two feathered wings
 /// and hanging pendants (original procedural model). Its wings, gem and glow take whichever of seven
 /// colours is closest to the player's own body colour. Purely local visuals: every client builds it from
 /// the colours the game already syncs, so there is nothing to network. Hidden in your own first-person view.
@@ -149,7 +149,7 @@ internal sealed class WingedCirclet : MonoBehaviour
     private void LateUpdate()
     {
         if (_root == null) return;
-        // Only visible while this player is pinging (see PingController.RecentlyPinged).
+        // Only visible while a ping marks this player (see PingController.RecentlyPinged).
         bool show = Patches.Effects.PingController.RecentlyPinged(avatar);
         if (_root.gameObject.activeSelf != show) _root.gameObject.SetActive(show);
         if (!show) return;

@@ -55,39 +55,33 @@ internal static class BatteryLifeUpgrade
             return;
 
         // Distinct front artwork and matching inventory renders for each weapon category.
-        DefineGun(BulletId, "Bullet Gun Extra Shots", "Upgrade_Gun-Bullet-Count.png");
-        DefineGun(LaserId, "Laser Gun Extra Shots", "Upgrade_Gun-Laser-Capacity.png");
-        DefineGun(TranqId, "Tranq Gun Extra Shots", "Upgrade_Gun-Tranq-Capacity.png");
+        DefineGun(BulletId, "Bullet Gun Extra Shots");
+        DefineGun(LaserId, "Laser Gun Extra Shots");
+        DefineGun(TranqId, "Tranq Gun Extra Shots");
 
         PlayerUpgradeRegistry.Define(new PlayerUpgradeRegistry.Definition
         {
             Id = DroneId,
             DisplayName = "Drone Battery Life",
-            Description = "Your drones' batteries last longer. Stacks per level (up to +100%).",
             MaxLevel = EffectiveMaxLevel(true),
-            BaseShopPrice = ModConfig.DroneBatteryBasePrice.Value,
-            IconFile = "Upgrade_Drone-Charge-Capacity.png",
         });
     }
 
-    private static void DefineGun(string id, string name, string iconFile = null)
+    private static void DefineGun(string id, string name)
     {
         PlayerUpgradeRegistry.Define(new PlayerUpgradeRegistry.Definition
         {
             Id = id,
             DisplayName = name,
-            Description = $"More shots from every battery charge, scaled to each gun's own ammo: the Handgun gets {ModConfig.GunExtraBulletsPerLevel.Value:0.##} extra shot(s) per level, guns with fewer shots (like the shotgun) get proportionally less.",
             MaxLevel = EffectiveMaxLevel(false),
-            BaseShopPrice = ModConfig.GunBatteryBasePrice.Value,
-            IconFile = iconFile,
         });
     }
 
     internal static int EffectiveMaxLevel(bool drone)
     {
         if (!drone) return Mathf.Clamp(ModConfig.GunExtraBulletsMaxLevel.Value, 1, 100);
-        float percent = Mathf.Clamp(drone ? ModConfig.DroneBatteryPercentPerLevel.Value : ModConfig.GunBatteryPercentPerLevel.Value, .01f, .5f);
-        int configured = drone ? ModConfig.DroneBatteryMaxLevel.Value : ModConfig.GunBatteryMaxLevel.Value;
+        float percent = Mathf.Clamp(ModConfig.DroneBatteryPercentPerLevel.Value, .01f, .5f);
+        int configured = ModConfig.DroneBatteryMaxLevel.Value;
         return Mathf.Clamp(configured, 1, Mathf.CeilToInt(1f / percent));
     }
 

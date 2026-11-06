@@ -6,9 +6,6 @@ namespace IncreaseHardMod.Upgrades;
 /// <summary>Vanilla Upgrade Pack geometry/UVs with a private printed material and a separate UI render.</summary>
 internal static class UpgradeAppearance
 {
-    // Shared identity for the completed inventory-slot upgrade wrapper.
-    public const string InventoryArt = "Upgrade_Inventory.png";
-
     public static void Apply(GameObject prefab, string id, string atlasFile)
     {
         var atlas = UpgradeIcons.LoadTexture(atlasFile);

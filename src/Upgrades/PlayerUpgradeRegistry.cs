@@ -52,10 +52,6 @@ internal static class PlayerUpgradeRegistry
         public Action<PlayerAvatar, int> UpgradeAction;
         // Printed native-layout atlas; Icon_ + filename is the separate transparent inventory render.
         public string IconFile;
-        // When true, source the shop icon + physical card art from the vanilla "Map Player Count"
-        // upgrade instead of an embedded PNG. Used by Map Suite, which replaces that vanilla upgrade
-        // and reuses its map-themed art. Takes precedence over IconFile.
-        public bool UseVanillaMapIcon = false;
         // Replaces the level increment when the item is used (host side), e.g. the Skill Point grants a point.
         public Action<PlayerAvatar> OnUse;
         // How many copies one shop may stock.
@@ -244,11 +240,7 @@ internal static class PlayerUpgradeRegistry
         attributes.item = item;
 
         // Apply the authored UV atlas and its separate transparent shop/inventory render.
-        if (def.UseVanillaMapIcon)
-        {
-            ApplyVanillaMapIcon(clone, def.Id, attributes);
-        }
-        else if (!string.IsNullOrEmpty(def.IconFile))
+        if (!string.IsNullOrEmpty(def.IconFile))
         {
             UpgradeAppearance.Apply(clone, def.Id, def.IconFile);
         }
@@ -297,61 +289,6 @@ internal static class PlayerUpgradeRegistry
                 }
             return true;
         }
-    }
-
-    /// <summary>
-    /// Give an upgrade the vanilla "Map Player Count" upgrade's art: copy that upgrade's shop icon
-    /// sprite onto our ItemAttributes, and retexture our physical card with its card-face texture.
-    /// Map Suite removes the vanilla map upgrade from the shop, so reusing its map-themed art makes
-    /// Map Suite read as its clear replacement without authoring a new PNG. Best-effort: if the
-    /// vanilla prefab can't be found the card just keeps the default clone art.
-    /// </summary>
-    private static void ApplyVanillaMapIcon(GameObject clone, string id, ItemAttributes attributes)
-    {
-        var vanilla = FindVanillaMapUpgradePrefab();
-        if (vanilla == null)
-        {
-            Plugin.Log.LogWarning($"[Icons] Vanilla 'Map Player Count' upgrade not found; '{id}' keeps default art.");
-            return;
-        }
-
-        var vanillaAttr = vanilla.GetComponentInChildren<ItemAttributes>(true);
-        if (vanillaAttr != null && vanillaAttr.icon != null)
-            attributes.icon = vanillaAttr.icon;
-
-        foreach (var renderer in clone.GetComponentsInChildren<Renderer>(true))
-        {
-            var original = vanilla.transform.Find(Path(renderer.transform, clone.transform));
-            var native = original != null ? original.GetComponent<Renderer>() : null;
-            if (native != null) renderer.sharedMaterials = native.sharedMaterials;
-        }
-    }
-
-    /// <summary>Locate the vanilla map-player-count upgrade prefab via its marker component.</summary>
-    private static GameObject FindVanillaMapUpgradePrefab()
-    {
-        var statsManager = StatsManager.instance;
-        if (statsManager == null || statsManager.itemDictionary == null)
-            return null;
-
-        foreach (var item in statsManager.itemDictionary.Values)
-        {
-            var prefab = item != null && item.prefab != null ? item.prefab.Prefab : null;
-            if (prefab != null && prefab.GetComponentInChildren<ItemUpgradeMapPlayerCount>(true) != null)
-                return prefab;
-        }
-        return null;
-    }
-
-    private static string Path(Transform t, Transform root)
-    {
-        var stack = new System.Collections.Generic.Stack<string>();
-        while (t != null && t != root)
-        {
-            stack.Push(t.name);
-            t = t.parent;
-        }
-        return string.Join("/", stack);
     }
 
     /// <summary>Runs after itemDictionary is populated, before REPOLib flushes its content.</summary>

@@ -158,7 +158,11 @@ internal static class SkillStore
 
     internal static BuyBlock HostQuestPoints(string steamId, int count)
     {
-        if (!Host || !Ready || string.IsNullOrEmpty(steamId)) return BuyBlock.NotReady;
+        if (!Host || !Ready || string.IsNullOrEmpty(steamId))
+        {
+            Plugin.Log.LogWarning($"[Skills] Personal-quest point(s) for {steamId ?? "an unknown player"} not paid: the tree is not ready.");
+            return BuyBlock.NotReady;
+        }
         var run = RunManager.instance;
         string level = run != null && run.levelCurrent != null ? run.levelsCompleted + ":" + run.levelCurrent.name : "";
         if (level != _paidLevel) { PersonalPaid.Clear(); _paidLevel = level; }
@@ -301,6 +305,21 @@ internal static class SkillStore
               string.Join("; ", result.Lines));
     }
 
+    // Photon actor number -> Steam id, kept by the host while players are in the run, so a request that arrives
+    // while the level unloads (avatars gone) can still be credited to the right player.
+    private static readonly Dictionary<int, string> ActorSteam = new();
+
+    internal static string SteamIdOfActor(int actor) => ActorSteam.TryGetValue(actor, out var id) ? id : null;
+
+    private static void RememberActors()
+    {
+        var players = SemiFunc.PlayerGetList();
+        if (players == null) return;
+        foreach (var player in players)
+            if (player != null && !string.IsNullOrEmpty(player.steamID) && player.photonView != null && player.photonView.Owner != null)
+                ActorSteam[player.photonView.Owner.ActorNumber] = player.steamID;
+    }
+
     /// <summary>Host: migrates every player in the run as soon as the save is bound. Lives on the runtime object.</summary>
     internal sealed class HostController : MonoBehaviour
     {
@@ -312,6 +331,7 @@ internal static class SkillStore
         {
             if (Time.unscaledTime < _next) return;
             _next = Time.unscaledTime + 1f;
+            if (Host) RememberActors();
             if (!Host || !Ready) return;
             if (!SemiFunc.RunIsLevel() && !SemiFunc.RunIsShop() && !SemiFunc.RunIsLobby()) return;
             if (_stats != StatsManager.instance) { _stats = StatsManager.instance; _done.Clear(); }

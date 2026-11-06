@@ -30,30 +30,21 @@ internal static class SurvivalUpgrades
             {
                 Id = ArmorId,
                 DisplayName = "Armor",
-                Description = $"Reduces incoming damage by {ModConfig.ArmorPercentPerLevel.Value * 100f:0.#}% per level (up to {ArmorCap * 100f:0.#}%). Always rounded in your favour.",
                 MaxLevel = ModConfig.ArmorMaxLevel.Value,
-                BaseShopPrice = ModConfig.ArmorBasePrice.Value,
-                IconFile = "Upgrade_Armor.png",
             });
         if (ModConfig.OverchargeEnabled.Value)
             PlayerUpgradeRegistry.Define(new PlayerUpgradeRegistry.Definition
             {
                 Id = OverchargeId,
                 DisplayName = "Overcharge",
-                Description = $"Hold monsters longer before your grab beam overloads: overcharge builds up {ModConfig.OverchargeBuildupPerLevel.Value * 100f:0.#}% slower per level and recovers faster.",
                 MaxLevel = ModConfig.OverchargeMaxLevel.Value,
-                BaseShopPrice = ModConfig.OverchargeBasePrice.Value,
-                IconFile = "Upgrade_Overcharge.png",
             });
         if (ModConfig.TumbleBonusEnabled.Value)
             PlayerUpgradeRegistry.Define(new PlayerUpgradeRegistry.Definition
             {
                 Id = TumbleId,
                 DisplayName = "Tumble Damage",
-                Description = $"Launching yourself into a monster hits harder: +{ModConfig.TumbleDamagePerLevel.Value * 100f:0.#}% damage per level, compounding, and you take {ModConfig.TumbleSelfDamageReductionPerLevel.Value * 100f:0.#}% less self-damage per level.",
                 MaxLevel = ModConfig.TumbleMaxLevel.Value,
-                BaseShopPrice = ModConfig.TumbleBasePrice.Value,
-                IconFile = "Upgrade_Tumble-Launch.png",
             });
     }
 

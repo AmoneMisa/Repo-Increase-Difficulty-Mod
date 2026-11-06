@@ -327,44 +327,106 @@ internal sealed class IceBlock : MonoBehaviour
 
     // ------------------------------------------------------------------ textures
 
-    // Fractured, cloudy ice: alpha = cloudy frost + bold crack network + fine hairline cracks. Tiles seamlessly.
-    private static Texture2D CrackTexture()
+    // The crack texture is tens of millions of distance checks: done all at once on the first freeze it stalled
+    // the game for a moment. Prewarm builds the textures a few rows per frame from game start (and loads the ice
+    // shader bundle), so the first shot only has to build the block itself.
+    private const int CrackSize = 256, RimeSize = 128;
+    private static Color[] _crackPixels, _rimePixels;
+    private static int _crackRows, _rimeRows;
+    private static Vector2[] _bold, _fine;
+
+    internal static System.Collections.IEnumerator Prewarm()
     {
-        const int size = 256;
-        var random = new System.Random(9137);
-        var bold = Seeds(random, 11);
-        var fine = Seeds(random, 34);
-        var pixels = new Color[size * size];
-        for (int y = 0; y < size; y++)
-        for (int x = 0; x < size; x++)
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        while (_crackTexture == null && _crackRows < CrackSize)
         {
-            var p = new Vector2((x + .5f) / size, (y + .5f) / size);
-            float crack = Mathf.Exp(-Mathf.Pow(Edge(p, bold) / .006f, 2f));
-            float hair = Mathf.Exp(-Mathf.Pow(Edge(p, fine) / .003f, 2f)) * .55f;
+            CrackRow();
+            if (clock.ElapsedMilliseconds >= 2) { yield return null; clock.Restart(); }
+        }
+        while (_rimeTexture == null && _rimeRows < RimeSize)
+        {
+            RimeRow();
+            if (clock.ElapsedMilliseconds >= 2) { yield return null; clock.Restart(); }
+        }
+        _crackTexture ??= CrackTexture();
+        _rimeTexture ??= RimeTexture();
+        yield return null;
+        // The embedded shader bundle, loaded now rather than mid-fight, and its GPU programs compiled up front:
+        // the first draw with a new shader otherwise compiles it on the spot.
+        var ice = IceShader.Shader;
+        yield return null;
+        WarmUp(ice, PassType.Normal);
+        yield return null;
+        var standard = Shader.Find("Standard");
+        WarmUp(standard, PassType.ForwardBase, "_ALPHAPREMULTIPLY_ON", "_EMISSION");
+        WarmUp(standard, PassType.ForwardBase, "_ALPHAPREMULTIPLY_ON");
+    }
+
+    private static void WarmUp(Shader shader, PassType pass, params string[] keywords)
+    {
+        if (shader == null) return;
+        try
+        {
+            var variants = new ShaderVariantCollection();
+            variants.Add(new ShaderVariantCollection.ShaderVariant(shader, pass, keywords));
+            variants.WarmUp();
+        }
+        catch (System.Exception error) { Plugin.Log.LogInfo($"[Ice] Shader warm-up skipped for {shader.name}: {error.Message}"); }
+    }
+
+    // Fractured, cloudy ice: alpha = cloudy frost + bold crack network + fine hairline cracks. Tiles seamlessly.
+    private static void CrackRow()
+    {
+        if (_crackPixels == null)
+        {
+            var random = new System.Random(9137);
+            _bold = Seeds(random, 11);
+            _fine = Seeds(random, 34);
+            _crackPixels = new Color[CrackSize * CrackSize];
+        }
+        int y = _crackRows++;
+        for (int x = 0; x < CrackSize; x++)
+        {
+            var p = new Vector2((x + .5f) / CrackSize, (y + .5f) / CrackSize);
+            float crack = Mathf.Exp(-Mathf.Pow(Edge(p, _bold) / .006f, 2f));
+            float hair = Mathf.Exp(-Mathf.Pow(Edge(p, _fine) / .003f, 2f)) * .55f;
             float cloud = Fbm(p * 4f, 4);
             float frost = Mathf.SmoothStep(.35f, .8f, cloud) * .42f + .16f;
             float a = Mathf.Clamp01(frost + crack * .8f + hair * .6f);
             float bright = Mathf.Clamp01(.75f + crack * .25f);
-            pixels[y * size + x] = new Color(bright, bright, 1f, a);
+            _crackPixels[y * CrackSize + x] = new Color(bright, bright, 1f, a);
         }
-        return MakeTexture("IHM Ice Cracks", size, pixels, TextureWrapMode.Repeat);
+    }
+
+    private static Texture2D CrackTexture()
+    {
+        while (_crackRows < CrackSize) CrackRow(); // finishes whatever Prewarm has not done yet
+        var texture = MakeTexture("IHM Ice Cracks", CrackSize, _crackPixels, TextureWrapMode.Repeat);
+        _crackPixels = null;
+        return texture;
     }
 
     // Dense white frost crust: speckled crystals over a milky base.
-    private static Texture2D RimeTexture()
+    private static void RimeRow()
     {
-        const int size = 128;
-        var pixels = new Color[size * size];
-        for (int y = 0; y < size; y++)
-        for (int x = 0; x < size; x++)
+        _rimePixels ??= new Color[RimeSize * RimeSize];
+        int y = _rimeRows++;
+        for (int x = 0; x < RimeSize; x++)
         {
-            var p = new Vector2((x + .5f) / size, (y + .5f) / size);
+            var p = new Vector2((x + .5f) / RimeSize, (y + .5f) / RimeSize);
             float grain = Fbm(p * 16f, 3);
             float speck = Mathf.SmoothStep(.5f, .7f, grain);
             float a = Mathf.Clamp01(.45f + speck * .5f + Fbm(p * 3f, 2) * .15f);
-            pixels[y * size + x] = new Color(1f, 1f, 1f, a);
+            _rimePixels[y * RimeSize + x] = new Color(1f, 1f, 1f, a);
         }
-        return MakeTexture("IHM Ice Rime", size, pixels, TextureWrapMode.Repeat);
+    }
+
+    private static Texture2D RimeTexture()
+    {
+        while (_rimeRows < RimeSize) RimeRow();
+        var texture = MakeTexture("IHM Ice Rime", RimeSize, _rimePixels, TextureWrapMode.Repeat);
+        _rimePixels = null;
+        return texture;
     }
 
     private static Vector2[] Seeds(System.Random random, int count)

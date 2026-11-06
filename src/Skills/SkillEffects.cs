@@ -187,8 +187,45 @@ internal static class SkillEffects
         choice.SetLevel(local.steamID, Mathf.Clamp(index, 0, BeamColours.Length - 1));
     }
 
-    private sealed class Beam { internal float Range, Angle; internal Color Colour; }
+    private sealed class Beam
+    {
+        internal float Range, Angle;
+        internal Color Colour;
+        internal int Applied;                    // beam colour the lamp and halo currently show
+        internal Material Lamp;                  // our own copy of the flashlight lens material
+        internal Color LampColour, LampEmission;
+        internal bool HasColour, HasEmission;
+    }
     private static readonly ConditionalWeakTable<FlashlightController, Beam> Beams = new();
+
+    // What other players mostly see of a flashlight is its glowing lens and halo, not the light on the walls,
+    // so a chosen colour tints those too. Runs only when the colour changes.
+    private static void TintLamp(FlashlightController flashlight, Beam beam, int colour)
+    {
+        if (beam.Applied == colour) return;
+        beam.Applied = colour;
+        var tint = colour > 0 ? BeamColours[colour] : Color.white;
+        var mesh = flashlight.mesh;
+        if (mesh != null && beam.Lamp == null && mesh.sharedMaterial != null)
+        {
+            beam.Lamp = mesh.material; // an instance: the shared lens material of other flashlights is untouched
+            beam.HasColour = beam.Lamp.HasProperty("_Color");
+            beam.HasEmission = beam.Lamp.HasProperty("_EmissionColor");
+            if (beam.HasColour) beam.LampColour = beam.Lamp.GetColor("_Color");
+            if (beam.HasEmission) beam.LampEmission = beam.Lamp.GetColor("_EmissionColor");
+        }
+        if (beam.Lamp != null)
+        {
+            if (beam.HasColour) beam.Lamp.SetColor("_Color", beam.LampColour * tint);
+            if (beam.HasEmission) beam.Lamp.SetColor("_EmissionColor", beam.LampEmission * tint);
+        }
+        var halo = flashlight.halo;
+        var property = halo != null ? halo.GetType().GetProperty("color") : null;
+        if (property != null && property.PropertyType == typeof(Color) && property.CanWrite)
+            try { property.SetValue(halo, colour > 0 ? tint : beam.Colour); } catch { }
+        var owner = flashlight.PlayerAvatar;
+        Plugin.Log.LogInfo($"[Skills] Flashlight colour for {(owner != null ? SemiFunc.PlayerGetName(owner) : "?")}: {BeamColourNames[colour]}{(owner != null && owner.isLocal ? " (you)" : "")}.");
+    }
 
     [HarmonyPatch(typeof(FlashlightController), "Update")]
     private static class FlashlightBeam
@@ -214,6 +251,7 @@ internal static class SkillEffects
             light.spotAngle = Mathf.Min(170f, beam.Angle * angle);
             light.intensity *= bright; // the game rewrites intensity every frame, so this never compounds
             light.color = colour > 0 ? BeamColours[colour] : beam.Colour;
+            TintLamp(__instance, beam, colour);
         }
     }
 

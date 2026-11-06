@@ -1,17 +1,12 @@
 """python tools/build_skill_point_atlas.py --root .
 
-Skill Point upgrade atlas, same recipe as build_damage_upgrade_atlases.py: teal packaging and a
-skill-tree node pictogram (hexagon with a star and a plus badge).
-Then render its Icon_ PNG: blender --background --factory-startup --python tools/build_upgrade_art.py -- --root . --atlas Upgrade_Skill-Point.png
-
-(Original notes of the shared recipe:)
-
-Builds the Melee Damage and Grenade Damage upgrade atlases from the checked-in
-Upgrade_Gun-Bullet-Count.png wrapper: the packaging is recoloured, the bullet/battery
-illustration is cleared from the front panel and replaced by a flat pictogram in the
-same cream-ink / chunky-outline style. Only the front panel (x256-438, y296-500 of the
-512 px atlas) is repainted; side labels, barcode and UV islands are untouched.
-Afterwards run tools/build_upgrade_art.py --atlas <file> to render the Icon_ PNG.
+Builds the Skill Point upgrade atlas (src/Textures/Upgrade_Skill-Point.png) from the old bullet-gun
+wrapper kept in art/upgrade-reference/Upgrade_Gun-Bullet-Count.png: the packaging is recoloured teal,
+the front panel (x256-438, y296-500 of the 512 px atlas) is cleared and repainted with a flat
+skill-tree node pictogram (hexagon, star, plus badge) in the cream-ink / chunky-outline style.
+Side labels, barcode and UV islands are untouched.
+Then render its Icon_ PNG:
+blender --background --factory-startup --python tools/build_upgrade_art.py -- --root . --atlas Upgrade_Skill-Point.png
 """
 import argparse
 import colorsys
@@ -25,7 +20,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--root', type=Path, required=True)
 args = parser.parse_args()
 textures = args.root.resolve() / 'src' / 'Textures'
-source = Image.open(textures / 'Upgrade_Gun-Bullet-Count.png').convert('RGB')
+source = Image.open(args.root.resolve() / 'art' / 'upgrade-reference' / 'Upgrade_Gun-Bullet-Count.png').convert('RGB')
 
 INK = (27, 24, 22, 255)
 CREAM = (239, 230, 207, 255)

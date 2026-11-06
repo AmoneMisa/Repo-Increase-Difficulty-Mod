@@ -42,10 +42,7 @@ internal static class MapUpgrade
         {
             Id = Id,
             DisplayName = "Map Suite",
-            Description = "Unlocks map features as it levels: live player/monster counts, quota heading + valuable tracker, team pings on the map, zoom-out, and trackers.",
             MaxLevel = Levels,
-            BaseShopPrice = ModConfig.MapBasePrice.Value,
-            IconFile = "Upgrade_Map_Suite.png",
         });
     }
 

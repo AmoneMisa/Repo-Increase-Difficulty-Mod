@@ -135,6 +135,20 @@ int hudCalls=LevelInfoHud.Calls; Send(LevelInfoHud.StateEventCode,new object[]{"
     Check(R.Count==0,"A peer cannot fake a skill result");
     Send(ModNetwork.SkillResultEventCode,new object[]{(byte)0,(byte)0,"IHM_ST_Armor"},1);
     Check(R.Count==1&&R[0].Node=="IHM_ST_Armor","The host's skill result is shown");
+    // Level end: only the host's word counts, and it reaches the guest's quest manager.
+    int ends=IncreaseHardMod.Quests.QuestManager.LevelEnds;
+    Send(ModNetwork.QuestLevelEndEventCode,new object[]{true},5);
+    Check(IncreaseHardMod.Quests.QuestManager.LevelEnds==ends,"A peer cannot end the level for others");
+    Send(ModNetwork.QuestLevelEndEventCode,new object[]{"yes"});
+    Check(IncreaseHardMod.Quests.QuestManager.LevelEnds==ends,"A malformed level end is ignored");
+    Send(ModNetwork.QuestLevelEndEventCode,new object[]{true});
+    Check(IncreaseHardMod.Quests.QuestManager.LevelEnds==ends+1&&IncreaseHardMod.Quests.QuestManager.LastCompleted,"The host's level end finishes the guest's personal quest");
+    // A personal-quest request from a guest whose avatar is already gone is credited by its remembered Steam id.
+    PhotonNetwork.IsMasterClient=true;S.Clear();SemiFunc.Players.Clear();
+    IncreaseHardMod.Skills.SkillStore.Actors[7]="leaving";
+    Send(ModNetwork.SkillRequestEventCode,new object[]{(byte)2,"",1},7);
+    Check(S.Count==1&&S[0].Steam=="leaving"&&S[0].Op==2,"A guest leaving the level is still paid by its remembered Steam id");
+    PhotonNetwork.IsMasterClient=false;
     PhotonNetwork.IsMasterClient=wasMaster;SemiFunc.Players.Clear();
 }
 Console.WriteLine("NETWORK_AUDIT_PASS: "+checks);

@@ -20,9 +20,7 @@ internal static class InventorySlotsUpgrade
         PlayerUpgradeRegistry.Define(new PlayerUpgradeRegistry.Definition
         {
             Id = Id, DisplayName = "Inventory Slot",
-            Description = "Adds one inventory slot per level. Three base slots, seven slots maximum. Extra slots use keys 4-7.",
-            MaxLevel = MaxLevel, BaseShopPrice = ModConfig.InventorySlotBasePrice.Value,
-            IconFile = UpgradeAppearance.InventoryArt,
+            MaxLevel = MaxLevel,
         });
     }
 

@@ -17,10 +17,7 @@ internal static class AutoscanUpgrade
         PlayerUpgradeRegistry.Define(new PlayerUpgradeRegistry.Definition
         {
             Id = Id, DisplayName = "Autoscan",
-            Description = "Automatically discovers nearby valuables and native discoverable items. Higher levels scan farther; discoveries are shared with the team.",
             MaxLevel = ModConfig.AutoscanMaxLevel.Value,
-            BaseShopPrice = ModConfig.AutoscanBasePrice.Value,
-            IconFile = "Upgrade_Autoscan.png",
         });
     }
 

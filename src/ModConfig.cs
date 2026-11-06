@@ -125,8 +125,6 @@ public static class ModConfig
     // Global cap on how many ping markers can be on screen at once (anti-flood).
     public static ConfigEntry<int> MaxActivePings;
     // Shop prices for the two ping-gate upgrades.
-    public static ConfigEntry<int> PingAnywhereBasePrice;
-    public static ConfigEntry<int> PingInfoBasePrice;
     // "Pin": a one-time permanent unlock (like Ping Anywhere) letting you place Location pins.
 
     // --- Item Unstuck (valuable safety net) ---
@@ -174,7 +172,6 @@ public static class ModConfig
     public static ConfigEntry<UnityEngine.KeyCode> RoundResultsKey;
     public static ConfigEntry<UnityEngine.KeyCode> MapVoteHudKey;
     public static ConfigEntry<bool> InventorySlotsEnabled;
-    public static ConfigEntry<int> InventorySlotBasePrice;
     public static ConfigEntry<UnityEngine.KeyCode> InventorySlot4Key, InventorySlot5Key, InventorySlot6Key, InventorySlot7Key;
 
     // --- Utility Drones ---
@@ -196,7 +193,7 @@ public static class ModConfig
     public static ConfigEntry<bool> FailVoteEnabled, HostRunControlsEnabled;
     public static ConfigEntry<float> ArmorPercentPerLevel, ArmorMaxReduction, OverchargeBuildupPerLevel, OverchargeRecoveryPerLevel;
     public static ConfigEntry<float> TumbleDamagePerLevel, TumbleSelfDamageReductionPerLevel, TumbleSelfDamageMaxReduction;
-    public static ConfigEntry<int> ArmorMaxLevel, ArmorBasePrice, OverchargeMaxLevel, OverchargeBasePrice, TumbleMaxLevel, TumbleBasePrice;
+    public static ConfigEntry<int> ArmorMaxLevel, OverchargeMaxLevel, TumbleMaxLevel;
     public static ConfigEntry<float> CircletScale;
     public static ConfigEntry<bool> DefenceOrbEnabled, DefenceDroneEnabled, ProtectionOrbEnabled;
     public static ConfigEntry<bool> PoisonCrossbowEnabled, DecoyGrenadeEnabled, IcePistolEnabled, StickyPistolEnabled;
@@ -271,41 +268,31 @@ public static class ModConfig
     // Stamina: each level reduces sprint energy drain by this fraction.
     public static ConfigEntry<float> StaminaPercentPerLevel;
     public static ConfigEntry<int> StaminaMaxLevel;
-    public static ConfigEntry<int> StaminaBasePrice;
     // HP Regen: very slow passive heal, only up to a fraction of max HP, then stops.
     public static ConfigEntry<float> RegenPercentPerLevel;
     public static ConfigEntry<float> RegenMaxHpFraction;
     public static ConfigEntry<int> RegenMaxLevel;
-    public static ConfigEntry<int> RegenBasePrice;
     // Death Protection: consumable charge; survive a lethal hit at 1 HP, re-bought each use.
     public static ConfigEntry<int> DeathProtectMaxCharges;
     public static ConfigEntry<int> DeathProtectBasePrice;
     // Battery Life: separate upgrades per gun type (Bullet/Laser/Tranq) and for drones.
     // Each level adds effective battery life (refunds a fraction of drain), so the item
     // lasts longer. "+100%" = twice the usage.
-    public static ConfigEntry<float> GunBatteryPercentPerLevel;
-    public static ConfigEntry<int> GunBatteryMaxLevel;
     public static ConfigEntry<float> GunExtraBulletsPerLevel;
     public static ConfigEntry<int> GunExtraBulletsMaxLevel;
-    public static ConfigEntry<int> GunBatteryBasePrice;
     public static ConfigEntry<float> DroneBatteryPercentPerLevel;
     public static ConfigEntry<int> DroneBatteryMaxLevel;
-    public static ConfigEntry<int> DroneBatteryBasePrice;
     // Melee / Grenade Damage: per-player, each level adds a percentage to monster damage.
     public static ConfigEntry<float> MeleeDamagePercentPerLevel;
     public static ConfigEntry<int> MeleeDamageMaxLevel;
-    public static ConfigEntry<int> MeleeDamageBasePrice;
     public static ConfigEntry<float> GrenadeDamagePercentPerLevel;
     public static ConfigEntry<int> GrenadeDamageMaxLevel;
-    public static ConfigEntry<int> GrenadeDamageBasePrice;
     // Autoscan: passively discovers nearby valuables; each level widens the scan radius.
     public static ConfigEntry<float> AutoscanRangePerLevel;
     public static ConfigEntry<int> AutoscanMaxLevel;
     public static ConfigEntry<float> AutoscanInterval;
-    public static ConfigEntry<int> AutoscanBasePrice;
     // Map Suite: single 10-level upgrade, each level unlocking a map feature (counts,
     // quota path, zoom, cosmetic-box tracker, monster dots). Level->feature ladder is fixed.
-    public static ConfigEntry<int> MapBasePrice;
     public static ConfigEntry<float> MapZoomFovLevel7;
     public static ConfigEntry<float> MapZoomFovLevel8;
     // Live zoom hotkeys while the map is open at L7+ (adjust the FOV on top of the level default).
@@ -482,12 +469,12 @@ public static class ModConfig
         StaffAimAngle = BindFloat(cfg, "Wizard Staff", "AimAssistAngle", 20f, 0f, 60f, "If the aim line misses, the bolt still finds a monster within this many degrees of it (0 = exact aim only).");
         StaffCharges = BindInt(cfg, "Wizard Staff", "Charges", 8, 1, 20, "Bolts per full battery (one battery bar per bolt).");
         CircletEnabled = Module(cfg, "Cosmetics", "WingedCircletEnabled", true, "WingedCirclet",
-            "Player ping marker: while a player is pinging, a floating winged circlet appears above their head for the length of the ping, coloured to match the player's own colour (black, cyan, yellow, green, white, purple or red). Not a cosmetic and not always shown. Local visuals only: each player can turn it off for themselves.");
+            "Player ping marker: when someone pings a player, a floating winged circlet appears above that player's head for the length of the ping, coloured to match the player's own colour (black, cyan, yellow, green, white, purple or red). Not a cosmetic and not always shown. Local visuals only: each player can turn it off for themselves.");
         // Lived in a "Cosmetics" section before 0.7.12; it is a ping marker, so it now sits with the ping settings.
         var orphans = Orphans(cfg);
         var circletScaleDef = new ConfigDefinition("Ping", "WingedCircletScale");
         bool circletScaleExisted = orphans != null && orphans.ContainsKey(circletScaleDef);
-        CircletScale = BindFloat(cfg, "Ping", "WingedCircletScale", 1f, .5f, 2f, "Size of the winged circlet shown above a pinging player (1 = default).");
+        CircletScale = BindFloat(cfg, "Ping", "WingedCircletScale", 1f, .5f, 2f, "Size of the winged circlet shown above a pinged player (1 = default).");
         if (!circletScaleExisted && orphans != null && orphans.TryGetValue(new ConfigDefinition("Cosmetics", "WingedCircletScale"), out var oldCircletScale))
             CircletScale.SetSerializedValue(oldCircletScale);
         IceBlockEnabled = Module(cfg, "Cosmetics", "IceBlockEnabled", true, "IceBlock",
@@ -713,12 +700,6 @@ public static class ModConfig
         MaxActivePings = BindInt(cfg,
             "Ping", "MaxActivePings", 3, 1, 20,
             "Global anti-flood cap: the most ping markers shown on screen at once (across all players). Placing more drops the oldest.");
-        PingAnywhereBasePrice = BindInt(cfg,
-            "Ping", "PingAnywhereBasePrice", 6000, 0, 1000000,
-            "Ping Anywhere upgrade: approximate shop price (unlocks Location pings on any surface / through walls).");
-        PingInfoBasePrice = BindInt(cfg,
-            "Ping", "PingInfoBasePrice", 6000, 0, 1000000,
-            "Ping Info upgrade: approximate shop price (your pings reveal value / rarity / exact names).");
 
         // --- Item Unstuck ---
                 ValuableRelocateStuck = cfg.Bind(
@@ -832,7 +813,6 @@ public static class ModConfig
             "Silencer drone: multiplier applied to the attached target's emitted sound, voice and the radius enemies investigate it from. 0.08 = 8% as loud.");
 
         // --- Map Vote ---
-        InventorySlotBasePrice = BindInt(cfg, "Player Upgrades", "InventorySlotBasePrice", 15000, 1000, 500000, "Approximate first Inventory Slot upgrade price. Four levels, each adds one slot; maximum seven slots total.");
         InventorySlot4Key = cfg.Bind("Inventory Slots", "Slot4Key", UnityEngine.KeyCode.Alpha4, "Store/retrieve from inventory slot 4.");
         InventorySlot5Key = cfg.Bind("Inventory Slots", "Slot5Key", UnityEngine.KeyCode.Alpha5, "Store/retrieve from inventory slot 5.");
         InventorySlot6Key = cfg.Bind("Inventory Slots", "Slot6Key", UnityEngine.KeyCode.Alpha6, "Store/retrieve from inventory slot 6.");
@@ -912,9 +892,6 @@ public static class ModConfig
         StaminaMaxLevel = BindInt(cfg,
             "Player Upgrades", "StaminaMaxLevel", 5, 1, 20,
             "Slower Stamina Use: maximum purchasable level.");
-        StaminaBasePrice = BindInt(cfg,
-            "Player Upgrades", "StaminaBasePrice", 4000, 0, 1000000,
-            "Slower Stamina Use: approximate shop price (at one player, before the game's own scaling).");
         RegenPercentPerLevel = BindFloat(cfg,
             "Player Upgrades", "RegenPercentPerLevel", 0.000667f, 0.0005f, 0.05f,
             "HP Regen: fraction of MAX HP healed per SECOND, per level. 0.000667 = about 0.07%/s per level (~1 HP every 15s at level 1 for a 100 HP player).");
@@ -924,56 +901,38 @@ public static class ModConfig
         RegenMaxLevel = BindInt(cfg,
             "Player Upgrades", "RegenMaxLevel", 3, 1, 20,
             "HP Regen: maximum purchasable level.");
-        RegenBasePrice = BindInt(cfg,
-            "Player Upgrades", "RegenBasePrice", 20000, 0, 1000000,
-            "HP Regen: approximate shop price of the first level (very expensive).");
         DeathProtectMaxCharges = BindInt(cfg,
             "Player Upgrades", "DeathProtectMaxCharges", 1, 1, 9,
             "Death Protection: max charges you can stockpile at once. Each charge saves you from one lethal hit (survive at 1 HP) and is consumed on use; re-buy to restore.");
         DeathProtectBasePrice = BindInt(cfg,
             "Player Upgrades", "DeathProtectBasePrice", 50000, 0, 1000000,
             "Death Protection: approximate shop price per charge (very-very expensive).");
-        GunBatteryPercentPerLevel = BindFloat(cfg,
-            "Player Upgrades", "GunBatteryPercentPerLevel", 0.05f, 0.01f, 0.5f,
-            "Gun Battery Life: extra effective battery life per level (shared by the Bullet/Laser/Tranq gun upgrades). 0.05 = +5%/level; capped at +100% total.");
-        GunBatteryMaxLevel = BindInt(cfg,
-            "Player Upgrades", "GunBatteryMaxLevel", 20, 1, 100,
-            "Gun Battery Life: maximum purchasable level (20 x 5% = +100%).");
         GunExtraBulletsPerLevel = BindFloat(cfg,
             "Player Upgrades", "GunExtraBulletsPerLevel", 1f, 0.25f, 5f,
             "Gun upgrades (Bullet/Laser/Tranq): extra shots per level for the vanilla Handgun. Other guns get the same share of their own battery (fewer shots per charge = fewer extra shots, e.g. the shotgun).");
         GunExtraBulletsMaxLevel = BindInt(cfg,
             "Player Upgrades", "GunExtraBulletsMaxLevel", 5, 1, 100,
             "Gun upgrades (Bullet/Laser/Tranq): maximum purchasable level.");
-        GunBatteryBasePrice = BindInt(cfg,
-            "Player Upgrades", "GunBatteryBasePrice", 6000, 0, 1000000,
-            "Gun Battery Life: approximate shop price of the first level (each gun type is a separate upgrade).");
         DroneBatteryPercentPerLevel = BindFloat(cfg,
             "Player Upgrades", "DroneBatteryPercentPerLevel", 0.05f, 0.01f, 0.5f,
             "Drone Battery Life: extra effective battery life per level. 0.05 = +5%/level; capped at +100% total.");
         DroneBatteryMaxLevel = BindInt(cfg,
             "Player Upgrades", "DroneBatteryMaxLevel", 20, 1, 100,
             "Drone Battery Life: maximum purchasable level (20 x 5% = +100%).");
-        DroneBatteryBasePrice = BindInt(cfg,
-            "Player Upgrades", "DroneBatteryBasePrice", 6000, 0, 1000000,
-            "Drone Battery Life: approximate shop price of the first level.");
         ArmorEnabled = Module(cfg, "Player Upgrades", "ArmorEnabled", true, "Armor", "Sell the Armor upgrade: less damage taken per level.");
         ArmorPercentPerLevel = BindFloat(cfg, "Player Upgrades", "ArmorPercentPerLevel", .02f, .005f, .25f,
             "Armor: damage reduction per level. 0.02 = 2% per level; the result is always rounded in the player's favour.");
         ArmorMaxLevel = BindInt(cfg, "Player Upgrades", "ArmorMaxLevel", 10, 1, 20, "Armor: maximum purchasable level (10 x 2% = 20% less damage).");
         ArmorMaxReduction = BindFloat(cfg, "Player Upgrades", "ArmorMaxReduction", .2f, .05f, .9f, "Armor: hard cap on total damage reduction (0.2 = 20%).");
-        ArmorBasePrice = BindInt(cfg, "Player Upgrades", "ArmorBasePrice", 9000, 0, 1000000, "Armor: approximate shop price of the first level.");
         OverchargeEnabled = Module(cfg, "Player Upgrades", "OverchargeEnabled", true, "Overcharge", "Sell the Overcharge upgrade: hold monsters longer before your grab beam overloads.");
         OverchargeBuildupPerLevel = BindFloat(cfg, "Player Upgrades", "OverchargeBuildupPerLevel", .1f, .02f, .3f,
             "Overcharge: how much slower overcharge builds up per level while holding a monster. 0.1 = 10% slower per level (capped at 80%).");
         OverchargeRecoveryPerLevel = BindFloat(cfg, "Player Upgrades", "OverchargeRecoveryPerLevel", .25f, 0f, 2f,
             "Overcharge: extra drain speed per level once you stop holding a monster, as a share of the vanilla drain. 0.25 = +25% per level.");
         OverchargeMaxLevel = BindInt(cfg, "Player Upgrades", "OverchargeMaxLevel", 5, 1, 10, "Overcharge: maximum purchasable level.");
-        OverchargeBasePrice = BindInt(cfg, "Player Upgrades", "OverchargeBasePrice", 8000, 0, 1000000, "Overcharge: approximate shop price of the first level.");
         TumbleBonusEnabled = Module(cfg, "Player Upgrades", "TumbleDamageEnabled", true, "TumbleDamage",
             "Sell the Tumble Damage upgrade: launching into a monster deals more damage and hurts you less. Host-side.");
         TumbleMaxLevel = BindInt(cfg, "Player Upgrades", "TumbleDamageMaxLevel", 10, 1, 20, "Tumble Damage: maximum purchasable level.");
-        TumbleBasePrice = BindInt(cfg, "Player Upgrades", "TumbleDamageBasePrice", 7000, 0, 1000000, "Tumble Damage: approximate shop price of the first level.");
         TumbleDamagePerLevel = BindFloat(cfg, "Player Upgrades", "TumbleDamagePercentPerLevel", .05f, 0f, 1f,
             "Tumble Damage: extra monster damage per upgrade level, compounding (0.05 = x1.05 per level: x1.16 at 3, x1.63 at 10).");
         TumbleSelfDamageReductionPerLevel = BindFloat(cfg, "Player Upgrades", "TumbleSelfDamageReductionPerLevel", .1f, 0f, 1f,
@@ -986,18 +945,12 @@ public static class ModConfig
         MeleeDamageMaxLevel = BindInt(cfg,
             "Player Upgrades", "MeleeDamageMaxLevel", 10, 1, 100,
             "Melee Damage: maximum purchasable level (10 x 5% = +50%).");
-        MeleeDamageBasePrice = BindInt(cfg,
-            "Player Upgrades", "MeleeDamageBasePrice", 7000, 0, 1000000,
-            "Melee Damage: approximate shop price of the first level.");
         GrenadeDamagePercentPerLevel = BindFloat(cfg,
             "Player Upgrades", "GrenadeDamagePercentPerLevel", 0.05f, 0.01f, 0.5f,
             "Grenade Damage: extra monster damage from grenades you throw per level. 0.05 = +5%/level.");
         GrenadeDamageMaxLevel = BindInt(cfg,
             "Player Upgrades", "GrenadeDamageMaxLevel", 10, 1, 100,
             "Grenade Damage: maximum purchasable level (10 x 5% = +50%).");
-        GrenadeDamageBasePrice = BindInt(cfg,
-            "Player Upgrades", "GrenadeDamageBasePrice", 7000, 0, 1000000,
-            "Grenade Damage: approximate shop price of the first level.");
         AutoscanRangePerLevel = BindFloat(cfg,
             "Player Upgrades", "AutoscanRangePerLevel", 5f, 1f, 30f,
             "Autoscan: scan radius added per level, in metres. Discovers valuables and native discoverable items for the team. 5 = level 1 scans 5m, level 2 scans 10m.");
@@ -1007,12 +960,6 @@ public static class ModConfig
         AutoscanInterval = BindFloat(cfg,
             "Player Upgrades", "AutoscanInterval", 1f, 0.1f, 10f,
             "Autoscan: seconds between scans. Lower = discovers valuables faster but costs more CPU.");
-        AutoscanBasePrice = BindInt(cfg,
-            "Player Upgrades", "AutoscanBasePrice", 8000, 0, 1000000,
-            "Autoscan: approximate shop price of the first level.");
-        MapBasePrice = BindInt(cfg,
-            "Player Upgrades", "MapBasePrice", 15000, 0, 1000000,
-            "Map Suite: approximate shop price of the FIRST level (very expensive). A single upgrade with 10 levels, each unlocking a map feature: L1-5 live counts + quota path, L6 team pings on the map, L7-8 zoom out, L9 cosmetic-box tracker, L10 monster dots.");
         MapZoomFovLevel7 = BindFloat(cfg,
             "Player Upgrades", "MapZoomFovLevel7", 62f, 50f, 120f,
             "Map Suite L7: camera field-of-view used while the map is open (higher = more zoomed out, see more of the level at once). Vanilla map view is 50.");
