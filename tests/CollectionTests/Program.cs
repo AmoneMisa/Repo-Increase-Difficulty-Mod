@@ -14,10 +14,12 @@ var expected=new Dictionary<string,(LootMap maps,float min,float max)>{
     ["ram_pair"]=(LootMap.Museum|LootMap.McJannek,4500,5500),
     ["monoblock_pc"]=(LootMap.McJannek|LootMap.Museum|LootMap.Manor|LootMap.Sunstone,6000,8000),
     ["gold_ingot"]=(LootMap.Sunstone|LootMap.McJannek,3500,4800),
-    ["maneki_neko"]=(LootMap.Museum|LootMap.Manor,12000,16000)
+    ["maneki_neko"]=(LootMap.Museum|LootMap.Manor,12000,16000),
+    ["plush_corgi"]=(LootMap.Manor|LootMap.Museum|LootMap.Sunstone|LootMap.McJannek,3000,4000),
+    ["whiskey_bottle"]=(LootMap.Swiftbroom|LootMap.Manor|LootMap.McJannek|LootMap.Museum,5000,6500)
 };
-Assert(CollectionCatalog.Entries.Count==13,"All thirteen valuables, excluding the shop-only Spritz");
-Assert(CollectionCatalog.Entries.Select(e=>e.Key).Distinct().Count()==13,"No duplicate valuables");
+Assert(CollectionCatalog.Entries.Count==expected.Count,"All fifteen valuables, excluding the shop-only Spritz");
+Assert(CollectionCatalog.Entries.Select(e=>e.Key).Distinct().Count()==expected.Count,"No duplicate valuables");
 foreach(var entry in CollectionCatalog.Entries)
 {
     var row=expected[entry.Key];Assert(entry.Min==row.min&&entry.Max==row.max,entry.Key+" requested price");

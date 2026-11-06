@@ -54,6 +54,7 @@ namespace IncreaseHardMod.Gear {
  public class ShieldItem:UnityEngine.Component {public ShieldMode mode;public PlayerAvatar Target;public bool Covers(PlayerAvatar p)=>p==Target;}
  public static class GearEffects {public const float NetBroken = -1f, NetExpired = -2f;public static void Tick(float dt){}}
  public static class PlayerFreezeEffect {public static void Apply(PlayerAvatar p,float seconds){}public static bool ReadSnapshot(object data,double time,string key,out int id,out float remaining){id=0;remaining=0;return false;}}
+ public static class PlayerNetEffect {public static void Apply(PlayerAvatar p,float seconds){}public static void End(PlayerAvatar p,bool torn){}}
 }
 namespace IncreaseHardMod.Visuals {
  public static class EnemyStatusVisual {public static void Apply(Enemy e,byte kind,float seconds){}}
@@ -64,5 +65,7 @@ namespace IncreaseHardMod.Quests {
  public enum StatKind:byte {Health,Stamina,SprintSpeed,GrabStrength,GrabRange,ThrowStrength,ExtraJump,TumbleLaunch}
  public static class QuestManager {public static int States,Buffs;public static void Tick(float dt){}public static void ReceiveTeamState(object[] d){States++;}public static void ApplyTempBuff(StatKind stat,int amount){Buffs++;}}
  public static class QuestRewards {public static int Money;public static void GrantMoney(int amount){Money+=amount;}}
+ public static class QuestRankProgress {public static void PublishSave(){}}
 }
+namespace IncreaseHardMod.Patches.Effects { public static class LateJoinNetworkDiagnostics { public static void Tick(){} } }
 namespace IncreaseHardMod.Patches.Effects { public static class LevelInfoHud { public const byte StateEventCode=197; public static int Calls; public static void HandleStateEvent(ExitGames.Client.Photon.EventData e){Calls++;} } }

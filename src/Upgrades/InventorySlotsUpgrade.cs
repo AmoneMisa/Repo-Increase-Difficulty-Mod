@@ -87,6 +87,14 @@ internal static class InventorySlotsUpgrade
             spot.inventorySpotIndex = index;
             spot.currentState = InventorySpot.SpotState.Empty;
             spot.CurrentItem = null;
+            // After a level change the slots are rebuilt while slot 1 already holds its restored item.
+            // Instantiate copies that live state: the battery widget would stay bound to slot 1's item and
+            // show its bars on this empty slot. Unbind it and re-enter the empty state so the native
+            // StateEmpty resets the bars and plays the battery outro.
+            battery.itemBattery = null;
+            battery.batteryPercent = 100f;
+            battery.currentBars = battery.batteryBars;
+            spot.stateStart = true;
             spot.layoutOffsetX = spot.appliedLayoutOffsetX = 0f;
             foreach (var glyph in clone.GetComponentsInChildren<InputGlyphText>(true))
             {

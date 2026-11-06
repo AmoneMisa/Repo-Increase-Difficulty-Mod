@@ -94,11 +94,17 @@ internal sealed class PingOutline : MaskableGraphic
     private Rect _calloutBox;        // in this graphic's local space (origin = the item's screen rect min)
     private Vector2 _calloutDot;
     private bool _calloutLeft;
-    private bool _noContour;
+    private bool _noContour, _noArrow;
+
+    /// <summary>Locator arrow only, no silhouette outline (loot and souls).</summary>
+    internal void HideContour() => _noContour = true;
+
+    /// <summary>Nothing drawn on screen at all (souls: the world-space aura and underglow mark them).</summary>
+    internal void HideMarker() { _noContour = true; _noArrow = true; }
 
     internal void UseWeaponCallout(WeaponKind kind, bool contour = true)
     {
-        _noContour = !contour; // upgrades: callout only, no silhouette border
+        _noContour = !contour; // upgrades and drones: callout only, no silhouette border
         var go = new GameObject("Weapon Icon", typeof(RectTransform), typeof(CanvasRenderer));
         go.transform.SetParent(_root.transform, false);
         _calloutIcon = go.AddComponent<RawImage>();
@@ -298,10 +304,30 @@ internal sealed class PingOutline : MaskableGraphic
         }
     }
 
+    // Each contour edge becomes 5 halo strokes x 4 vertices, and a UI mesh holds at most 65,000 vertices.
+    // Busy silhouettes (a whole player up close, feathered cosmetics) are traced on a coarser mask instead.
+    private const int MaxContourEdges=2600;
+
     internal void BuildContour(Color32[] pixels,int width,int height)
     {
+        bool[] filled=new bool[width*height];
+        for(int i=0;i<filled.Length;i++)filled[i]=pixels[i].r>127;
+        Trace(filled,width,height);
+        while(_contour.Count>MaxContourEdges && width>16 && height>16)
+        {
+            // Halve the mask (a coarse pixel is filled if any of its four fine pixels is).
+            int w2=(width+1)/2,h2=(height+1)/2; var coarse=new bool[w2*h2];
+            for(int y=0;y<height;y++)for(int x=0;x<width;x++)if(filled[y*width+x])coarse[(y/2)*w2+x/2]=true;
+            filled=coarse;width=w2;height=h2;
+            Trace(filled,width,height);
+        }
+        SetVerticesDirty();
+    }
+
+    private void Trace(bool[] mask,int width,int height)
+    {
         _contour.Clear();_maskWidth=width;_maskHeight=height;
-        bool Filled(int x,int y)=>x>=0&&y>=0&&x<width&&y<height&&pixels[y*width+x].r>127;
+        bool Filled(int x,int y)=>x>=0&&y>=0&&x<width&&y<height&&mask[y*width+x];
         _arrowU=.5f;
         for(int y=height-1;y>=0;y--)
         {
@@ -331,7 +357,6 @@ internal sealed class PingOutline : MaskableGraphic
                 if(!edge && start>=0){_contour.Add(new Vector4(x,start,x,y));start=-1;}
             }
         }
-        SetVerticesDirty();
     }
 
     internal static bool ProjectBounds(Camera camera, Bounds bounds, out Rect rectangle)
@@ -378,7 +403,7 @@ internal sealed class PingOutline : MaskableGraphic
             var tint=color;tint.a*=alphas[layer]*(_pointMarker?1f:.8f);
             float width=widths[layer]*(_pointMarker?_markerScale:1f);
             if(arrowOnly){}
-            else if(_pointMarker)
+            else if(_pointMarker && !_noArrow)
             {
                 var centre=_objectSize*.5f;const int steps=96;
                 var radii=_objectSize*.5f-new Vector2(6f,6f)*_markerScale;
@@ -393,7 +418,7 @@ internal sealed class PingOutline : MaskableGraphic
                 foreach(var edge in _contour)
                     Segment(vh,new Vector2(edge.x/_maskWidth*_objectSize.x,edge.y/_maskHeight*_objectSize.y),
                         new Vector2(edge.z/_maskWidth*_objectSize.x,edge.w/_maskHeight*_objectSize.y),width,tint);
-            Arrow(vh,tint,layer==widths.Length-1?0f:width*.4f);
+            if(!_noArrow) Arrow(vh,tint,layer==widths.Length-1?0f:width*.4f);
             Callout(vh,tint,width);
         }
     }
@@ -411,6 +436,7 @@ internal sealed class PingOutline : MaskableGraphic
 
     private static void Segment(VertexHelper vh,Vector2 a,Vector2 b,float width,Color tint)
     {
+        if(vh.currentVertCount>64000-4)return;   // hard stop below Unity's UI mesh limit
         var d=b-a;if(d.sqrMagnitude<.001f)return;
         var side=new Vector2(-d.y,d.x).normalized*(width*.5f);
         int start=vh.currentVertCount;

@@ -27,6 +27,8 @@ Station (`Level - Arctic`). Swiftbroom is `Level - Wizard`, Headman Manor is
 | Monoblock PC | $6,000–8,000 | 3 kg | Normal | McJannek, Museum, Manor, Sunstone |
 | Gold ingot | $3,500–4,800 | 3 kg | Reinforced | Sunstone/Sunstore, McJannek |
 | Porcelain Maneki-neko | $12,000–16,000 | 6 kg | Fragile | Museum, Manor |
+| Plush corgi | $3,000–4,000 | 1.5 kg | Sturdy | Manor, Museum, Sunstone, McJannek |
+| Whiskey bottle | $5,000–6,500 | 3 kg | Fragile | Swiftbroom, Manor, McJannek, Museum |
 
 0.7.2 sizes relative to 0.7.1: bomb −20%, cannon −15%, centrifuge/vacuum +10%.
 Neko is now doubled in each dimension relative to its previous collection size.

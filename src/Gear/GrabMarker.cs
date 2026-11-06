@@ -7,8 +7,9 @@ using Object = UnityEngine.Object;
 namespace IncreaseHardMod.Gear;
 
 /// <summary>
-/// The red "grab here" hand-in-a-diamond plate that vanilla C.A.R.T.s show where players hold them.
-/// Drawn at runtime (no shipped texture), unlit and double-sided so it reads in the dark like the native one.
+/// The "grab here" hand-in-a-diamond plate that vanilla C.A.R.T.s show where players hold them, plus a glowing
+/// handle bar across the back. Drawn at runtime (no shipped texture), unlit and double-sided so it reads in the
+/// dark like the native one. Both are drawn white and tinted per grab state by <see cref="FlameCartGrabState"/>.
 /// </summary>
 internal static class GrabMarker
 {
@@ -40,9 +41,9 @@ internal static class GrabMarker
             Plugin.Log.LogWarning("[Flame] Storage box has no mesh bounds; grab marker skipped.");
             return;
         }
-        float side = Mathf.Min(bounds.size.x, bounds.size.y) * .32f;
+        float side = Mathf.Min(bounds.size.x, bounds.size.y) * .46f;
         var plate = GameObject.CreatePrimitive(PrimitiveType.Quad);
-        plate.name = "IHM Grab Marker";
+        plate.name = PlateName;
         plate.layer = layer;
         Object.DestroyImmediate(plate.GetComponent<Collider>()); // visual only; the box colliders take the grab
         plate.transform.SetParent(box, false);
@@ -57,6 +58,30 @@ internal static class GrabMarker
         renderer.sharedMaterial = Material();
         renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         renderer.receiveShadows = false;
+
+        // A handle bar along the top of the back wall, standing off it like a C.A.R.T. push bar.
+        var bar = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        bar.name = BarName;
+        bar.layer = layer;
+        Object.DestroyImmediate(bar.GetComponent<Collider>());
+        bar.transform.SetParent(box, false);
+        float length = bounds.size.x * .86f, radius = .028f;
+        bar.transform.localPosition = new Vector3(bounds.center.x, bounds.center.y + bounds.extents.y * .82f, bounds.min.z - .055f);
+        bar.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+        bar.transform.localScale = new Vector3(radius * 2f, length / 2f, radius * 2f);
+        var barRenderer = bar.GetComponent<MeshRenderer>();
+        barRenderer.sharedMaterial = BarMaterial();
+        barRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+    }
+
+    internal const string PlateName = "IHM Grab Marker", BarName = "IHM Grab Bar";
+    private static Material _barMaterial;
+
+    private static Material BarMaterial()
+    {
+        if (_barMaterial != null) return _barMaterial;
+        _barMaterial = new Material(Shader.Find("Sprites/Default")) { name = "IHM Grab Bar", hideFlags = HideFlags.HideAndDontSave };
+        return _barMaterial;
     }
 
     private static bool LocalBounds(Transform root, out Bounds bounds)
@@ -97,8 +122,8 @@ internal static class GrabMarker
 
     private static Texture2D Texture()
     {
-        var red = new Color(1f, .12f, .08f, 1f);
-        var fill = new Color(.25f, .02f, .02f, .55f);
+        var red = Color.white;                       // tinted per grab state at runtime
+        var fill = new Color(.25f, .25f, .25f, .55f);
         var pixels = new Color[Size * Size];
         const float c = (Size - 1) / 2f, outer = 60f, inner = 53f;
         for (int y = 0; y < Size; y++)

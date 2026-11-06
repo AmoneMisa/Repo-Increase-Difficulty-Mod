@@ -228,6 +228,9 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
     [HarmonyPatch(typeof(MenuPageEsc), "Start")]
     private static class EscButtons
     {
+        // Quit is the bottom button of the Esc menu. New buttons go where Quit was, Quit moves below them,
+        // and the whole button group shifts up by the same amount, so the menu keeps its bottom edge and
+        // nothing is drawn below the panel or over the voice sliders.
         [HarmonyPostfix]
         private static void Postfix(MenuPageEsc __instance)
         {
@@ -235,10 +238,29 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
             bool runLevel = false, inRun = false;
             try { runLevel = SemiFunc.RunIsLevel(); inRun = runLevel || SemiFunc.RunIsShop() || SemiFunc.RunIsLobby(); } catch { }
             if (!inRun) return;
-            float step = Step(__instance.quitButton);
-            int k = 1;
-            if (runLevel) Add(__instance.quitButton, "RESTART LEVEL", step * k++, confirm: true, RestartLevel);
-            Add(__instance.quitButton, "RETURN TO LOBBY", step * k, confirm: true, ReturnToLobby);
+            var quit = __instance.quitButton;
+            var actions = new List<(string text, System.Action action)>();
+            if (runLevel) actions.Add(("RESTART LEVEL", RestartLevel));
+            actions.Add(("RETURN TO LOBBY", ReturnToLobby));
+
+            float step = Step(quit);
+            var parent = quit.transform.parent;
+            bool laidOut = parent != null && parent.GetComponent<LayoutGroup>() != null;
+            var top = quit.transform.localPosition;
+            int added = 0;
+            foreach (var (text, action) in actions)
+            {
+                var clone = Add(quit, text, action);
+                if (clone == null) continue;
+                if (laidOut) clone.transform.SetSiblingIndex(quit.transform.GetSiblingIndex());
+                else clone.transform.localPosition = top - new Vector3(0f, step * added, 0f);
+                added++;
+            }
+            if (added == 0 || laidOut) return;
+            quit.transform.localPosition = top - new Vector3(0f, step * added, 0f);
+            var group = __instance.mainMenuRectTransform;
+            if (group != null && quit.transform.IsChildOf(group))
+                group.anchoredPosition += new Vector2(0f, step * added);
         }
 
         // Vertical spacing between the native buttons (fallback: 32 px, the game's own moons offset).
@@ -254,20 +276,27 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
             return best < float.MaxValue ? best : 32f;
         }
 
-        private static void Add(MenuButton template, string text, float below, bool confirm, System.Action action)
+        private static GameObject Add(MenuButton template, string text, System.Action action)
         {
             var clone = Object.Instantiate(template.gameObject, template.transform.parent);
             clone.name = "IHM " + text;
-            clone.transform.localPosition = template.transform.localPosition - new Vector3(0f, below, 0f);
+            // The copied label would keep Quit's localized text: drop the localizer and write ours now
+            // (MenuButton.Awake already ran during Instantiate, before buttonTextString could be set).
+            foreach (var component in clone.GetComponentsInChildren<MonoBehaviour>(true))
+                if (component != null && component.GetType().Name.IndexOf("Localize", System.StringComparison.Ordinal) >= 0)
+                    Object.DestroyImmediate(component);
             var menuButton = clone.GetComponent<MenuButton>();
+            if (menuButton == null) { Object.Destroy(clone); return null; }
             menuButton.buttonTextString = text;
+            if (menuButton.buttonText != null) menuButton.buttonText.text = text;
+            try { menuButton.ResizeToText(); } catch { }
             var button = clone.GetComponent<Button>() ?? clone.GetComponentInChildren<Button>(true);
-            if (button == null) { Object.Destroy(clone); return; }
+            if (button == null) { Object.Destroy(clone); return null; }
             button.onClick = new Button.ButtonClickedEvent(); // drop the cloned Quit listener
             float armed = -1f;
             button.onClick.AddListener(() =>
             {
-                if (confirm && Time.unscaledTime - armed > 3f)
+                if (Time.unscaledTime - armed > 3f)
                 {
                     armed = Time.unscaledTime; // first click arms; a second click within 3 s confirms
                     if (menuButton.buttonText != null) menuButton.buttonText.text = "CLICK AGAIN: " + text;
@@ -275,6 +304,7 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
                 }
                 action();
             });
+            return clone;
         }
     }
 }

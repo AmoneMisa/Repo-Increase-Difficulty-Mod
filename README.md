@@ -11,7 +11,9 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.7.11`
+- **Version:** `0.7.12`
+
+Version 0.7.12 adds the plush corgi, three Rare wing cosmetics, an Armor HUD row, cleaner pings and a set of shop, HUD and multiplayer fixes ([details](release-notes/v0.7.12.md)).
 
 Version 0.7.4 fixes Ice Pistol freezing and Link Drone pulling ([details](release-notes/v0.7.4.md)).
 
@@ -383,7 +385,9 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.7.11`
+- **Версия:** `0.7.12`
+
+В 0.7.12 добавлены плюшевый корги, три редких крыла, строка брони на HUD, более чистые пинги и исправления магазина, HUD и мультиплеера ([подробности](release-notes/v0.7.12.md)).
 
 В 0.7.4 исправлены заморозка Ледяного пистолета и подтягивание Link Drone ([подробности](release-notes/v0.7.4.md)).
 

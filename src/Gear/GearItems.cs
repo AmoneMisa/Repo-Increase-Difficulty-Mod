@@ -52,7 +52,7 @@ internal static class GearItems
             {
                 if (ModConfig.DefenceOrbEnabled.Value)
                     MakeOrb(orb, "Item Orb Defence", "Defence Orb", ShieldMode.DefenceOrb, 19000f, 24000f, new Color(0.3f, 0.6f, 1f),
-                        "Protects loot: value that valuables would lose from breaking inside its field is absorbed while it is charged.");
+                        $"Protects loot: value that valuables would lose from breaking inside its field is absorbed while it is charged. One shared pool for every item in the field: a full charge absorbs ${ModConfig.DefenceItemAbsorb.Value:N0} in total.");
                 if (ModConfig.ProtectionOrbEnabled.Value)
                     MakeOrb(orb, "Item Orb Protection", "Protection Orb", ShieldMode.ProtectionOrb, 11000f, 15000f, new Color(1f, 0.85f, 0.3f),
                         "Players inside its field take 25% less damage. Drains its charge quickly.");

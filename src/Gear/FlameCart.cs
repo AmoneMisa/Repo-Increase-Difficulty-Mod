@@ -112,6 +112,7 @@ internal static class FlameCartItem
             MakeBoxGrabbable(box);
             GrabMarker.AttachToBoxBack(box.transform, visualLayer);
             AddHandle(go);
+            go.AddComponent<FlameCartGrabState>();
             AddIconCamera(go, hauler);
 
             // Native ItemLight Get/SetFloats _FresnelScale on these every frame; a material without it
@@ -443,7 +444,8 @@ internal sealed class FlameCart : MonoBehaviour
 
     private Vector3 Nozzle => head != null ? head.TransformPoint(FlameCartItem.NozzleLocal) : transform.position + Vector3.up;
 
-    private bool FiringAllowedHere => !SemiFunc.RunIsShop() || Testing.TestShortcuts.Any;
+    // The flame only ever hurts enemies (see Burn), so it is safe to try out in the shop too.
+    private bool FiringAllowedHere => true;
 
     private PlayerAvatar Operator()
     {

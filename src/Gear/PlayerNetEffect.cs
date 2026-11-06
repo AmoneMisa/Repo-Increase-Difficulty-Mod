@@ -85,6 +85,8 @@ internal sealed class PlayerNetEffect : MonoBehaviour
         {
             var bounds = VisualBounds();
             _net = NetDrape.Create(Avatar.playerAvatarVisuals.transform, bounds, localOwner: IsLocal);
+            Plugin.Log.LogInfo($"[Net] Net on player {Avatar.playerName}: body {bounds.center} size {bounds.size}, " +
+                $"{(bounds.center - Avatar.transform.position).magnitude:0.00} m from the avatar, local={IsLocal}.");
         }
         if (!IsLocal) return;
         if (_note == null)
@@ -104,13 +106,7 @@ internal sealed class PlayerNetEffect : MonoBehaviour
 
     private Bounds VisualBounds()
     {
-        var bounds = new Bounds(Avatar.transform.position + Vector3.up * .8f, new Vector3(.6f, 1.6f, .6f));
-        bool found = false;
-        foreach (var r in Avatar.playerAvatarVisuals.GetComponentsInChildren<Renderer>())
-        {
-            if (!(r is MeshRenderer || r is SkinnedMeshRenderer) || !r.enabled || Decoration.Is(r)) continue;
-            if (!found) { bounds = r.bounds; found = true; } else bounds.Encapsulate(r.bounds);
-        }
+        PlayerBody.Renderers(Avatar, out var bounds);
         return bounds;
     }
 

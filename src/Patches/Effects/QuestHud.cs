@@ -13,7 +13,7 @@ internal sealed class QuestHud : MonoBehaviour
     private NativeHudPanel _surface;
     private readonly List<string> _pages = new();
     private int _page;
-    private bool _questsVisible;
+    private bool _questsVisible = true; // shown by default; the peek key hides/shows it and the choice is kept
     internal void ToggleQuests() { _questsVisible = !_questsVisible; _page = 0; }
     private bool ShowQuests => ModConfig.QuestsEnabled.Value && _questsVisible;
     private const float Margin = 24f;
@@ -22,7 +22,6 @@ internal sealed class QuestHud : MonoBehaviour
     {
         if (!LevelInfoHud.InfoReady || SafeMenuLevel() || !SafeRunIsLevel())
         {
-            _questsVisible = false;
             Hide();
             return;
         }

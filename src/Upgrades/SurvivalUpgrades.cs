@@ -57,7 +57,15 @@ internal static class SurvivalUpgrades
             });
     }
 
-    private static float ArmorCap => Mathf.Clamp01(Mathf.Min(ModConfig.ArmorMaxReduction.Value, ModConfig.ArmorPercentPerLevel.Value * ModConfig.ArmorMaxLevel.Value));
+    internal static float ArmorCap => Mathf.Clamp01(Mathf.Min(ModConfig.ArmorMaxReduction.Value, ModConfig.ArmorPercentPerLevel.Value * ModConfig.ArmorMaxLevel.Value));
+
+    /// <summary>Damage reduction (0..1) the Armor upgrade gives this player right now.</summary>
+    internal static float ArmorReduction(PlayerAvatar player)
+    {
+        if (!ModConfig.ArmorEnabled.Value) return 0f;
+        int level = Level(ArmorId, player, ModConfig.ArmorMaxLevel.Value);
+        return level > 0 ? Mathf.Min(ArmorCap, ModConfig.ArmorPercentPerLevel.Value * level) : 0f;
+    }
 
     private static int Level(string id, PlayerAvatar player, int max)
     {

@@ -4,29 +4,35 @@ using UnityEngine.Rendering;
 namespace IncreaseHardMod.Visuals;
 
 /// <summary>
-/// Red-purple aura on enemy souls: a soft halo, slowly turning light rays, twinkling sparkles and a point
-/// light around the soul. Shown only while a ping is on the soul (see SoulAuraPatch). Local visuals only.
+/// Aura around an item: a soft halo, slowly turning light rays, twinkling sparkles and a point light.
+/// The soul style (enemy souls, shown only while pinged; see SoulAuraPatch) is the same aura in red-velvet
+/// colours: a deep crimson halo, rose-red rays and sparkles and a crimson light. Local visuals only.
 /// It hides beyond 25 m.
 /// </summary>
 internal sealed class HeroAura : MonoBehaviour
 {
-    private static readonly Color Tint = new(.8f, .18f, .62f);
+    private static readonly Color HeroTint = new(.8f, .18f, .62f);
+    private static readonly Color SoulTint = new(.62f, .03f, .14f);   // red velvet
     private static Mesh _quad;
     private static Material _glowMaterial, _rayMaterial, _sparkMaterial;
+    private static Material _soulGlowMaterial, _soulRayMaterial, _soulSparkMaterial;
 
     private Transform _root, _glow, _rays;
     private Light _light;
     private ParticleSystem _sparks;
     private ItemEquippable _equippable;
     private float _radius = .3f;
-    private bool _pingOnly;
+    private bool _pingOnly, _soul;
+    private float _shown;                          // 0..1 fade while the ping comes and goes
+    private Color Tint => _soul ? SoulTint : HeroTint;
 
     /// <summary>Adds the aura to a prefab. With <paramref name="pingOnly"/> it shows only while a ping is on it.</summary>
-    internal static void Mark(GameObject prefab, bool pingOnly = false)
+    internal static void Mark(GameObject prefab, bool pingOnly = false, bool soul = false)
     {
         if (prefab == null) return;
         var aura = prefab.GetComponent<HeroAura>() ?? prefab.AddComponent<HeroAura>();
         aura._pingOnly = pingOnly;
+        aura._soul = soul;
     }
 
     // True while a live ping sits on (or very close to) this object's position.
@@ -50,9 +56,18 @@ internal sealed class HeroAura : MonoBehaviour
         _glowMaterial ??= GlowTextures.Sprite(GlowTextures.Soft, "IHM Aura Glow");
         _rayMaterial ??= GlowTextures.Sprite(GlowTextures.Rays, "IHM Aura Rays", 3101);
         _sparkMaterial ??= GlowTextures.Sprite(GlowTextures.Star, "IHM Aura Sparkle", 3102);
-        _glowMaterial.color = new Color(Tint.r, Tint.g, Tint.b, .32f);
+        _glowMaterial.color = new Color(HeroTint.r, HeroTint.g, HeroTint.b, .32f);
         _rayMaterial.color = new Color(.95f, .6f, .85f, .2f);
         _sparkMaterial.color = Color.white;
+        if (_soul)
+        {
+            _soulGlowMaterial ??= GlowTextures.Sprite(GlowTextures.Soft, "IHM Soul Glow");
+            _soulRayMaterial ??= GlowTextures.Sprite(GlowTextures.Rays, "IHM Soul Rays", 3101);
+            _soulSparkMaterial ??= GlowTextures.Sprite(GlowTextures.Star, "IHM Soul Sparkle", 3102);
+            _soulGlowMaterial.color = new Color(SoulTint.r, SoulTint.g, SoulTint.b, .36f);
+            _soulRayMaterial.color = new Color(.88f, .28f, .4f, .22f);
+            _soulSparkMaterial.color = Color.white;
+        }
 
         var center = transform.position;
         if (ItemBounds(out var bounds))
@@ -63,8 +78,8 @@ internal sealed class HeroAura : MonoBehaviour
         _root = new GameObject("IHM Hero Aura", typeof(Decoration)).transform;
         _root.SetParent(transform, false);
         _root.position = center;
-        _glow = Billboard("Glow", _glowMaterial, _radius * 2.6f);
-        _rays = Billboard("Rays", _rayMaterial, _radius * 2.6f);
+        _glow = Billboard("Glow", _soul ? _soulGlowMaterial : _glowMaterial, _radius * 2.6f);
+        _rays = Billboard("Rays", _soul ? _soulRayMaterial : _rayMaterial, _radius * 2.6f);
 
         _light = new GameObject("Light").AddComponent<Light>();
         _light.transform.SetParent(_root, false);
@@ -118,7 +133,8 @@ internal sealed class HeroAura : MonoBehaviour
         main.startSpeed = new ParticleSystem.MinMaxCurve(.02f, .12f);
         main.startSize = new ParticleSystem.MinMaxCurve(_radius * .12f, _radius * .26f);
         main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
-        main.startColor = new ParticleSystem.MinMaxGradient(Color.white, Tint);
+        main.startColor = _soul ? new ParticleSystem.MinMaxGradient(new Color(1f, .72f, .78f), Tint)
+                                : new ParticleSystem.MinMaxGradient(Color.white, Tint);
         main.gravityModifier = -.02f;
         main.maxParticles = 40;
         var emission = ps.emission;
@@ -133,7 +149,7 @@ internal sealed class HeroAura : MonoBehaviour
         spin.enabled = true;
         spin.z = new ParticleSystem.MinMaxCurve(-1.5f, 1.5f);
         var r = obj.GetComponent<ParticleSystemRenderer>();
-        r.sharedMaterial = _sparkMaterial;
+        r.sharedMaterial = _soul ? _soulSparkMaterial : _sparkMaterial;
         r.renderMode = ParticleSystemRenderMode.Billboard;
         r.shadowCastingMode = ShadowCastingMode.Off;
         r.receiveShadows = false;
@@ -173,12 +189,15 @@ internal sealed class HeroAura : MonoBehaviour
         bool stowed = _equippable != null && _equippable.IsEquipped();
         bool near = cam != null && (cam.transform.position - _root.position).sqrMagnitude < 25f * 25f;
         bool show = !stowed && near && (!_pingOnly || Pinged());
-        if (_root.gameObject.activeSelf != show) _root.gameObject.SetActive(show);
-        if (!show) return;
+        // Soft fade in and out instead of popping (the soul glow follows the life of the ping).
+        _shown = Mathf.MoveTowards(_shown, show ? 1f : 0f, Time.deltaTime * (show ? 4f : 2.5f));
+        bool active = _shown > .001f;
+        if (_root.gameObject.activeSelf != active) _root.gameObject.SetActive(active);
+        if (!active || cam == null) return;
         var facing = Quaternion.LookRotation(_root.position - cam.transform.position, cam.transform.up);
         _glow.rotation = facing;
         _rays.rotation = facing * Quaternion.Euler(0f, 0f, Time.time * 14f);
         float pulse = .85f + Mathf.Sin(Time.time * 2.1f + GetInstanceID()) * .15f;
-        _light.intensity = .65f * pulse;
+        _light.intensity = (_soul ? .8f : .65f) * pulse * _shown;
     }
 }

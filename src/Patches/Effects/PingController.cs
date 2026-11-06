@@ -21,7 +21,7 @@ internal enum PingType : byte
 }
 
 /// <summary>Callout icon for item pings. Derived locally from the pinged object, so it needs no network field.</summary>
-internal enum WeaponKind : byte { None, Gun, Melee, Grenade, Upgrade, Drone }
+internal enum WeaponKind : byte { None, Gun, Melee, Grenade, Upgrade, Drone, Soul }
 
 /// <summary>Team pings with soft silhouette contours and large cyan location markers.
 /// Object IDs and world positions are shared with the team and the Map Suite mirror.
@@ -325,7 +325,11 @@ internal static class PingController
             PingOutline.Create(physGrab, pos, tint, duration);
         if (type == PingType.Location) graphic.AttachBeacon(duration);
         else if (type == PingType.Enemy) graphic.UseReticle();
-        else if (kind != WeaponKind.None) graphic.UseWeaponCallout(kind, contour: kind != WeaponKind.Upgrade);
+        else if (kind != WeaponKind.None && kind != WeaponKind.Soul) graphic.UseWeaponCallout(kind, contour: kind != WeaponKind.Upgrade && kind != WeaponKind.Drone);
+        // Loot gets no silhouette outline (locator arrow and underglow only). Souls get only the underglow
+        // and their red-velvet aura (HeroAura soul style), nothing on screen.
+        if (kind == WeaponKind.Soul) graphic.HideMarker();
+        else if (type == PingType.Valuable) graphic.HideContour();
         // Neon underglow in the ping colour for physical objects (loot, items, carts...), not monsters/players.
         if (physGrab != null && player == null && type != PingType.Enemy && type != PingType.Location)
             PingUnderglow.Attach(physGrab, tint, duration, graphic);
@@ -460,6 +464,9 @@ internal static class PingController
     internal static WeaponKind CalloutOf(PingType type, PhysGrabObject physGrab)
     {
         if (type == PingType.Upgrade) return WeaponKind.Upgrade;
+        if (type == PingType.Valuable)
+            return physGrab != null && (physGrab.GetComponent<EnemyValuable>() ?? physGrab.GetComponentInParent<EnemyValuable>()) != null
+                ? WeaponKind.Soul : WeaponKind.None;
         if (type != PingType.Weapon && type != PingType.Item) return WeaponKind.None;
         var kind = WeaponOf(physGrab);
         if (kind != WeaponKind.None) return kind;
@@ -478,6 +485,7 @@ internal static class PingController
         WeaponKind.Grenade => new Color(.72f, 1f, .2f),            // acid lime
         WeaponKind.Upgrade => new Color(1f, .84f, .25f),           // gold
         WeaponKind.Drone => new Color(.6f, .45f, 1f),              // violet
+        WeaponKind.Soul => new Color(.8f, .07f, .22f),             // red velvet
         _ => ColorFor(type),
     };
 

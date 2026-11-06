@@ -40,6 +40,8 @@ public class GoalUI{public static GoalUI instance;public TMPro.TextMeshProUGUI u
 public class StatsUI{public static StatsUI instance;public TMPro.TextMeshProUGUI Text,upgradesHeader;}
 public static class SemiFunc{public static bool Menu,IsLevel=true,Shop,TextInput;public static bool MenuLevel()=>Menu;public static bool RunIsLevel()=>IsLevel;public static bool RunIsShop()=>Shop;public static bool NoTextInputsActive()=>!TextInput;public static bool IsMasterClientOrSingleplayer()=>!Photon.Pun.PhotonNetwork.InRoom||Photon.Pun.PhotonNetwork.IsMasterClient;}
 namespace IncreaseHardMod {
+ public class LogStub{public void LogInfo(object o){}public void LogWarning(object o){}}
+ public static class Plugin{public static LogStub Log=new();}
  public class Config<T>{public T Value;public Config(T t){Value=t;}}
  public static class ModConfig {public static Config<bool> LevelInfoEnabled=new(true),BlackMarketEnabled=new(false);public static Config<UnityEngine.KeyCode> LevelInfoToggleKey=new(UnityEngine.KeyCode.F8),BlackMarketKey=new(UnityEngine.KeyCode.Home);public static string ModifierDescription(Modifiers.ModifierType t)=>t.ToString();}
 }

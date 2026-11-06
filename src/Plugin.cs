@@ -14,7 +14,7 @@ public static class PluginInfo
     // Keep the identity stable across the rename: existing config and integrations use it.
     public const string PLUGIN_GUID = "com.kubai.increasehardmod";
     public const string PLUGIN_NAME = "IncreaseDifficultyMod";
-    public const string PLUGIN_VERSION = "0.7.11";
+    public const string PLUGIN_VERSION = "0.7.12";
 }
 
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -70,6 +70,7 @@ public class Plugin : BaseUnityPlugin
         InventorySlotsUpgrade.Register();
         PingUpgrades.Register();
         TruckUpgrades.Register();
+        // Wing cosmetics register from MetaManager.Awake (see WingCosmetics), not here.
 
         if (ModConfig.DiagnosticDisableRuntimeObjects.Value)
         {
@@ -112,6 +113,7 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<SpectatorMapHud>();
         // Quest tracker from remote master.
         netObject.AddComponent<QuestHud>();
+        netObject.AddComponent<ArmorHud>();
         // End-of-level MVP / OOPS CHAMP scoreboard (stats recorded host-side by RoundStats).
         netObject.AddComponent<RoundResultsHud>();
         // Black Market (shop): pay to block unwanted modifiers / economies. Keyboard driven.

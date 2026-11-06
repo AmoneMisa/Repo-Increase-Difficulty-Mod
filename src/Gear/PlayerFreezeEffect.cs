@@ -7,7 +7,9 @@ using UnityEngine.SceneManagement;
 
 namespace IncreaseHardMod.Gear;
 
-/// <summary>Host-confirmed player freeze; movement pauses on its owner, visuals appear on every client.</summary>
+/// <summary>Host-confirmed player freeze; movement pauses on its owner, visuals appear on every client:
+/// frost on the body and, for everyone except the frozen player themselves, the same refracting ice block
+/// monsters get (seeded from the player's network ID, so all clients see the same block).</summary>
 internal sealed class PlayerFreezeEffect : MonoBehaviour
 {
     internal static readonly List<PlayerFreezeEffect> Active = new();
@@ -16,6 +18,7 @@ internal sealed class PlayerFreezeEffect : MonoBehaviour
     private Scene _scene;
     private readonly FrostCoating _frost = new();
     private bool _coated;
+    private IceBlock _block;
     private NativeHudPanel _note;
     private TextMeshProUGUI _label;
 
@@ -82,6 +85,15 @@ internal sealed class PlayerFreezeEffect : MonoBehaviour
         {
             _frost.Apply(Avatar.playerAvatarVisuals.GetComponentsInChildren<Renderer>(true));
             _coated = true;
+            // The block would surround the frozen player's own camera and fill their screen: they get the
+            // frost and the HUD note, everyone else sees them encased.
+            bool own = PlayerController.instance != null && PlayerController.instance.playerAvatarScript == Avatar;
+            if (ModConfig.IceBlockEnabled.Value && _block == null && !own)
+            {
+                var body = BodyRenderers(out var bounds);
+                var view = Avatar.photonView;
+                _block = IceBlock.Create(Avatar.playerAvatarVisuals.transform, bounds, view != null ? view.ViewID : GetInstanceID(), body);
+            }
         }
         _frost.Tick();
         var controller = PlayerController.instance;
@@ -102,12 +114,15 @@ internal sealed class PlayerFreezeEffect : MonoBehaviour
         _note.Fit();
     }
 
+    private List<Renderer> BodyRenderers(out Bounds bounds) => PlayerBody.Renderers(Avatar, out bounds);
+
     private void OnDisable()
     {
         Active.Remove(this);
         _until = 0f;
         _frost.Clear();
         _coated = false;
+        if (_block != null) { _block.Thaw(); _block = null; }
         if (_note != null) Destroy(_note.gameObject);
         _note = null;
     }

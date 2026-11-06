@@ -143,6 +143,26 @@ internal sealed class LevelInfoHud : MonoBehaviour
     }
 
     private readonly List<string> _parts = new();
+    private string _reportedFor;
+    private Rect _layoutArea, _layoutQuota, _layoutHeading, _layoutNumber;
+    private bool _layoutQuotaVisible, _layoutHaulVisible, _layoutLevelBelow;
+    private float _layoutTop, _layoutBottom, _layoutAvailable;
+
+    // One log line per level when there is text to show but every block ended up hidden.
+    private void ReportHiddenOnce(string mapInfo)
+    {
+        if (_modsLabel == null || _mapLabel == null) return;
+        bool wantMods = !string.IsNullOrEmpty(_modsLabel.text);
+        bool wantMap = TabOpen && SafeRunIsLevel() && !string.IsNullOrEmpty(mapInfo);
+        if (!(wantMods && !_modsLabel.enabled) && !(wantMap && !_mapLabel.enabled)) return;
+        string key = LevelKey;
+        if (_reportedFor == key) return;
+        _reportedFor = key;
+        Plugin.Log.LogWarning($"[LevelInfo] Text hidden by layout (mods={wantMods}/{_modsLabel.enabled}, map={wantMap}/{_mapLabel.enabled}, " +
+                              $"font={_modsLabel.fontSize:0}/{_modsLabel.fontSizeMin:0}): canvas={_layoutArea}, quota={_layoutQuota}, " +
+                              $"quotaVisible={_layoutQuotaVisible}, haulVisible={_layoutHaulVisible}, level={_layoutHeading}/{_layoutNumber}, " +
+                              $"levelBelow={_layoutLevelBelow}, top={_layoutTop:0}, bottom={_layoutBottom:0}, available={_layoutAvailable:0}.");
+    }
 
     private void LateUpdate()
     {
@@ -217,6 +237,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
             _descriptionLabel.text = "";
         }
         PositionMods(mapInfo);
+        ReportHiddenOnce(mapInfo);
         if (_modsLabel.enabled)
         {
             _modsLabel.overflowMode = TextOverflowModes.Page;
@@ -442,9 +463,19 @@ internal sealed class LevelInfoHud : MonoBehaviour
         float right = quota.xMax;
         float width = Mathf.Min(area.width * 0.23f, 360f);
         float top = quota.yMin - gap;
-        float bottom = Mathf.Max(area.yMin + area.height * 0.24f,
-            Mathf.Max(heading.yMax, number.yMax) + gap);
+        float floor = area.yMin + area.height * 0.24f;
+        // The native level label (number, moon) only limits the block when it sits BELOW the quota area.
+        // After the HUD changes it can sit beside or above it, which left no room and hid every label.
+        float levelTop = Mathf.Max(heading.yMax, number.yMax);
+        bool levelBelow = levelTop > 0f && levelTop + gap < top;
+        float bottom = levelBelow ? Mathf.Max(floor, levelTop + gap) : floor;
+        // Never squeeze the block below a few lines: fall back to the plain screen-ratio floor.
+        if (top - bottom < _modsLabel.fontSizeMax * 3f) bottom = Mathf.Min(bottom, floor);
         float available = Mathf.Max(0f, top - bottom);
+        // Raw numbers only; formatted into text only when a hidden-label report is actually logged.
+        _layoutArea = area; _layoutQuota = quota; _layoutHeading = heading; _layoutNumber = number;
+        _layoutQuotaVisible = quotaVisible; _layoutHaulVisible = haulVisible; _layoutLevelBelow = levelBelow;
+        _layoutTop = top; _layoutBottom = bottom; _layoutAvailable = available;
         // Keep the requested order: native haul, native extraction count, Map Suite,
         // modifier names. Map data and descriptions are separate, simultaneous blocks.
         _mapLabel.text = TabOpen && SafeRunIsLevel() ? mapInfo : "";

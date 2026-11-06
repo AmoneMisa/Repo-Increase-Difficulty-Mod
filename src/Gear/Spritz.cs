@@ -10,7 +10,8 @@ using Object = UnityEngine.Object;
 
 namespace IncreaseHardMod.Gear;
 
-/// <summary>One close-range dose, using the game's native tranq bullet/stun and replicated firing path.</summary>
+/// <summary>One close-range dose, using the game's native tranq bullet/stun and replicated firing path.
+/// Stuns monsters and knocks out players (no damage). Shown as a single battery bar; free to try in the shop.</summary>
 internal static class SpritzItems
 {
     internal const string AssetName = "Item Spritz";
@@ -48,7 +49,7 @@ internal static class SpritzItems
                 item.name = AssetName;
                 item.itemName = "Spritz";
                 item.itemNameLocalized = null;
-                item.description = "Single-use tranquilizer injector. Stuns a monster at close range. Consumed on use, even if you miss.";
+                item.description = "Single-use tranquilizer injector. Stuns a monster or knocks out a player at close range. Consumed on use, even if you miss. Free to try in the shop.";
                 item.value = Object.Instantiate(donor.value);
                 item.value.valueMin = item.value.valueMax = 5000f;
                 item.maxAmount = 3;
@@ -72,6 +73,13 @@ internal static class SpritzItems
                 gun.investigateRadius = 2f;
                 gun.batteryDrainFullBar = false;
                 gun.batteryDrain = 100f;
+                // One dose = one battery bar. The donor tranq gun shows several bars, which read as several uses.
+                var battery = go.GetComponent<ItemBattery>();
+                if (battery != null)
+                {
+                    battery.batteryBars = 1;
+                    battery.batteryLifeInt = battery.currentBars = battery.batteryLifeCountBarsPrev = 1;
+                }
 
                 var bullet = Object.Instantiate(gun.bulletPrefab, DroneItems.EnsureHolder().transform);
                 bullet.name = "Spritz Native Tranq Hit";
@@ -85,11 +93,9 @@ internal static class SpritzItems
                     hit.enemyStun = true;
                     hit.enemyImpact = HurtCollider.BreakImpact.None;
                     hit.enemyHitForce = hit.enemyHitTorque = 0f;
+                    // Players: keep the native tranq knock-out (stun and tumble), never damage.
                     hit.playerDamage = 0;
-                    hit.playerLogic = false;
                     hit.physLogic = false;
-                    hit.playerStunTime = 0f;
-                    hit.playerHitForce = hit.playerTumbleForce = hit.playerTumbleTorque = hit.playerTumbleTime = 0f;
                     hit.physHitForce = hit.physHitTorque = 0f;
                 }
                 gun.bulletPrefab = bullet;
@@ -105,7 +111,7 @@ internal static class SpritzItems
                 InventoryItemVisuals.Prepare(go);
                 if (Items.RegisterItem(attributes) == null) throw new InvalidOperationException("REPOLib rejected Spritz.");
                 _built = true;
-                Plugin.Log.LogInfo("[Spritz] Registered: fixed $5,000, one close-range tranquilizer use.");
+                Plugin.Log.LogInfo("[Spritz] Registered: fixed $5,000, one close-range tranquilizer use (1 bar).");
             }
             catch (Exception e)
             {
@@ -209,7 +215,7 @@ internal sealed class SpritzDose : MonoBehaviour
         private static bool Prefix(ItemGun __instance, ref bool __result)
         {
             var dose = __instance.GetComponent<SpritzDose>();
-            if (dose == null || (!dose.Used && !SemiFunc.RunIsShop())) return true;
+            if (dose == null || !dose.Used) return true;
             __result = false;
             return false;
         }
@@ -231,7 +237,10 @@ internal sealed class SpritzDose : MonoBehaviour
             __state = false;
             var dose = __instance.GetComponent<SpritzDose>();
             if (dose == null || !SemiFunc.MasterOnlyRPC(_info)) return true;
-            if (SemiFunc.RunIsShop() || !dose.BeginUse()) return false;
+            // In the shop it is a free try-out, like testing other gear there: fire natively, consume nothing
+            // (the game never drains batteries in the shop).
+            if (SemiFunc.RunIsShop()) return true;
+            if (!dose.BeginUse()) return false;
             __state = true;
             return true;
         }

@@ -203,6 +203,8 @@ public static class ModConfig
     public static ConfigEntry<float> FlameTickSeconds, FlameRange, FlameConeAngle;
     // Wizard Staff: chain-lightning wand (handgun base, revolver price).
     public static ConfigEntry<bool> StaffEnabled, NetLauncherEnabled;
+    public static ConfigEntry<bool> WingCosmeticsEnabled;
+    public static ConfigEntry<bool> GuaranteedStrengthEnabled;
     public static ConfigEntry<float> NetSeconds, NetBreakChance;
     public static ConfigEntry<int> NetShots;
     public static ConfigEntry<int> StaffDamage, StaffMaxTargets, StaffCharges;
@@ -452,6 +454,8 @@ public static class ModConfig
         FlameCartPriceMaxK = BindInt(cfg, "Flamethrower", "ShopPriceMaxK", 120, 1, 5000, "Highest shop price, in K as the shop shows it (120 = $120K).");
         StaffEnabled = Module(cfg, "Gear", "WizardStaffEnabled", true, "WizardStaff", "Sell the Wizard Staff (chain-lightning wand).");
         NetLauncherEnabled = Module(cfg, "Gear", "NetLauncherEnabled", true, "NetLauncher", "Sell the Net Launcher (roots a monster to the floor).");
+        GuaranteedStrengthEnabled = Module(cfg, "Shop", "GuaranteedStrength", true, "GuaranteedStrength", "When MoreStandsForShops is installed, the shop always offers at least one Strength (grab strength) upgrade, while the team can still buy it. Host setting.");
+        WingCosmeticsEnabled = Module(cfg, "Cosmetics", "WingsEnabled", true, "WingCosmetics", "Add three Rare back-wing cosmetics (Astral Night, Solar Seraph, Prism Chime) to the Body Top slot. Everyone in the lobby needs this setting to see them. Takes effect on restart.");
         NetSeconds = BindFloat(cfg, "Net Launcher", "RootSeconds", 5f, 1f, 30f, "How long a net pins a monster to the floor. It can still turn and attack anyone in reach.");
         NetBreakChance = BindFloat(cfg, "Net Launcher", "BreakChancePerSecond", .12f, 0f, 1f, "Chance each second that the monster tears the net and breaks free early (0.12 = about 45% over 5 seconds).");
         NetShots = BindInt(cfg, "Net Launcher", "Shots", 8, 1, 20, "Nets per full battery (one battery bar per net).");
@@ -462,8 +466,14 @@ public static class ModConfig
         StaffAimAngle = BindFloat(cfg, "Wizard Staff", "AimAssistAngle", 20f, 0f, 60f, "If the aim line misses, the bolt still finds a monster within this many degrees of it (0 = exact aim only).");
         StaffCharges = BindInt(cfg, "Wizard Staff", "Charges", 8, 1, 20, "Bolts per full battery (one battery bar per bolt).");
         CircletEnabled = Module(cfg, "Cosmetics", "WingedCircletEnabled", true, "WingedCirclet",
-            "Show a floating winged circlet above every player's head, coloured to match the player's own colour (black, cyan, yellow, green, white, purple or red). Local visuals only: each player can turn it off for themselves.");
-        CircletScale = BindFloat(cfg, "Cosmetics", "WingedCircletScale", 1f, .5f, 2f, "Size of the winged circlet (1 = default).");
+            "Player ping marker: while a player is pinging, a floating winged circlet appears above their head for the length of the ping, coloured to match the player's own colour (black, cyan, yellow, green, white, purple or red). Not a cosmetic and not always shown. Local visuals only: each player can turn it off for themselves.");
+        // Lived in a "Cosmetics" section before 0.7.12; it is a ping marker, so it now sits with the ping settings.
+        var orphans = Orphans(cfg);
+        var circletScaleDef = new ConfigDefinition("Ping", "WingedCircletScale");
+        bool circletScaleExisted = orphans != null && orphans.ContainsKey(circletScaleDef);
+        CircletScale = BindFloat(cfg, "Ping", "WingedCircletScale", 1f, .5f, 2f, "Size of the winged circlet shown above a pinging player (1 = default).");
+        if (!circletScaleExisted && orphans != null && orphans.TryGetValue(new ConfigDefinition("Cosmetics", "WingedCircletScale"), out var oldCircletScale))
+            CircletScale.SetSerializedValue(oldCircletScale);
         IceBlockEnabled = Module(cfg, "Cosmetics", "IceBlockEnabled", true, "IceBlock",
             "Monsters frozen by the Ice Pistol are encased in a see-through block of ice with crystal shards, cold mist and frost sparkles. Local visuals only.");
         HeroAuraEnabled = Module(cfg, "Cosmetics", "HeroAuraEnabled", true, "HeroAura",
@@ -711,7 +721,7 @@ public static class ModConfig
             "Enable the quest progression layer: each run level offers 2-3 team quests plus a personal quest, scaled to team size / day / your contract rank. Completing quests advances your rank (F..SSS) and pays money or upgrade items. Team quests are rolled by the host and synced to everyone.");
         QuestPeekKey = cfg.Bind(
             "Quests", "PeekKey", UnityEngine.KeyCode.J,
-            "Press this key to show/hide the quest tracker (default J). Quests start hidden and do not automatically open with Tab.");
+            "Press this key to show/hide the quest tracker (default J). Quests are shown by default; your choice is kept between levels.");
         QuestsPerLevelMin = BindInt(cfg,
             "Quests", "QuestsPerLevelMin", 2, 1, 5,
             "Minimum number of TEAM quests offered per level.");

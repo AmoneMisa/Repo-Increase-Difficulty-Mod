@@ -118,6 +118,8 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         // Client-side: unfreeze a mid-run joiner whose PlayerHealth.Fetch() never completed
         // (health/maxHealth stuck at 100 defaults -> immune to all damage AND healing).
         LateJoinController.EnsureLocalHealthInitialized();
+        LateJoinNetworkDiagnostics.Tick();
+        Quests.QuestRankProgress.PublishSave();
     }
 
     private void FixedUpdate()

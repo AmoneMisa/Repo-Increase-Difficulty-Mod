@@ -11,14 +11,49 @@ namespace IncreaseHardMod.Quests;
 /// count of lifetime completions per Steam ID; the rank is derived from it, so a player's
 /// rank naturally reflects how many quests THEY were present for.
 ///
+/// Ranks are kept separately for each save: a new save starts at rank F. The save is the host's save file
+/// (guests learn it from a room property the host publishes, since the game clears their own save name).
+///
 /// Stored as a tiny hand-rolled text file next to the BepInEx config
-/// (quest_ranks.txt, one "steamID=completions" line each) rather than a ConfigEntry, since
-/// this is churny runtime state, not a user-tunable knob.
+/// (quest_ranks.txt, one "save|steamID=completions" line each) rather than a ConfigEntry, since
+/// this is churny runtime state, not a user-tunable knob. Lines from before per-save ranks
+/// ("steamID=completions") are moved to the first save that player plays.
 /// </summary>
 public static class QuestRankProgress
 {
     private static readonly Dictionary<string, int> Completions = new();
     private static bool _loaded;
+    private const string SaveProperty = "ihm_save";
+    private static string _published;
+
+    /// <summary>The save the current run belongs to: the host's save file name.</summary>
+    internal static string CurrentSave()
+    {
+        try
+        {
+            if (Photon.Pun.PhotonNetwork.InRoom && !Photon.Pun.PhotonNetwork.IsMasterClient)
+                return Photon.Pun.PhotonNetwork.CurrentRoom?.CustomProperties[SaveProperty] is string hostSave && hostSave.Length > 0
+                    ? hostSave : "unsaved";
+            string own = StatsManager.instance != null ? StatsManager.instance.saveFileCurrent : null;
+            return string.IsNullOrEmpty(own) ? "unsaved" : own;
+        }
+        catch { return "unsaved"; }
+    }
+
+    /// <summary>Host: publish the save name so guests rank against the same save. Cheap; call every frame.</summary>
+    internal static void PublishSave()
+    {
+        if (!Photon.Pun.PhotonNetwork.InRoom || !Photon.Pun.PhotonNetwork.IsMasterClient || StatsManager.instance == null) return;
+        string save = StatsManager.instance.saveFileCurrent;
+        if (string.IsNullOrEmpty(save) || save == _published) return;
+        var room = Photon.Pun.PhotonNetwork.CurrentRoom;
+        if (room == null) return;
+        if (room.CustomProperties[SaveProperty] is string current && current == save) { _published = save; return; }
+        room.SetCustomProperties(new ExitGames.Client.Photon.Hashtable { [SaveProperty] = save });
+        _published = save;
+    }
+
+    private static string Key(string steamId) => CurrentSave() + "|" + steamId;
 
     private static string FilePath =>
         Path.Combine(BepInEx.Paths.ConfigPath, "com.kubai.increasehardmod.quest_ranks.txt");
@@ -70,7 +105,18 @@ public static class QuestRankProgress
         if (string.IsNullOrEmpty(steamId))
             return 0;
         EnsureLoaded();
-        return Completions.TryGetValue(steamId, out int c) ? c : 0;
+        string key = Key(steamId);
+        if (Completions.TryGetValue(key, out int c)) return c;
+        // Legacy global count (before per-save ranks): hand it to the first real save this player plays.
+        if (!key.StartsWith("unsaved|", System.StringComparison.Ordinal) && Completions.TryGetValue(steamId, out int legacy))
+        {
+            Completions.Remove(steamId);
+            Completions[key] = legacy;
+            Save();
+            Plugin.Log.LogInfo($"[Quests] Moved {legacy} earlier quest completion(s) to save {CurrentSave()}.");
+            return legacy;
+        }
+        return 0;
     }
 
     /// <summary>
@@ -134,7 +180,7 @@ public static class QuestRankProgress
         int before = GetCompletions(steamId);
         Resolve(before, out var beforeRank, out _);
         int after = before + 1;
-        Completions[steamId] = after;
+        Completions[Key(steamId)] = after;
         Save();
 
         Resolve(after, out var afterRank, out _);
