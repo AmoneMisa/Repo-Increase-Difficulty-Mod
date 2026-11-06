@@ -76,7 +76,7 @@ internal static class BatteryLifeUpgrade
         {
             Id = id,
             DisplayName = name,
-            Description = $"Each level gives this gun type {ModConfig.GunExtraBulletsPerLevel.Value:0.##} extra shot(s) from every battery charge.",
+            Description = $"More shots from every battery charge, scaled to each gun's own ammo: the Handgun gets {ModConfig.GunExtraBulletsPerLevel.Value:0.##} extra shot(s) per level, guns with fewer shots (like the shotgun) get proportionally less.",
             MaxLevel = EffectiveMaxLevel(false),
             BaseShopPrice = ModConfig.GunBatteryBasePrice.Value,
             IconFile = iconFile,
@@ -146,15 +146,56 @@ internal static class BatteryLifeUpgrade
         return Mathf.Max(1f, shots);
     }
 
-    private static float ExtraShots(int level) => level * Mathf.Max(0f, ModConfig.GunExtraBulletsPerLevel.Value);
+    // The vanilla Handgun is the reference gun: it gets exactly GunExtraBulletsPerLevel extra shots per level.
+    private const string ReferenceGun = "Item Gun Handgun";
+    private static float _referenceShots = -1f;
+    private static bool _referenceMissing;
 
-    // Bars the widget should show: one more segment per extra shot for bar-per-shot guns, and the same
-    // proportional growth for continuous-drain guns (laser) so a fuller bar still reads as "more shots".
+    /// <summary>Shots one full battery gives the vanilla Handgun, read from its prefab (0 = unknown yet).</summary>
+    private static float ReferenceShots()
+    {
+        if (_referenceShots > 0f || _referenceMissing) return Mathf.Max(0f, _referenceShots);
+        var stats = StatsManager.instance;
+        if (stats == null || stats.itemDictionary == null || stats.itemDictionary.Count == 0) return 0f; // not loaded yet, retry later
+        try
+        {
+            if (stats.itemDictionary.TryGetValue(ReferenceGun, out var item) && item != null && item.prefab != null && item.prefab.IsValid())
+            {
+                var prefab = item.prefab.Prefab;
+                var gun = prefab != null ? prefab.GetComponentInChildren<ItemGun>(true) : null;
+                var battery = prefab != null ? prefab.GetComponentInChildren<ItemBattery>(true) : null;
+                if (gun != null && battery != null)
+                {
+                    _referenceShots = BaseShots(gun, Mathf.Max(1, battery.batteryBars));
+                    Plugin.Log?.LogInfo($"[Upgrades] Gun Extra Shots reference: {ReferenceGun} fires {_referenceShots:0.##} shot(s) per charge.");
+                    return _referenceShots;
+                }
+            }
+        }
+        catch (System.Exception error) { Plugin.Log?.LogWarning("[Upgrades] Gun Extra Shots reference lookup failed: " + error.Message); }
+        _referenceMissing = true;
+        Plugin.Log?.LogWarning($"[Upgrades] {ReferenceGun} not found; Gun Extra Shots gives every gun the flat per-level bonus.");
+        return 0f;
+    }
+
+    // Extra shots scale with the gun's own capacity: the Handgun gets GunExtraBulletsPerLevel per level, and every
+    // other gun gets the same share of its own battery, so a gun with fewer shots per charge (the shotgun) gets fewer
+    // and one with more gets more. Every gun therefore gains the same percentage. Fractional shots are settled by
+    // the cheaper drain below. Without a reference (Handgun missing) it falls back to the flat bonus.
+    private static float ExtraShots(int level, float baseShots)
+    {
+        float flat = level * Mathf.Max(0f, ModConfig.GunExtraBulletsPerLevel.Value);
+        float reference = ReferenceShots();
+        return reference > 0f ? flat * baseShots / reference : flat;
+    }
+
+    // Bars the widget should show: the same proportional growth as the shots, so a fuller bar reads as
+    // "more shots" for bar-per-shot and continuous-drain (laser) guns alike.
     private static int TargetGunBars(ItemGun gun, int baseBars, int level)
     {
         if (level <= 0) return baseBars;
         float baseShots = BaseShots(gun, baseBars);
-        float scaled = baseBars * (baseShots + ExtraShots(level)) / baseShots;
+        float scaled = baseBars * (baseShots + ExtraShots(level, baseShots)) / baseShots;
         return Mathf.Clamp(Mathf.RoundToInt(scaled), baseBars, Mathf.Max(baseBars, MaxGunBars));
     }
 
@@ -248,7 +289,8 @@ internal static class BatteryLifeUpgrade
         if (level >= 0) state.Level = level;
         SyncUpgradeBars(battery, state);
         int baseBars = BaseBars(battery, state);
-        float desiredCost = 100f / (BaseShots(gun, baseBars) + ExtraShots(state.Level));
+        float baseShots = BaseShots(gun, baseBars);
+        float desiredCost = 100f / (baseShots + ExtraShots(state.Level, baseShots));
         float nativeCost = gun.batteryDrainFullBar
             ? Mathf.Max(1, gun.batteryDrainFullBars) * 100f / Mathf.Max(1, battery.batteryBars)
             : Mathf.Max(0.01f, gun.batteryDrain);

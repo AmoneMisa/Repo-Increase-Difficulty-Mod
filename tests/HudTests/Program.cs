@@ -78,6 +78,17 @@ PhotonNetwork.CurrentRoom=new(){Name=PhotonNetwork.CurrentRoom.Name};
 Check(!LevelInfoHud.InfoReady,"Different room object invalidates snapshot even with reused room name and actor IDs");
 Tick();request=PhotonNetwork.Sent.Last();Reply((string)request[0],(string)request[1],3);
 Check(LevelInfoHud.InfoReady,"Fresh snapshot accepted in rejoined room");
+// A host that never answers must not blank the guest HUD: the request repeats (same nonce) and, after a short
+// grace period, the HUD falls back to the modifiers already synced at level start.
+LevelGenerator.Instance=new(){Generated=true};int sentBefore=PhotonNetwork.Sent.Count;Tick();
+string unanswered=(string)PhotonNetwork.Sent.Last()[0];
+Check(PhotonNetwork.Sent.Count==sentBefore+1&&!LevelInfoHud.InfoReady,"Guest requests a snapshot for a new scene and waits briefly");
+Tick();Check(PhotonNetwork.Sent.Count==sentBefore+1,"Unanswered request is not repeated every frame");
+Time.unscaledTime+=3.1f;Tick();
+Check(PhotonNetwork.Sent.Count==sentBefore+2&&(string)PhotonNetwork.Sent.Last()[0]==unanswered,"Unanswered request repeats after 3 s with the same nonce");
+Check(LevelInfoHud.InfoReady,"Guest HUD falls back to synced modifiers when the host does not answer");
+Reply(unanswered,(string)PhotonNetwork.Sent.Last()[1],3);Tick();
+Check(LevelInfoHud.InfoReady&&PhotonNetwork.Sent.Count==sentBefore+2,"Late reply to a repeated request is accepted and stops the repeats");
 RunManager.instance.levelCurrent=new(){name="next"};
 Check(!LevelInfoHud.GameplayReady,"Selected next level cannot reuse the old generated scene");
 RunManager.instance.levelCurrent=LevelGenerator.Instance.Level;

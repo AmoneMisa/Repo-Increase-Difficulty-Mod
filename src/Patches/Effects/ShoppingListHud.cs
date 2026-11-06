@@ -20,6 +20,9 @@ internal sealed class ShoppingListHud : MonoBehaviour
 
     // Canvas distance from the top to the cart's bottom edge, or 0 while hidden. Other top-right HUD uses this to stack below it.
     internal static float PanelBottom;
+    // The cart's bottom edge in screen pixels (from the bottom of the screen), or -1 while hidden.
+    internal static float PanelBottomScreenY = -1f;
+    private static readonly Vector3[] Corners = new Vector3[4];
 
     private NativeHudPanel _surface;
     private TextMeshProUGUI _title, _footer;
@@ -35,6 +38,7 @@ internal sealed class ShoppingListHud : MonoBehaviour
         {
             if (_surface != null) _surface.gameObject.SetActive(false);
             PanelBottom = 0f;
+            PanelBottomScreenY = -1f;
             return;
         }
         if (_surface == null)
@@ -81,6 +85,9 @@ internal sealed class ShoppingListHud : MonoBehaviour
         _surface.Panel.sizeDelta = new Vector2(460f, 112f + _rows.Count * rowHeight);
         _surface.Fit();
         PanelBottom = 100f + 112f + _rows.Count * rowHeight;
+        // Overlay canvas: world space is screen pixels. Lowest corner = the panel's bottom edge on screen.
+        _surface.Panel.GetWorldCorners(Corners);
+        PanelBottomScreenY = Mathf.Min(Corners[0].y, Corners[3].y);
     }
 
     private static void Place(TextMeshProUGUI label, float x, float y, float width, float height)

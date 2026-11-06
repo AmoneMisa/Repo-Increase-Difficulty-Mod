@@ -915,7 +915,7 @@ public static class ModConfig
             "Gun Battery Life: maximum purchasable level (20 x 5% = +100%).");
         GunExtraBulletsPerLevel = BindFloat(cfg,
             "Player Upgrades", "GunExtraBulletsPerLevel", 1f, 0.25f, 5f,
-            "Gun upgrades (Bullet/Laser/Tranq): extra shots every battery charge gives per level. 1 = one more shot per level.");
+            "Gun upgrades (Bullet/Laser/Tranq): extra shots per level for the vanilla Handgun. Other guns get the same share of their own battery (fewer shots per charge = fewer extra shots, e.g. the shotgun).");
         GunExtraBulletsMaxLevel = BindInt(cfg,
             "Player Upgrades", "GunExtraBulletsMaxLevel", 5, 1, 100,
             "Gun upgrades (Bullet/Laser/Tranq): maximum purchasable level.");

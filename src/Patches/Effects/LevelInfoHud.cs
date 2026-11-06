@@ -35,6 +35,9 @@ internal sealed class LevelInfoHud : MonoBehaviour
     private LevelModifiers _snapshotModifiers;
     private int _snapshotEconomy;
     private int _snapshotShop;
+    // Guest side: when this generation was first seen and when to repeat an unanswered request.
+    private float _generationAt, _nextRequestAt;
+    private int _requestsSent;
     private static LevelInfoHud _instance;
     private readonly Dictionary<int, (string Request, string Level, string Sent)> _readers = new();
     private Room _readersRoom;
@@ -53,8 +56,11 @@ internal sealed class LevelInfoHud : MonoBehaviour
         HUDCanvas.instance != null && HUDCanvas.instance.gameObject.activeInHierarchy;
     internal static bool TabOpen => (MapToolController.instance != null && MapToolController.instance.Active) ||
         (Map.Instance != null && Map.Instance.Active);
+    // Guests wait briefly for the host's HUD snapshot, then fall back to the modifiers, economy and shop
+    // economy the mod already synced to them. A missing reply must never hide the whole right-side HUD.
     internal static bool InfoReady => GameplayReady &&
-        (SemiFunc.IsMasterClientOrSingleplayer() || (_instance != null && _instance.SnapshotReady));
+        (SemiFunc.IsMasterClientOrSingleplayer() || (_instance != null && (_instance.SnapshotReady || _instance.SnapshotGraceOver)));
+    private bool SnapshotGraceOver => _generation == LevelGenerator.Instance && Time.unscaledTime - _generationAt > 2.5f;
     private static string LevelKey => RunManager.instance.levelCurrent.name + "|" +
         RunManager.instance.levelsCompleted;
     private static string OwnerKey => PhotonNetwork.InRoom
@@ -103,6 +109,10 @@ internal sealed class LevelInfoHud : MonoBehaviour
             _room = PhotonNetwork.CurrentRoom;
             _request = null;
             _snapshotModifiers = null;
+            _snapshotEconomy = _snapshotShop = 0;
+            _generationAt = Time.unscaledTime;
+            _nextRequestAt = 0f;
+            _requestsSent = 0;
             _mapPage = 1;
             _detailsPage = 1;
         }
@@ -133,12 +143,17 @@ internal sealed class LevelInfoHud : MonoBehaviour
                 _readers[actor] = (reader.Request, key, signature);
             }
         }
-        else if (_request == null && PhotonNetwork.MasterClient != null)
+        else if (!SnapshotReady && PhotonNetwork.MasterClient != null && Time.unscaledTime >= _nextRequestAt && _requestsSent < 10)
         {
+            // Repeat an unanswered request (the host may still be loading, or the event was dropped); same
+            // nonce, so a late reply to an earlier attempt is still accepted.
             _readers.Clear();
-            _request = System.Guid.NewGuid().ToString("N");
+            _request ??= System.Guid.NewGuid().ToString("N");
             PhotonNetwork.RaiseEvent(StateEventCode, new object[] { _request, LevelKey },
                 new RaiseEventOptions { Receivers = ReceiverGroup.MasterClient }, SendOptions.SendReliable);
+            _nextRequestAt = Time.unscaledTime + 3f;
+            if (++_requestsSent == 10)
+                Plugin.Log.LogWarning($"[LevelInfo] Host sent no HUD state after 10 requests ({LevelKey}); showing the modifiers synced at level start.");
         }
     }
 
@@ -186,7 +201,8 @@ internal sealed class LevelInfoHud : MonoBehaviour
             return; // HUD or font template not ready yet
 
         bool host = SemiFunc.IsMasterClientOrSingleplayer();
-        var mods = host ? ModifierManager.Current : _snapshotModifiers;
+        bool snapshot = !host && SnapshotReady;
+        var mods = host || !snapshot ? ModifierManager.Current : _snapshotModifiers;
         // Top-centre countdown for the LevelTimer modifier.
         if (showModifiers && mods.Has(ModifierType.LevelTimer) && LevelTimerController.Running)
         {
@@ -203,11 +219,11 @@ internal sealed class LevelInfoHud : MonoBehaviour
         }
 
         bool special = SafeRunIsLevel() && mods != null && mods.IsSpecial;
-        var econ = SafeRunIsLevel() ? (host ? Economy.EconomyEvents.Current :
+        var econ = SafeRunIsLevel() ? (host || !snapshot ? Economy.EconomyEvents.Current :
             _snapshotEconomy > 0 ? Economy.EconomyEvents.All[_snapshotEconomy - 1] : null) : null;
         bool inShop = false;
         try { inShop = SemiFunc.RunIsShop(); } catch { }
-        var shopEcon = inShop ? (host ? Economy.ShopEconomy.Current :
+        var shopEcon = inShop ? (host || !snapshot ? Economy.ShopEconomy.Current :
             _snapshotShop > 0 ? Economy.ShopEconomy.All[_snapshotShop - 1] : null) : null;
         bool market = inShop && ModConfig.BlackMarketEnabled.Value;
         if (showModifiers && (special || econ != null || shopEcon != null || market))
@@ -463,6 +479,17 @@ internal sealed class LevelInfoHud : MonoBehaviour
         float right = quota.xMax;
         float width = Mathf.Min(area.width * 0.23f, 360f);
         float top = quota.yMin - gap;
+        // In the shop the cart list sits at the top right on its own overlay canvas: stack below it
+        // (the Black Market hint and shop economy would otherwise be drawn over the list).
+        if (ShoppingListHud.PanelBottomScreenY >= 0f && SafeRunIsShop())
+        {
+            var display = HudProjection.DisplayRect(HudProjection.CanvasCamera(_modsLabel.canvas));
+            if (display.height > 1f)
+            {
+                float listBottom = area.yMin + (ShoppingListHud.PanelBottomScreenY - display.y) / display.height * area.height;
+                top = Mathf.Min(top, listBottom - gap);
+            }
+        }
         float floor = area.yMin + area.height * 0.24f;
         // The native level label (number, moon) only limits the block when it sits BELOW the quota area.
         // After the HUD changes it can sit beside or above it, which left no room and hid every label.
@@ -630,6 +657,12 @@ internal sealed class LevelInfoHud : MonoBehaviour
     private static bool SafeMenuLevel()
     {
         try { return SemiFunc.MenuLevel(); }
+        catch { return false; }
+    }
+
+    private static bool SafeRunIsShop()
+    {
+        try { return SemiFunc.RunIsShop(); }
         catch { return false; }
     }
 

@@ -326,10 +326,10 @@ internal static class PingController
         if (type == PingType.Location) graphic.AttachBeacon(duration);
         else if (type == PingType.Enemy) graphic.UseReticle();
         else if (kind != WeaponKind.None && kind != WeaponKind.Soul) graphic.UseWeaponCallout(kind, contour: kind != WeaponKind.Upgrade && kind != WeaponKind.Drone);
-        // Loot gets no silhouette outline (locator arrow and underglow only). Souls get only the underglow
-        // and their red-velvet aura (HeroAura soul style), nothing on screen.
+        // Loot, carts and vehicles get no silhouette outline (locator arrow and underglow only). Souls get only
+        // the underglow and their red-velvet aura (HeroAura soul style), nothing on screen.
         if (kind == WeaponKind.Soul) graphic.HideMarker();
-        else if (type == PingType.Valuable) graphic.HideContour();
+        else if (type is PingType.Valuable or PingType.Cart or PingType.Scooter) graphic.HideContour();
         // Neon underglow in the ping colour for physical objects (loot, items, carts...), not monsters/players.
         if (physGrab != null && player == null && type != PingType.Enemy && type != PingType.Location)
             PingUnderglow.Attach(physGrab, tint, duration, graphic);
