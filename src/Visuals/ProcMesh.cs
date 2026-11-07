@@ -43,6 +43,29 @@ internal sealed class ProcMesh
         return this;
     }
 
+    /// <summary>Doubly terminated crystal along Y (tips at ±0.5, radius 0.5): a prism of <paramref name="sides"/>
+    /// faces between y = <paramref name="bodyBottom"/> and <paramref name="bodyTop"/>, closed by a pyramid at each end.</summary>
+    internal ProcMesh Crystal(Matrix4x4 m, int sides = 6, float bodyBottom = -.3f, float bodyTop = .22f)
+    {
+        sides = Mathf.Max(3, sides);
+        var top = m.MultiplyPoint3x4(new Vector3(0f, .5f, 0f));
+        var bottom = m.MultiplyPoint3x4(new Vector3(0f, -.5f, 0f));
+        Vector3 Ring(int i, float y)
+        {
+            float a = i * Mathf.PI * 2f / sides;
+            return m.MultiplyPoint3x4(new Vector3(Mathf.Cos(a) * .5f, y, Mathf.Sin(a) * .5f));
+        }
+        for (int i = 0; i < sides; i++)
+        {
+            var b0 = Ring(i, bodyBottom); var b1 = Ring(i + 1, bodyBottom);
+            var t0 = Ring(i, bodyTop); var t1 = Ring(i + 1, bodyTop);
+            Quad(b0, t0, t1, b1);   // outward-facing side (clockwise seen from outside)
+            Tri(t0, top, t1);       // upper tip
+            Tri(b1, bottom, b0);    // lower tip
+        }
+        return this;
+    }
+
     internal Mesh Build(string name)
     {
         var mesh = new Mesh { name = name };

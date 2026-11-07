@@ -80,6 +80,9 @@ internal sealed class PingOutline : MaskableGraphic
     /// <summary>Area pings: add the world-space beacon; the screen marker keeps only its locator arrow.</summary>
     internal void AttachBeacon(float duration) => _beacon = PingBeacon.Create(_point, duration);
 
+    /// <summary>Battery crystal pings: the beacon's floor runes and pillar in the ping colour, without the emblem.</summary>
+    internal void AttachBeacon(float duration, Color tint) => _beacon = PingBeacon.Create(_point, duration, tint, emblem: false);
+
     /// <summary>Enemy pings: frame the target with a rotating red reticle instead of a silhouette.</summary>
     internal void UseReticle()
     {

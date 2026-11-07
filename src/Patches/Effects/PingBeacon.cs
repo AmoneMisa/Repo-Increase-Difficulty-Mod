@@ -7,6 +7,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// <summary>
 /// World-space beacon for area (Location) pings: a rotating rune circle on the floor, a light
 /// pillar, a hovering winged-spear emblem inside a soft halo and a few rising motes, all additive blue.
+/// Object pings that have no physics body (battery crystals) reuse it in their own colour without the emblem.
 /// </summary>
 internal sealed class PingBeacon : MonoBehaviour
 {
@@ -23,8 +24,12 @@ internal sealed class PingBeacon : MonoBehaviour
     private MaterialPropertyBlock _block;
     private ParticleSystem _motes;
     private float _born, _until;
+    private Color _tint = Tint;
+    private bool _showEmblem = true;
 
-    internal static PingBeacon Create(Vector3 point, float duration)
+    internal static PingBeacon Create(Vector3 point, float duration) => Create(point, duration, Tint, emblem: true);
+
+    internal static PingBeacon Create(Vector3 point, float duration, Color tint, bool emblem)
     {
         if (!EnsureMaterials()) return null;
         var root = new GameObject("IHM_PingBeacon");
@@ -32,6 +37,8 @@ internal sealed class PingBeacon : MonoBehaviour
         var beacon = root.AddComponent<PingBeacon>();
         beacon._born = Time.time;
         beacon._until = Time.time + duration;
+        beacon._tint = tint;
+        beacon._showEmblem = emblem;
         beacon.Build();
         return beacon;
     }
@@ -54,8 +61,11 @@ internal sealed class PingBeacon : MonoBehaviour
         _runeOuter = Part("Rune", _rune, new Vector3(0f, .025f, 0f), Quaternion.Euler(90f, 0f, 0f), Vector3.one * RuneRadius * 2f);
         _runeInner = Part("RuneInner", _rune, new Vector3(0f, .03f, 0f), Quaternion.Euler(90f, 0f, 0f), Vector3.one * RuneRadius * .9f);
         _pillarT = Part("Pillar", _pillar, new Vector3(0f, PillarHeight * .5f, 0f), Quaternion.identity, new Vector3(PillarWidth, PillarHeight, 1f));
-        _haloT = Part("Halo", _halo, new Vector3(0f, EmblemHeight, 0f), Quaternion.identity, Vector3.one * HaloSize);
-        _emblemT = Part("Emblem", _emblem, new Vector3(0f, EmblemHeight, 0f), Quaternion.identity, Vector3.one * EmblemSize);
+        if (_showEmblem)
+        {
+            _haloT = Part("Halo", _halo, new Vector3(0f, EmblemHeight, 0f), Quaternion.identity, Vector3.one * HaloSize);
+            _emblemT = Part("Emblem", _emblem, new Vector3(0f, EmblemHeight, 0f), Quaternion.identity, Vector3.one * EmblemSize);
+        }
         BuildMotes();
         _renderers = GetComponentsInChildren<Renderer>();
         Apply(0f);
@@ -90,7 +100,7 @@ internal sealed class PingBeacon : MonoBehaviour
         main.startLifetime = new ParticleSystem.MinMaxCurve(1.1f, 1.9f);
         main.startSpeed = new ParticleSystem.MinMaxCurve(.25f, .7f);
         main.startSize = new ParticleSystem.MinMaxCurve(.04f, .09f);
-        main.startColor = Tint;
+        main.startColor = _tint;
         main.maxParticles = 40;
         main.simulationSpace = ParticleSystemSimulationSpace.World;
         var shape = _motes.shape;
@@ -125,10 +135,13 @@ internal sealed class PingBeacon : MonoBehaviour
         _pillarT.localScale = new Vector3(PillarWidth, PillarHeight * intro, 1f);
         _pillarT.localPosition = new Vector3(0f, PillarHeight * intro * .5f, 0f);
 
-        float bob = Mathf.Sin(age * 2.2f) * .05f;
-        _emblemT.localPosition = _haloT.localPosition = new Vector3(0f, EmblemHeight + bob, 0f);
-        _emblemT.localScale = Vector3.one * EmblemSize * Mathf.Lerp(.5f, 1f, intro);
-        _haloT.localScale = Vector3.one * HaloSize * (1f + Mathf.Sin(age * 3.1f) * .04f) * Mathf.Lerp(.3f, 1f, intro);
+        if (_emblemT != null)
+        {
+            float bob = Mathf.Sin(age * 2.2f) * .05f;
+            _emblemT.localPosition = _haloT.localPosition = new Vector3(0f, EmblemHeight + bob, 0f);
+            _emblemT.localScale = Vector3.one * EmblemSize * Mathf.Lerp(.5f, 1f, intro);
+            _haloT.localScale = Vector3.one * HaloSize * (1f + Mathf.Sin(age * 3.1f) * .04f) * Mathf.Lerp(.3f, 1f, intro);
+        }
 
         var camera = PingController.ActiveCamera();
         if (camera != null)
@@ -140,16 +153,16 @@ internal sealed class PingBeacon : MonoBehaviour
                 // Pillar and emblem stay upright and turn only around Y; the halo faces the camera fully.
                 var yaw = Quaternion.LookRotation(-flat.normalized, Vector3.up);
                 _pillarT.rotation = yaw;
-                _emblemT.rotation = yaw;
+                if (_emblemT != null) _emblemT.rotation = yaw;
             }
-            _haloT.rotation = Quaternion.LookRotation(_haloT.position - camera.transform.position, Vector3.up);
+            if (_haloT != null) _haloT.rotation = Quaternion.LookRotation(_haloT.position - camera.transform.position, Vector3.up);
         }
         Apply(alpha);
     }
 
     private void Apply(float alpha)
     {
-        var tint = Tint; tint.a = alpha;
+        var tint = _tint; tint.a = alpha;
         var legacy = tint * .5f; legacy.a = alpha; // legacy additive shaders double _TintColor
         _block.SetColor(ColorId, tint);
         _block.SetColor(TintId, legacy);

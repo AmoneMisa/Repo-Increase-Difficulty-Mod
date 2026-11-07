@@ -18,6 +18,7 @@ internal enum PingType : byte
     Upgrade = 7,
     Player = 8,
     Weapon = 9,
+    Crystal = 10, // battery crystal (no physics body: found by RetryCrystalEffect.TryAim)
 }
 
 /// <summary>Callout icon for item pings. Derived locally from the pinged object, so it needs no network field.</summary>
@@ -80,7 +81,8 @@ internal static class PingController
         bool info = OwnsPingInfo();
 
         RaycastHit hit;
-        if (TryAim(ray, maxDist, out hit))
+        bool aimed = TryAim(ray, maxDist, out hit);
+        if (aimed)
         {
             ClassifyHit(hit, info, out type, out pos, out physGrab, out label);
             label = AddSkillInfo(label, type, hit.collider, physGrab);
@@ -90,6 +92,16 @@ internal static class PingController
             type = PingType.Location;
             pos = ray.GetPoint(maxDist);
             label = "Location";
+        }
+
+        // Battery crystals have no colliders: a crystal in front of whatever the ray hit wins.
+        if (RetryCrystalEffect.TryAim(ray, maxDist, out var gem, out float gemDistance) &&
+            (!aimed || gemDistance <= hit.distance + .05f) && !Blocked(ray.origin, gem))
+        {
+            type = PingType.Crystal;
+            pos = gem;
+            physGrab = null;
+            label = RetryCrystalEffect.PingLabel(info);
         }
 
         // Location pings need the "Ping Anywhere" upgrade,
@@ -115,6 +127,15 @@ internal static class PingController
         int viewID = player != null && player.photonView != null ? player.photonView.ViewID :
             physGrab != null && physGrab.photonView != null ? physGrab.photonView.ViewID : 0;
         ModNetwork.Instance?.BroadcastPing((byte)type, pos, label, sender, viewID);
+    }
+
+    // Walls and props between the camera and a point (triggers ignored).
+    private static bool Blocked(Vector3 from, Vector3 to)
+    {
+        var direction = to - from;
+        float distance = direction.magnitude - .1f;
+        return distance > 0f && Physics.Raycast(from, direction.normalized, distance,
+            SemiFunc.LayerMaskGetVisionObstruct(), QueryTriggerInteraction.Ignore);
     }
 
     // Decide what was hit, its label (richer when Ping Info is owned), and the PhysGrabObject the
@@ -293,7 +314,7 @@ internal static class PingController
                            ?? pv.GetComponentInParent<PhysGrabObject>();
         }
 
-        if(type>(byte)PingType.Weapon) return;
+        if(type>(byte)PingType.Crystal) return;
         var tint = SpawnPing((PingType)type, pos, physGrab, local: false, sender, player);
         Announce(label, tint, sender);
     }
@@ -312,7 +333,7 @@ internal static class PingController
             if(old.Sender!=sender || old.Local!=local || old.Type!=type) continue;
             if((physGrab!=null && old.Graphic!=null && old.Graphic.target==physGrab) ||
                 (player!=null && old.Graphic!=null && old.Graphic.PlayerTarget==player) ||
-                (type==PingType.Location && Vector3.SqrMagnitude(old.Pos-pos)<.09f)) Remove(old);
+                ((type==PingType.Location || type==PingType.Crystal) && Vector3.SqrMagnitude(old.Pos-pos)<.09f)) Remove(old);
         }
         EnforceGlobalCap();
 
@@ -326,6 +347,12 @@ internal static class PingController
         var graphic = player != null ? PingOutline.CreatePlayer(player, pos, tint, duration) :
             PingOutline.Create(physGrab, pos, tint, duration);
         if (type == PingType.Location) graphic.AttachBeacon(duration);
+        else if (type == PingType.Crystal)
+        {
+            // Its own mark: green floor runes and pillar on the crystal, which flares while the ping lasts.
+            graphic.AttachBeacon(duration, tint);
+            RetryCrystalEffect.Flare(pos, duration);
+        }
         else if (type == PingType.Enemy) graphic.UseReticle();
         // No pinged object gets a silhouette outline: weapons, upgrades and drones get their icon callout, and
         // every object (loot, items, carts, vehicles, cosmetic boxes too) the locator arrow and underglow.
@@ -508,6 +535,7 @@ internal static class PingController
         PingType.CosmeticBox => new Color(1f, 0.4f, 0.8f),  // pink
         PingType.Scooter => new Color(0.9f, 0.85f, 0.6f),   // beige
         PingType.Weapon => new Color(1f, 0.28f, 0.86f),     // neon magenta
+        PingType.Crystal => new Color(0.55f, 1f, 0.45f),    // crystal green (matches its pickup text)
         _ => new Color(.45f,.82f,1f),                         // soft cyan location
     };
 
@@ -520,6 +548,7 @@ internal static class PingController
         PingType.Cart => "\u25A1",
         PingType.CosmeticBox => "\u2726",
         PingType.Scooter => "\u25B2",
+        PingType.Crystal => "\u25C6",
         _ => "\u2316",
     };
 

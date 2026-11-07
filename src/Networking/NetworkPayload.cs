@@ -17,8 +17,11 @@ internal static class NetworkPayload
     internal static bool Timer(object raw, out object[] data) => Envelope(raw, 2, 2, out data) &&
         data[0] is float seconds && Finite(seconds) && seconds >= 0f && data[1] is bool;
 
+    // Highest PingType on the wire (10 = battery crystal). Weapon pings (9) were wrongly refused before 0.8.4.
+    internal const byte MaxPingType = 10;
+
     internal static bool Ping(object raw, out object[] data) => Envelope(raw, 6, 7, out data) &&
-        data[0] is byte kind && kind <= 8 && data[1] is float x && Finite(x) &&
+        data[0] is byte kind && kind <= MaxPingType && data[1] is float x && Finite(x) &&
         data[2] is float y && Finite(y) && data[3] is float z && Finite(z) &&
         Text(data[4], 512) && Text(data[5], 128) && (data.Length == 6 || data[6] is int id && id >= 0);
 

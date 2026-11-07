@@ -19,7 +19,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// Like skill boxes, crystals are not network objects: the host owns placement and pickup and broadcasts the state
 /// (event 176). The charge itself is set on the host's ItemBattery, which the game syncs to everyone as usual.
 /// Placement uses navigation LevelPoints, never valuable spawn spots, away from the truck, start room, extraction
-/// rooms, mystery boxes and skill boxes. Crystals have no colliders.
+/// rooms, mystery boxes and skill boxes. Crystals have no colliders; pings find them with <see cref="TryAim"/>.
 /// </summary>
 internal static class RetryCrystalEffect
 {
@@ -224,6 +224,51 @@ internal static class RetryCrystalEffect
         SemiFunc.UIFocusText($"BATTERY CRYSTAL: +{ChargeFor(SemiFunc.PlayerAvatarLocal()):0}% {c.Item}", new Color(0.55f, 1f, 0.45f), Color.white, 3f);
     }
 
+    // ---------------------------------------------------------------- pings
+
+    private const float PingRadius = 0.32f;
+
+    /// <summary>The nearest ready crystal the ray passes through within <paramref name="maxDistance"/>, tested
+    /// against a sphere round the floating gem (crystals have no colliders, so physics rays never find them).</summary>
+    internal static bool TryAim(Ray ray, float maxDistance, out Vector3 center, out float distance)
+    {
+        center = default;
+        distance = float.MaxValue;
+        if (Crystals.Count == 0 || _key != LevelKey()) return false;
+        foreach (var c in Crystals)
+        {
+            if (c.State != Ready || c.Visual == null || !c.Visual.isActiveAndEnabled) continue;
+            var gem = RetryCrystalVisual.GemCenter(c.Pos);
+            float along = Vector3.Dot(gem - ray.origin, ray.direction);
+            if (along <= 0f || along > maxDistance || along >= distance) continue;
+            if ((ray.GetPoint(along) - gem).sqrMagnitude > PingRadius * PingRadius) continue;
+            distance = along;
+            center = gem;
+        }
+        return distance < float.MaxValue;
+    }
+
+    /// <summary>Flare the ready crystal at (or nearest to) a pinged position, on any client.</summary>
+    internal static void Flare(Vector3 near, float seconds)
+    {
+        Crystal best = null;
+        float bestSq = 1f; // a crystal ping lands on the gem itself, so anything farther than 1 m is another crystal
+        foreach (var c in Crystals)
+        {
+            if (c.State != Ready || c.Visual == null) continue;
+            float sq = (RetryCrystalVisual.GemCenter(c.Pos) - near).sqrMagnitude;
+            if (sq < bestSq) { bestSq = sq; best = c; }
+        }
+        best?.Visual.Flare(seconds);
+    }
+
+    /// <summary>Ping callout: what the crystal would give the local player.</summary>
+    internal static string PingLabel(bool info)
+    {
+        var local = SemiFunc.PlayerAvatarLocal();
+        return info && local != null ? $"Battery Crystal (+{ChargeFor(local):0}% charge)" : "Battery Crystal";
+    }
+
     // ---------------------------------------------------------------- networking
 
     private static void Broadcast(bool force)
@@ -284,15 +329,28 @@ internal static class RetryCrystalEffect
     }
 }
 
-/// <summary>Local-only battery crystal visual (no colliders). Destroyed with the level scene.</summary>
+/// <summary>
+/// Local-only battery crystal visual (no colliders). Destroyed with the level scene.
+/// A small faceted cluster: a tall doubly terminated crystal with two shorter ones leaning off its base, in a
+/// translucent green glass shell around a softly glowing core, so the game's bloom keeps it green instead of
+/// washing it out to white. A ping makes it flare (<see cref="Flare"/>).
+/// </summary>
 internal sealed class RetryCrystalVisual : MonoBehaviour
 {
     private static readonly Color Green = new(0.45f, 1f, 0.35f);
+    private const float GemLift = 0.12f;
+    private static Mesh _shellMesh, _coreMesh;
+    private static Material _shell, _core;
+
     private Transform _gem;
     private Light _light;
     private byte _state;
     private float _takenAt = -10f;
+    private float _flareUntil = -10f;
     private float _phase;
+
+    /// <summary>Centre of the floating gem: where pings aim and where the crystal ping marker sits.</summary>
+    internal static Vector3 GemCenter(Vector3 floor) => floor + Vector3.up * (RetryCrystalEffect.Size.y * 0.5f + GemLift);
 
     internal static RetryCrystalVisual Create(Vector3 floor, float yaw)
     {
@@ -306,18 +364,13 @@ internal sealed class RetryCrystalVisual : MonoBehaviour
     private void Build()
     {
         _phase = Random.Range(0f, 6.28f);
-        var mat = new Material(Shader.Find("Standard")) { name = "IHM Battery Crystal", color = Green };
-        if (mat.HasProperty("_Glossiness")) mat.SetFloat("_Glossiness", 0.9f);
-        mat.EnableKeyword("_EMISSION");
-        mat.SetColor("_EmissionColor", Green * 2.2f);
-
+        EnsureAssets();
         var s = RetryCrystalEffect.Size;
         _gem = new GameObject("Gem").transform;
         _gem.SetParent(transform, false);
-        _gem.localPosition = new Vector3(0f, s.y * 0.5f + 0.12f, 0f);
-        // A tall diamond: a cube turned onto its corner and stretched upward, plus a small shard beside it.
-        Shard(Vector3.zero, new Vector3(s.x, s.y, s.x), mat);
-        Shard(new Vector3(0.11f, -0.1f, 0.04f), new Vector3(s.x * 0.45f, s.y * 0.5f, s.x * 0.45f), mat);
+        _gem.localPosition = new Vector3(0f, s.y * 0.5f + GemLift, 0f);
+        Part("Core", _coreMesh, _core);   // drawn first: the glass shell sits over it
+        Part("Shell", _shellMesh, _shell);
 
         var lightGo = new GameObject("Light");
         lightGo.transform.SetParent(transform, false);
@@ -330,17 +383,61 @@ internal sealed class RetryCrystalVisual : MonoBehaviour
         _light.shadows = LightShadows.None;
     }
 
-    private void Shard(Vector3 pos, Vector3 size, Material mat)
+    private void Part(string name, Mesh mesh, Material material)
     {
-        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        go.name = "Shard";
+        var go = new GameObject(name, typeof(MeshFilter), typeof(MeshRenderer));
         go.transform.SetParent(_gem, false);
-        go.transform.localPosition = pos;
-        go.transform.localRotation = Quaternion.Euler(45f, 0f, 45f);
-        go.transform.localScale = size * 0.72f;
-        go.GetComponent<MeshRenderer>().sharedMaterial = mat;
-        Destroy(go.GetComponent<Collider>()); // walk-through: never blocks players, monsters or loot
+        go.GetComponent<MeshFilter>().sharedMesh = mesh;
+        var renderer = go.GetComponent<MeshRenderer>();
+        renderer.sharedMaterial = material;
+        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
     }
+
+    // Shared by every crystal on the level (kept across levels, never destroyed with a crystal).
+    private static void EnsureAssets()
+    {
+        var s = RetryCrystalEffect.Size;
+        if (_shellMesh == null)
+        {
+            // Tall centre crystal, plus two shorter ones leaning out from its lower half.
+            _shellMesh = Cluster(new Visuals.ProcMesh(), s, 1f).Build("IHM Battery Crystal Shell");
+            _shellMesh.hideFlags = HideFlags.HideAndDontSave;
+        }
+        if (_coreMesh == null)
+        {
+            _coreMesh = new Visuals.ProcMesh()
+                .Crystal(Visuals.ProcMesh.TRS(new Vector3(0f, 0.02f, 0f), Vector3.zero, new Vector3(s.x * 0.32f, s.y * 0.62f, s.x * 0.32f)))
+                .Build("IHM Battery Crystal Core");
+            _coreMesh.hideFlags = HideFlags.HideAndDontSave;
+        }
+        if (_shell == null)
+        {
+            // Same premultiplied-transparent Standard setup as the mod's glass valuables and ice (ships in the build).
+            _shell = new Material(Shader.Find("Standard")) { name = "IHM Battery Crystal Glass", color = new Color(0.32f, 1f, 0.42f, 0.42f), hideFlags = HideFlags.HideAndDontSave };
+            _shell.SetFloat("_Mode", 3);
+            _shell.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+            _shell.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            _shell.SetInt("_ZWrite", 0);
+            _shell.EnableKeyword("_ALPHAPREMULTIPLY_ON");
+            _shell.SetFloat("_Glossiness", 0.95f);
+            _shell.SetFloat("_Metallic", 0.1f);
+            _shell.EnableKeyword("_EMISSION");
+            _shell.SetColor("_EmissionColor", new Color(0.08f, 0.42f, 0.14f));
+            _shell.renderQueue = 3000;
+        }
+        if (_core == null)
+        {
+            _core = new Material(Shader.Find("Standard")) { name = "IHM Battery Crystal Core", color = Green, hideFlags = HideFlags.HideAndDontSave };
+            _core.SetFloat("_Glossiness", 0.6f);
+            _core.EnableKeyword("_EMISSION");
+            _core.SetColor("_EmissionColor", Green * 0.9f);
+        }
+    }
+
+    private static Visuals.ProcMesh Cluster(Visuals.ProcMesh mesh, Vector3 s, float scale) => mesh
+        .Crystal(Visuals.ProcMesh.TRS(Vector3.zero, new Vector3(0f, 0f, 4f), new Vector3(s.x * 0.62f, s.y, s.x * 0.62f) * scale))
+        .Crystal(Visuals.ProcMesh.TRS(new Vector3(0.07f, -0.1f, 0.03f) * scale, new Vector3(10f, 0f, -32f), new Vector3(s.x * 0.36f, s.y * 0.52f, s.x * 0.36f) * scale))
+        .Crystal(Visuals.ProcMesh.TRS(new Vector3(-0.06f, -0.12f, -0.04f) * scale, new Vector3(-14f, 0f, 28f), new Vector3(s.x * 0.3f, s.y * 0.42f, s.x * 0.3f) * scale), 5);
 
     internal void SetState(byte state, bool animate)
     {
@@ -352,15 +449,23 @@ internal sealed class RetryCrystalVisual : MonoBehaviour
         }
     }
 
+    /// <summary>Pinged: glow brighter and pulse for <paramref name="seconds"/>.</summary>
+    internal void Flare(float seconds) => _flareUntil = Mathf.Max(_flareUntil, Time.time + Mathf.Max(0.5f, seconds));
+
     private void Update()
     {
         if (_gem == null) return;
         float now = Time.time;
         if (_state == 0)
         {
-            _gem.localRotation = Quaternion.Euler(0f, now * 40f + _phase * 57f, 0f);
-            _gem.localPosition = new Vector3(0f, RetryCrystalEffect.Size.y * 0.5f + 0.12f + Mathf.Sin(now * 2f + _phase) * 0.04f, 0f);
-            _light.intensity = 0.9f + Mathf.Sin(now * 3f + _phase) * 0.25f;
+            bool flaring = now < _flareUntil;
+            float spin = flaring ? 120f : 40f;
+            _gem.localRotation = Quaternion.Euler(0f, now * spin + _phase * 57f, 0f);
+            _gem.localPosition = new Vector3(0f, RetryCrystalEffect.Size.y * 0.5f + GemLift + Mathf.Sin(now * 2f + _phase) * 0.04f, 0f);
+            float pulse = Mathf.Sin(now * (flaring ? 9f : 3f) + _phase);
+            _light.intensity = flaring ? 2.2f + pulse * 0.6f : 0.9f + pulse * 0.25f;
+            _light.range = flaring ? 4f : 2.5f;
+            _gem.localScale = Vector3.one * (flaring ? 1.08f + pulse * 0.05f : 1f);
             return;
         }
         // Taken: a quick flash while the gem shrinks away, then it is gone.
