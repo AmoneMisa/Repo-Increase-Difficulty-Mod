@@ -11,7 +11,7 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.8.2`
+- **Version:** `0.8.3`
 
 Version 0.7.12 adds the plush corgi, three Rare wing cosmetics, an Armor HUD row, cleaner pings and a set of shop, HUD and multiplayer fixes ([details](release-notes/v0.7.12.md)).
 
@@ -247,6 +247,10 @@ only on a successful extraction.
   failed grab also rescues valuables wedged in window frames or partially embedded in shelves
   (6 seconds by default). Releases grab anchors and briefly protects the valuable during recovery.
   Also keeps valuables invulnerable until first grabbed (host-side anti-softlock).
+- **Loot Safety Net** — while an extraction point is open, the host spawns more loot when the loot
+  the team can reach is not enough to fill it, or when the point gets no new loot for 5 minutes.
+  New loot appears away from players, is marked on the map and everyone sees a notice. Replaces
+  the game's own top-up, which also counts loot nobody can reach. Host-side.
 - **Auto Backup Saves** — always protects the checkpoint from automatic deletion after a wipe
   or early exit when the game would delete it. Optional backup snapshots are kept indefinitely.
 - **Voice Recovery** — local recovery of failed microphone capture and voice streams after
@@ -346,7 +350,7 @@ All settings live in `BepInEx/config/com.kubai.increasehardmod.cfg` and are edit
 REPOConfig. **Every module on/off switch is gathered in the first section, `Modules`** (surprises, upgrades,
 each drone and gear item, each difficulty scaling stat, lobby tools, HUDs...), so you don't have to scroll
 through tuning values to find them; values from the old sections are carried over the first time. Other sections: General, Enemies, Quota, Surprises, Surprise Modifiers, Modifier Tuning,
-Player Upgrades, Truck Upgrades, Ping, Shop, Map Vote, Late Join, Item Unstuck, More Players,
+Player Upgrades, Truck Upgrades, Ping, Shop, Map Vote, Late Join, Item Unstuck, Loot Safety Net, More Players,
 Spectator Map, Round Results, Auto Backup Saves, and HUD toggles (Level Info,
 Server Info, Shopping List, Photon HUD), plus Voice Recovery and Diagnostics.
 
@@ -383,7 +387,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.8.2`
+- **Версия:** `0.8.3`
 
 В 0.7.12 добавлены плюшевый корги, три редких крыла, строка брони на HUD, более чистые пинги и исправления магазина, HUD и мультиплеера ([подробности](release-notes/v0.7.12.md)).
 
@@ -614,6 +618,10 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
   неудачной попытки (по умолчанию 6 секунд) мод освободит его. Захваты отпускаются, а на время переноса
   включается краткая защита от повреждений. Также сохраняется неуязвимость до первого захвата.
   Работает на стороне хоста.
+- **Loot Safety Net** — пока точка сдачи открыта, хост добавляет ценности, если тех, до которых
+  команда может добраться, не хватает на её квоту, или если в точку 5 минут не приносят ничего нового.
+  Новые ценности появляются вдали от игроков, отмечаются на карте, и все видят сообщение. Заменяет
+  встроенную добавку игры, которая учитывает и недоступные ценности. Работает на стороне хоста.
 - **Auto Backup Saves** — всегда защищает чекпоинт, когда игра собирается автоматически удалить
   сохранение после вайпа или раннего выхода. Дополнительные снимки хранятся без ограничения.
 - **Voice Recovery** — локальное восстановление захвата микрофона и голосовых потоков после
@@ -680,7 +688,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 
 Все настройки хранятся в `BepInEx/config/com.kubai.increasehardmod.cfg` и редактируются прямо в
 игре через REPOConfig. **Все переключатели модулей собраны в первой секции `Modules`** (сюрпризы, улучшения, каждый дрон и предмет, каждая характеристика роста сложности, лобби-инструменты, HUD...), чтобы не листать значения настройки; значения из прежних секций переносятся при первом запуске. Остальные секции: General, Enemies, Quota, Surprises, Surprise Modifiers, Modifier
-Tuning, Player Upgrades, Truck Upgrades, Ping, Shop, Map Vote, Late Join, Item Unstuck, More
+Tuning, Player Upgrades, Truck Upgrades, Ping, Shop, Map Vote, Late Join, Item Unstuck, Loot Safety Net, More
 Players, Spectator Map, Round Results, Auto Backup Saves, переключатели HUD
 (Level Info, Server Info, Shopping List, Photon HUD), Voice Recovery и Diagnostics.
 
