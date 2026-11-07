@@ -12,7 +12,8 @@ namespace IncreaseHardMod.Cosmetics;
 /// cosmetics of their tier and sync between players by asset ID:
 /// three Rare back wings (Body Top), the six-part Plush Shark set (hood, headphones, suit, tail, two fin sleeves)
 /// the seven-part Starlight Gown set (bodice, skirt, two lace sleeves, two boots, earrings) and the Legate set
-/// (silver cuirass with or without the red mantle and cape, war skirt, two bracers), each part in its
+/// (silver cuirass with or without the red mantle and cape, war skirt, two bracers) and the Petal Fairy set (crop top
+/// with or without glowing petal wings, wrap skirt, two sleeves, two striped stockings with boots), each part in its
 /// own slot so it mixes with anything else. Plush, galaxy fabric, lace and gems are tintable: they take the colour
 /// the player picks for that slot in the cosmetics menu (the galaxy's glowing stars too).
 /// Each prefab is a small template: a Cosmetic root with one "Visuals" mesh parent. The meshes are built when the
@@ -27,7 +28,7 @@ internal static class WingCosmetics
         public readonly SemiFunc.CosmeticType Type;
         public readonly SemiFunc.Rarity Rarity;
         public readonly bool Tintable;
-        public readonly string Set;   // "wings", "shark", "starlight", "legate": each set has its own config switch
+        public readonly string Set;   // "wings", "shark", "starlight", "legate", "fairy": each set has its own config switch
         public Definition(string key, string title, SemiFunc.CosmeticType type = SemiFunc.CosmeticType.BodyTop, string slot = "Body Top",
             SemiFunc.Rarity rarity = SemiFunc.Rarity.Rare, bool tintable = false, string set = "wings")
         { Key = key; Title = title; Type = type; Slot = slot; Rarity = rarity; Tintable = tintable; Set = set; }
@@ -56,6 +57,13 @@ internal static class WingCosmetics
         new("legate_skirt", "Legate War Skirt", SemiFunc.CosmeticType.BodyBottom, "Body Bottom", SemiFunc.Rarity.Rare, true, "legate"),
         new("legate_bracer_r", "Legate Bracer Right", SemiFunc.CosmeticType.ArmRight, "Arm Right", SemiFunc.Rarity.Uncommon, true, "legate"),
         new("legate_bracer_l", "Legate Bracer Left", SemiFunc.CosmeticType.ArmLeft, "Arm Left", SemiFunc.Rarity.Uncommon, true, "legate"),
+        new("fairy_top", "Petal Fairy Top", SemiFunc.CosmeticType.BodyTop, "Body Top", SemiFunc.Rarity.Uncommon, true, "fairy"),
+        new("fairy_top_wings", "Petal Fairy Top and Wings", SemiFunc.CosmeticType.BodyTop, "Body Top", SemiFunc.Rarity.UltraRare, true, "fairy"),
+        new("fairy_skirt", "Petal Fairy Skirt", SemiFunc.CosmeticType.BodyBottom, "Body Bottom", SemiFunc.Rarity.Rare, true, "fairy"),
+        new("fairy_sleeve_r", "Petal Fairy Sleeve Right", SemiFunc.CosmeticType.ArmRight, "Arm Right", SemiFunc.Rarity.Uncommon, true, "fairy"),
+        new("fairy_sleeve_l", "Petal Fairy Sleeve Left", SemiFunc.CosmeticType.ArmLeft, "Arm Left", SemiFunc.Rarity.Uncommon, true, "fairy"),
+        new("fairy_leg_r", "Petal Fairy Stocking Right", SemiFunc.CosmeticType.LegRight, "Leg Right", SemiFunc.Rarity.Uncommon, true, "fairy"),
+        new("fairy_leg_l", "Petal Fairy Stocking Left", SemiFunc.CosmeticType.LegLeft, "Leg Left", SemiFunc.Rarity.Uncommon, true, "fairy"),
     };
 
     private static GameObject _templates;
@@ -79,7 +87,7 @@ internal static class WingCosmetics
 
     internal static void Register()
     {
-        if (_registered || !ModConfig.WingCosmeticsEnabled.Value && !ModConfig.SharkCosmeticsEnabled.Value && !ModConfig.StarlightCosmeticsEnabled.Value && !ModConfig.LegateCosmeticsEnabled.Value) return;
+        if (_registered || !ModConfig.WingCosmeticsEnabled.Value && !ModConfig.SharkCosmeticsEnabled.Value && !ModConfig.StarlightCosmeticsEnabled.Value && !ModConfig.LegateCosmeticsEnabled.Value && !ModConfig.FairyCosmeticsEnabled.Value) return;
         _registered = true;
         // Templates live under an inactive holder: Unity never runs their Awake, while instances made by
         // PlayerCosmetics (parented to the player) are active and build their meshes.
@@ -94,6 +102,7 @@ internal static class WingCosmetics
                 "shark" => ModConfig.SharkCosmeticsEnabled.Value,
                 "starlight" => ModConfig.StarlightCosmeticsEnabled.Value,
                 "legate" => ModConfig.LegateCosmeticsEnabled.Value,
+                "fairy" => ModConfig.FairyCosmeticsEnabled.Value,
                 _ => ModConfig.WingCosmeticsEnabled.Value,
             };
             if (!enabled) continue;
@@ -264,7 +273,7 @@ internal sealed class WingCosmeticVisual : MonoBehaviour
     {
         var template = Template();
         var loaded = string.IsNullOrEmpty(data.texture) ? null : UpgradeIcons.LoadTexture(data.texture);
-        bool tiled = data.texture != null && (data.texture.StartsWith("starlight_", StringComparison.Ordinal) || data.texture.StartsWith("legate_", StringComparison.Ordinal));   // fabrics and trims repeat
+        bool tiled = data.texture != null && (data.texture.StartsWith("starlight_", StringComparison.Ordinal) || data.texture.StartsWith("legate_", StringComparison.Ordinal) || data.texture.StartsWith("fairy_", StringComparison.Ordinal));   // fabrics and trims repeat
         if (loaded != null) { loaded.wrapMode = tiled ? TextureWrapMode.Repeat : TextureWrapMode.Clamp; loaded.filterMode = FilterMode.Bilinear; }
         var glow = string.IsNullOrEmpty(data.emissionTexture) ? null : UpgradeIcons.LoadTexture(data.emissionTexture);
         if (glow != null) { glow.wrapMode = tiled ? TextureWrapMode.Repeat : TextureWrapMode.Clamp; glow.filterMode = FilterMode.Bilinear; }
