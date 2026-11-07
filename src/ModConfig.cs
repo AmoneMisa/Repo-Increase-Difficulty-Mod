@@ -675,7 +675,7 @@ public static class ModConfig
             "Modifier Tuning", "AutoReviveAtCar", true,
             "AutoRevive: bring the auto-revived player back at the level's spawn point (the truck/car drop-off) and fully heal them, instead of reviving them on the spot where they died. Still only one auto-revive per player per level.");
         LevelTimerSeconds = BindFloat(cfg,
-            // New key names (0.8.1) so existing configs pick up the new defaults (7 min, +1 min per kill, +2 min per quota).
+            // New key names (0.8.2) so existing configs pick up the new defaults (7 min, +1 min per kill, +2 min per quota).
             "Modifier Tuning", "LevelTimerStartSeconds", 420f, 30f, 1800f,
             "LevelTimer: starting countdown in seconds. When it hits 0 the level restarts and rerolls to a fresh layout (progress is not lost, the level is just regenerated).");
         LevelTimerKillBonus = BindFloat(cfg,
