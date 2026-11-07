@@ -25,12 +25,14 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 {
     // Our private event codes. Must not collide with REPO's (123/124/199) or PUN's
     // reserved range (200+). In use: 172-173 (skill tree), 174 (quest level end), 175 (SkillBoxEffect.EventCode), 176 (RetryCrystalEffect.EventCode), 177-179, 181-198 (197 = LevelInfoHud.StateEventCode, declared there);
-    // 180 is retired (old cart-upgrade state). 170-171 = HostRunControls (failed-level vote).
+    // 180 is retired (old cart-upgrade state). 170-171 = HostRunControls (failed-level vote). 169 = loot safety net notice.
     // Search every file for "EventCode" before adding one.
     // Host: a player was poisoned or sedated (screen effect on that player's own client only).
     public const byte PlayerStatusEventCode = 177;
     public const byte ModifierEventCode = 178;
     public const byte LevelTimerEventCode = 179;
+    // Host: the loot safety net spawned valuables [count, total value, marked on map] -> HUD notice for everyone.
+    public const byte LootNoticeEventCode = 169;
     // 180 previously carried cart-upgrade state; truck upgrades now sync via REPOLib per-player.
     public const byte PingEventCode = 181;
     public const byte MapVoteCandidatesEventCode = 182;
@@ -342,6 +344,15 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient)
             return;
         PhotonNetwork.RaiseEvent(EconomyEventCode, new object[] { id },
+            new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
+    }
+
+    /// <summary>Host tells everyone the loot safety net spawned valuables; the host shows its own notice locally.</summary>
+    public void BroadcastLootNotice(int count, int value, bool marked)
+    {
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient)
+            return;
+        PhotonNetwork.RaiseEvent(LootNoticeEventCode, new object[] { count, value, marked },
             new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
     }
 
@@ -690,6 +701,13 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
                     battery.batteryLife = Mathf.Clamp(battery.batteryLife - (float)data[1], 0f, 100f);
                     return;
                 }
+            return;
+        }
+
+        if (photonEvent.Code == LootNoticeEventCode)
+        {
+            if (!HostSender(photonEvent) || !NetworkPayload.LootNotice(photonEvent.CustomData, out var data)) return;
+            Valuables.LootSafetyNet.ShowNotice((int)data[0], (int)data[1], (bool)data[2]);
             return;
         }
 

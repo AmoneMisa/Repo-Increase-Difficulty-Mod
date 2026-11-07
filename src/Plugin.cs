@@ -124,6 +124,8 @@ public class Plugin : BaseUnityPlugin
         // Item Unstuck: host-side valuable safety net (relocate stuck loot, invuln-until-grab)
         // plus a client-side undamaged-value HUD.
         netObject.AddComponent<ItemUnstuckController>();
+        // Loot safety net: host-side top-up while an extraction point is open (replaces the game's own).
+        netObject.AddComponent<Valuables.LootSafetyNet>();
         // Passive left-side lobby/menu server info (region/ping/room), reads Photon state only.
         netObject.AddComponent<ServerInfoHud>();
         // In-shop cart overlay: aggregates ShopManager.shoppingList into a colour-coded panel.

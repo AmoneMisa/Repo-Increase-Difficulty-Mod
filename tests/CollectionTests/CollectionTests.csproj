@@ -5,6 +5,7 @@
     <Compile Include="../../src/Valuables/TubeLossState.cs" Link="Production/TubeLossState.cs" />
     <Compile Include="../../src/Valuables/ValuableDynamics.cs" Link="Production/ValuableDynamics.cs" />
     <Compile Include="../../src/Valuables/LiquidFlow.cs" Link="Production/LiquidFlow.cs" />
+    <Compile Include="../../src/Valuables/LootSafetyRules.cs" Link="Production/LootSafetyRules.cs" />
     <Compile Include="../../src/Patches/Effects/LateJoinRules.cs" Link="Production/LateJoinRules.cs" />
   </ItemGroup>
 </Project>

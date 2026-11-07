@@ -152,4 +152,10 @@ int hudCalls=LevelInfoHud.Calls; Send(LevelInfoHud.StateEventCode,new object[]{"
     PhotonNetwork.IsMasterClient=false;
     PhotonNetwork.IsMasterClient=wasMaster;SemiFunc.Players.Clear();
 }
+// Loot safety net notice: host only, well-formed only.
+foreach(var raw in new object[]{null,42,new object[]{0,100,true},new object[]{101,100,true},new object[]{3,-1,true},new object[]{3,100,"yes"},new object[]{3,100}})
+ Send(ModNetwork.LootNoticeEventCode,raw);
+Check(IncreaseHardMod.Valuables.LootSafetyNet.Shown==0,"Malformed loot notices ignored");
+Send(ModNetwork.LootNoticeEventCode,new object[]{3,12000,true},3);Check(IncreaseHardMod.Valuables.LootSafetyNet.Shown==0,"Non-host cannot raise a loot notice");
+Send(ModNetwork.LootNoticeEventCode,new object[]{3,12000,true});Check(IncreaseHardMod.Valuables.LootSafetyNet.Shown==1&&IncreaseHardMod.Valuables.LootSafetyNet.Last==(3,12000,true),"Host loot notice is delivered");
 Console.WriteLine("NETWORK_AUDIT_PASS: "+checks);

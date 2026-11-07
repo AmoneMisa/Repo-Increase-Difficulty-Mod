@@ -135,6 +135,16 @@ public static class ModConfig
     public static ConfigEntry<float> ValuableStuckSeconds;
     public static ConfigEntry<bool> ValuableInvulnerableUntilGrab;
 
+    // --- Loot Safety Net ---
+    // Host-side top-up while an extraction point is open: replaces the game's own soft-lock spawn, counting
+    // only loot the team can reach and also topping up when the open point stops making progress.
+    public static ConfigEntry<bool> LootSafetyNetEnabled;
+    public static ConfigEntry<float> LootSafetyStallMinutes;
+    public static ConfigEntry<float> LootSafetyMinPlayerDistance;
+    public static ConfigEntry<int> LootSafetyMaxSpawns;
+    public static ConfigEntry<bool> LootSafetyRevealOnMap;
+    public static ConfigEntry<bool> LootSafetyLog;
+
     // --- Spectator Map ---
     public static ConfigEntry<bool> SpectatorMapEnabled;
     public static ConfigEntry<UnityEngine.KeyCode> SpectatorMapHoldKey;
@@ -500,6 +510,8 @@ public static class ModConfig
         PingUnderglowEnabled = Module(cfg, "Ping", "UnderglowEnabled", true, "PingUnderglow",
             "Pinged loot, items, carts and other physical objects get a neon underglow in the ping colour: coloured light on the floor beneath them for as long as the ping lasts. Local visuals only.");
         ItemUnstuckEnabled = Module(cfg, "Item Unstuck", "Enabled", true, "ItemUnstuck", "Master switch for the valuable safety-net features (relocate stuck loot, invulnerable-until-grab, undamaged-value HUD). The relocate/invuln parts are HOST-SIDE (computed by the host).");
+        LootSafetyNetEnabled = Module(cfg, "Loot Safety Net", "Enabled", true, "LootSafetyNet",
+            "Host-side: while an extraction point is open and the loot the team can reach is not enough to fill it, spawn more (replaces the game's own top-up, which also counts loot nobody can reach). Everyone gets a notice.");
         var spectatorMap = SpectatorMapConfig.Bind(cfg);
         SpectatorMapEnabled = spectatorMap.Enabled;
         SpectatorMapHoldKey = spectatorMap.HoldKey;
@@ -719,6 +731,23 @@ public static class ModConfig
         ValuableInvulnerableUntilGrab = cfg.Bind(
             "Item Unstuck", "InvulnerableUntilGrab", true,
             "Valuables take no damage / lose no value until a player grabs them for the first time (uses the game's own indestructible flag). Host-side.");
+
+        // --- Loot Safety Net ---
+        LootSafetyStallMinutes = BindFloat(cfg,
+            "Loot Safety Net", "StallMinutes", 5f, 0f, 30f,
+            "If an open extraction point gets no new loot for this many minutes, spawn what it still needs even when loot seems to be left somewhere (it may be hidden or out of reach). 0 turns this off.");
+        LootSafetyMinPlayerDistance = BindFloat(cfg,
+            "Loot Safety Net", "MinPlayerDistance", 20f, 0f, 60f,
+            "New loot prefers spawn spots at least this far (metres) from every player, like the game's own top-up. Closer spots are used only when no far spot is free.");
+        LootSafetyMaxSpawns = BindInt(cfg,
+            "Loot Safety Net", "MaxSpawnsPerTopUp", 25, 1, 100,
+            "Most valuables one top-up may spawn.");
+        LootSafetyRevealOnMap = cfg.Bind(
+            "Loot Safety Net", "RevealOnMap", true,
+            "Mark the new loot on the map right away so players can find it.");
+        LootSafetyLog = cfg.Bind(
+            "Loot Safety Net", "DiagnosticLog", true,
+            "While an extraction point is open, log the loot count against its goal about once a minute, plus every top-up and the loot it did not count.");
 
         // --- Quests ---
         QuestsEnabled = cfg.Bind(

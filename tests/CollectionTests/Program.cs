@@ -77,4 +77,17 @@ Assert(!LiquidFlow.Flowing(0,1)&&!LiquidFlow.Flowing(1,-1),"Empty source stops d
 Assert(LiquidFlow.Advance(.4f,1,-10,32)==.4f,"Negative clock delta cannot reverse flow");
 foreach(bool enabled in new[]{false,true})foreach(bool generated in new[]{false,true})foreach(bool spawned in new[]{false,true})
  Assert(IncreaseHardMod.Patches.Effects.LateJoinRules.ShouldSpawn(enabled,generated,spawned)==!(enabled&&generated&&spawned),"Late join only preserves already spawned players during an active run");
+// Loot safety net rules
+Assert(LootSafetyRules.Shortfall(10000,4000)==6000&&LootSafetyRules.Shortfall(10000,12000)==0&&LootSafetyRules.Shortfall(5000,-50)==5000,"Shortfall is the goal minus reachable loot, never negative");
+Assert(LootSafetyRules.Reachable(false,false,false)&&!LootSafetyRules.Reachable(true,false,false)&&!LootSafetyRules.Reachable(false,true,false),"Loot outside rooms or held by a drone does not count");
+Assert(LootSafetyRules.Reachable(true,true,true),"Fresh spawns count before their room check runs");
+Assert(!LootSafetyRules.Stalled(299,300)&&LootSafetyRules.Stalled(300,300)&&!LootSafetyRules.Stalled(9999,0),"Stall needs the full time and 0 turns it off");
+Assert(LootSafetyRules.Decide(10000,4000,3000,10,300,out int t1)==LootTopUpReason.Shortfall&&t1==6000,"A shortfall tops up the missing value");
+Assert(LootSafetyRules.Decide(10000,20000,3000,10,300,out int t2)==LootTopUpReason.None&&t2==0,"Enough reachable loot and recent progress: no top-up");
+Assert(LootSafetyRules.Decide(10000,20000,3000,300,300,out int t3)==LootTopUpReason.Stall&&t3==7000,"A stalled point gets what it still needs");
+Assert(LootSafetyRules.Decide(10000,20000,10000,900,300,out int t4)==LootTopUpReason.None&&t4==0,"A full point never stalls");
+Assert(LootSafetyRules.Decide(10000,20000,3000,900,0,out _)==LootTopUpReason.None,"Stall top-up can be turned off");
+Assert(LootSafetyRules.KeepSpawning(1,24,25)&&!LootSafetyRules.KeepSpawning(1,25,25)&&!LootSafetyRules.KeepSpawning(0,0,25),"Spawning stops at the target or the cap");
+Assert(LootSafetyRules.Money(900)=="$900"&&LootSafetyRules.Money(12000)=="$12K"&&LootSafetyRules.Money(12550)=="$12.5K"&&LootSafetyRules.Money(-5)=="$0","Money text matches the game's style");
+Assert(LootSafetyRules.Notice(1,4000,false)=="New loot appeared: 1 valuable worth $4K"&&LootSafetyRules.Notice(3,12500,true)=="New loot appeared: 3 valuables worth $12.5K, marked on the map","Notice text");
 Console.WriteLine($"PASS: {checks} collection, sample loss, liquid orientation and late join policy checks.");

@@ -70,6 +70,7 @@ namespace IncreaseHardMod.Quests {
  public static class QuestRewards {public static int Money;public static void GrantMoney(int amount){Money+=amount;}public static List<int> Actors=new();public static bool GrantPersonalMoney(int actor,int amount){Actors.Add(actor);Money+=amount;return true;}}
  public static class QuestRankProgress {public static void PublishSave(){}}
 }
+namespace IncreaseHardMod.Valuables { public static class LootSafetyNet { public static int Shown; public static (int Count,int Value,bool Marked) Last; public static void ShowNotice(int c,int v,bool m){Shown++;Last=(c,v,m);} } }
 namespace IncreaseHardMod.Patches.Effects { public static class LateJoinNetworkDiagnostics { public static void Tick(){} } }
 namespace IncreaseHardMod.Patches.Effects { public static class LevelInfoHud { public const byte StateEventCode=197; public static int Calls; public static void HandleStateEvent(ExitGames.Client.Photon.EventData e){Calls++;} } }
 

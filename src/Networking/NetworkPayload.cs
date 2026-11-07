@@ -41,6 +41,10 @@ internal static class NetworkPayload
     internal static bool Repair(object raw, out object[] data) => Envelope(raw, 2, 2, out data) &&
         data[0] is int id && id > 0 && data[1] is float value && Finite(value) && value >= 0f;
 
+    // Loot safety net notice: [spawned count 1..100, total value, marked on map].
+    internal static bool LootNotice(object raw, out object[] data) => Envelope(raw, 3, 3, out data) &&
+        data[0] is int count && count >= 1 && count <= 100 && data[1] is int value && value >= 0 && data[2] is bool;
+
     internal static bool QuestBuff(object raw, out object[] data) => Envelope(raw, 2, 2, out data) &&
         data[0] is byte stat && Enum.IsDefined(typeof(Quests.StatKind), stat) && data[1] is int amount && amount > 0;
 
