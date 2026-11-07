@@ -222,10 +222,16 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
         }
         float left = Mathf.Max(0f, (float)(_shownDeadline - Now));
         string Pick(int option) => _myVote == option ? "<color=#ffd24d>>" : "<color=#ffffff>";
-        _label.text = $"<color=#ff5a4d>LEVEL FAILED</color>  VOTE  {left:0}s\n" +
-                      $"{Pick(1)}[1] RESTART LEVEL  ({_restartVotes})</color>\n" +
-                      $"{Pick(2)}[2] RANDOM MAP  ({_randomVotes})</color>\n" +
-                      $"<size=70%>{_voted}/{_players} VOTED</size>";
+        bool ru = Localization.GameLanguage.Russian;
+        _label.text = ru
+            ? $"<color=#ff5a4d>УРОВЕНЬ ПРОВАЛЕН</color>  ГОЛОСОВАНИЕ  {left:0} с\n" +
+              $"{Pick(1)}[1] ПЕРЕЗАПУСТИТЬ УРОВЕНЬ  ({_restartVotes})</color>\n" +
+              $"{Pick(2)}[2] СЛУЧАЙНАЯ КАРТА  ({_randomVotes})</color>\n" +
+              $"<size=70%>ПРОГОЛОСОВАЛИ {_voted}/{_players}</size>"
+            : $"<color=#ff5a4d>LEVEL FAILED</color>  VOTE  {left:0}s\n" +
+              $"{Pick(1)}[1] RESTART LEVEL  ({_restartVotes})</color>\n" +
+              $"{Pick(2)}[2] RANDOM MAP  ({_randomVotes})</color>\n" +
+              $"<size=70%>{_voted}/{_players} VOTED</size>";
         _panel.Fit();
     }
 
@@ -274,9 +280,10 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
             var quit = __instance.quitButton;
             // Top to bottom. Host actions ask for a second click; the skill tree opens at once.
             var actions = new List<(string text, System.Action action, bool confirm)>();
-            if (skillTree) actions.Add(("SKILL TREE", OpenSkillTree, false));
-            if (hostButtons && runLevel) actions.Add(("RESTART LEVEL", RestartLevel, true));
-            if (hostButtons) actions.Add(("RETURN TO LOBBY", ReturnToLobby, true));
+            bool ru = Localization.GameLanguage.Russian;
+            if (skillTree) actions.Add((ru ? "ДЕРЕВО НАВЫКОВ" : "SKILL TREE", OpenSkillTree, false));
+            if (hostButtons && runLevel) actions.Add((ru ? "ПЕРЕЗАПУСК УРОВНЯ" : "RESTART LEVEL", RestartLevel, true));
+            if (hostButtons) actions.Add((ru ? "ВЕРНУТЬСЯ В ЛОББИ" : "RETURN TO LOBBY", ReturnToLobby, true));
 
             float step = Step(quit);
             var parent = quit.transform.parent;
@@ -486,7 +493,7 @@ internal sealed class EscButtonLabel : MonoBehaviour
         if (_button == null) _button = GetComponent<MenuButton>();
         var label = _button != null ? _button.buttonText : null;
         if (label == null || string.IsNullOrEmpty(Text)) return;
-        string wanted = Time.unscaledTime < ArmedUntil ? "CLICK AGAIN: " + Text : Text;
+        string wanted = Time.unscaledTime < ArmedUntil ? (Localization.GameLanguage.Russian ? "НАЖМИТЕ ЕЩЁ РАЗ: " : "CLICK AGAIN: ") + Text : Text;
         if (!label.enabled) label.enabled = true;
         if (label.text == wanted) return;
         label.text = wanted;

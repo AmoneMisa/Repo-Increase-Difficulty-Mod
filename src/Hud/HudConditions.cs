@@ -23,18 +23,23 @@ internal static class HudConditions
 {
     private sealed class Look
     {
-        public string Title;
-        public string[] Lines;
+        public string Title, TitleRu;
+        public string[] Lines, LinesRu;
         public Color Color;
     }
 
     private static readonly Dictionary<PlayerCondition, Look> Looks = new()
     {
-        [PlayerCondition.Frozen] = new Look { Title = "FROZEN", Color = new Color(.55f, .85f, 1f), Lines = new[] { "MOVEMENT FROZEN", "THAWING OUT" } },
-        [PlayerCondition.Poisoned] = new Look { Title = "POISONED", Color = new Color(.66f, 1f, .16f), Lines = new[] { "TOXIC BOLT HIT" } },
-        [PlayerCondition.Sedated] = new Look { Title = "SEDATED", Color = new Color(.7f, .62f, 1f), Lines = new[] { "KNOCKED OUT", "WAKING UP SOON" } },
-        [PlayerCondition.Netted] = new Look { Title = "NETTED", Color = new Color(1f, .6f, .2f), Lines = new[] { "CAN'T WALK OR JUMP", "STRUGGLE TO BREAK FREE" } },
-        [PlayerCondition.Shocked] = new Look { Title = "SHOCKED", Color = new Color(.55f, .82f, 1f), Lines = new[] { "50% SLOWER", "STAMINA RECOVERS HALF AS FAST" } },
+        [PlayerCondition.Frozen] = new Look { Title = "FROZEN", TitleRu = "ЗАМОРОЖЕН", Color = new Color(.55f, .85f, 1f),
+            Lines = new[] { "MOVEMENT FROZEN", "THAWING OUT" }, LinesRu = new[] { "ВЫ НЕ МОЖЕТЕ ДВИГАТЬСЯ", "ОТТАИВАЕТЕ" } },
+        [PlayerCondition.Poisoned] = new Look { Title = "POISONED", TitleRu = "ОТРАВЛЕН", Color = new Color(.66f, 1f, .16f),
+            Lines = new[] { "TOXIC BOLT HIT" }, LinesRu = new[] { "ПОПАДАНИЕ ЯДОВИТОГО БОЛТА" } },
+        [PlayerCondition.Sedated] = new Look { Title = "SEDATED", TitleRu = "УСЫПЛЁН", Color = new Color(.7f, .62f, 1f),
+            Lines = new[] { "KNOCKED OUT", "WAKING UP SOON" }, LinesRu = new[] { "ВЫ БЕЗ СОЗНАНИЯ", "СКОРО ОЧНЁТЕСЬ" } },
+        [PlayerCondition.Netted] = new Look { Title = "NETTED", TitleRu = "В СЕТИ", Color = new Color(1f, .6f, .2f),
+            Lines = new[] { "CAN'T WALK OR JUMP", "STRUGGLE TO BREAK FREE" }, LinesRu = new[] { "НЕЛЬЗЯ ХОДИТЬ И ПРЫГАТЬ", "ВЫРЫВАЙТЕСЬ НА СВОБОДУ" } },
+        [PlayerCondition.Shocked] = new Look { Title = "SHOCKED", TitleRu = "ШОК", Color = new Color(.55f, .82f, 1f),
+            Lines = new[] { "50% SLOWER", "STAMINA RECOVERS HALF AS FAST" }, LinesRu = new[] { "НА 50% МЕДЛЕННЕЕ", "ВЫНОСЛИВОСТЬ ВОССТАНАВЛИВАЕТСЯ ВДВОЕ МЕДЛЕННЕЕ" } },
     };
 
     private sealed class View
@@ -143,7 +148,7 @@ internal static class HudConditions
         float seconds = view.Timer.RemainingSeconds(now);
         // Tenths only change ten times a second: rebuild the string only then.
         int tenths = Mathf.CeilToInt(seconds * 10f);
-        if (tenths != view.ShownTenths) { view.ShownTenths = tenths; view.Seconds.text = tenths > 0 ? (tenths / 10f).ToString("0.0") + "s" : ""; }
+        if (tenths != view.ShownTenths) { view.ShownTenths = tenths; view.Seconds.text = tenths > 0 ? (tenths / 10f).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) + (Localization.GameLanguage.Russian ? " с" : "s") : ""; }
         view.Seconds.alpha = alpha;
         foreach (var line in view.Lines) line.alpha = alpha * .9f;
         view.Icon.color = view.Accent.color = WithAlpha(look.Color, alpha);
@@ -203,7 +208,8 @@ internal static class HudConditions
             view.Icon = AddImage(card.Panel, "Icon", HudScreenArt.Icon(condition), new Vector2(16f, -14f), new Vector2(70f, 70f));
             view.ShownTenths = -1;
             view.Title = card.Label("Title", HudStyle.Heading * 1.35f, TextAlignmentOptions.TopLeft);
-            view.Title.text = look.Title;
+            bool ru = Localization.GameLanguage.Russian;
+            view.Title.text = ru ? look.TitleRu : look.Title;
             view.Title.color = look.Color;
             Place(view.Title, 100f, 10f, 250f, 44f);
             view.Seconds = card.Label("Seconds", HudStyle.Small, TextAlignmentOptions.TopLeft);
@@ -216,7 +222,7 @@ internal static class HudConditions
             for (int i = 0; i < lines; i++)
             {
                 var line = card.Label("Line", HudStyle.Small, TextAlignmentOptions.TopLeft);
-                line.text = look.Lines[i];
+                line.text = ru && look.LinesRu != null && i < look.LinesRu.Length ? look.LinesRu[i] : look.Lines[i];
                 line.color = new Color(.9f, .92f, .95f);
                 Place(line, 22f, 96f + i * 28f, CardWidth - 36f, 26f);
                 view.Lines.Add(line);

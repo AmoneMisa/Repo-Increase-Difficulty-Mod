@@ -158,8 +158,9 @@ internal static class LinkSets
             int set = SetOf(__instance);
             if (set <= 0 || __instance.item == null) return;
             string name = __instance.item.name;
-            string label = name == DroneItems.LinkAName ? $"Link Drone A / Set {set}" :
-                name == DroneItems.LinkBName ? $"Link Drone B / Set {set}" : null;
+            string setWord = Localization.GameLanguage.Russian ? "Комплект" : "Set";
+            string label = name == DroneItems.LinkAName ? $"Link Drone A / {setWord} {set}" :
+                name == DroneItems.LinkBName ? $"Link Drone B / {setWord} {set}" : null;
             if (label == null) return;
             __instance.cachedItemName = label; // Current game caches the prompt's localized name.
             __instance.itemName = label;

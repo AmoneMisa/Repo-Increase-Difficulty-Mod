@@ -89,10 +89,14 @@ Assert(LootSafetyRules.Money(900)=="$900"&&LootSafetyRules.Money(12000)=="$12K"&
 Assert(LootSafetyRules.Notice(1,4000,false)=="New loot appeared: 1 valuable worth $4K"&&LootSafetyRules.Notice(3,12500,true)=="New loot appeared: 3 valuables worth $12.5K, marked on the map","Notice text");
 // Challenge shrine rules
 var kinds=Enumerable.Range(0,1000).Select(i=>IncreaseHardMod.Challenges.ChallengeRules.Kind(i/1000.0)).Distinct().Count();
-Assert(kinds==5&&IncreaseHardMod.Challenges.ChallengeRules.Kind(1.0)==IncreaseHardMod.Challenges.ChallengeKind.Smash,"Every challenge kind can roll");
+Assert(kinds==9&&IncreaseHardMod.Challenges.ChallengeRules.Kind(1.0)==IncreaseHardMod.Challenges.ChallengeKind.Offering,"Every challenge kind can roll");
+Assert(IncreaseHardMod.Challenges.ChallengeRules.WaveSize(1,1)==1&&IncreaseHardMod.Challenges.ChallengeRules.WaveSize(3,2)==3&&IncreaseHardMod.Challenges.ChallengeRules.WaveSize(3,4)==4&&IncreaseHardMod.Challenges.ChallengeRules.WaveSize(5,6)==4,"Waves grow 1,2,3 (+1 for 3+ players), at most 4");
+Assert(IncreaseHardMod.Challenges.ChallengeRules.DeathFails(IncreaseHardMod.Challenges.ChallengeKind.Waves)&&!IncreaseHardMod.Challenges.ChallengeRules.DeathFails(IncreaseHardMod.Challenges.ChallengeKind.Vigil),"Deaths fail Monster Waves, not Vigil");
+Assert(IncreaseHardMod.Challenges.ChallengeRules.OfferingTarget(0)==2000&&IncreaseHardMod.Challenges.ChallengeRules.OfferingTarget(40000)==6000&&IncreaseHardMod.Challenges.ChallengeRules.OfferingTarget(1e7)==20000,"Offering: 15% of level loot, $2K-$20K");
+Assert(IncreaseHardMod.Challenges.ChallengeRules.Status(IncreaseHardMod.Challenges.ChallengeKind.Waves,1,3,100f,false)=="MONSTER WAVES  WAVE 2/3  1:40"&&IncreaseHardMod.Challenges.ChallengeRules.Status(IncreaseHardMod.Challenges.ChallengeKind.Offering,1500,6000,60f,false)=="OFFERING  $1.5K/$6K  1:00","New shrine HUD lines");
 var rewards=Enumerable.Range(0,300).Select(i=>IncreaseHardMod.Challenges.ChallengeRules.Reward(i/300.0)).Distinct().ToList();
 Assert(rewards.Count==3&&!rewards.Contains(IncreaseHardMod.Challenges.ChallengeReward.None),"A win always gives a skill point, an upgrade or a cosmetic box");
-Assert(IncreaseHardMod.Challenges.ChallengeRules.CullTarget(1)==4&&IncreaseHardMod.Challenges.ChallengeRules.CullTarget(6)==8&&IncreaseHardMod.Challenges.ChallengeRules.CullTarget(0)==4,"Cull: 3 + players, at most 8");
+Assert(IncreaseHardMod.Challenges.ChallengeRules.CullTarget(1)==5&&IncreaseHardMod.Challenges.ChallengeRules.CullTarget(6)==9&&IncreaseHardMod.Challenges.ChallengeRules.CullTarget(0)==5,"Cull: 4 + players, at most 9");
 Assert(Enumerable.Range(0,100).All(i=>IncreaseHardMod.Challenges.ChallengeRules.PropCount(i/100.0) is >=6 and <=10)&&IncreaseHardMod.Challenges.ChallengeRules.PropCount(1)==10,"6 to 10 targets or crates");
 Assert(IncreaseHardMod.Challenges.ChallengeRules.DeathFails(IncreaseHardMod.Challenges.ChallengeKind.Hunt)&&!IncreaseHardMod.Challenges.ChallengeRules.DeathFails(IncreaseHardMod.Challenges.ChallengeKind.Targets),"Deaths fail only the fighting challenges");
 Assert(!IncreaseHardMod.Challenges.ChallengeRules.Expired(0,44.9f,IncreaseHardMod.Challenges.ChallengeKind.Targets)&&IncreaseHardMod.Challenges.ChallengeRules.Expired(0,45f,IncreaseHardMod.Challenges.ChallengeKind.Targets),"Target Practice lasts 45 s");

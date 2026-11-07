@@ -123,23 +123,36 @@ internal sealed class RoundResultsHud : MonoBehaviour
         }
 
         var sb = new StringBuilder();
-        sb.Append($"<line-height=115%><size=54><color=#{Hex(Gold)}>LEVEL RESULTS</color></size>\n\n");
+        bool ru = Localization.GameLanguage.Russian;
+        sb.Append($"<line-height=115%><size=54><color=#{Hex(Gold)}>{(ru ? "ИТОГИ УРОВНЯ" : "LEVEL RESULTS")}</color></size>\n\n");
         var summary = RoundStats.ResultsSummary;
         if (summary != null)
         {
-            sb.Append($"LEVEL LOOT AT START: ${summary.InitialValue:N0}  ({summary.InitialCount} items)\n");
-            sb.Append($"LEFT UNCOLLECTED: {summary.RemainingCount} items / ${summary.RemainingValue:N0}\n");
-            sb.Append($"  UNFOUND (included above): {summary.UnfoundCount} items / ${summary.UnfoundValue:N0}\n");
-            sb.Append($"SOUL INCOME: ${summary.SoulIncome:N0}  |  Extracted value: ${summary.SoulHaul:N0}\n\n");
+            if (ru)
+            {
+                sb.Append($"ДОБЫЧА НА УРОВНЕ В НАЧАЛЕ: ${summary.InitialValue:N0}  ({summary.InitialCount} шт.)\n");
+                sb.Append($"НЕ СОБРАНО: {summary.RemainingCount} шт. / ${summary.RemainingValue:N0}\n");
+                sb.Append($"  НЕ НАЙДЕНО (входит в число выше): {summary.UnfoundCount} шт. / ${summary.UnfoundValue:N0}\n");
+                sb.Append($"ДОХОД С ДУШ: ${summary.SoulIncome:N0}  |  Сдано душ на: ${summary.SoulHaul:N0}\n\n");
+            }
+            else
+            {
+                sb.Append($"LEVEL LOOT AT START: ${summary.InitialValue:N0}  ({summary.InitialCount} items)\n");
+                sb.Append($"LEFT UNCOLLECTED: {summary.RemainingCount} items / ${summary.RemainingValue:N0}\n");
+                sb.Append($"  UNFOUND (included above): {summary.UnfoundCount} items / ${summary.UnfoundValue:N0}\n");
+                sb.Append($"SOUL INCOME: ${summary.SoulIncome:N0}  |  Extracted value: ${summary.SoulHaul:N0}\n\n");
+            }
         }
         if (mvp != null)
-            sb.Append($"<color=#7CFF7C>MVP: {Clean(mvp.Name)}</color>  score {mvp.Score:N0}\n");
+            sb.Append($"<color=#7CFF7C>MVP: {Clean(mvp.Name)}</color>  {(ru ? "очки" : "score")} {mvp.Score:N0}\n");
         if (oops != null)
-            sb.Append($"<color=#FF6B6B>OOPS CHAMP: {Clean(oops.Name)}</color>  broke ${oops.BrokenValue:N0} ({oops.BrokenCount}x)\n");
+            sb.Append(ru ? $"<color=#FF6B6B>ЧЕМПИОН ПО «УПС»: {Clean(oops.Name)}</color>  разбил на ${oops.BrokenValue:N0} ({oops.BrokenCount}x)\n"
+                : $"<color=#FF6B6B>OOPS CHAMP: {Clean(oops.Name)}</color>  broke ${oops.BrokenValue:N0} ({oops.BrokenCount}x)\n");
         if (mvp == null && oops == null)
-            sb.Append("Nobody stood out this time.\n");
+            sb.Append(ru ? "В этот раз никто не выделился.\n" : "Nobody stood out this time.\n");
 
-        sb.Append("\n<color=#AAAAAA>PLAYER<pos=38%>HAULED<pos=58%>BROKEN<pos=76%>DIED<pos=88%>REVIVED</color>\n");
+        sb.Append(ru ? "\n<color=#AAAAAA>ИГРОК<pos=38%>СДАНО<pos=58%>РАЗБИТО<pos=76%>СМЕРТИ<pos=88%>ВОСКРЕШ.</color>\n"
+            : "\n<color=#AAAAAA>PLAYER<pos=38%>HAULED<pos=58%>BROKEN<pos=76%>DIED<pos=88%>REVIVED</color>\n");
         int first = Mathf.Clamp(page * PageSize, 0, Mathf.Max(0, sorted.Count - 1));
         for (int i = first; i < Mathf.Min(sorted.Count, first + PageSize); i++)
         {
@@ -159,9 +172,9 @@ internal sealed class RoundResultsHud : MonoBehaviour
             deaths += r.Deaths;
             revives += r.Revives;
         }
-        sb.Append($"<color=#{Hex(Gold)}>TEAM<pos=38%>${hauled:N0}<pos=58%>${broken:N0}<pos=76%>{deaths}<pos=88%>{revives}</color>\n");
-        sb.Append($"\n<color=#BBBBBB>{ModConfig.RoundResultsKey.Value} / ESC  CLOSE");
-        if (rows.Count > PageSize) sb.Append($"   PGUP / PGDN  PAGE {page + 1}/{(rows.Count + PageSize - 1) / PageSize}");
+        sb.Append($"<color=#{Hex(Gold)}>{(ru ? "КОМАНДА" : "TEAM")}<pos=38%>${hauled:N0}<pos=58%>${broken:N0}<pos=76%>{deaths}<pos=88%>{revives}</color>\n");
+        sb.Append($"\n<color=#BBBBBB>{ModConfig.RoundResultsKey.Value} / ESC  {(ru ? "ЗАКРЫТЬ" : "CLOSE")}");
+        if (rows.Count > PageSize) sb.Append($"   PGUP / PGDN  {(ru ? "СТРАНИЦА" : "PAGE")} {page + 1}/{(rows.Count + PageSize - 1) / PageSize}");
         sb.Append("</color>");
         return sb.ToString();
     }

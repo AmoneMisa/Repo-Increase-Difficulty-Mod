@@ -368,7 +368,9 @@ internal sealed class MapVoteController : MonoBehaviour
         int myChoice = MapVoteState.Ballots.TryGetValue(LocalActor(), out var mine) ? mine.Key : -1;
         bool closed = MapVoteState.Closed;
         int lockedWinner = MapVoteState.LockedWinner;
-        _title.text = closed ? "VOTE CLOSED" : $"NEXT MAP   ({Mathf.CeilToInt(MapVoteState.RemainingSeconds)}s)";
+        bool ru = Localization.GameLanguage.Russian;
+        _title.text = closed ? (ru ? "ГОЛОСОВАНИЕ ЗАКРЫТО" : "VOTE CLOSED")
+            : ru ? $"СЛЕДУЮЩАЯ КАРТА   ({Mathf.CeilToInt(MapVoteState.RemainingSeconds)} с)" : $"NEXT MAP   ({Mathf.CeilToInt(MapVoteState.RemainingSeconds)}s)";
         Place(_title.rectTransform, 8f, 4f, 504f, 34f);
         for (int i = 0; i < count; i++)
         {
@@ -388,7 +390,8 @@ internal sealed class MapVoteController : MonoBehaviour
             _backgrounds[i].color = Color.clear;
             _rows[i].color = winner ? new Color(0.5f, 1f, 0.5f) : i == myChoice ? new Color(0.5f, 0.85f, 1f) : Color.white;
             int votes = MapVoteState.VotesFor(i);
-            _rows[i].text = $"[{i + 1}] {DisplayName(i)}   /   {votes} vote{(votes == 1 ? "" : "s")}";
+            _rows[i].text = ru ? $"[{i + 1}] {DisplayName(i)}   /   {votes} {Quests.QuestText.Plural(votes, "голос", "голоса", "голосов")}"
+                : $"[{i + 1}] {DisplayName(i)}   /   {votes} vote{(votes == 1 ? "" : "s")}";
             Place(_backgrounds[i].rectTransform, 8f, 42f + i * 34f, 504f, 32f);
             Place(_rows[i].rectTransform, 8f, 42f + i * 34f, 504f, 32f);
             if (!closed && SafeNoTextInputs() && !InventoryInputActive() && Input.GetMouseButtonDown(0) &&
@@ -401,9 +404,10 @@ internal sealed class MapVoteController : MonoBehaviour
             _backgrounds[i].gameObject.SetActive(false);
         }
         _hint.text = closed
-            ? (lockedWinner >= 0 ? "Winner locked / loads on truck departure" : "No votes / random map")
-            : $"NUMPAD 1-{count} or click / inventory keys are reserved";
-        _hint.text += $"\n{ModConfig.MapVoteHudKey.Value}  HIDE / SHOW";
+            ? (lockedWinner >= 0 ? (ru ? "Победитель выбран / загрузится при отъезде грузовика" : "Winner locked / loads on truck departure")
+                : (ru ? "Голосов нет / случайная карта" : "No votes / random map"))
+            : ru ? $"NUMPAD 1-{count} или щелчок / клавиши инвентаря заняты" : $"NUMPAD 1-{count} or click / inventory keys are reserved";
+        _hint.text += $"\n{ModConfig.MapVoteHudKey.Value}  {(ru ? "СКРЫТЬ / ПОКАЗАТЬ" : "HIDE / SHOW")}";
         Place(_hint.rectTransform, 8f, 48f + count * 34f, 504f, 52f);
         _surface.Panel.sizeDelta = new Vector2(520f, 106f + count * 34f);
         // Native money text can animate far outside its visible glyph area. Keep the vote

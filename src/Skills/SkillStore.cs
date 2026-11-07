@@ -187,8 +187,29 @@ internal static class SkillStore
     {
         if (op == OpQuestPoints) return; // the quest's own completion toast already said it
         var node = SkillCatalog.Find(nodeId);
-        string name = node?.Name ?? "perk";
-        string text = block switch
+        bool ru = SkillText.Russian;
+        string name = node != null ? SkillText.Name(node) : ru ? "навык" : "perk";
+        string text = ru ? block switch
+        {
+            BuyBlock.None when op == OpRespec => "Очки навыков возвращены",
+            BuyBlock.None when op == OpTradeOffReset => "Очки за компромиссы возвращены",
+            BuyBlock.NothingSpent when op == OpTradeOffReset => "Нет компромиссов для сброса",
+            BuyBlock.NoMoney when op == OpTradeOffReset => $"Сброс компромиссов стоит ${ModConfig.SkillTradeOffResetCost.Value}K",
+            BuyBlock.WrongPlace when op == OpTradeOffReset => "Сбросить компромиссы можно в магазине или грузовике",
+            BuyBlock.None => $"Изучено: «{name}» ({LocalLevel(nodeId)}/{node?.MaxLevel})",
+            BuyBlock.Maxed => $"«{name}» уже на максимуме",
+            BuyBlock.MissingPrerequisite => $"Для «{name}» нужен предыдущий навык",
+            BuyBlock.NotEnoughPoints => $"Не хватает очков для «{name}»",
+            BuyBlock.WrongPlace => op == OpRespec ? "Вернуть очки можно в магазине или грузовике" : "Тратить очки можно в магазине или грузовике",
+            BuyBlock.NoMoney => $"Сброс стоит ${ModConfig.SkillRespecCost.Value}K",
+            BuyBlock.NothingSpent => "Очки навыков ещё не потрачены",
+            BuyBlock.NotReady => "Дерево навыков ещё загружается",
+            BuyBlock.QuestOnly => $"«{name}» даётся только за особые контракты",
+            BuyBlock.GateNotMet => $"Для «{name}» нужно больше очков в навыках этой страницы",
+            BuyBlock.TierTaken => "На этом уровне уже выбран компромисс (сбросьте компромиссы, чтобы поменять)",
+            BuyBlock.NeedLowerTier => $"Для «{name}» сначала нужен компромисс уровнем ниже",
+            _ => "Это изучить нельзя",
+        } : block switch
         {
             BuyBlock.None when op == OpRespec => "Skill points refunded",
             BuyBlock.None when op == OpTradeOffReset => "Trade-off points refunded",

@@ -11,7 +11,7 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.8.5`
+- **Version:** `0.8.6`
 
 Version 0.7.12 adds the plush corgi, three Rare wing cosmetics, an Armor HUD row, cleaner pings and a set of shop, HUD and multiplayer fixes ([details](release-notes/v0.7.12.md)).
 
@@ -163,7 +163,7 @@ only in the shop or truck (the host checks every purchase), and **Refund All** r
 - **Trade-offs (0.8.5):** every page except Contracts has three TRADE-OFFS rows. Each trade-off is better at one
   thing and worse at another; you hold one per row per page. A row opens after enough points in that page's perks
   (rows II and III also need the row below), costs 1/2/3 points, and **Reset Trade-offs** ($5K) refunds only them.
-  The full tree is 220 points.
+  The full tree is 230 points.
 - **Old saves:** bought upgrades are converted into matching perks the first time a save loads.
 - The full design, costs and balance are in [docs/skill-tree-plan.md](docs/skill-tree-plan.md). Every number is in
   the `Skill Tree` and `Player Upgrades` config sections.
@@ -255,7 +255,10 @@ only on a successful extraction.
   (your interact key) next to it to start a timed challenge: **Wisp Escort** (stay near a wisp until it reaches its home),
   **Target Practice** (shoot every floating target; guns use no battery meanwhile), **Hunt** (kill the marked
   strongest monster, nobody may die), **Cull** (kill several monsters, nobody may die) or **Smash** (break every
-  crate by hitting, shooting, tumbling into or throwing things at it). Winning gives a skill point for everyone,
+  crate by hitting, shooting, tumbling into or throwing things at it). Since 0.8.6 also **Monster Waves** (three
+  waves of monsters come at the shrine one after another, nobody may die), **Vigil** (stand in the shrine's ring for
+  40 s while its light draws monsters), **Spark Hunt** (collect 8 sparks spread over the level) and **Offering** (bring
+  loot worth 15% of the level's loot into the shrine's ring). Winning gives a skill point for everyone,
   an upgrade or a cosmetic box. Host-side; the chance per level is in the `Challenges` config section.
 - **Loot Safety Net** — while an extraction point is open, the host spawns more loot when the loot
   the team can still collect (in the point, carried, in boxes, found or not) is not enough to fill it.
@@ -398,7 +401,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.8.5`
+- **Версия:** `0.8.6`
 
 В 0.7.12 добавлены плюшевый корги, три редких крыла, строка брони на HUD, более чистые пинги и исправления магазина, HUD и мультиплеера ([подробности](release-notes/v0.7.12.md)).
 
@@ -547,7 +550,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 - **Компромиссы (0.8.5):** на каждой странице, кроме Контрактов, есть три ряда TRADE-OFFS. Каждый компромисс
   сильнее в одном и слабее в другом; на странице держится по одному в каждом ряду. Ряд открывается после
   достаточного числа очков в перках страницы (рядам II и III нужен ещё ряд ниже), стоит 1/2/3 очка, а
-  **Reset Trade-offs** ($5K) возвращает очки только за них. Всё дерево стоит 220 очков.
+  **Reset Trade-offs** ($5K) возвращает очки только за них. Всё дерево стоит 230 очков.
 - **Старые сохранения:** купленные улучшения переводятся в подходящие перки при первой загрузке сохранения.
 - Полный дизайн, стоимость и баланс — в [docs/skill-tree-plan.md](docs/skill-tree-plan.md). Все числа настраиваются
   в разделах конфига `Skill Tree` и `Player Upgrades`.
@@ -638,6 +641,9 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
   не доберётся домой), **Стрельба по мишеням** (подстрелите все мишени; оружие при этом не тратит заряд),
   **Охота** (убейте отмеченного сильнейшего монстра, никто не должен умереть), **Зачистка** (убейте нескольких
   монстров, никто не должен умереть) или **Разгром** (разбейте все ящики ударом, выстрелом, кувырком или броском).
+  С 0.8.6 также **Волны монстров** (три волны монстров идут к святилищу одна за другой, никто не должен умереть),
+  **Бдение** (простойте в кругу святилища 40 с, пока его свет притягивает монстров), **Сбор искр** (соберите 8 искр
+  по уровню) и **Подношение** (принесите в круг святилища добычу на 15% стоимости всей добычи уровня).
   Победа даёт очко навыков всем, улучшение или коробку косметики. Работает на стороне хоста; шанс на уровень —
   в разделе конфига `Challenges`.
 - **Loot Safety Net** — пока точка сдачи открыта, хост добавляет ценности, если тех, до которых

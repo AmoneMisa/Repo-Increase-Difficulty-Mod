@@ -21,9 +21,14 @@ namespace IncreaseHardMod.Patches.Effects;
 [HarmonyPatch(typeof(ValuableObject), "DollarValueSetLogic")]
 internal static class BiggerSoulDropsEffect
 {
+    [HarmonyPrefix]
+    private static void Prefix(ValuableObject __instance, out bool __state) => __state = __instance.dollarValueSet;
+
     [HarmonyPostfix]
-    private static void Postfix(ValuableObject __instance)
+    private static void Postfix(ValuableObject __instance, bool __state)
     {
+        // Only the first valuation, and never a fixed value the game set (surplus/money bags).
+        if (__state || __instance.dollarValueOverride != 0) return;
         var mods = ModifierManager.Current;
         if (!mods.Has(ModifierType.BiggerSoulDrops))
             return;

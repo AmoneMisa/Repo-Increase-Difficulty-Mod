@@ -1,6 +1,6 @@
 {
   "name": "IncreaseDifficultyMod",
-  "version_number": "0.8.5",
+  "version_number": "0.8.6",
   "website_url": "https://github.com/AmoneMisa/Repo-Increase-Difficulty-Mod",
   "description": "Configurable difficulty, Spritz tranquilizer, map-specific valuables with physics and explosions, custom weapons and drones, upgrades, Black Market and round statistics. English / Russian.",
   "dependencies": [

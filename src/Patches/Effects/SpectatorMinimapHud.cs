@@ -4,7 +4,10 @@ using UnityEngine.UI;
 
 namespace IncreaseHardMod.Patches.Effects;
 
-/// <summary>A large spectator map that follows the current view instead of the dead player's body.</summary>
+/// <summary>
+/// A large map panel. Dead players get it as the spectator map, following the current view instead of their body.
+/// Living players with the Better Map perk open the same panel with M (BetterMapKey) while their map is up.
+/// </summary>
 [DefaultExecutionOrder(10000)]
 internal sealed class SpectatorMapHud : MonoBehaviour
 {
@@ -18,7 +21,7 @@ internal sealed class SpectatorMapHud : MonoBehaviour
     private RenderTexture _texture;
     private NativeHudPanel _surface;
     private RawImage _image;
-    private bool _toggle, _show;
+    private bool _toggle, _show, _alive;
     private static SpectatorMapHud _instance;
 
     /// <summary>True while a dead player has the spectator map open (their Tab), for HUD that shows "in Tab".</summary>
@@ -27,21 +30,52 @@ internal sealed class SpectatorMapHud : MonoBehaviour
     private float _zoom = 1.5f;
     private Vector2 _pan;
 
+    // Living player with Better Map: the map tool is up on a run level.
+    private static bool AliveMapUp()
+    {
+        if (!Skills.SkillEffects.LocalHas(Skills.SkillCatalog.BetterMap)) return false;
+        bool level;
+        try { level = SemiFunc.RunIsLevel(); } catch { level = false; }
+        var me = SemiFunc.PlayerAvatarLocal();
+        return level && me != null && !me.isDisabled && MapToolController.instance != null && MapToolController.instance.Active;
+    }
+
+    // What the map centres on: the spectator view when dead, your own camera when alive.
+    private Transform Source()
+    {
+        if (!_alive) return DeadMapAccessPatch.ViewSource();
+        var cam = PhysGrabber.instance != null && PhysGrabber.instance.playerCamera != null ? PhysGrabber.instance.playerCamera : Camera.main;
+        return cam != null ? cam.transform : PlayerController.instance != null ? PlayerController.instance.transform : null;
+    }
+
     private void Update()
     {
-        if (!ModConfig.SpectatorMapEnabled.Value || !DeadMapAccessPatch.LocalDeadOnLevel())
+        bool dead = ModConfig.SpectatorMapEnabled.Value && DeadMapAccessPatch.LocalDeadOnLevel();
+        bool aliveMap = !dead && AliveMapUp();
+        if (!dead && !aliveMap)
         {
             _toggle = false;
             _show = false;
             Release();
             return;
         }
-        bool nativeToggle = InputManager.instance != null && InputManager.instance.InputToggleGet(InputKey.Map);
-        if (nativeToggle && SemiFunc.InputDown(InputKey.Map) && SemiFunc.NoTextInputsActive())
-            _toggle = !_toggle;
-        if (!nativeToggle) _toggle = false;
-        bool hold = Input.GetKey(ModConfig.SpectatorMapHoldKey.Value);
-        _show = (_toggle || SemiFunc.InputHold(InputKey.Map) || hold) && SemiFunc.NoTextInputsActive();
+        if (_alive != aliveMap) { _toggle = false; _show = false; Release(); }
+        _alive = aliveMap;
+        if (_alive)
+        {
+            // M (BetterMapKey) switches between the hand-held map and the big map while the map is up.
+            if (SemiFunc.NoTextInputsActive() && Input.GetKeyDown(ModConfig.BetterMapKey.Value)) _toggle = !_toggle;
+            _show = _toggle && SemiFunc.NoTextInputsActive();
+        }
+        else
+        {
+            bool nativeToggle = InputManager.instance != null && InputManager.instance.InputToggleGet(InputKey.Map);
+            if (nativeToggle && SemiFunc.InputDown(InputKey.Map) && SemiFunc.NoTextInputsActive())
+                _toggle = !_toggle;
+            if (!nativeToggle) _toggle = false;
+            bool hold = Input.GetKey(ModConfig.SpectatorMapHoldKey.Value);
+            _show = (_toggle || SemiFunc.InputHold(InputKey.Map) || hold) && SemiFunc.NoTextInputsActive();
+        }
         if (!_show)
         {
             Release();
@@ -54,7 +88,7 @@ internal sealed class SpectatorMapHud : MonoBehaviour
             _zoom = Mathf.Min(4f, _zoom + 0.2f);
         float step = 15f * _zoom * Time.unscaledDeltaTime;
         var movement = Vector3.zero;
-        var source = DeadMapAccessPatch.ViewSource();
+        var source = Source();
         if (source != null)
         {
             var yaw = Quaternion.Euler(0f, source.eulerAngles.y, 0f);
@@ -71,7 +105,7 @@ internal sealed class SpectatorMapHud : MonoBehaviour
         if (!_show) return;
         var map = Map.Instance;
         if (_map != null && _map != map) Release();
-        if (map == null || DeadMapAccessPatch.ViewSource() == null) return;
+        if (map == null || Source() == null) return;
         if (_map == null)
         {
             _map = map;
@@ -90,7 +124,7 @@ internal sealed class SpectatorMapHud : MonoBehaviour
             _previousPosition = _marker.transform.position;
             _previousRotation = _marker.transform.rotation;
         }
-        var source = DeadMapAccessPatch.ViewSource();
+        var source = Source();
         _focus.position = source.position + new Vector3(_pan.x, 0f, _pan.y);
         _focus.rotation = Quaternion.Euler(0f, source.eulerAngles.y, 0f);
         map.playerTransformSource = _focus;
@@ -146,11 +180,13 @@ internal sealed class SpectatorMapHud : MonoBehaviour
         if (_surface == null) return;
         var title = _surface.Label("Title", 24f, TextAlignmentOptions.Top);
         Stretch(title.rectTransform, 12f, 36f, true);
-        title.text = "SPECTATOR MAP";
+        bool ru = Localization.GameLanguage.Russian;
+        title.text = _alive ? (ru ? "КАРТА" : "MAP") : (ru ? "КАРТА НАБЛЮДАТЕЛЯ" : "SPECTATOR MAP");
         title.color = new Color(1f, 0.85f, 0.4f);
         var hint = _surface.Label("Controls", 20f, TextAlignmentOptions.Bottom);
         Stretch(hint.rectTransform, 8f, 40f, false);
-        hint.text = "Arrows: pan   +/-: zoom   Home: follow";
+        string controls = ru ? "Стрелки: сдвиг   +/-: масштаб   Home: к себе" : "Arrows: pan   +/-: zoom   Home: follow";
+        hint.text = _alive ? $"{controls}   {ModConfig.BetterMapKey.Value}: {(ru ? "закрыть" : "close")}" : controls;
         var go = new GameObject("Map", typeof(RectTransform), typeof(RawImage));
         go.transform.SetParent(_surface.Panel, false);
         _image = go.GetComponent<RawImage>();

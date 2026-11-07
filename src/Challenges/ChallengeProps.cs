@@ -663,3 +663,94 @@ internal sealed class HuntBeacon : MonoBehaviour
         _gem.localRotation = Quaternion.Euler(0f, Time.time * 110f, 0f);
     }
 }
+
+/// <summary>A Spark Hunt spark: a small bright crystal in a soft halo, bobbing and turning; flares and fades when collected.</summary>
+internal sealed class SparkVisual : MonoBehaviour
+{
+    private static readonly Color Colour = new(.55f, 1f, .75f);
+    private Transform _core;
+    private Light _light;
+    private Vector3 _base;
+    private float _phase, _takenAt = -10f;
+    private bool _taken;
+
+    internal static SparkVisual Create(Vector3 at, float phase)
+    {
+        var root = new GameObject("IHM Challenge Spark");
+        root.transform.position = at;
+        var v = root.AddComponent<SparkVisual>();
+        v._base = at;
+        v._phase = phase;
+        v._core = ChallengeProps.Part(root.transform, "Core", ChallengeProps.Mesh("SparkCore", m => m
+            .Crystal(ProcMesh.TRS(Vector3.zero, Vector3.zero, new Vector3(.1f, .2f, .1f)), 6)), ChallengeProps.Mat(Colour, 1.8f, .8f, 0f)).transform;
+        ChallengeProps.Halo(root.transform, Vector3.zero, .55f, new Color(Colour.r, Colour.g, Colour.b, .5f));
+        v._light = ChallengeProps.Lamp(root.transform, Vector3.zero, Colour, 2.5f, 1f);
+        ChallengeProps.Motes(root.transform, Vector3.zero, new Color(.7f, 1f, .85f, .8f), 6f, .15f, .2f, .05f, world: false);
+        ChallengeProps.MapDot(root, Colour);
+        return v;
+    }
+
+    internal void SetCollected(bool taken)
+    {
+        if (taken && !_taken) { _takenAt = Time.time; Visuals.ItemAudio.Cue("ping_upgrade", .5f).Play(transform.position); }
+        _taken = taken;
+    }
+
+    private void Update()
+    {
+        float now = Time.time;
+        if (_taken)
+        {
+            float k = (now - _takenAt) / .4f;
+            if (k >= 1f) { gameObject.SetActive(false); return; }
+            transform.localScale = Vector3.one * (1f + k * 1.5f) * (1f - k);
+            transform.position += Vector3.up * Time.deltaTime * 2f;
+            _light.intensity = 3f * (1f - k);
+            return;
+        }
+        transform.position = _base + Vector3.up * Mathf.Sin(now * 2f + _phase) * .12f;
+        _core.localRotation = Quaternion.Euler(0f, now * 90f, 0f);
+        _light.intensity = .9f + Mathf.Sin(now * 3f + _phase) * .25f;
+    }
+}
+
+/// <summary>Vigil and Offering: a ring of carved, faintly glowing segments on the floor around the shrine, slowly turning.</summary>
+internal sealed class FloorRingVisual : MonoBehaviour
+{
+    private Transform _ring;
+    private Material _glow;
+    private Color _colour;
+
+    internal static FloorRingVisual Create(Vector3 floor, float radius, Color colour)
+    {
+        var root = new GameObject("IHM Challenge Ring");
+        root.transform.position = floor + Vector3.up * .03f;
+        var v = root.AddComponent<FloorRingVisual>();
+        v._colour = colour;
+        v._glow = ChallengeProps.Mat(colour, 1.2f, .3f, 0f);
+        v._ring = ChallengeProps.Part(root.transform, "Ring", ChallengeProps.Mesh("FloorRing" + radius.ToString("0.0"), m =>
+        {
+            int segments = Mathf.Max(16, Mathf.RoundToInt(radius * 9f));
+            for (int i = 0; i < segments; i++)
+            {
+                if (i % 4 == 3) continue; // gaps, like carved rune segments
+                float a = i * 360f / segments;
+                var dir = Quaternion.Euler(0f, a, 0f) * Vector3.forward;
+                float arc = 2f * Mathf.PI * radius / segments * .9f;
+                m.ChamferBox(ProcMesh.TRS(dir * radius, new Vector3(0f, a, 0f), new Vector3(arc, .02f, .07f)), .3f);
+            }
+            return m;
+        }), v._glow).transform;
+        ChallengeProps.Motes(root.transform, Vector3.zero, new Color(colour.r, colour.g, colour.b, .6f), radius * 3f, radius, .25f, .05f, world: false);
+        return v;
+    }
+
+    private void Update()
+    {
+        float now = Time.time;
+        if (_ring != null) _ring.localRotation = Quaternion.Euler(0f, now * 8f, 0f);
+        if (_glow != null) _glow.SetColor("_EmissionColor", _colour * (1f + Mathf.Sin(now * 2.2f) * .3f));
+    }
+
+    private void OnDestroy() { if (_glow != null) Destroy(_glow); }
+}

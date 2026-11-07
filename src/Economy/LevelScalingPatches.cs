@@ -30,6 +30,11 @@ internal static class LevelScalingPatches
         {
             if (__state || !SemiFunc.IsMasterClientOrSingleplayer() || !SemiFunc.RunIsLevel())
                 return; // already valued earlier, or not host-authoritative
+            // A fixed value set by the game (dollarValueOverride) is money already earned, not loot to scale: the
+            // surplus bag an over-filled extraction point hands back, money bags, Halloween rewards. Scaling it
+            // re-inflated the surplus by the level's loot multiplier every time it went through a point.
+            if (__instance.dollarValueOverride != 0)
+                return;
 
             float mult = EconomyEvents.LootMult * Modifiers.StatModifiers.Mult(Modifiers.StatAxis.LootValue);
             if (ModConfig.ScaleMapValue.Value)

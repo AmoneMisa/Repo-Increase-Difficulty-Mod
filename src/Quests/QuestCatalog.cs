@@ -41,10 +41,10 @@ public static class QuestCatalog
     // small extra push on later days so deep runs ask for a bit more.
     private static float DayFactor(int day) => 1f + 0.03f * Mathf.Max(0, day);
 
-    private static int MoneyReward(QuestContext ctx)
+    private static int MoneyReward(QuestContext ctx, bool solo = false)
     {
         float baseMoney = Mathf.Max(0, ModConfig.QuestMoneyBase.Value);
-        float amount = baseMoney * MoneyFactor(ctx.Players) * QuestRankInfo.Scale(ctx.Rank) * DayFactor(ctx.Day);
+        float amount = baseMoney * MoneyFactor(solo ? 1 : ctx.Players) * QuestRankInfo.Scale(ctx.Rank) * DayFactor(ctx.Day);
         // round to a tidy 100.
         return Mathf.Max(100, Mathf.RoundToInt(amount / 100f) * 100);
     }
@@ -364,7 +364,8 @@ public static class QuestCatalog
             Title = "Take no damage this level",
         };
         q.RewardType = RewardType.Money;
-        q.RewardAmount = MoneyReward(ctx);
+        // Every player earns their own copy into the shared wallet, so it must not also grow with team size.
+        q.RewardAmount = MoneyReward(ctx, solo: true);
         q.RewardPoints = RollSkillPoints(q);
         q.Id = 100;
         return q;

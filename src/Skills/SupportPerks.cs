@@ -61,12 +61,12 @@ internal static class SupportPerks
                     _nextScan = Time.time + .2f;
                     _hunted = IsHunted(local);
                 }
-                if (_hunted) HudNotify.Status(HuntedKey, "HUNTED", HudStyle.Bad);
+                if (_hunted) HudNotify.Status(HuntedKey, SkillText.Russian ? "ПОГОНЯ" : "HUNTED", HudStyle.Bad);
             }
             else _hunted = false;
 
             if (DesperationOn(local.playerHealth))
-                HudNotify.Status(DesperationKey, $"DESPERATION  -{Mathf.RoundToInt(100f * Mathf.Min(.9f, ModConfig.SkillDesperationPerLevel.Value * SkillEffects.Level(local, C.Desperation)))}% DAMAGE", HudStyle.Caution);
+                HudNotify.Status(DesperationKey, $"{(SkillText.Russian ? "ОТЧАЯНИЕ" : "DESPERATION")}  -{Mathf.RoundToInt(100f * Mathf.Min(.9f, ModConfig.SkillDesperationPerLevel.Value * SkillEffects.Level(local, C.Desperation)))}%{(SkillText.Russian ? " УРОНА" : " DAMAGE")}", HudStyle.Caution);
         }
 
         // The host sends every monster's state and target to all players, so any client can read them.

@@ -189,7 +189,7 @@ internal static class BuffPerks
             {
                 string key = "ihm.buff." + (int)buff;
                 if (Shown.TryGetValue(buff, out float until) && until > Time.time)
-                    Hud.HudNotify.Status(key, $"{Label(buff, russian)}  {(until - Time.time).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)}s", Hud.HudStyle.Good);
+                    Hud.HudNotify.Status(key, $"{Label(buff, russian)}  {(until - Time.time).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)}{(russian ? " с" : "s")}", Hud.HudStyle.Good);
                 else if (Shown.Remove(buff)) Hud.HudNotify.Clear(key);
             }
         }

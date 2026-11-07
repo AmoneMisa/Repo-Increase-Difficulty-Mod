@@ -16,15 +16,22 @@ internal static class SkillText
     /// <summary>The game's language is Russian (shared check in Localization/ModifierText.cs).</summary>
     internal static bool Russian => Localization.GameLanguage.Russian;
 
-    /// <summary>A node's display name: Russian for trade-offs when the game is Russian.</summary>
+    /// <summary>A node's display name: Russian for every perk when the game is Russian.</summary>
     internal static string Name(SkillNode node) =>
-        node.Tier > 0 && Russian && !string.IsNullOrEmpty(node.NameRu) ? node.NameRu : node.Name;
+        Russian && !string.IsNullOrEmpty(node.NameRu) ? node.NameRu : node.Name;
+
+    private static string SecRu(float seconds) => seconds.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) + " с";
 
     // The instinct line: trigger, buff, then the level ladder shared by all of them.
     private static string Instinct(string trigger, string buff) => $"When {trigger.Substring(0, 1).ToLowerInvariant()}{trigger.Substring(1)}: {buff} for 3/4/5 s (by level). Cooldown 60/45/30 s.";
 
     internal static string Describe(string id)
     {
+        if (Russian)
+        {
+            string ru = DescribeRu(id);
+            if (!string.IsNullOrEmpty(ru)) return ru;
+        }
         float root = SkillEffects.RootBonus, weaponMax = Mathf.Max(0f, ModConfig.SkillWeaponDamageMax.Value);
         string Weapon(string node, string weapon) => $"+{Pct(weaponMax / C.Find(node).MaxLevel)} {weapon} damage per level (+{Pct(weaponMax)} at max).";
         var tradeOff = TradeOffRules.Find(id);
@@ -34,10 +41,11 @@ internal static class SkillText
                 : $"{tradeOff.Up}.  <color=#FF8C8C>Downside: {tradeOff.Down}.</color>";
         switch (id)
         {
-            case C.MapUplink: return "The map shows how many players are alive.";
-            case C.DeadPlayers: return "The map shows how many players are dead.";
+            case C.MapUplink: return "Every teammate shows on the map with their nickname, even unseen: a white figure while alive, a red death head when dead. The map also counts the living and the dead.";
             case C.ActiveMonsters: return "The map shows how many monsters are active.";
-            case C.RespawnTimers: return "The map shows how many monsters are respawning.";
+            case C.MapLandmarks: return "The challenge shrine and every battery crystal nobody has taken show on the map, each with its own icon: a gold shrine and green crystals.";
+            case C.BetterMap: return "With the map up, press M to open the big map (the spectator map): a large panel you can pan with the arrows and zoom with +/-. M again or lowering the map closes it.";
+            case C.RespawnTimers: return "The map lists every monster waiting to respawn and how long until it comes back.";
             case C.MonsterDots: return "Monsters appear as dots on the map.";
             case C.QuotaHeading: return "The map shows which way the quota is.";
             case C.ValuableTracker: return "The map counts valuables found and your haul.";
@@ -105,6 +113,8 @@ internal static class SkillText
 
             case C.InventorySlot: return "+1 inventory slot per level (keys 4-7).";
             case C.Autoscan: return "Finds nearby valuables for the whole team; reaches farther per level.";
+            case C.HeadRecharge: return "While you watch a teammate, your death head's battery refills 50% faster per level (+150% at level 3).";
+            case C.HeadLeap: return "A charged death head jump carries 20% further per level, twice as far at level 5.";
             case C.HeadBattery: return "The game's Death Head Battery upgrade: your death head's battery lasts longer.";
             case C.TumbleWings: return "The game's Tumble Wings upgrade: fly longer after a tumble launch.";
             case C.FieldMedic: return $"Health packs you use heal {Pct(ModConfig.SkillMedicPerLevel.Value)} more per level; teammates within {ModConfig.SkillMedicRadius.Value:0} m get {Pct(ModConfig.SkillMedicPerLevel.Value)} of the pack per level.";
@@ -130,6 +140,117 @@ internal static class SkillText
             case C.SoftSteps: return $"Your footsteps, landings, voice and the loot you handle alert monsters from {Pct(ContractPerks.NoisePerLevel)} closer per level.";
             case C.HeavyHitter: return $"Your melee hits stun monsters {Sec(ModConfig.SkillHeavyHitterPerLevel.Value)} longer per level (8 s max).";
             case C.PoisonRush: return $"Poison deals the same damage faster per level: {Sec(ModConfig.PoisonSeconds.Value)} down to 8 s.";
+        }
+        return "";
+    }
+
+    private static string InstinctRu(string trigger, string buff) => $"Когда {trigger}: {buff} на 3/4/5 с (по уровню). Перезарядка 60/45/30 с.";
+
+    private static string DescribeRu(string id)
+    {
+        float root = SkillEffects.RootBonus, weaponMax = Mathf.Max(0f, ModConfig.SkillWeaponDamageMax.Value);
+        string Weapon(string node, string weapon) => $"+{Pct(weaponMax / C.Find(node).MaxLevel)} к урону: {weapon}, за уровень (+{Pct(weaponMax)} на максимуме).";
+        switch (id)
+        {
+            case C.MapUplink: return "Все напарники видны на карте вместе с никами, даже если их никто не видит: белая фигурка, пока жив, красная мёртвая голова, когда погиб. Карта также считает живых и мёртвых.";
+            case C.ActiveMonsters: return "Карта показывает, сколько монстров сейчас активно.";
+            case C.MapLandmarks: return "Святилище испытаний и все ещё не взятые кристаллы батарей видны на карте, каждый своей иконкой: золотое святилище и зелёные кристаллы.";
+            case C.BetterMap: return "С поднятой картой нажмите M, чтобы открыть большую карту (как у наблюдателя): стрелки двигают её, +/- меняют масштаб. Повторное M или опущенная карта закрывают её.";
+            case C.RespawnTimers: return "Карта показывает список монстров, ждущих возрождения, и сколько осталось до возвращения каждого.";
+            case C.MonsterDots: return "Монстры видны на карте, каждый своей иконкой.";
+            case C.QuotaHeading: return "Карта показывает, в какой стороне квота и как до неё далеко.";
+            case C.ValuableTracker: return "Карта считает найденные ценности и собранную добычу.";
+            case C.MapPings: return "Пинги видны на карте, в том числе пинги напарников.";
+            case C.ZoomOne: return "Отдаляйте карту клавишами масштаба.";
+            case C.ZoomTwo: return "Карта отдаляется ещё сильнее.";
+            case C.CosmeticTracker: return "Коробки с косметикой видны на карте.";
+
+            case C.Ping: return "Отмечайте игроков, монстров, добычу и места; команда видит пинги сквозь стены.";
+            case C.TargetInfo: return "Пинг называет цель: цену, редкость, имя монстра или предмета.";
+            case C.EnemyHp: return "У отмеченных монстров видно здоровье.";
+            case C.LootCondition: return "У отмеченной добычи видно, сколько стоимости от неё осталось.";
+            case C.Weight: return "У отмеченных предметов виден вес.";
+            case C.Threat: return "У отмеченных монстров виден уровень опасности.";
+
+            case C.FlashTuning: return $"Фонарь светит на {Pct(ModConfig.SkillFlashRange.Value)} дальше.";
+            case C.BeamWidth: return $"Луч на {Pct(ModConfig.SkillFlashWidthPerLevel.Value)} шире за уровень.";
+            case C.Brightness: return $"Луч на {Pct(ModConfig.SkillFlashBrightnessPerLevel.Value)} ярче за уровень.";
+            case C.BeamColour: return "Выберите цвет луча, его видит и команда. Нажмите ещё раз, чтобы сменить.";
+
+            case C.Brawler: return $"+{Pct(root)} к урону в ближнем бою, гранатами и кувырком.";
+            case C.GrenadeDamage: return $"+{Pct(PerLevel(ModConfig.GrenadeDamagePercentPerLevel.Value, ModConfig.GrenadeDamageMaxLevel.Value, id))} к урону гранат за уровень.";
+            case C.Vampirism:
+            {
+                var node = C.Find(id);
+                float max = ModConfig.SkillVampireMax.Value;
+                return $"Удары в ближнем бою лечат вас на {(max * 100f / node.MaxLevel).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)}% нанесённого урона за уровень ({Pct(max)} на максимуме).";
+            }
+            case C.Adrenaline: return InstinctRu("вас ранит монстр", "+30% к скорости");
+            case C.IronSkin: return InstinctRu("здоровье падает ниже 35%", "на 40% меньше получаемого урона");
+            case C.HotBarrel: return InstinctRu("вы убиваете монстра из огнестрельного оружия", "+30% к урону огнестрельного оружия");
+            case C.Overheat: return InstinctRu("вы попадаете по монстру лазером", "+30% к урону лазера");
+            case C.BattleTrance: return InstinctRu("вы наносите 3 удара в ближнем бою за 4 с", "+30% к урону в ближнем бою");
+            case C.MendingSurge: return "Когда вы убиваете монстра: восстанавливаете 5/10/15% максимального здоровья за 5 с (по уровню). Перезарядка 60/45/30 с.";
+            case C.MeleeDamage: return $"+{Pct(PerLevel(ModConfig.MeleeDamagePercentPerLevel.Value, ModConfig.MeleeDamageMaxLevel.Value, id))} к урону в ближнем бою за уровень.";
+            case C.TumbleDamage:
+            {
+                float max = Mathf.Pow(1f + Mathf.Max(0f, ModConfig.TumbleDamagePerLevel.Value), ModConfig.TumbleMaxLevel.Value) - 1f;
+                return $"Кувырок бьёт сильнее (+{Pct(max)} на максимуме) и меньше ранит вас самих.";
+            }
+            case C.Gunsmith: return "Каждое оружие получает заряды ещё одного уровня улучшения.";
+            case C.BulletShots: case C.LaserShots: case C.TranqShots:
+            {
+                string kind = id == C.BulletShots ? "огнестрельного оружия" : id == C.LaserShots ? "лазерного оружия" : "транквилизаторов";
+                float shots = PerLevel(ModConfig.GunExtraBulletsPerLevel.Value, ModConfig.GunExtraBulletsMaxLevel.Value, id);
+                return $"Больше выстрелов на заряд у {kind}: пистолету +{shots:0.#} за уровень, другому оружию по его боезапасу.";
+            }
+            case C.Technician: return "+10% к заряду батарей дронов.";
+            case C.DroneBattery: return $"+{Pct(PerLevel(ModConfig.DroneBatteryPercentPerLevel.Value, Upgrades.BatteryLifeUpgrade.EffectiveMaxLevel(true), id))} к заряду батарей дронов за уровень.";
+            case C.Overcharge: return "Луч захвата дольше держит монстров до перегрузки и быстрее остывает.";
+
+            case C.Survivor: return $"+{ModConfig.SkillSurvivorStamina.Value:0} к максимальной выносливости.";
+            case C.StaminaEfficiency:
+            {
+                float keep = Mathf.Pow(1f - Mathf.Clamp(ModConfig.StaminaPercentPerLevel.Value, 0f, .5f), ModConfig.StaminaMaxLevel.Value);
+                return $"Бег тратит меньше выносливости (-{Pct(1f - keep)} на максимуме).";
+            }
+            case C.SecondWind: return $"Выносливость восстанавливается на {Pct(ModConfig.SkillSecondWindPerLevel.Value)} быстрее за уровень.";
+            case C.Armor: return $"-{Pct(PerLevel(ModConfig.ArmorPercentPerLevel.Value, ModConfig.ArmorMaxLevel.Value, id))} получаемого урона за уровень (до -{Pct(Upgrades.SurvivalUpgrades.ArmorCap)}).";
+            case C.HpRegen: return $"Здоровье понемногу восстанавливается, до {Pct(ModConfig.RegenMaxHpFraction.Value)} от максимума; с каждым уровнем быстрее.";
+
+            case C.Desperation: return $"-{Pct(ModConfig.SkillDesperationPerLevel.Value)} получаемого урона за уровень, пока здоровья меньше {Pct(ModConfig.SkillDesperationThreshold.Value)}.";
+            case C.HuntedWarning: return "Пока за вами гонится монстр, на экране горит надпись ПОГОНЯ.";
+            case C.CrouchSpeed: return $"+{Pct(ModConfig.SkillCrouchSpeedPerLevel.Value)} к скорости в приседе за уровень (+{Pct(ModConfig.SkillCrouchSpeedPerLevel.Value * C.Find(id).MaxLevel)} на максимуме).";
+
+            case C.InventorySlot: return "+1 ячейка инвентаря за уровень (клавиши 4-7).";
+            case C.Autoscan: return "Находит ценности рядом для всей команды; с каждым уровнем дальше.";
+            case C.HeadRecharge: return "Пока вы смотрите за напарником, батарея мёртвой головы заряжается на 50% быстрее за уровень (+150% на 3 уровне).";
+            case C.HeadLeap: return "Заряженный прыжок мёртвой головы улетает на 20% дальше за уровень, вдвое дальше на 5 уровне.";
+            case C.HeadBattery: return "Игровое улучшение «Батарея мёртвой головы»: заряда головы хватает дольше.";
+            case C.TumbleWings: return "Игровое улучшение «Крылья кувырка»: после броска кувырком вы летите дольше.";
+            case C.FieldMedic: return $"Ваши аптечки лечат на {Pct(ModConfig.SkillMedicPerLevel.Value)} больше за уровень; напарники в {ModConfig.SkillMedicRadius.Value:0} м получают {Pct(ModConfig.SkillMedicPerLevel.Value)} лечения аптечки за уровень.";
+            case C.BatterySaver: return $"Предметы на батарейках (кроме оружия и дронов) разряжаются на {Pct(ModConfig.SkillBatterySaverPerLevel.Value)} медленнее за уровень, пока вы ими пользуетесь.";
+            case C.LuckyFinder: return $"Коробки навыков чаще дают очки, а кристаллы батарей дают на {ModConfig.SkillLuckyCrystalBonus.Value:0}% больше заряда за уровень.";
+
+            case C.Marksman: return $"+{Pct(root)} к урону любого оружия.";
+            case C.HandgunDamage: return Weapon(id, "пистолет");
+            case C.RevolverDamage: return Weapon(id, "револьвер");
+            case C.ShotgunDamage: return Weapon(id, "дробовик");
+            case C.CartCannonDamage: return Weapon(id, "пушка тележки") + " Считается для того, кто ей управляет.";
+            case C.CartLaserDamage: return Weapon(id, "лазер тележки") + " Считается для того, кто им управляет.";
+            case C.StaffDamage: return Weapon(id, "посох волшебника");
+            case C.CrossbowDamage: return Weapon(id, "болт ядовитого арбалета");
+
+            case C.StatusLab: return $"Эффекты вашего оружия длятся на {SecRu(ModConfig.SkillStatusRootSeconds.Value)} дольше (до 8 с); яд действует настолько же быстрее.";
+            case C.TranqTime: return "Оглушение транквилизатором длится дольше с каждым уровнем, до 8 с.";
+            case C.NetTime: return $"Сети держат дольше с каждым уровнем: от {SecRu(ModConfig.NetSeconds.Value)} до 8 с.";
+            case C.FreezeTime: return $"Заморозка длится дольше с каждым уровнем: от {SecRu(ModConfig.IceFreezeSeconds.Value)} до 8 с.";
+            case C.CartHandling: return $"Вы толкаете тележку на {Pct(ContractPerks.CartPerLevel)} сильнее за уровень: гружёная тележка легче едет в гору и поворачивает.";
+            case C.GentleHands: return $"Добыча в ваших руках теряет на {Pct(ContractPerks.LootPerLevel)} меньше стоимости при ударах за уровень (до {Pct(ContractPerks.LootPerLevel * 3)}).";
+            case C.CalmPresence: return "Монстры, потерявшие вас из виду, быстрее прекращают погоню; с каждым уровнем сильнее.";
+            case C.SoftSteps: return $"Ваши шаги, приземления, голос и добыча в руках слышны монстрам с расстояния на {Pct(ContractPerks.NoisePerLevel)} меньше за уровень.";
+            case C.HeavyHitter: return $"Ваши удары в ближнем бою оглушают монстров на {SecRu(ModConfig.SkillHeavyHitterPerLevel.Value)} дольше за уровень (до 8 с).";
+            case C.PoisonRush: return $"Яд наносит тот же урон быстрее с каждым уровнем: от {SecRu(ModConfig.PoisonSeconds.Value)} до 8 с.";
         }
         return "";
     }

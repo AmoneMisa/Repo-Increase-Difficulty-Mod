@@ -77,7 +77,7 @@ internal static class TradeOffs
         string level = run != null && run.levelCurrent != null ? run.levelsCompleted + ":" + run.levelCurrent.name : "";
         if (level != _lastStandLevel) { _lastStandUsed.Clear(); _lastStandLevel = level; }
         if (!_lastStandUsed.Add(player.steamID)) return false;
-        Hud.HudNotify.Toast("LAST STAND: you survive at 1 HP", Hud.HudStyle.Caution, 3f, "skills.laststand");
+        Hud.HudNotify.Toast(Localization.GameLanguage.Russian ? "ПОСЛЕДНИЙ РУБЕЖ: вы выжили с 1 HP" : "LAST STAND: you survive at 1 HP", Hud.HudStyle.Caution, 3f, "skills.laststand");
         return true;
     }
 
@@ -101,7 +101,10 @@ internal static class TradeOffs
             EchoMarker.Show(t, seconds);
             shown++;
         }
-        if (shown > 0) Hud.HudNotify.Toast($"ECHO: {shown} monster{(shown == 1 ? "" : "s")} nearby", Hud.HudStyle.Caution, 2.5f, "skills.echo");
+        if (shown > 0)
+            Hud.HudNotify.Toast(Localization.GameLanguage.Russian
+                ? $"ЭХО: рядом {shown} {Quests.QuestText.Plural(shown, "монстр", "монстра", "монстров")}"
+                : $"ECHO: {shown} monster{(shown == 1 ? "" : "s")} nearby", Hud.HudStyle.Caution, 2.5f, "skills.echo");
     }
 
     /// <summary>Host: a ping from this player draws monsters near the spot to come and look.</summary>

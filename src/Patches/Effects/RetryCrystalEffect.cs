@@ -222,7 +222,7 @@ internal static class RetryCrystalEffect
     {
         if (PhotonNetwork.InRoom && PhotonNetwork.LocalPlayer.ActorNumber != c.Taker) return;
         // The game's own focus text: native font, size, glow and placement.
-        SemiFunc.UIFocusText($"BATTERY CRYSTAL: +{ChargeFor(SemiFunc.PlayerAvatarLocal()):0}% {c.Item}", new Color(0.55f, 1f, 0.45f), Color.white, 3f);
+        SemiFunc.UIFocusText($"{(Localization.GameLanguage.Russian ? "КРИСТАЛЛ БАТАРЕИ" : "BATTERY CRYSTAL")}: +{ChargeFor(SemiFunc.PlayerAvatarLocal()):0}% {c.Item}", new Color(0.55f, 1f, 0.45f), Color.white, 3f);
     }
 
     // ---------------------------------------------------------------- pings
@@ -231,6 +231,20 @@ internal static class RetryCrystalEffect
 
     /// <summary>The nearest ready crystal the ray passes through within <paramref name="maxDistance"/>, tested
     /// against a sphere round the floating gem (crystals have no colliders, so physics rays never find them).</summary>
+    /// <summary>The visuals of crystals nobody has taken yet (Map Landmarks perk).</summary>
+    internal static IEnumerable<GameObject> ReadyVisuals()
+    {
+        foreach (var c in Crystals)
+            if (c.State == Ready && c.Visual != null && c.Visual.isActiveAndEnabled) yield return c.Visual.gameObject;
+    }
+
+    /// <summary>The visuals of crystals already taken (their landmark icon comes off the map).</summary>
+    internal static IEnumerable<GameObject> TakenVisuals()
+    {
+        foreach (var c in Crystals)
+            if (c.State != Ready && c.Visual != null) yield return c.Visual.gameObject;
+    }
+
     internal static bool TryAim(Ray ray, float maxDistance, out Vector3 center, out float distance)
     {
         center = default;
@@ -267,7 +281,9 @@ internal static class RetryCrystalEffect
     internal static string PingLabel(bool info)
     {
         var local = SemiFunc.PlayerAvatarLocal();
-        return info && local != null ? $"Battery Crystal (+{ChargeFor(local):0}% charge)" : "Battery Crystal";
+        bool ru = Localization.GameLanguage.Russian;
+        return info && local != null ? (ru ? $"Кристалл батареи (+{ChargeFor(local):0}% заряда)" : $"Battery Crystal (+{ChargeFor(local):0}% charge)")
+            : ru ? "Кристалл батареи" : "Battery Crystal";
     }
 
     // ---------------------------------------------------------------- networking
@@ -476,3 +492,4 @@ internal sealed class RetryCrystalVisual : MonoBehaviour
         _light.intensity = Mathf.Lerp(4f, 0f, k);
     }
 }
+

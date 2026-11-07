@@ -296,7 +296,10 @@ internal static class MysteryBoxEffect
     {
         if (string.IsNullOrEmpty(label)) return;
         // The game's own focus text: native font, size, glow and placement.
-        SemiFunc.UIFocusText("MYSTERY BOX: " + label, new Color(0.85f, 0.55f, 1f), Color.white, 3f);
+        // The host words the prize; each player reads it in their own language.
+        if (Localization.GameLanguage.Russian)
+            label = label.Replace("UPGRADE: ", "УЛУЧШЕНИЕ: ").Replace(" (THIS LEVEL)", " (НА ЭТОТ УРОВЕНЬ)");
+        SemiFunc.UIFocusText((Localization.GameLanguage.Russian ? "ЯЩИК-СЮРПРИЗ: " : "MYSTERY BOX: ") + label, new Color(0.85f, 0.55f, 1f), Color.white, 3f);
     }
 
     // ---------------------------------------------------------------- pings
@@ -332,7 +335,9 @@ internal static class MysteryBoxEffect
         best?.Visual.Flare(seconds);
     }
 
-    internal static string PingLabel(bool info) => info ? "Mystery Box (drop 1 soul in)" : "Mystery Box";
+    internal static string PingLabel(bool info) => Localization.GameLanguage.Russian
+        ? (info ? "Ящик-сюрприз (бросьте внутрь 1 душу)" : "Ящик-сюрприз")
+        : (info ? "Mystery Box (drop 1 soul in)" : "Mystery Box");
 
     // ---------------------------------------------------------------- networking
 

@@ -32,7 +32,9 @@ internal sealed class ShoppingListHud : MonoBehaviour
         }
         // Built on the HUD toolkit: a native-font list stacked at the top right (order 100), so the
         // modifier list and Black Market hint start below it instead of drawing over it.
-        _list ??= new HudListPanel("shopping", HudCorner.TopRight, order: 100) { Title = "SHOPPING LIST", PageKeys = false };
+        _list ??= new HudListPanel("shopping", HudCorner.TopRight, order: 100) { PageKeys = false };
+        bool ru = Localization.GameLanguage.Russian;
+        _list.Title = ru ? "СПИСОК ПОКУПОК" : "SHOPPING LIST";
         Aggregate(shop);
         int total = 0;
         _lines.Clear();
@@ -44,7 +46,8 @@ internal sealed class ShoppingListHud : MonoBehaviour
         _list.SetRows(_lines);
         int currency = SafeCurrency(shop);
         _list.FooterColor = currency < 0 || total <= currency ? HudStyle.Good : HudStyle.Bad;
-        _list.Footer = currency >= 0 ? $"TOTAL  ${total:N0}K / ${currency:N0}K" : $"TOTAL  ${total:N0}K";
+        string totalWord = ru ? "ИТОГО" : "TOTAL";
+        _list.Footer = currency >= 0 ? $"{totalWord}  ${total:N0}K / ${currency:N0}K" : $"{totalWord}  ${total:N0}K";
         _list.Show();
     }
 

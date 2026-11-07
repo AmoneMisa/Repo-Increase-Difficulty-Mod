@@ -42,7 +42,7 @@ internal sealed class LootSafetyNet : MonoBehaviour
 
     /// <summary>Shown on every client: the host locally, guests through ModNetwork.LootNoticeEventCode.</summary>
     internal static void ShowNotice(int count, int value, bool marked) =>
-        Hud.HudNotify.Toast(LootSafetyRules.Notice(count, value, marked), Hud.HudStyle.Info, 6f, "lootnet");
+        Hud.HudNotify.Toast(LootSafetyRules.Notice(count, value, marked, Localization.GameLanguage.Russian), Hud.HudStyle.Info, 6f, "lootnet");
 
     private void Update()
     {

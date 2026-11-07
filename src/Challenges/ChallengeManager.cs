@@ -10,7 +10,8 @@ namespace IncreaseHardMod.Challenges;
 
 /// <summary>
 /// Shrine challenges: on a run level the host places one challenge shrine. A living player who presses the interact
-/// key (E by default) next to it starts its timed challenge (wisp escort, target practice, hunt, cull or smash); finishing it in time
+/// key (E by default) next to it starts its timed challenge (wisp escort, target practice, hunt, cull, smash, monster waves,
+/// vigil, spark hunt or offering); finishing it in time
 /// gives one reward: a skill point for everyone, an upgrade or a cosmetic box at the shrine, plus a quest-rank
 /// completion. Like skill boxes, nothing is a network object: the host owns the state and broadcasts it (event 168);
 /// every client builds the same local props (see <see cref="ChallengeProps"/>) and shows the HUD line.
@@ -44,11 +45,17 @@ internal sealed class ChallengeManager : MonoBehaviour
     private static float _nextScan, _nextSync;
     private static string _sent;
     private static EnemyParent _huntTarget;
+    // Monster Waves: the monsters this shrine spawned, when each died (removed a few seconds later), and wave timing.
+    private static readonly List<EnemyParent> _waveEnemies = new();
+    private static readonly Dictionary<EnemyParent, float> _waveDead = new();
+    private static float _nextWaveAt, _nextLure, _vigilHeld, _nextOfferingScan;
 
     // ---- client visuals
     private static ShrineVisual _shrineVisual;
     private static WispVisual _wispVisual;
     private static WispHomeVisual _homeVisual;
+    private static FloorRingVisual _ringVisual;
+    private static int _shownProgress = -1;
     private static HuntBeacon _beacon;
     private static readonly List<Component> _propVisuals = new();
     private static ChallengePhase _shownPhase;
@@ -56,6 +63,35 @@ internal sealed class ChallengeManager : MonoBehaviour
     private const float VanishSeconds = 3f; // after the result, everything left shrinks away
 
     private static bool Host => SemiFunc.IsMasterClientOrSingleplayer();
+
+    // Target Practice: whether this client's player was standing at the shrine when it started (and is rooted).
+    private static bool _rootDecided, _rooted;
+
+    // Rooted like the net trap: no walking or jumping; looking, aiming, shooting and items are untouched.
+    private void FixedUpdate()
+    {
+        bool running = _has && _phase == ChallengePhase.Active && _kind == ChallengeKind.Targets && _key == LevelKey();
+        if (!running) { _rootDecided = _rooted = false; return; }
+        var me = SemiFunc.PlayerAvatarLocal();
+        if (!_rootDecided)
+        {
+            _rootDecided = true;
+            _rooted = Near(me, ChallengeRules.RootRadius);
+        }
+        if (!_rooted || me == null || me.isDisabled) return;
+        var controller = PlayerController.instance;
+        if (controller == null || controller.playerAvatarScript != me) return;
+        controller.OverrideSpeed(0f, .12f);
+        controller.OverrideJumpCooldown(.2f);
+        controller.JumpImpulse = false;
+        controller.JumpInputBuffer = 0f;
+        controller.VelocityImpulse = Vector3.zero;
+        if (controller.rb != null && !controller.rb.isKinematic)
+        {
+            var v = controller.rb.velocity;
+            controller.rb.velocity = new Vector3(0f, Mathf.Min(v.y, 0f), 0f);
+        }
+    }
     private static bool Russian => Localization.GameLanguage.Russian;
 
     /// <summary>Clock shared by host and clients (drifting targets move identically everywhere).</summary>
@@ -73,6 +109,8 @@ internal sealed class ChallengeManager : MonoBehaviour
         if (_wispVisual != null) Destroy(_wispVisual.gameObject);
         if (_homeVisual != null) Destroy(_homeVisual.gameObject);
         if (_beacon != null) Destroy(_beacon.gameObject);
+        if (_ringVisual != null) Destroy(_ringVisual.gameObject);
+        _waveEnemies.Clear(); _waveDead.Clear(); _shownProgress = -1;
         foreach (var v in _propVisuals) if (v != null) Destroy(v.gameObject);
         _propVisuals.Clear();
         _props.Clear(); _propDone.Clear(); _propDrift.Clear(); _path.Clear();
@@ -176,7 +214,12 @@ internal sealed class ChallengeManager : MonoBehaviour
             else if (_kind == ChallengeKind.Escort) EscortStep();
             else if (_kind == ChallengeKind.Smash && now >= _nextScan) { _nextScan = now + ScanInterval; ScanCrates(); }
             else if (_kind == ChallengeKind.Hunt && (_huntTarget == null || !_huntTarget.Spawned) && _progress == 0) PickHuntTarget();
+            else if (_kind == ChallengeKind.Waves) WavesStep(now);
+            else if (_kind == ChallengeKind.Vigil) VigilStep(now);
+            else if (_kind == ChallengeKind.Sparks && now >= _nextScan) { _nextScan = now + ScanInterval; ScanSparks(); }
+            else if (_kind == ChallengeKind.Offering && now >= _nextOfferingScan) { _nextOfferingScan = now + .5f; ScanOffering(); }
         }
+        RemoveDeadWaveMonsters(now, all: false);
         Broadcast(force: false);
     }
 
@@ -238,7 +281,18 @@ internal sealed class ChallengeManager : MonoBehaviour
             case ChallengeKind.Targets: PlaceTargets(); _total = _props.Count; break;
             case ChallengeKind.Smash: PlaceCrates(); _total = _props.Count; break;
             case ChallengeKind.Hunt: _total = 1; break;
+            case ChallengeKind.Waves: _total = ChallengeRules.WaveCount; _nextWaveAt = Time.time + 3f; _waveEnemies.Clear(); _waveDead.Clear(); break;
+            case ChallengeKind.Vigil: StartVigil(); break;
+            case ChallengeKind.Sparks: PlaceSparks(); _total = _props.Count; break;
+            case ChallengeKind.Offering: _total = ChallengeRules.OfferingTarget(LevelLootValue()); _nextOfferingScan = 0f; break;
             default: _total = ChallengeRules.CullTarget(Living().Count); break;
+        }
+        if (_kind == ChallengeKind.Waves && WaveSetups().Count == 0) { _kind = ChallengeKind.Cull; _total = ChallengeRules.CullTarget(Living().Count); }
+        if (_kind == ChallengeKind.Sparks && _props.Count < 4)
+        {
+            _kind = ChallengeKind.Vigil; // not enough far-off spots for sparks on this level
+            _props.Clear(); _propDone.Clear(); _propDrift.Clear();
+            StartVigil();
         }
         if ((_kind == ChallengeKind.Targets || _kind == ChallengeKind.Smash) && _props.Count < ChallengeRules.MinProps)
         {
@@ -252,23 +306,44 @@ internal sealed class ChallengeManager : MonoBehaviour
         Broadcast(force: true);
     }
 
+    // Target Practice: the shooters are rooted where they stand, so every target must be in clear sight of every one of
+    // them (and of the shrine), along the whole path of a drifting target.
     private static void PlaceTargets()
     {
         int want = ChallengeRules.PropCount(Random.value);
         int mask = SemiFunc.LayerMaskGetVisionObstruct();
-        var eye = _shrine + Vector3.up * 1.4f;
-        for (int tries = 0; tries < 160 && _props.Count < want; tries++)
+        var eyes = new List<Vector3> { _shrine + Vector3.up * 1.4f };
+        foreach (var p in Living())
+            if (Near(p, ChallengeRules.RootRadius)) eyes.Add(p.transform.position + Vector3.up * 1.5f);
+        for (int tries = 0; tries < 240 && _props.Count < want; tries++)
         {
             var dir = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f) * Vector3.forward;
             var p = _shrine + dir * Random.Range(5f, 13f) + Vector3.up * Random.Range(1.2f, 3.2f);
-            if (Physics.CheckSphere(p, 1f, mask, QueryTriggerInteraction.Ignore) || Physics.Linecast(eye, p, mask, QueryTriggerInteraction.Ignore)) continue;
+            if (Physics.CheckSphere(p, 1f, mask, QueryTriggerInteraction.Ignore)) continue;
+            bool drift = (_props.Count + 1) % 3 == 0;
+            if (!InSight(eyes, p, drift, mask)) continue;
             bool spaced = true;
             foreach (var q in _props) if (((Vector3)q - p).sqrMagnitude < 4f) { spaced = false; break; }
             if (!spaced) continue;
             _props.Add(new Vector4(p.x, p.y, p.z, Random.Range(0f, 6.28f)));
             _propDone.Add(false);
-            _propDrift.Add(_props.Count % 3 == 0);
+            _propDrift.Add(drift);
         }
+    }
+
+    // Clear line from each eye to the target (its centre and both ends of its drift loop, see TargetVisual.Position).
+    private static bool InSight(List<Vector3> eyes, Vector3 target, bool drift, int mask)
+    {
+        var points = drift ? new[] { target, target + new Vector3(.9f, .3f, 0f), target - new Vector3(.9f, .3f, 0f) } : new[] { target };
+        foreach (var eye in eyes)
+            foreach (var point in points)
+            {
+                var to = point - eye;
+                if (to.magnitude < 1f) return false;
+                // Start a little out from the eye so the shooter's own body never blocks the check.
+                if (Physics.Linecast(eye + to.normalized * .6f, point, mask, QueryTriggerInteraction.Ignore)) return false;
+            }
+        return true;
     }
 
     private static void PlaceCrates()
@@ -378,9 +453,211 @@ internal sealed class ChallengeManager : MonoBehaviour
         }
     }
 
+    // ---------------------------------------------------------------- Monster Waves
+
+    // Monsters come one wave at a time: the next wave spawns only after every monster of this one is dead.
+    private static void WavesStep(float now)
+    {
+        if (_waveEnemies.Count > 0)
+        {
+            bool cleared = true;
+            foreach (var e in _waveEnemies)
+                if (e != null && !_waveDead.ContainsKey(e)) { cleared = false; break; }
+            if (!cleared)
+            {
+                // Keep the wave coming at the shrine rather than wandering off.
+                if (now >= _nextLure) { _nextLure = now + 6f; try { SemiFunc.EnemyInvestigate(_shrine, 45f); } catch { } }
+                return;
+            }
+            _waveEnemies.Clear(); // the dead stay in _waveDead until they are removed
+            _progress++;
+            if (ChallengeRules.Done(_progress, _total)) { Finish(true, "waves"); return; }
+            _nextWaveAt = now + ChallengeRules.WaveBreak;
+            Broadcast(force: true);
+            return;
+        }
+        if (now < _nextWaveAt) return;
+        SpawnWave(_progress + 1);
+        _nextLure = now + 4f;
+        if (_waveEnemies.Count == 0)
+        {
+            // Nothing could spawn: count the wave so the shrine never hangs.
+            _progress++;
+            if (ChallengeRules.Done(_progress, _total)) Finish(true, "waves");
+            else _nextWaveAt = now + ChallengeRules.WaveBreak;
+        }
+    }
+
+    // Later waves draw from the tougher monster pools.
+    private static List<EnemySetup> WaveSetups(int wave = 1)
+    {
+        var list = new List<EnemySetup>();
+        var d = EnemyDirector.instance;
+        if (d == null) return list;
+        void Add(List<EnemySetup> pool)
+        {
+            if (pool == null) return;
+            foreach (var s in pool) if (s != null && s.spawnObjects != null && s.spawnObjects.Count > 0 && s.spawnObjects.Count <= 3) list.Add(s);
+        }
+        Add(d.enemiesDifficulty1);
+        if (wave >= 2) Add(d.enemiesDifficulty2);
+        if (wave >= 3) Add(d.enemiesDifficulty3);
+        if (list.Count == 0) { Add(d.enemiesDifficulty1); Add(d.enemiesDifficulty2); Add(d.enemiesDifficulty3); }
+        return list;
+    }
+
+    private static void SpawnWave(int wave)
+    {
+        var setups = WaveSetups(wave);
+        if (setups.Count == 0) return;
+        var spots = new List<Vector3>();
+        var points = SemiFunc.LevelPointsGetAll();
+        if (points != null)
+            foreach (var p in points)
+            {
+                if (p == null || p.Truck || p.inStartRoom || (p.Room != null && p.Room.Truck)) continue;
+                float d = Vector3.Distance(p.transform.position, _shrine);
+                if (d >= 12f && d <= 32f) spots.Add(p.transform.position);
+            }
+        if (spots.Count == 0 && points != null)
+            foreach (var p in points) if (p != null && !p.Truck && !p.inStartRoom) spots.Add(p.transform.position);
+        if (spots.Count == 0) return;
+        int count = ChallengeRules.WaveSize(wave, Living().Count);
+        for (int i = 0; i < count; i++)
+        {
+            var setup = setups[Random.Range(0, setups.Count)];
+            var at = spots[Random.Range(0, spots.Count)];
+            foreach (var prefab in setup.spawnObjects)
+            {
+                try
+                {
+                    var go = SemiFunc.IsMultiplayer()
+                        ? PhotonNetwork.InstantiateRoomObject(prefab.ResourcePath, at, Quaternion.identity, 0, EnemyFloaterHalloweenState.SpawnData(prefab))
+                        : Instantiate(prefab.Prefab, at, Quaternion.identity);
+                    var parent = go != null ? go.GetComponent<EnemyParent>() : null;
+                    if (parent == null) continue;
+                    parent.SetupDone = true;
+                    parent.firstSpawnPointUsed = true;
+                    var enemy = go.GetComponentInChildren<Enemy>();
+                    if (enemy != null) enemy.EnemyTeleported(at);
+                    _waveEnemies.Add(parent);
+                }
+                catch (System.Exception e) { Plugin.Log.LogWarning($"[Challenge] Wave spawn of {setup.name} failed: {e.Message}"); }
+            }
+        }
+        Plugin.Log.LogInfo($"[Challenge] Wave {wave}: spawned {_waveEnemies.Count} monster(s).");
+    }
+
+    // Wave monsters do not come back: a few seconds after death (so their orb drops) they are removed for good.
+    // all = also remove the living ones (a lost wave challenge takes its monsters with it).
+    private static void RemoveDeadWaveMonsters(float now, bool all)
+    {
+        if (_waveDead.Count == 0 && !(all && _waveEnemies.Count > 0)) return;
+        var gone = new List<EnemyParent>();
+        foreach (var pair in _waveDead) if (pair.Key == null || all || now - pair.Value >= 6f) gone.Add(pair.Key);
+        if (all) foreach (var e in _waveEnemies) if (!gone.Contains(e)) gone.Add(e);
+        foreach (var e in gone)
+        {
+            _waveDead.Remove(e);
+            _waveEnemies.Remove(e);
+            if (e == null) continue;
+            try
+            {
+                if (EnemyDirector.instance != null) EnemyDirector.instance.enemiesSpawned.Remove(e);
+                if (SemiFunc.IsMultiplayer()) PhotonNetwork.Destroy(e.gameObject); else Destroy(e.gameObject);
+            }
+            catch (System.Exception ex) { Plugin.Log.LogWarning("[Challenge] Removing a wave monster failed: " + ex.Message); }
+        }
+    }
+
+    // ---------------------------------------------------------------- Vigil, Sparks, Offering
+
+    private static void StartVigil()
+    {
+        _total = (int)ChallengeRules.VigilSeconds;
+        _vigilHeld = 0f;
+        _nextLure = Time.time + 4f;
+    }
+
+    private static void VigilStep(float now)
+    {
+        foreach (var p in Living())
+            if (Near(p, ChallengeRules.VigilRadius)) { _vigilHeld += Time.deltaTime; break; }
+        // The shrine's light calls the monsters nearby while the vigil lasts.
+        if (now >= _nextLure) { _nextLure = now + 8f; try { SemiFunc.EnemyInvestigate(_shrine, 30f); } catch { } }
+        int held = Mathf.FloorToInt(_vigilHeld);
+        if (held == _progress) return;
+        _progress = held;
+        if (ChallengeRules.Done(_progress, _total)) Finish(true, "held");
+    }
+
+    private static void PlaceSparks()
+    {
+        var points = SemiFunc.LevelPointsGetAll();
+        if (points == null) return;
+        var shuffled = new List<LevelPoint>(points);
+        for (int i = shuffled.Count - 1; i > 0; i--) { int j = Random.Range(0, i + 1); (shuffled[i], shuffled[j]) = (shuffled[j], shuffled[i]); }
+        foreach (var p in shuffled)
+        {
+            if (_props.Count >= ChallengeRules.SparkCount) break;
+            if (p == null || p.Truck || p.inStartRoom || (p.Room != null && p.Room.Truck)) continue;
+            var at = p.transform.position + Vector3.up * 1.1f;
+            float d = Vector3.Distance(at, _shrine);
+            if (d < ChallengeRules.SparkMinDistance || d > ChallengeRules.SparkMaxDistance) continue;
+            bool spaced = true;
+            foreach (var q in _props) if (((Vector3)q - at).sqrMagnitude < 36f) { spaced = false; break; }
+            if (!spaced) continue;
+            _props.Add(new Vector4(at.x, at.y, at.z, Random.Range(0f, 6.28f)));
+            _propDone.Add(false);
+            _propDrift.Add(false);
+        }
+    }
+
+    private static void ScanSparks()
+    {
+        var living = Living();
+        float r2 = ChallengeRules.SparkRadius * ChallengeRules.SparkRadius;
+        for (int i = 0; i < _props.Count; i++)
+        {
+            if (_propDone[i]) continue;
+            var at = (Vector3)_props[i];
+            foreach (var p in living)
+            {
+                var d = p.transform.position + Vector3.up * .8f - at;
+                if (d.sqrMagnitude <= r2) { BreakProp(i); break; }
+            }
+            if (_phase != ChallengePhase.Active) return;
+        }
+    }
+
+    private static float LevelLootValue()
+    {
+        float total = 0f;
+        foreach (var v in FindObjectsOfType<ValuableObject>()) if (v != null) total += v.dollarValueCurrent;
+        return total;
+    }
+
+    // Loot resting (or held) inside the ring counts; taking it back out lowers the total again.
+    private static void ScanOffering()
+    {
+        float sum = 0f, r2 = ChallengeRules.OfferingRadius * ChallengeRules.OfferingRadius;
+        foreach (var v in FindObjectsOfType<ValuableObject>())
+        {
+            if (v == null) continue;
+            var d = v.transform.position - _shrine;
+            if (d.y < -1f || d.y > 2.5f || d.x * d.x + d.z * d.z > r2) continue;
+            sum += v.dollarValueCurrent;
+        }
+        int value = Mathf.RoundToInt(sum);
+        if (value == _progress) return;
+        _progress = value;
+        if (ChallengeRules.Done(_progress, _total)) Finish(true, "offered");
+    }
+
     internal static void OnEnemyKilled(EnemyParent enemy)
     {
         if (!Host || !_has || _phase != ChallengePhase.Active) return;
+        if (_kind == ChallengeKind.Waves && enemy != null && _waveEnemies.Contains(enemy) && !_waveDead.ContainsKey(enemy)) _waveDead[enemy] = Time.time;
         if (_kind == ChallengeKind.Cull) { _progress++; if (ChallengeRules.Done(_progress, _total)) Finish(true, "kills"); else Broadcast(force: true); }
         else if (_kind == ChallengeKind.Hunt && enemy != null && enemy == _huntTarget) { _progress = 1; Finish(true, "hunted"); }
     }
@@ -395,6 +672,7 @@ internal sealed class ChallengeManager : MonoBehaviour
     {
         _phase = won ? ChallengePhase.Won : ChallengePhase.Lost;
         _wispWaiting = false;
+        if (_kind == ChallengeKind.Waves && !won) RemoveDeadWaveMonsters(Time.time, all: true); // a lost wave leaves with the shrine
         if (won) GiveReward();
         Plugin.Log.LogInfo($"[Challenge] {_kind} {(won ? "won" : "lost")} ({why}); reward {_reward}.");
         Broadcast(force: true);
@@ -495,6 +773,7 @@ internal sealed class ChallengeManager : MonoBehaviour
             if (_homeVisual != null) { Destroy(_homeVisual.gameObject); _homeVisual = null; }
             if (_wispVisual != null) { Destroy(_wispVisual.gameObject); _wispVisual = null; }
             if (_beacon != null) { Destroy(_beacon.gameObject); _beacon = null; }
+            if (_ringVisual != null) { Destroy(_ringVisual.gameObject); _ringVisual = null; }
             foreach (var v in _propVisuals) if (v != null) Destroy(v.gameObject);
             _propVisuals.Clear();
             Localization.HudStatus.Clear(StatusKey);
@@ -521,15 +800,24 @@ internal sealed class ChallengeManager : MonoBehaviour
             _wispVisual.transform.localScale = _shrineVisual.transform.localScale;
         }
 
-        // Targets / crates.
-        if (_kind is ChallengeKind.Targets or ChallengeKind.Smash && _props.Count > 0)
+        // Vigil and Offering: a glowing ring on the floor around the shrine while they run.
+        if ((_kind == ChallengeKind.Vigil || _kind == ChallengeKind.Offering) && active)
+        {
+            if (_ringVisual == null)
+                _ringVisual = FloorRingVisual.Create(_shrine, _kind == ChallengeKind.Vigil ? ChallengeRules.VigilRadius : ChallengeRules.OfferingRadius,
+                    _kind == ChallengeKind.Vigil ? ChallengeProps.Wisp : ChallengeProps.Gold);
+        }
+        else if (_ringVisual != null) _ringVisual.transform.localScale = Vector3.one * shrink;
+
+        // Targets / crates / sparks.
+        if (_kind is ChallengeKind.Targets or ChallengeKind.Smash or ChallengeKind.Sparks && _props.Count > 0)
         {
             while (_propVisuals.Count < _props.Count)
             {
                 int i = _propVisuals.Count;
                 var c = _props[i];
-                _propVisuals.Add(_kind == ChallengeKind.Targets
-                    ? TargetVisual.Create(new Vector3(c.x, c.y, c.z), _propDrift[i], c.w)
+                _propVisuals.Add(_kind == ChallengeKind.Targets ? TargetVisual.Create(new Vector3(c.x, c.y, c.z), _propDrift[i], c.w)
+                    : _kind == ChallengeKind.Sparks ? SparkVisual.Create(new Vector3(c.x, c.y, c.z), c.w)
                     : CrateVisual.Create(new Vector3(c.x, c.y, c.z), c.w));
             }
             for (int i = 0; i < _propVisuals.Count && i < _propDone.Count; i++)
@@ -539,6 +827,7 @@ internal sealed class ChallengeManager : MonoBehaviour
                 if (finished && !_propDone[i]) { Destroy(_propVisuals[i].gameObject); continue; }
                 if (_propVisuals[i] is TargetVisual t) t.SetHit(_propDone[i]);
                 else if (_propVisuals[i] is CrateVisual c) c.SetBroken(_propDone[i]);
+                else if (_propVisuals[i] is SparkVisual s) s.SetCollected(_propDone[i]);
             }
         }
 
@@ -580,6 +869,14 @@ internal sealed class ChallengeManager : MonoBehaviour
             else if (_phase == ChallengePhase.Lost)
                 SemiFunc.UIFocusText(Russian ? "ИСПЫТАНИЕ ПРОВАЛЕНО" : "CHALLENGE FAILED", ChallengeProps.Lose, Color.white, 3f);
             _shownPhase = _phase;
+            _shownProgress = _progress;
+        }
+        // Monster Waves: announce each new wave as the previous one falls.
+        if (_kind == ChallengeKind.Waves && _phase == ChallengePhase.Active && _progress != _shownProgress)
+        {
+            _shownProgress = _progress;
+            if (_progress > 0 && _progress < _total)
+                SemiFunc.UIFocusText((Russian ? "ВОЛНА " : "WAVE ") + (_progress + 1) + "/" + _total, ChallengeProps.Hunt, Color.white, 3f);
         }
     }
 

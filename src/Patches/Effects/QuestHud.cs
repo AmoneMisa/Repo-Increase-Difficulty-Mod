@@ -102,7 +102,8 @@ internal sealed class QuestHud : MonoBehaviour
         _surface.Fit();
     }
 
-    private string Header() => "<color=#FFD24D><b>QUESTS</b></color>\n";
+    private static bool Ru => QuestText.Russian;
+    private string Header() => Ru ? "<color=#FFD24D><b>ЗАДАНИЯ</b></color>\n" : "<color=#FFD24D><b>QUESTS</b></color>\n";
 
     private void BuildText()
     {
@@ -110,11 +111,11 @@ internal sealed class QuestHud : MonoBehaviour
         var entries = new List<string>();
         if (ShowQuests)
         {
-            entries.Add($"<color=#FFD24D><b>RANK {QuestRankInfo.Label(QuestManager.LocalRank())}  {QuestManager.LocalRankProgress()}/{Mathf.Max(1, QuestManager.LocalRankRequirement())}</b></color>\n");
+            entries.Add($"<color=#FFD24D><b>{(Ru ? "РАНГ" : "RANK")} {QuestRankInfo.Label(QuestManager.LocalRank())}  {QuestManager.LocalRankProgress()}/{Mathf.Max(1, QuestManager.LocalRankRequirement())}</b></color>\n");
             foreach (var q in QuestManager.TeamQuests) if (q != null) entries.Add(Entry(q, ""));
-            if (QuestManager.PersonalQuest != null) entries.Add(Entry(QuestManager.PersonalQuest, "YOU: "));
+            if (QuestManager.PersonalQuest != null) entries.Add(Entry(QuestManager.PersonalQuest, Ru ? "ВЫ: " : "YOU: "));
         }
-        if (entries.Count == 0) entries.Add("NO QUESTS THIS LEVEL.\n");
+        if (entries.Count == 0) entries.Add(Ru ? "НА ЭТОМ УРОВНЕ ЗАДАНИЙ НЕТ.\n" : "NO QUESTS THIS LEVEL.\n");
         float width = _surface.Panel.sizeDelta.x;
         float height = _surface.Panel.sizeDelta.y;
         // HUD toolkit paging: whole quests per page, measured with the header and the page footer.
@@ -126,7 +127,7 @@ internal sealed class QuestHud : MonoBehaviour
     {
         // Special contracts stand out in pink (their reward is a quest-only skill tree perk).
         string colour = q.Completed ? "#7CFF7C" : q.Failed ? "#FF6B6B" : q.Special ? "#FF9ED8" : "#FFFFFF";
-        string title = Clean(q.Title);
+        string title = Clean(QuestText.Title(q));
         string line = $"<color={colour}>[{QuestRankInfo.Label(q.Rank)}] {prefix}{title}  {StatusText(q)}</color>\n";
         if (!q.Failed) line += $"<size=90%><color={(q.Special ? "#FF9ED8" : "#FFD24D")}>{Clean(QuestManager.RewardLabel(q))}</color></size>\n";
         return line;
@@ -136,14 +137,14 @@ internal sealed class QuestHud : MonoBehaviour
 
     private static string StatusText(ActiveQuest q)
     {
-        if (q.Completed) return "DONE";
-        if (q.Failed) return "FAILED";
+        if (q.Completed) return Ru ? "ВЫПОЛНЕНО" : "DONE";
+        if (q.Failed) return Ru ? "ПРОВАЛЕНО" : "FAILED";
         return q.Objective switch
         {
             ObjectiveType.NoDeaths or ObjectiveType.NoDamage or ObjectiveType.NoGunKills => "...",
             ObjectiveType.ExtractionRush or ObjectiveType.FastOpener => FormatClock(Mathf.Max(0, q.Target - q.Progress)),
             ObjectiveType.ReachHaul or ObjectiveType.Oops => $"${q.Progress / 1000f:0.#}K/${q.Target / 1000f:0.#}K",
-            ObjectiveType.TalkItOut or ObjectiveType.LightsOut or ObjectiveType.MonsterHugger => $"{q.Progress}s/{q.Target}s",
+            ObjectiveType.TalkItOut or ObjectiveType.LightsOut or ObjectiveType.MonsterHugger => Ru ? $"{q.Progress}/{q.Target} с" : $"{q.Progress}s/{q.Target}s",
             ObjectiveType.CrownJewel or ObjectiveType.Ballerina or ObjectiveType.PayRespects => "...",
             _ => $"{q.Progress}/{q.Target}",
         };

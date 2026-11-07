@@ -6,11 +6,11 @@ int checks = 0;
 void Check(bool ok, string name) { if (!ok) throw new Exception("FAIL " + name); Console.WriteLine("PASS " + name); checks++; }
 
 // ---------------------------------------------------------------- catalogue
-Check(C.NormalPageCost(SkillPage.Recon) == 28 && C.NormalPageCost(SkillPage.Combat) == 50 &&
-      C.NormalPageCost(SkillPage.Survival) == 37 && C.NormalPageCost(SkillPage.Utility) == 33 && C.NormalPageCost(SkillPage.Arsenal) == 42, "Normal page costs match the plan");
-Check(C.PageCost(SkillPage.Recon) == 34 && C.PageCost(SkillPage.Combat) == 56 && C.PageCost(SkillPage.Survival) == 43 &&
-      C.PageCost(SkillPage.Utility) == 39 && C.PageCost(SkillPage.Arsenal) == 48, "Each page adds one trade-off per tier (1+2+3 points)");
-Check(C.TotalCost() == 220, "Whole tree costs 220 points (190 normal + 30 trade-off picks)");
+Check(C.NormalPageCost(SkillPage.Recon) == 30 && C.NormalPageCost(SkillPage.Combat) == 50 &&
+      C.NormalPageCost(SkillPage.Survival) == 37 && C.NormalPageCost(SkillPage.Utility) == 41 && C.NormalPageCost(SkillPage.Arsenal) == 42, "Normal page costs match the plan");
+Check(C.PageCost(SkillPage.Recon) == 36 && C.PageCost(SkillPage.Combat) == 56 && C.PageCost(SkillPage.Survival) == 43 &&
+      C.PageCost(SkillPage.Utility) == 47 && C.PageCost(SkillPage.Arsenal) == 48, "Each page adds one trade-off per tier (1+2+3 points)");
+Check(C.TotalCost() == 230, "Whole tree costs 230 points (200 normal + 30 trade-off picks)");
 Check(C.Find(C.Vampirism) is { Page: SkillPage.Combat, Cost: 1, MaxLevel: 7 } && C.Find(C.Vampirism).Requires.SequenceEqual(new[] { C.MeleeDamage }),
       "Vampirism: Combat, 7 levels of 1 point, under Melee Damage");
 Check(Math.Abs(PerkRules.VampireShare(7, 7, .29f) - .29f) < 1e-5f && Math.Abs(PerkRules.VampireShare(1, 7, .29f) - .29f / 7f) < 1e-5f &&
@@ -177,10 +177,10 @@ Check(m.Loadout.Level(C.MeleeDamage) == 5 && m.Refund == 2, "Levels above the ol
 m = SkillMigration.Convert(new Dictionary<string, int> { ["IHM_PingInfo"] = 1 }, null);
 Check(m.Loadout.Level(C.TargetInfo) == 1 && m.Loadout.Level(C.Ping) == 1 && m.Loadout.Earned == 3, "Ping Info alone also grants the Ping root");
 m = SkillMigration.Convert(new Dictionary<string, int> { ["IHM_Map"] = 5 }, null);
-Check(new[] { C.MapUplink, C.DeadPlayers, C.ActiveMonsters, C.RespawnTimers, C.QuotaHeading, C.ValuableTracker }.All(id => m.Loadout.Level(id) == 1)
+Check(new[] { C.MapUplink, C.ActiveMonsters, C.RespawnTimers, C.QuotaHeading, C.ValuableTracker }.All(id => m.Loadout.Level(id) == 1)
       && m.Loadout.Level(C.MapPings) == 0, "Map Suite 5 unlocks its first five features");
 m = SkillMigration.Convert(new Dictionary<string, int> { ["IHM_Map"] = 10 }, null);
-Check(C.All.Where(n => n.Branch == "Map").All(n => m.Loadout.Level(n.Id) == 1) && m.Loadout.Spent == 13, "Map Suite 10 unlocks the whole Map branch");
+Check(C.All.Where(n => n.Branch == "Map" && n.Id != C.BetterMap && n.Id != C.MapLandmarks).All(n => m.Loadout.Level(n.Id) == 1) && m.Loadout.Level(C.BetterMap) == 0 && m.Loadout.Level(C.MapLandmarks) == 0 && m.Loadout.Spent == 12, "Map Suite 10 unlocks the old Map branch (Better Map is new)");
 m = SkillMigration.Convert(new Dictionary<string, int> { ["IHM_DeathProtect"] = 1, ["IHM_TruckHeal"] = 4 }, null);
 Check(m.Loadout.Bought.Count == 0 && m.Loadout.Earned == 0, "Death Protection and truck upgrades are left out of the tree");
 m = SkillMigration.Convert(new Dictionary<string, int>(), null, headBattery: 2, tumbleWings: 5);

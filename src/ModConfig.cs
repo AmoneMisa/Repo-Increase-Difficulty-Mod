@@ -218,7 +218,7 @@ public static class ModConfig
     public static ConfigEntry<float> FlameTickSeconds, FlameRange, FlameConeAngle;
     // Wizard Staff: chain-lightning wand (handgun base, revolver price).
     public static ConfigEntry<bool> StaffEnabled, NetLauncherEnabled;
-    public static ConfigEntry<bool> WingCosmeticsEnabled;
+    public static ConfigEntry<bool> WingCosmeticsEnabled, SharkCosmeticsEnabled, StarlightCosmeticsEnabled, LegateCosmeticsEnabled;
     public static ConfigEntry<bool> ScreenEffectsEnabled;
     public static ConfigEntry<bool> GuaranteedStrengthEnabled;
     public static ConfigEntry<float> NetSeconds, NetBreakChance;
@@ -274,7 +274,7 @@ public static class ModConfig
     // Post-quota selling: once bought, leftover valuables are auto-cashed AFTER
     // every extraction quota is closed, for TruckSellFraction of their value.
     public static ConfigEntry<int> TruckSellCost;
-    public static ConfigEntry<float> TruckSellFraction;
+    public static ConfigEntry<float> TruckSellFraction, TruckSellMaxQuotaShare;
 
     // --- Player Upgrades (custom per-player upgrades sold in the DEFAULT shop) ---
     // Registered via REPOLib as runtime clones of vanilla upgrade items, so they roll
@@ -311,7 +311,7 @@ public static class ModConfig
     public static ConfigEntry<float> MapZoomFovLevel7;
     public static ConfigEntry<float> MapZoomFovLevel8;
     // Live zoom hotkeys while the map is open at L7+ (adjust the FOV on top of the level default).
-    public static ConfigEntry<UnityEngine.KeyCode> MapZoomInKey;
+    public static ConfigEntry<UnityEngine.KeyCode> MapZoomInKey, BetterMapKey;
     public static ConfigEntry<UnityEngine.KeyCode> MapZoomOutKey;
     public static ConfigEntry<float> MapZoomStep;
     // When true, the vanilla "Map Player Count" upgrade is removed from the shop (Map Suite replaces it).
@@ -477,6 +477,9 @@ public static class ModConfig
         GuaranteedStrengthEnabled = Module(cfg, "Shop", "GuaranteedStrength", true, "GuaranteedStrength", "When MoreStandsForShops is installed, the shop always offers at least one Strength (grab strength) upgrade, while the team can still buy it. Host setting.");
         ScreenEffectsEnabled = Module(cfg, "Screen Effects", "Enabled", true, "ScreenEffects", "When you are frozen, poisoned, sedated (tranquilized) or netted, show a themed frame around the screen edges and a status card at the left with a time bar. Local only.");
         WingCosmeticsEnabled = Module(cfg, "Cosmetics", "WingsEnabled", true, "WingCosmetics", "Add three Rare back-wing cosmetics (Astral Night, Solar Seraph, Prism Chime) to the Body Top slot. Everyone in the lobby needs this setting to see them. Takes effect on restart.");
+        SharkCosmeticsEnabled = Module(cfg, "Cosmetics", "PlushSharkEnabled", true, "SharkCosmetics", "Add the six-part Plush Shark set: hood (Hat), headphones (Ears), suit with dorsal fin (Body Top), tail (Body Bottom) and two fin sleeves (Arm Right, Arm Left). The blue plush takes the colour you pick in the cosmetics menu. Everyone in the lobby needs this setting to see them. Takes effect on restart.");
+        LegateCosmeticsEnabled = Module(cfg, "Cosmetics", "LegateEnabled", true, "LegateCosmetics", "Add the Legate set: a silver muscle cuirass with baldric and belt (Body Top), the same cuirass with a red mantle and long cape (Body Top), a war skirt of tooled leather strips (Body Bottom) and red leather bracers (Arm Right, Arm Left). The red cloth and leather take the colour you pick in the cosmetics menu. Everyone in the lobby needs this setting to see them. Takes effect on restart.");
+        StarlightCosmeticsEnabled = Module(cfg, "Cosmetics", "StarlightEnabled", true, "StarlightCosmetics", "Add the seven-part Starlight Gown set: galaxy bodice with choker (Body Top), high-low skirt with lace hems and belt (Body Bottom), lace sleeves (Arm Right, Arm Left), thigh-high galaxy boots (Leg Right, Leg Left) and drop earrings (Ears). The galaxy fabric, its glowing stars, the lace and the gems take the colour you pick in the cosmetics menu. Everyone in the lobby needs this setting to see them. Takes effect on restart.");
         NetSeconds = BindFloat(cfg, "Net Launcher", "RootSeconds", 5f, 1f, 30f, "How long a net pins a monster to the floor. It can still turn and attack anyone in reach.");
         NetBreakChance = BindFloat(cfg, "Net Launcher", "BreakChancePerSecond", .12f, 0f, 1f, "Chance each second that the monster tears the net and breaks free early (0.12 = about 45% over 5 seconds).");
         NetShots = BindInt(cfg, "Net Launcher", "Shots", 8, 1, 20, "Nets per full battery (one battery bar per net).");
@@ -944,6 +947,9 @@ public static class ModConfig
         TruckSellFraction = BindFloat(cfg,
             "Truck Upgrades", "SellFraction", 0.75f, 0f, 1f,
             "Loot Cash-In: fraction of a leftover valuable's value returned as currency when sold. 0.75 = 75%.");
+        TruckSellMaxQuotaShare = BindFloat(cfg,
+            "Truck Upgrades", "SellMaxQuotaShare", 0.3f, 0f, 5f,
+            "Loot Cash-In: most it can pay per level, as a share of that level's total quota. 0.3 = at most 30% of the quota. Levels hold several times their quota in loot, so without a cap selling every leftover paid more than the extractions themselves.");
 
         // --- Player Upgrades (custom, sold in the default shop via REPOLib) ---
                 StaminaPercentPerLevel = BindFloat(cfg,
@@ -1029,6 +1035,9 @@ public static class ModConfig
         MapZoomInKey = cfg.Bind(
             "Player Upgrades", "MapZoomInKey", UnityEngine.KeyCode.Minus,
             "Map Suite L7+: key to zoom the map view IN (lower FOV) while the map is open. Also accepts Keypad Minus and '['.");
+        BetterMapKey = cfg.Bind(
+            "Player Upgrades", "BetterMapKey", UnityEngine.KeyCode.M,
+            "Better Map perk: with the map up, this key opens and closes the big map.");
         MapZoomOutKey = cfg.Bind(
             "Player Upgrades", "MapZoomOutKey", UnityEngine.KeyCode.Equals,
             "Map Suite L7+: key to zoom the map view OUT (higher FOV) while the map is open. Also accepts Keypad Plus and ']'.");

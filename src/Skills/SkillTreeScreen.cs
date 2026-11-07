@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 using IncreaseHardMod.Hud;
@@ -19,6 +20,9 @@ internal sealed class SkillTreeScreen : MonoBehaviour
 
     private static readonly SkillPage[] Pages = { SkillPage.Recon, SkillPage.Combat, SkillPage.Survival, SkillPage.Utility, SkillPage.Arsenal, SkillPage.Contracts };
     private static readonly string[] PageNames = { "RECON", "COMBAT", "SURVIVAL", "UTILITY", "ARSENAL", "CONTRACTS" };
+    private static readonly string[] PageNamesRu = { "РАЗВЕДКА", "БОЙ", "ВЫЖИВАНИЕ", "СНАРЯЖЕНИЕ", "АРСЕНАЛ", "КОНТРАКТЫ" };
+    private static bool Ru => SkillText.Russian;
+    private static string L(string en, string ru) => Ru ? ru : en;
     private static readonly string[] TabLabels = { "1", "2", "3", "4", "5", "6" };
     private static readonly Color[] Accents =
     {
@@ -31,6 +35,26 @@ internal sealed class SkillTreeScreen : MonoBehaviour
         ["Contracts"] = "EARNED FROM SPECIAL CONTRACTS", ["Instincts"] = "INSTINCTS · SHORT BUFFS FROM CONTRACTS",
         ["TradeOffs1"] = "TRADE-OFFS I · PICK ONE", ["TradeOffs2"] = "TRADE-OFFS II · PICK ONE", ["TradeOffs3"] = "TRADE-OFFS III · PICK ONE",
     };
+    private static readonly Dictionary<string, string> GroupNamesRu = new()
+    {
+        ["Map"] = "КАРТА", ["Ping"] = "ПИНГ", ["Flashlight"] = "ФОНАРЬ", ["Damage"] = "УРОН", ["Guns"] = "ЗАРЯДЫ ОРУЖИЯ",
+        ["Tech"] = "ТЕХНИКА", ["Survival"] = "ВЫЖИВАНИЕ", ["Gear"] = "СНАРЯЖЕНИЕ", ["Support"] = "ПОДДЕРЖКА", ["Weapons"] = "УРОН ОРУЖИЯ", ["Status"] = "ЭФФЕКТЫ",
+        ["Contracts"] = "НАГРАДЫ ЗА ОСОБЫЕ КОНТРАКТЫ", ["Instincts"] = "ИНСТИНКТЫ · КОРОТКИЕ БАФФЫ ЗА КОНТРАКТЫ",
+        ["TradeOffs1"] = "КОМПРОМИССЫ I · ОДИН НА ВЫБОР", ["TradeOffs2"] = "КОМПРОМИССЫ II · ОДИН НА ВЫБОР", ["TradeOffs3"] = "КОМПРОМИССЫ III · ОДИН НА ВЫБОР",
+    };
+
+    // Russian plural: 1 очко, 2 очка, 5 очков.
+    private static string Points(int n, bool upper = false)
+    {
+        string word;
+        if (!Ru) word = n == 1 ? "point" : "points";
+        else
+        {
+            int m10 = Math.Abs(n) % 10, m100 = Math.Abs(n) % 100;
+            word = m10 == 1 && m100 != 11 ? "очко" : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? "очка" : "очков";
+        }
+        return upper ? word.ToUpperInvariant() : word;
+    }
 
     private readonly HudTreeView _view = new("IHM Skill Tree");
     private bool _open;
@@ -166,14 +190,16 @@ internal sealed class SkillTreeScreen : MonoBehaviour
             var items = new List<HudTreeItem>();
             foreach (var node in C.All)
                 if (node.Page == page) items.Add(new HudTreeItem(node.Id, node.Requires.Length > 0 ? node.Requires[0] : null, node.Branch));
-            _view.BuildPage(items, g => GroupNames.TryGetValue(g, out var name) ? name : g.ToUpperInvariant(), accent);
+            var groups = Ru ? GroupNamesRu : GroupNames;
+            _view.BuildPage(items, g => groups.TryGetValue(g, out var name) ? name : g.ToUpperInvariant(), accent);
             _builtPage = _page;
         }
 
         bool canSpend = SkillStore.SpendAllowedHere();
-        string where = canSpend ? "CLICK A PERK TO LEARN IT" : "VIEW ONLY: SPEND POINTS IN THE SHOP OR TRUCK";
-        _view.SetHeader("SKILL TREE", $"PAGE {_page + 1}/{Pages.Length} · {PageNames[_page]}   ·   {where}",
-            $"{loadout.Available} POINT{(loadout.Available == 1 ? "" : "S")}  <size=70%><color=#BBBBBB>({loadout.Earned} EARNED)</color></size>");
+        string where = canSpend ? L("CLICK A PERK TO LEARN IT", "НАЖМИТЕ НА НАВЫК, ЧТОБЫ ИЗУЧИТЬ")
+            : L("VIEW ONLY: SPEND POINTS IN THE SHOP OR TRUCK", "ТОЛЬКО ПРОСМОТР: ОЧКИ ТРАТЯТСЯ В МАГАЗИНЕ ИЛИ ГРУЗОВИКЕ");
+        _view.SetHeader(L("SKILL TREE", "ДЕРЕВО НАВЫКОВ"), $"{L("PAGE", "СТРАНИЦА")} {_page + 1}/{Pages.Length} · {(Ru ? PageNamesRu : PageNames)[_page]}   ·   {where}",
+            $"{loadout.Available} {Points(loadout.Available, true)}  <size=70%><color=#BBBBBB>({L("EARNED", "ПОЛУЧЕНО")} {loadout.Earned})</color></size>");
         _view.SetTabs(TabLabels, _page, accent);
 
         float pulse = .75f + .25f * Mathf.Sin(Time.unscaledTime * 5f);
@@ -205,9 +231,9 @@ internal sealed class SkillTreeScreen : MonoBehaviour
         int fee = Mathf.Max(0, ModConfig.SkillRespecCost.Value), tradeFee = Mathf.Max(0, ModConfig.SkillTradeOffResetCost.Value);
         _view.SetButtons(new[]
             {
-                armed ? "CLICK AGAIN TO REFUND" : fee > 0 ? $"REFUND ALL (${fee}K)" : "REFUND ALL",
-                tradeArmed ? "CLICK AGAIN TO RESET" : tradeFee > 0 ? $"RESET TRADE-OFFS (${tradeFee}K)" : "RESET TRADE-OFFS",
-                "CLOSE  [K]",
+                armed ? L("CLICK AGAIN TO REFUND", "НАЖМИТЕ ЕЩЁ РАЗ ДЛЯ СБРОСА") : fee > 0 ? $"{L("REFUND ALL", "СБРОСИТЬ ВСЁ")} (${fee}K)" : L("REFUND ALL", "СБРОСИТЬ ВСЁ"),
+                tradeArmed ? L("CLICK AGAIN TO RESET", "НАЖМИТЕ ЕЩЁ РАЗ ДЛЯ СБРОСА") : tradeFee > 0 ? $"{L("RESET TRADE-OFFS", "СБРОСИТЬ КОМПРОМИССЫ")} (${tradeFee}K)" : L("RESET TRADE-OFFS", "СБРОСИТЬ КОМПРОМИССЫ"),
+                L("CLOSE  [K]", "ЗАКРЫТЬ  [K]"),
             },
             new[] { armed ? HudStyle.Bad : HudStyle.Caution, tradeArmed ? HudStyle.Bad : HudStyle.Caution, new Color(.8f, .8f, .8f) });
     }
@@ -216,34 +242,47 @@ internal sealed class SkillTreeScreen : MonoBehaviour
     {
         var node = C.Find(_view.HoveredNode);
         if (node == null)
-            return "<color=#BBBBBB>Hover a perk to see what it does. Points come from the shop's Skill Point and from finished quests. " +
-                   "1-6 / Q / E change page.</color>";
+            return Ru
+                ? "<color=#BBBBBB>Наведите на навык, чтобы узнать, что он делает. Очки дают «Очко навыка» в магазине и выполненные задания. " +
+                  "1-6 / Q / E меняют страницу.</color>"
+                : "<color=#BBBBBB>Hover a perk to see what it does. Points come from the shop's Skill Point and from finished quests. " +
+                  "1-6 / Q / E change page.</color>";
         int level = loadout.Level(node.Id);
         var text = new StringBuilder();
         text.Append("<color=#FFD966>").Append(SkillText.Name(node).ToUpperInvariant()).Append("</color>  [").Append(level).Append('/').Append(node.MaxLevel).Append("]   ");
         text.Append(SkillText.Describe(node.Id)).Append('\n');
-        if (node.QuestOnly) text.Append("<color=#BBBBBB>Not for points: each finished special contract gives one level");
+        if (node.QuestOnly) text.Append(L("<color=#BBBBBB>Not for points: each finished special contract gives one level",
+            "<color=#BBBBBB>Не за очки: каждый выполненный особый контракт даёт один уровень"));
         else if (node.Tier > 0 && SkillText.Russian)
-            text.Append("<color=#BBBBBB>Компромисс, уровень ").Append(node.Tier).Append(": ").Append(node.Cost).Append(node.Cost == 1 ? " очко" : " очка")
+            text.Append("<color=#BBBBBB>Компромисс, уровень ").Append(node.Tier).Append(": ").Append(node.Cost).Append(' ').Append(Points(node.Cost))
                 .Append(", один выбор на уровень. Нужно ").Append(TradeOffRules.Gate(node.Page, node.Tier)).Append(" очков в навыках страницы")
                 .Append(node.Tier > 1 ? " и выбор уровня " + (node.Tier - 1) : "");
         else if (node.Tier > 0)
             text.Append("<color=#BBBBBB>Trade-off tier ").Append(node.Tier).Append(": ").Append(node.Cost).Append(node.Cost == 1 ? " point" : " points")
                 .Append(", one pick per tier. Needs ").Append(TradeOffRules.Gate(node.Page, node.Tier)).Append(" points in this page's perks")
                 .Append(node.Tier > 1 ? " and a tier " + (node.Tier - 1) + " pick" : "");
-        else text.Append("<color=#BBBBBB>Cost: ").Append(node.Cost).Append(node.Cost == 1 ? " point" : " points").Append(node.MaxLevel > 1 ? " per level" : "");
-        foreach (var need in node.Requires) text.Append("   ·   Needs: ").Append(C.Find(need)?.Name);
+        else text.Append(L("<color=#BBBBBB>Cost: ", "<color=#BBBBBB>Цена: ")).Append(node.Cost).Append(' ').Append(Points(node.Cost))
+            .Append(node.MaxLevel > 1 ? L(" per level", " за уровень") : "");
+        foreach (var need in node.Requires)
+        {
+            var required = C.Find(need);
+            text.Append(L("   ·   Needs: ", "   ·   Нужно: ")).Append(required != null ? SkillText.Name(required) : need);
+        }
         text.Append("</color>   ");
         string state = SkillRules.CanBuy(loadout, node.Id) switch
         {
-            BuyBlock.None => canSpend ? "<color=#80FF80>Click to learn</color>" : "<color=#FFCC4D>Learn it in the shop or truck</color>",
-            BuyBlock.Maxed => node.Id == C.BeamColour ? "<color=#80E6FF>Click to change colour</color>" : "<color=#FFD966>Maxed</color>",
-            BuyBlock.MissingPrerequisite => "<color=#FF7373>Locked: learn the perk before it first</color>",
-            BuyBlock.NotEnoughPoints => "<color=#FF7373>Not enough points</color>",
-            BuyBlock.QuestOnly => "<color=#FF9ED8>Finish a special CONTRACT quest to earn a level</color>",
-            BuyBlock.GateNotMet => $"<color=#FF7373>Locked: {SkillRules.PageSpent(loadout, node.Page)}/{TradeOffRules.Gate(node.Page, node.Tier)} points in this page</color>",
-            BuyBlock.NeedLowerTier => "<color=#FF7373>Locked: pick a trade-off from the tier below first</color>",
-            BuyBlock.TierTaken => "<color=#FFCC4D>You hold another trade-off on this tier: RESET TRADE-OFFS to swap</color>",
+            BuyBlock.None => canSpend ? L("<color=#80FF80>Click to learn</color>", "<color=#80FF80>Нажмите, чтобы изучить</color>")
+                : L("<color=#FFCC4D>Learn it in the shop or truck</color>", "<color=#FFCC4D>Изучается в магазине или грузовике</color>"),
+            BuyBlock.Maxed => node.Id == C.BeamColour ? L("<color=#80E6FF>Click to change colour</color>", "<color=#80E6FF>Нажмите, чтобы сменить цвет</color>")
+                : L("<color=#FFD966>Maxed</color>", "<color=#FFD966>Максимум</color>"),
+            BuyBlock.MissingPrerequisite => L("<color=#FF7373>Locked: learn the perk before it first</color>", "<color=#FF7373>Закрыто: сначала изучите предыдущий навык</color>"),
+            BuyBlock.NotEnoughPoints => L("<color=#FF7373>Not enough points</color>", "<color=#FF7373>Не хватает очков</color>"),
+            BuyBlock.QuestOnly => L("<color=#FF9ED8>Finish a special CONTRACT quest to earn a level</color>", "<color=#FF9ED8>Выполните особый КОНТРАКТ, чтобы получить уровень</color>"),
+            BuyBlock.GateNotMet => L($"<color=#FF7373>Locked: {SkillRules.PageSpent(loadout, node.Page)}/{TradeOffRules.Gate(node.Page, node.Tier)} points in this page</color>",
+                $"<color=#FF7373>Закрыто: {SkillRules.PageSpent(loadout, node.Page)}/{TradeOffRules.Gate(node.Page, node.Tier)} очков на этой странице</color>"),
+            BuyBlock.NeedLowerTier => L("<color=#FF7373>Locked: pick a trade-off from the tier below first</color>", "<color=#FF7373>Закрыто: сначала выберите компромисс уровнем ниже</color>"),
+            BuyBlock.TierTaken => L("<color=#FFCC4D>You hold another trade-off on this tier: RESET TRADE-OFFS to swap</color>",
+                "<color=#FFCC4D>На этом уровне уже выбран другой компромисс: СБРОСИТЬ КОМПРОМИССЫ, чтобы поменять</color>"),
             _ => "",
         };
         return text.Append(state).ToString();
@@ -261,7 +300,9 @@ internal sealed class SkillTreeScreen : MonoBehaviour
         var local = SemiFunc.PlayerAvatarLocal();
         int points = local != null ? SkillStore.LoadoutOf(local.steamID).Available : 0;
         _hinted = true;
-        if (points > 0) HudNotify.Toast($"{points} skill point{(points == 1 ? "" : "s")} to spend: press {ModConfig.SkillTreeKey.Value}", HudStyle.Good, 5f, "skills.hint");
+        if (points > 0)
+            HudNotify.Toast(Ru ? $"Можно потратить {points} {Points(points)} навыков: нажмите {ModConfig.SkillTreeKey.Value}"
+                : $"{points} skill point{(points == 1 ? "" : "s")} to spend: press {ModConfig.SkillTreeKey.Value}", HudStyle.Good, 5f, "skills.hint");
     }
 
     private static bool LevelInfoHud_Ready() => Patches.Effects.LevelInfoHud.GameplayReady;

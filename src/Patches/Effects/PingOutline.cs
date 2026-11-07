@@ -21,7 +21,7 @@ internal sealed class PingOutline : MaskableGraphic
     private GameObject _root;
     private readonly List<Vector4> _contour = new();
     private Vector2 _objectSize;
-    private bool _pointMarker, _pending, _synchronousFallback;
+    private bool _pointMarker, _pending, _synchronousFallback, _arrowOnly;
     private float _refreshAt, _arrowU=.5f;
     private float _markerScale=1f;
     private bool _clipLeft,_clipRight,_clipTop,_clipBottom;
@@ -61,13 +61,13 @@ internal sealed class PingOutline : MaskableGraphic
 
     internal static PingOutline CreatePlayer(PlayerAvatar player, Vector3 point, Color tint, float duration)
     {
+        // The winged circlet marks the pinged player in the world; on screen only the locator arrow points at it.
+        // (The body lives under playerAvatarVisuals, not the PlayerAvatar, so a renderer search here found nothing
+        // and fell back to a ring around the chest.)
         var frame = Create(null, point, tint, duration);
         frame.PlayerTarget = player;
         frame._hadPlayer = true;
-        var renderers = new List<Renderer>();
-        foreach (var renderer in player.GetComponentsInChildren<Renderer>(true))
-            if (renderer.GetComponentInParent<ItemAttributes>() == null && !Visuals.Decoration.Is(renderer)) renderers.Add(renderer);
-        frame._renderers = renderers.ToArray();
+        frame._arrowOnly = true;
         return frame;
     }
 
@@ -108,10 +108,27 @@ internal sealed class PingOutline : MaskableGraphic
     internal void UseWeaponCallout(WeaponKind kind, bool contour = true)
     {
         _noContour = !contour; // callout only, no silhouette border (every ping kind now)
-        var go = new GameObject("Weapon Icon", typeof(RectTransform), typeof(CanvasRenderer));
+        AddCalloutIcon(PingWeaponIcons.Get(kind));
+    }
+
+    private bool _calloutSquare;
+    private Color _calloutTint = Color.white;
+
+    /// <summary>Enemy pings: the monster's own silhouette icon in the callout box beside the reticle, in the ping colour.</summary>
+    internal void UseMonsterCallout(Texture icon, Color tint)
+    {
+        if (icon == null) return;
+        _calloutSquare = true;
+        _calloutTint = tint;
+        AddCalloutIcon(icon);
+    }
+
+    private void AddCalloutIcon(Texture texture)
+    {
+        var go = new GameObject("Callout Icon", typeof(RectTransform), typeof(CanvasRenderer));
         go.transform.SetParent(_root.transform, false);
         _calloutIcon = go.AddComponent<RawImage>();
-        _calloutIcon.texture = PingWeaponIcons.Get(kind);
+        _calloutIcon.texture = texture;
         _calloutIcon.raycastTarget = false;
         _calloutIcon.maskable = false;
         _calloutIcon.rectTransform.anchorMin = _calloutIcon.rectTransform.anchorMax = Vector2.zero;
@@ -124,7 +141,7 @@ internal sealed class PingOutline : MaskableGraphic
         if (_calloutIcon == null) return;
         if (_pointMarker) { _calloutIcon.canvasRenderer.SetAlpha(0f); return; }
         float s = Mathf.Clamp(Screen.height / 1080f, .8f, 2.5f) * ModConfig.PingMarkerScale.Value;
-        var size = new Vector2(118f, 60f) * s;
+        var size = (_calloutSquare ? new Vector2(76f, 76f) : new Vector2(118f, 60f)) * s;
         float gap = 46f * s;
         var display = HudProjection.DisplayRect(camera);
         // Right of the item by default; flip left when it would leave the screen.
@@ -135,8 +152,8 @@ internal sealed class PingOutline : MaskableGraphic
         _calloutDot = new Vector2(rectangle.width * (_calloutLeft ? .3f : .7f), rectangle.height * .4f);
         var icon = _calloutIcon.rectTransform;
         icon.anchoredPosition = rectangle.min + _calloutBox.center;
-        icon.sizeDelta = new Vector2(size.x * .72f, size.x * .72f * .5f);
-        _calloutIcon.color = Color.white;
+        icon.sizeDelta = _calloutSquare ? new Vector2(size.y * .8f, size.y * .8f) : new Vector2(size.x * .72f, size.x * .72f * .5f);
+        _calloutIcon.color = _calloutTint;
         _calloutIcon.canvasRenderer.SetAlpha(alpha);
     }
 
@@ -228,7 +245,7 @@ internal sealed class PingOutline : MaskableGraphic
         }
         else
         {
-            var screen=HudProjection.WorldToScreen(camera,target!=null?target.centerPoint:PlayerTarget!=null?PlayerTarget.transform.position+Vector3.up*.8f:_point);
+            var screen=HudProjection.WorldToScreen(camera,target!=null?target.centerPoint:PlayerTarget!=null?Visuals.WingedCirclet.MarkerPoint(PlayerTarget):_point);
             if(screen.z<=camera.nearClipPlane || !HudProjection.DisplayRect(camera).Contains(screen)) {Hide();return;}
             _markerScale=Mathf.Clamp(Screen.height/1080f,.8f,2.5f)*ModConfig.PingMarkerScale.Value;
             var size=new Vector2(96f,44f)*_markerScale;
@@ -396,8 +413,19 @@ internal sealed class PingOutline : MaskableGraphic
     protected override void OnPopulateMesh(VertexHelper vh)
     {
         vh.Clear();
-        if (HasReticle) return;                    // the reticle images replace the outline and arrow
-        bool arrowOnly = _pointMarker && _beacon != null; // the world beacon replaces the ellipse
+        if (HasReticle)                            // the reticle images replace the outline and arrow
+        {
+            if (_calloutIcon == null) return;      // enemy pings: only the monster icon's callout box is drawn here
+            var reticleWidths = new[] { 16f, 11f, 7f, 4f, 2f };
+            var reticleAlphas = new[] { .025f, .045f, .09f, .19f, .95f };
+            for (int layer = 0; layer < reticleWidths.Length; layer++)
+            {
+                var tint = color; tint.a *= reticleAlphas[layer] * .8f;
+                Callout(vh, tint, reticleWidths[layer]);
+            }
+            return;
+        }
+        bool arrowOnly = _pointMarker && (_beacon != null || _arrowOnly); // the world beacon / circlet replaces the ellipse
         // Wide low-alpha strokes form a soft halo; the transparent centre is never filled.
         var widths=new[]{16f,11f,7f,4f,2f};
         var alphas=new[]{.025f,.045f,.09f,.19f,.95f};

@@ -190,7 +190,10 @@ internal static class BlackMarket
 internal sealed class BlackMarketHud : MonoBehaviour
 {
     private static readonly BlackMarket.Kind[] Tabs = { BlackMarket.Kind.Modifier, BlackMarket.Kind.Economy, BlackMarket.Kind.ShopEconomy };
-    private static readonly string[] TabNames = { "Surprise modifiers", "Economic surprises", "Shop economies" };
+    private static readonly string[] TabNamesEn = { "Surprise modifiers", "Economic surprises", "Shop economies" };
+    private static readonly string[] TabNamesRu = { "Модификаторы-сюрпризы", "Экономические сюрпризы", "Экономика магазина" };
+    private static bool Ru => Localization.GameLanguage.Russian;
+    private static string[] TabNames => Ru ? TabNamesRu : TabNamesEn;
 
     private bool _open;
     private int _tab, _index;
@@ -244,28 +247,28 @@ internal sealed class BlackMarketHud : MonoBehaviour
     {
         if (BlackMarket.IsBanned(kind, id))
         {
-            _message = "Already blocked.";
+            _message = Ru ? "Уже заблокировано." : "Already blocked.";
             return;
         }
         BlackMarket.Describe(kind, id, out _, out var tier);
         if (SemiFunc.StatGetRunCurrency() < BlackMarket.Price(kind, tier))
         {
-            _message = "Not enough money.";
+            _message = Ru ? "Не хватает денег." : "Not enough money.";
             return;
         }
         if (SemiFunc.IsMasterClientOrSingleplayer())
-            _message = BlackMarket.TryBuy(kind, id) ? "Blocked." : "Can't buy that.";
+            _message = BlackMarket.TryBuy(kind, id) ? (Ru ? "Заблокировано." : "Blocked.") : (Ru ? "Это купить нельзя." : "Can't buy that.");
         else
         {
             ModNetwork.Instance?.RequestBan((byte)kind, id);
-            _message = "Requested...";
+            _message = Ru ? "Запрос отправлен..." : "Requested...";
         }
     }
 
     private string Build(List<string> ids)
     {
         var sb = new StringBuilder();
-        sb.Append("<line-height=130%><size=54><color=#FF7060>BLACK MARKET</color></size>   MONEY: $").Append(SemiFunc.StatGetRunCurrency()).Append("K\n\n");
+        sb.Append(Ru ? "<line-height=130%><size=54><color=#FF7060>ЧЁРНЫЙ РЫНОК</color></size>   ДЕНЬГИ: $" : "<line-height=130%><size=54><color=#FF7060>BLACK MARKET</color></size>   MONEY: $").Append(SemiFunc.StatGetRunCurrency()).Append("K\n\n");
         for (int i = 0; i < Tabs.Length; i++)
             sb.Append(i == _tab ? "<color=#ffd24a>[" + TabNames[i] + "]</color> " : TabNames[i] + " ");
         sb.Append("\n\n");
@@ -276,13 +279,13 @@ internal sealed class BlackMarketHud : MonoBehaviour
             BlackMarket.Describe(Tabs[_tab], ids[i], out var name, out var tier);
             name = Localization.ModifierText.T(name);
             bool banned = BlackMarket.IsBanned(Tabs[_tab], ids[i]);
-            string cost = banned ? "<color=#7CFF7C>BLOCKED</color>" : "$" + BlackMarket.Price(Tabs[_tab], tier) + "K";
+            string cost = banned ? (Ru ? "<color=#7CFF7C>ЗАБЛОКИРОВАНО</color>" : "<color=#7CFF7C>BLOCKED</color>") : "$" + BlackMarket.Price(Tabs[_tab], tier) + "K";
             string color = TierColor(tier);
             sb.Append(i == _index ? "> " : "  ")
               .Append("<color=").Append(color).Append(">").Append(name.ToUpperInvariant()).Append("</color><pos=78%>").Append(cost).Append('\n');
         }
-        sb.Append("\n<color=#888888>Left/Right tab, Up/Down choose, Enter buys a block, ")
-          .Append(ModConfig.BlackMarketKey.Value).Append(" closes</color>");
+        sb.Append(Ru ? "\n<color=#888888>Влево/вправо — вкладка, вверх/вниз — выбор, Enter — купить блокировку, " : "\n<color=#888888>Left/Right tab, Up/Down choose, Enter buys a block, ")
+          .Append(ModConfig.BlackMarketKey.Value).Append(Ru ? " — закрыть</color>" : " closes</color>");
         if (_message.Length > 0)
             sb.Append("\n").Append(_message);
         return sb.ToString();

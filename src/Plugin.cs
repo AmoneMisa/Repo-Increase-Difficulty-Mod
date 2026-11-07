@@ -14,7 +14,7 @@ public static class PluginInfo
     // Keep the identity stable across the rename: existing config and integrations use it.
     public const string PLUGIN_GUID = "com.kubai.increasehardmod";
     public const string PLUGIN_NAME = "IncreaseDifficultyMod";
-    public const string PLUGIN_VERSION = "0.8.5";
+    public const string PLUGIN_VERSION = "0.8.6";
 }
 
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -146,6 +146,7 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<Upgrades.MapUpgrade.MapController>();
         // Drives the Map Suite 3D markers (L9 cosmetic boxes, L10 monster dots).
         netObject.AddComponent<Upgrades.MapUpgrade.MarkerController>();
+        netObject.AddComponent<Upgrades.RespawnList>();
         // Winged circlet above each player's head, coloured from their own cosmetics colour.
         netObject.AddComponent<Visuals.WingedCircletDriver>();
         // Guest-side log of which level-generation step a mid-level joiner is waiting on.

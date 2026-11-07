@@ -147,9 +147,13 @@ internal static class TruckUpgrades
         }
 
         int credit = Mathf.CeilToInt(total * fraction / 1000f); // Native extraction rounds up whole K.
+        // Cap: a level holds several times its quota in loot, so selling every leftover outpaid the extractions.
+        int quota = RoundDirector.instance != null ? RoundDirector.instance.haulGoal : 0;
+        if (quota > 0)
+            credit = Mathf.Min(credit, Mathf.CeilToInt(quota * Mathf.Max(0f, ModConfig.TruckSellMaxQuotaShare.Value) / 1000f));
         if (credit > 0)
             SemiFunc.StatSetRunCurrency(SemiFunc.StatGetRunCurrency() + credit);
-        Plugin.Log.LogInfo($"[TruckUpgrades] Loot Cash-In sold leftovers worth {total:0} for {credit} currency.");
+        Plugin.Log.LogInfo($"[TruckUpgrades] Loot Cash-In sold leftovers worth {total:0} for {credit} currency (level quota {quota}).");
         return credit;
     }
 

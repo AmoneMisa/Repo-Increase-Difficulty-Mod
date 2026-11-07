@@ -29,7 +29,7 @@ internal sealed class ItemUnstuckController : MonoBehaviour
     internal static void NotifyRelocated(ValuableObject v)
     {
         if (!ModConfig.ItemUnstuckEnabled.Value) return;
-        Hud.HudNotify.Toast($"Relocated stuck loot: {Clean(v != null ? v.name : "valuable")}", Hud.HudStyle.Info, 3f, "unstuck");
+        Hud.HudNotify.Toast($"{(Localization.GameLanguage.Russian ? "Застрявшая добыча перемещена" : "Relocated stuck loot")}: {Clean(v != null ? v.name : "valuable")}", Hud.HudStyle.Info, 3f, "unstuck");
     }
 
     private void Update()

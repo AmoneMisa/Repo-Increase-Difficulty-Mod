@@ -50,7 +50,52 @@ internal sealed class WingedCirclet : MonoBehaviour
     private static Material _goldMaterial;
 
     internal PlayerAvatar avatar;
-    private Transform _root, _float, _glow;
+    private Transform _root, _float, _glow, _anchor;
+    private float _clearance, _measure;
+
+    // Cosmetics that sit on or stick out of the head; the circlet floats above the tallest of them.
+    private static readonly SemiFunc.CosmeticType[] HeadTypes =
+    {
+        SemiFunc.CosmeticType.Hat, SemiFunc.CosmeticType.Ears, SemiFunc.CosmeticType.HeadTopMesh,
+        SemiFunc.CosmeticType.HeadTopOverlay, SemiFunc.CosmeticType.Eyewear,
+    };
+    private const float MaxClearance = .45f, Gap = .07f;
+    // The model is drawn 30% larger than its original 0.7.9 size; the config scale multiplies on top.
+    private const float SizeBoost = 1.3f;
+    private static float Size => ModConfig.CircletScale.Value * SizeBoost;
+
+    /// <summary>How far the top of the head's cosmetics (hats, ears...) rises above the head-top attach point, in metres.</summary>
+    internal static float HeadClearance(PlayerAvatar player)
+    {
+        var visuals = player != null ? player.playerAvatarVisuals : null;
+        var anchor = visuals != null ? visuals.attachPointTopHeadMiddle : null;
+        if (anchor == null) return 0f;
+        float top = anchor.position.y;
+        foreach (var cosmetic in visuals.GetComponentsInChildren<Cosmetic>())
+        {
+            if (System.Array.IndexOf(HeadTypes, cosmetic.type) < 0) continue;
+            foreach (var r in cosmetic.GetComponentsInChildren<Renderer>())
+            {
+                if (r == null || !r.enabled || Decoration.Is(r) || !(r is MeshRenderer || r is SkinnedMeshRenderer)) continue;
+                var b = r.bounds;
+                // Ignore anything that is not actually over the head (a stray long bound, a dangling accessory).
+                var flat = new Vector2(b.center.x - anchor.position.x, b.center.z - anchor.position.z);
+                if (flat.sqrMagnitude > .35f * .35f) continue;
+                top = Mathf.Max(top, b.max.y);
+            }
+        }
+        return Mathf.Clamp(top - anchor.position.y, 0f, MaxClearance);
+    }
+
+    /// <summary>World point just above the pinged player's head and hat, where the circlet floats.</summary>
+    internal static Vector3 MarkerPoint(PlayerAvatar player)
+    {
+        var anchor = player != null && player.playerAvatarVisuals != null ? player.playerAvatarVisuals.attachPointTopHeadMiddle : null;
+        if (anchor == null) return player != null ? player.transform.position + Vector3.up * 1.6f : Vector3.zero;
+        var circlet = player.GetComponent<WingedCirclet>();
+        float clearance = circlet != null && circlet._root != null ? circlet._clearance : HeadClearance(player);
+        return anchor.position + Vector3.up * (clearance + (Gap + .1f) * Size);
+    }
     private Material _wingMaterial, _glowMaterial;
     private Light _light;
     private int _colourIndex = int.MinValue;
@@ -65,9 +110,10 @@ internal sealed class WingedCirclet : MonoBehaviour
         _local = avatar.isLocal;
         BuildMeshes();
 
+        _anchor = anchor;
         _root = new GameObject("IHM Winged Circlet", typeof(Decoration)).transform;
         _root.SetParent(anchor, false);
-        float scale = ModConfig.CircletScale.Value;
+        float scale = Size;
         float lossy = Mathf.Max(.0001f, anchor.lossyScale.x);
         _root.localScale = Vector3.one * (scale / lossy);
         _root.localPosition = Vector3.up * (.13f * scale / lossy);
@@ -152,9 +198,21 @@ internal sealed class WingedCirclet : MonoBehaviour
         // Only visible while a ping marks this player (see PingController.RecentlyPinged).
         bool show = Patches.Effects.PingController.RecentlyPinged(avatar);
         if (_root.gameObject.activeSelf != show) _root.gameObject.SetActive(show);
-        if (!show) return;
+        if (!show) { _measure = 0f; return; }
         _check -= Time.deltaTime;
         if (_check <= 0f) { _check = 1f; Recolour(false); }
+        _measure -= Time.deltaTime;
+        if (_measure <= 0f) { _measure = .5f; _clearance = HeadClearance(avatar); }
+        // Float in world space above the head and anything worn on it, kept upright and turned with the head,
+        // instead of a fixed offset from the head bone that tall hats swallow.
+        if (_anchor != null)
+        {
+            float scale = Size;
+            _root.position = _anchor.position + Vector3.up * (_clearance + Gap * scale);
+            var forward = Vector3.ProjectOnPlane(_anchor.forward, Vector3.up);
+            if (forward.sqrMagnitude < .0001f) forward = Vector3.ProjectOnPlane(avatar.transform.forward, Vector3.up);
+            if (forward.sqrMagnitude > .0001f) _root.rotation = Quaternion.LookRotation(forward.normalized, Vector3.up);
+        }
         float t = Time.time + GetInstanceID() * .37f;
         _float.localPosition = Vector3.up * (Mathf.Sin(t * 1.6f) * .012f);
         _float.localRotation = Quaternion.Euler(0f, Mathf.Sin(t * .7f) * 4f, Mathf.Sin(t * 1.1f) * 2f);

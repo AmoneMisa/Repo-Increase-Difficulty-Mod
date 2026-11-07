@@ -625,9 +625,12 @@ public static class QuestManager
         ShowPopup(q, rankUp);
         // Every player sees what the quest added to their skill tree (the host pays it).
         if (q.Special && ModConfig.PlayerUpgradesEnabled.Value && Skills.SkillCatalog.QuestPerk(q.RewardPerk) is { } perk)
-            Hud.HudNotify.Toast($"Contract done: +1 {perk.Name} (skill tree, page 6)", new Color(1f, .62f, .85f), 5f, "quest.contract." + q.Id);
+            Hud.HudNotify.Toast(QuestText.Russian ? $"Контракт выполнен: +1 «{Skills.SkillText.Name(perk)}» (дерево навыков, стр. 6)"
+                : $"Contract done: +1 {perk.Name} (skill tree, page 6)", new Color(1f, .62f, .85f), 5f, "quest.contract." + q.Id);
         if (q.RewardPoints > 0 && ModConfig.PlayerUpgradesEnabled.Value)
-            Hud.HudNotify.Toast($"+{q.RewardPoints} skill point{(q.RewardPoints == 1 ? "" : "s")}: {q.Title}", Hud.HudStyle.Good, 4f, "quest.points." + q.Id);
+            Hud.HudNotify.Toast(QuestText.Russian
+                ? $"+{q.RewardPoints} {QuestText.Plural(q.RewardPoints, "очко", "очка", "очков")} навыков: {QuestText.Title(q)}"
+                : $"+{q.RewardPoints} skill point{(q.RewardPoints == 1 ? "" : "s")}: {q.Title}", Hud.HudStyle.Good, 4f, "quest.points." + q.Id);
     }
 
     private static void ShowPopup(ActiveQuest q, bool rankUp)
@@ -635,9 +638,11 @@ public static class QuestManager
         var mission = MissionUI.instance;
         if (mission == null)
             return;
+        bool ru = QuestText.Russian;
+        string rank = QuestRankInfo.Label(QuestRankProgress.GetRank(LocalSteamId()));
         string line = rankUp
-            ? $"QUEST COMPLETE — RANK UP TO {QuestRankInfo.Label(QuestRankProgress.GetRank(LocalSteamId()))}!"
-            : $"QUEST COMPLETE: {q.Title}";
+            ? (ru ? $"ЗАДАНИЕ ВЫПОЛНЕНО — НОВЫЙ РАНГ {rank}!" : $"QUEST COMPLETE — RANK UP TO {rank}!")
+            : (ru ? $"ЗАДАНИЕ ВЫПОЛНЕНО: {QuestText.Title(q)}" : $"QUEST COMPLETE: {q.Title}");
         try { mission.MissionText(line, Color.white, new Color(1f, 0.85f, 0.2f), 4f); }
         catch { /* MissionUI signature guard */ }
     }
@@ -659,7 +664,25 @@ public static class QuestManager
         _ => "upgrade item",
     };
 
-    public static string RewardLabel(ActiveQuest q) => q == null ? "" : BaseRewardLabel(q) + PointsText(q);
+    public static string RewardLabel(ActiveQuest q) => q == null ? "" : QuestText.Russian ? RewardLabelRu(q) : BaseRewardLabel(q) + PointsText(q);
+
+    private static string RewardLabelRu(ActiveQuest q)
+    {
+        string item = q.RewardItem;
+        string reward = q.RewardType switch
+        {
+            RewardType.Item => string.IsNullOrEmpty(item) ? "улучшение" : item,
+            RewardType.Cosmetic => "коробка косметики",
+            RewardType.Heal => $"лечение отряда на {q.RewardAmount} HP",
+            RewardType.TempStat => $"+{q.RewardAmount} {QuestText.Stat(q.RewardStat)} (на этот уровень)",
+            RewardType.ShopItem => string.IsNullOrEmpty(item) ? "предмет из магазина" : item,
+            RewardType.ExactUpgrade => string.IsNullOrEmpty(item) ? $"{QuestText.Tier(q.RewardTier)} улучшение" : item,
+            RewardType.QuestPerk => $"+1 «{QuestText.PerkName(q.RewardPerk)}» (дерево навыков, всем)",
+            _ => $"${QuestMoney.WalletUnits(q.RewardAmount)}K",
+        };
+        string points = q.RewardPoints <= 0 ? "" : $" + {q.RewardPoints} {QuestText.Plural(q.RewardPoints, "очко", "очка", "очков")} навыков";
+        return "Награда: " + reward + points;
+    }
 
     private static string BaseRewardLabel(ActiveQuest q)
     {

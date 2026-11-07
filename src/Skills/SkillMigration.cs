@@ -57,7 +57,7 @@ internal static class SkillMigration
     internal static readonly string[][] MapLadder =
     {
         new[] { SkillCatalog.MapUplink },
-        new[] { SkillCatalog.DeadPlayers },
+        new[] { SkillCatalog.MapUplink }, // old level 2 (dead players) is part of Map Uplink now
         new[] { SkillCatalog.ActiveMonsters },
         new[] { SkillCatalog.RespawnTimers },
         new[] { SkillCatalog.QuotaHeading, SkillCatalog.ValuableTracker },

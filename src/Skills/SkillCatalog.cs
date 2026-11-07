@@ -12,10 +12,10 @@ internal static class SkillCatalog
     private const string P = "IHM_ST_";
 
     // Recon
-    public const string MapUplink = P + "MapUplink", DeadPlayers = P + "DeadPlayers", ActiveMonsters = P + "ActiveMonsters",
+    public const string MapUplink = P + "MapUplink", ActiveMonsters = P + "ActiveMonsters",
         RespawnTimers = P + "RespawnTimers", MonsterDots = P + "MonsterDots", QuotaHeading = P + "QuotaHeading",
         ValuableTracker = P + "ValuableTracker", MapPings = P + "MapPings", ZoomOne = P + "ZoomOne", ZoomTwo = P + "ZoomTwo",
-        CosmeticTracker = P + "CosmeticTracker";
+        CosmeticTracker = P + "CosmeticTracker", BetterMap = P + "BetterMap", MapLandmarks = P + "MapLandmarks";
     public const string Ping = P + "Ping", TargetInfo = P + "TargetInfo", EnemyHp = P + "EnemyHp", LootCondition = P + "LootCondition",
         Weight = P + "Weight", Threat = P + "Threat";
     public const string FlashTuning = P + "FlashTuning", BeamWidth = P + "BeamWidth", Brightness = P + "Brightness", BeamColour = P + "BeamColour";
@@ -29,7 +29,8 @@ internal static class SkillCatalog
         Armor = P + "Armor", HpRegen = P + "HpRegen", Desperation = P + "Desperation", HuntedWarning = P + "HuntedWarning",
         CrouchSpeed = P + "CrouchSpeed";
     // Utility
-    public const string InventorySlot = P + "InventorySlot", Autoscan = P + "Autoscan", HeadBattery = P + "HeadBattery", TumbleWings = P + "TumbleWings";
+    public const string InventorySlot = P + "InventorySlot", Autoscan = P + "Autoscan", HeadBattery = P + "HeadBattery", TumbleWings = P + "TumbleWings",
+        HeadRecharge = P + "HeadRecharge", HeadLeap = P + "HeadLeap";
     public const string FieldMedic = P + "FieldMedic", BatterySaver = P + "BatterySaver", LuckyFinder = P + "LuckyFinder";
     // Arsenal: damage per weapon, and longer status effects from your own weapons
     public const string Marksman = P + "Marksman", HandgunDamage = P + "HandgunDamage", RevolverDamage = P + "RevolverDamage",
@@ -69,69 +70,72 @@ internal static class SkillCatalog
     static SkillCatalog()
     {
         var recon = SkillPage.Recon;
-        Add(recon, "Map", MapUplink, "Map Uplink", "Карта: база", 1, 1, root: true);
-        Add(recon, "Map", DeadPlayers, "Dead Players", "Мёртвые игроки", 1, 1, MapUplink);
+        Add(recon, "Map", MapUplink, "Map Uplink", "Отряд на карте", 1, 1, root: true);
         Add(recon, "Map", ActiveMonsters, "Active Monsters", "Активные монстры", 1, 1, MapUplink);
-        Add(recon, "Map", RespawnTimers, "Respawning Monsters", "Респавн монстров", 1, 1, ActiveMonsters);
-        Add(recon, "Map", MonsterDots, "Monster Dots", "Монстры точками", 2, 1, RespawnTimers);
-        Add(recon, "Map", QuotaHeading, "Quota Heading", "Направление к квоте", 1, 1, MapUplink);
-        Add(recon, "Map", ValuableTracker, "Valuable Tracker", "Трекер ценностей", 1, 1, QuotaHeading);
+        Add(recon, "Map", RespawnTimers, "Respawning Monsters", "Возрождение монстров", 1, 1, ActiveMonsters);
+        Add(recon, "Map", MonsterDots, "Monster Dots", "Монстры на карте", 2, 1, RespawnTimers);
+        Add(recon, "Map", QuotaHeading, "Quota Heading", "Курс на квоту", 1, 1, MapUplink);
+        Add(recon, "Map", ValuableTracker, "Valuable Tracker", "Учёт ценностей", 1, 1, QuotaHeading);
         Add(recon, "Map", MapPings, "Pings on Map", "Пинги на карте", 1, 1, MapUplink);
-        Add(recon, "Map", ZoomOne, "Map Zoom I", "Зум карты I", 1, 1, MapUplink);
-        Add(recon, "Map", ZoomTwo, "Map Zoom II", "Зум карты II", 1, 1, ZoomOne);
-        Add(recon, "Map", CosmeticTracker, "Cosmetic Tracker", "Трекер косметики", 2, 1, MapUplink);
+        Add(recon, "Map", ZoomOne, "Map Zoom I", "Обзор карты I", 1, 1, MapUplink);
+        Add(recon, "Map", ZoomTwo, "Map Zoom II", "Обзор карты II", 1, 1, ZoomOne);
+        Add(recon, "Map", CosmeticTracker, "Cosmetic Tracker", "Коробки косметики", 2, 1, MapUplink);
+        Add(recon, "Map", BetterMap, "Better Map", "Большая карта", 2, 1, ZoomOne);
+        Add(recon, "Map", MapLandmarks, "Shrines & Crystals", "Святилища и кристаллы", 1, 1, MapUplink);
 
-        Add(recon, "Ping", Ping, "Ping Anywhere", "Пинг", 2, 1, root: true);
-        Add(recon, "Ping", TargetInfo, "Target Info", "Инфо цели", 1, 1, Ping);
-        Add(recon, "Ping", EnemyHp, "Enemy HP", "HP врага", 1, 1, Ping);
-        Add(recon, "Ping", LootCondition, "Loot Condition", "Состояние лута", 1, 1, Ping);
+        Add(recon, "Ping", Ping, "Ping Anywhere", "Пинг повсюду", 2, 1, root: true);
+        Add(recon, "Ping", TargetInfo, "Target Info", "Сведения о цели", 1, 1, Ping);
+        Add(recon, "Ping", EnemyHp, "Enemy HP", "Здоровье врага", 1, 1, Ping);
+        Add(recon, "Ping", LootCondition, "Loot Condition", "Состояние добычи", 1, 1, Ping);
         Add(recon, "Ping", Weight, "Target Weight", "Вес цели", 1, 1, Ping);
-        Add(recon, "Ping", Threat, "Monster Threat", "Угроза моба", 1, 1, Ping);
+        Add(recon, "Ping", Threat, "Monster Threat", "Угроза монстра", 1, 1, Ping);
 
-        Add(recon, "Flashlight", FlashTuning, "Flashlight Tuning", "Фонарик", 1, 1, root: true);
-        Add(recon, "Flashlight", BeamWidth, "Beam Width", "Радиус света", 1, 3, FlashTuning);
-        Add(recon, "Flashlight", Brightness, "Brightness", "Яркость света", 1, 3, FlashTuning);
-        Add(recon, "Flashlight", BeamColour, "Beam Colour", "Цвет света", 1, 1, FlashTuning);
+        Add(recon, "Flashlight", FlashTuning, "Flashlight Tuning", "Настройка фонаря", 1, 1, root: true);
+        Add(recon, "Flashlight", BeamWidth, "Beam Width", "Ширина луча", 1, 3, FlashTuning);
+        Add(recon, "Flashlight", Brightness, "Brightness", "Яркость луча", 1, 3, FlashTuning);
+        Add(recon, "Flashlight", BeamColour, "Beam Colour", "Цвет луча", 1, 1, FlashTuning);
 
         var combat = SkillPage.Combat;
-        Add(combat, "Damage", Brawler, "Brawler", "Урон", 1, 1, root: true);
+        Add(combat, "Damage", Brawler, "Brawler", "Драчун", 1, 1, root: true);
         Add(combat, "Damage", GrenadeDamage, "Grenade Damage", "Урон гранат", 1, 5, Brawler);
         Add(combat, "Damage", MeleeDamage, "Melee Damage", "Урон в ближнем бою", 1, 5, Brawler);
-        Add(combat, "Damage", TumbleDamage, "Tumble Damage", "Урон в кувырке", 1, 5, Brawler);
+        Add(combat, "Damage", TumbleDamage, "Tumble Damage", "Урон кувырком", 1, 5, Brawler);
         Add(combat, "Damage", Vampirism, "Vampirism", "Вампиризм", 1, 7, MeleeDamage);
 
-        Add(combat, "Guns", Gunsmith, "Gunsmith", "Заряды оружия", 1, 1, root: true);
-        Add(combat, "Guns", BulletShots, "Bullet Gun Shots", "Пули", 1, 5, Gunsmith);
-        Add(combat, "Guns", LaserShots, "Laser Gun Shots", "Лазер", 1, 5, Gunsmith);
-        Add(combat, "Guns", TranqShots, "Tranq Gun Shots", "Транквилизатор", 1, 5, Gunsmith);
+        Add(combat, "Guns", Gunsmith, "Gunsmith", "Оружейник", 1, 1, root: true);
+        Add(combat, "Guns", BulletShots, "Bullet Gun Shots", "Запас патронов", 1, 5, Gunsmith);
+        Add(combat, "Guns", LaserShots, "Laser Gun Shots", "Заряды лазера", 1, 5, Gunsmith);
+        Add(combat, "Guns", TranqShots, "Tranq Gun Shots", "Заряды транквилизатора", 1, 5, Gunsmith);
 
-        Add(combat, "Tech", Technician, "Technician", "Техника", 1, 1, root: true);
-        Add(combat, "Tech", DroneBattery, "Drone Battery", "Заряд дронов", 1, 5, Technician);
+        Add(combat, "Tech", Technician, "Technician", "Техник", 1, 1, root: true);
+        Add(combat, "Tech", DroneBattery, "Drone Battery", "Батарея дронов", 1, 5, Technician);
         Add(combat, "Tech", Overcharge, "Overcharge", "Перегрузка", 1, 5, Technician);
 
         var survival = SkillPage.Survival;
-        Add(survival, "Survival", Survivor, "Survivor", "Выживание", 1, 1, root: true);
-        Add(survival, "Survival", StaminaEfficiency, "Stamina Efficiency", "Меньше расход стамины", 1, 5, Survivor);
+        Add(survival, "Survival", Survivor, "Survivor", "Выживший", 1, 1, root: true);
+        Add(survival, "Survival", StaminaEfficiency, "Stamina Efficiency", "Экономия выносливости", 1, 5, Survivor);
         Add(survival, "Survival", SecondWind, "Second Wind", "Второе дыхание", 1, 2, StaminaEfficiency);
         Add(survival, "Survival", Armor, "Armor", "Броня", 2, 5, Survivor);
-        Add(survival, "Survival", HpRegen, "HP Regeneration", "Регенерация HP", 3, 3, Survivor);
+        Add(survival, "Survival", HpRegen, "HP Regeneration", "Регенерация", 3, 3, Survivor);
         Add(survival, "Survival", Desperation, "Desperation", "Отчаяние", 2, 3, Survivor);
         Add(survival, "Survival", HuntedWarning, "Hunted Warning", "Чувство погони", 1, 1, Survivor);
-        Add(survival, "Survival", CrouchSpeed, "Crouch Speed", "Скорость в присяде", 1, 3, Survivor);
+        Add(survival, "Survival", CrouchSpeed, "Crouch Speed", "Скорость в приседе", 1, 3, Survivor);
 
         var utility = SkillPage.Utility;
         Add(utility, "Gear", InventorySlot, "Inventory Slot", "Слот инвентаря", 3, 4, root: true);
-        Add(utility, "Gear", Autoscan, "Autoscan", "Автоскан", 1, 5, root: true);
-        Add(utility, "Gear", HeadBattery, "Death Head Battery", "Заряд мёртвой головы", 1, 3, root: true).Vanilla = VanillaUpgrade.DeathHeadBattery;
-        Add(utility, "Gear", TumbleWings, "Tumble Wings", "Tumble Wings", 1, 3, root: true).Vanilla = VanillaUpgrade.TumbleWings;
+        Add(utility, "Gear", Autoscan, "Autoscan", "Автопоиск", 1, 5, root: true);
+        Add(utility, "Gear", HeadBattery, "Death Head Battery", "Батарея головы", 1, 3, root: true).Vanilla = VanillaUpgrade.DeathHeadBattery;
+        Add(utility, "Gear", HeadRecharge, "Head Recharge", "Подзарядка головы", 1, 3, HeadBattery);
+        Add(utility, "Gear", HeadLeap, "Head Leap", "Прыжок головы", 1, 5, HeadBattery);
+        Add(utility, "Gear", TumbleWings, "Tumble Wings", "Крылья кувырка", 1, 3, root: true).Vanilla = VanillaUpgrade.TumbleWings;
 
         Add(utility, "Support", FieldMedic, "Field Medic", "Полевой медик", 1, 3, root: true);
-        Add(utility, "Support", BatterySaver, "Battery Saver", "Экономия заряда", 1, 3, root: true);
+        Add(utility, "Support", BatterySaver, "Battery Saver", "Экономия батарей", 1, 3, root: true);
         Add(utility, "Support", LuckyFinder, "Lucky Finder", "Везунчик", 2, 2, root: true);
 
         // Cart weapons count for whoever is operating them.
         var arsenal = SkillPage.Arsenal;
-        Add(arsenal, "Weapons", Marksman, "Marksman", "Стрелок", 1, 1, root: true);
+        Add(arsenal, "Weapons", Marksman, "Marksman", "Меткий стрелок", 1, 1, root: true);
         Add(arsenal, "Weapons", HandgunDamage, "Handgun Damage", "Урон пистолета", 1, 5, Marksman);
         Add(arsenal, "Weapons", RevolverDamage, "Revolver Damage", "Урон револьвера", 1, 3, Marksman);
         Add(arsenal, "Weapons", ShotgunDamage, "Shotgun Damage", "Урон дробовика", 1, 4, Marksman);
@@ -140,10 +144,10 @@ internal static class SkillCatalog
         Add(arsenal, "Weapons", StaffDamage, "Wizard Staff Damage", "Урон посоха", 1, 4, Marksman);
         Add(arsenal, "Weapons", CrossbowDamage, "Poison Crossbow Damage", "Урон арбалета", 1, 3, Marksman);
 
-        Add(arsenal, "Status", StatusLab, "Status Lab", "Статусы", 1, 1, root: true);
-        Add(arsenal, "Status", TranqTime, "Longer Tranquilizer", "Дольше транквилизатор", 1, 3, StatusLab);
-        Add(arsenal, "Status", NetTime, "Longer Net", "Дольше сеть", 1, 3, StatusLab);
-        Add(arsenal, "Status", FreezeTime, "Longer Freeze", "Дольше заморозка", 1, 3, StatusLab);
+        Add(arsenal, "Status", StatusLab, "Status Lab", "Мастер эффектов", 1, 1, root: true);
+        Add(arsenal, "Status", TranqTime, "Longer Tranquilizer", "Долгий транквилизатор", 1, 3, StatusLab);
+        Add(arsenal, "Status", NetTime, "Longer Net", "Долгая сеть", 1, 3, StatusLab);
+        Add(arsenal, "Status", FreezeTime, "Longer Freeze", "Долгая заморозка", 1, 3, StatusLab);
         Add(arsenal, "Status", PoisonRush, "Fast Poison", "Быстрый яд", 1, 3, StatusLab);
         Add(arsenal, "Status", HeavyHitter, "Heavy Hitter", "Тяжёлый удар", 1, 3, StatusLab);
 

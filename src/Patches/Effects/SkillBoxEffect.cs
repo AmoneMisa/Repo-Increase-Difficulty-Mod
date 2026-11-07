@@ -195,11 +195,13 @@ internal static class SkillBoxEffect
     {
         // The game's own focus text: native font, size, glow and placement.
         var teal = new Color(0.35f, 0.9f, 1f);
-        string points = b.Points == 1 ? "+1 SKILL POINT" : "+" + b.Points + " SKILL POINTS";
+        bool ru = Localization.GameLanguage.Russian;
+        string points = ru ? "+" + b.Points + " " + Quests.QuestText.Plural(b.Points, "ОЧКО", "ОЧКА", "ОЧКОВ") + " НАВЫКОВ"
+            : b.Points == 1 ? "+1 SKILL POINT" : "+" + b.Points + " SKILL POINTS";
         if (Mine(b))
-            SemiFunc.UIFocusText(b.Points > 0 ? "SKILL BOX: " + points : "SKILL BOX: EMPTY", teal, Color.white, 3f);
+            SemiFunc.UIFocusText(b.Points > 0 ? (ru ? "КОРОБКА НАВЫКОВ: " : "SKILL BOX: ") + points : ru ? "КОРОБКА НАВЫКОВ: ПУСТО" : "SKILL BOX: EMPTY", teal, Color.white, 3f);
         else if (b.Points > 0)
-            SemiFunc.UIFocusText(b.OpenerName.ToUpperInvariant() + " FOUND " + points, teal, Color.white, 3f);
+            SemiFunc.UIFocusText(b.OpenerName.ToUpperInvariant() + (ru ? " НАХОДИТ " : " FOUND ") + points, teal, Color.white, 3f);
     }
 
     // ---------------------------------------------------------------- pings
@@ -235,7 +237,9 @@ internal static class SkillBoxEffect
         best?.Visual.Flare(seconds);
     }
 
-    internal static string PingLabel(bool info) => info ? "Skill Box (0-3 skill points)" : "Skill Box";
+    internal static string PingLabel(bool info) => Localization.GameLanguage.Russian
+        ? (info ? "Коробка навыков (0-3 очка)" : "Коробка навыков")
+        : (info ? "Skill Box (0-3 skill points)" : "Skill Box");
 
     // ---------------------------------------------------------------- networking
 

@@ -264,7 +264,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
                 AddModifier(shopEcon.Name, shopEcon.Description, shopEcon.Tier);
             if (market)
             {
-                _parts.Add($"[{ModConfig.BlackMarketKey.Value}] Black Market");
+                _parts.Add($"[{ModConfig.BlackMarketKey.Value}] {(Localization.GameLanguage.Russian ? "Чёрный рынок" : "Black Market")}");
                 _effectDescriptions.Add("");
                 _effectColors.Add("FFFFFF");
             }
@@ -410,9 +410,10 @@ internal sealed class LevelInfoHud : MonoBehaviour
         }
         _detailsPage = Mathf.Clamp(_detailsPage, 1, pages);
         _descriptionLabel.pageToDisplay = _detailsPage;
-        _detailsPageLabel.text = (_modsLabel.enabled && _modsLabel.textInfo.pageCount > 1 ? "END: NAMES\n" : "") +
-            (mapPages > 1 ? $", / .: MAP SUITE  {_mapPage}/{mapPages}\n" : "") +
-            (pages > 1 ? $"LEFT / RIGHT  {_detailsPage}/{pages}" : "");
+        bool ru = Localization.GameLanguage.Russian;
+        _detailsPageLabel.text = (_modsLabel.enabled && _modsLabel.textInfo.pageCount > 1 ? (ru ? "END: НАЗВАНИЯ\n" : "END: NAMES\n") : "") +
+            (mapPages > 1 ? $", / .: {(ru ? "КАРТА" : "MAP SUITE")}  {_mapPage}/{mapPages}\n" : "") +
+            (pages > 1 ? $"{(ru ? "ВЛЕВО / ВПРАВО" : "LEFT / RIGHT")}  {_detailsPage}/{pages}" : "");
         _detailsPageLabel.rectTransform.anchoredPosition = rt.anchoredPosition + new Vector2(0f, -rt.rect.height);
         _detailsPageLabel.rectTransform.sizeDelta = new Vector2(rt.rect.width, footer);
         _detailsPageLabel.enabled = !string.IsNullOrEmpty(_detailsPageLabel.text);
@@ -517,6 +518,15 @@ internal sealed class LevelInfoHud : MonoBehaviour
             GoalUI.instance.uiText.isActiveAndEnabled&&!GoalUI.instance.isHidden;
         Rect heading = level!=null&&level.uiText!=null ? Bounds(level.uiText.rectTransform) : new Rect();
         Rect number = level!=null&&level.textNumber!=null ? Bounds(level.textNumber.rectTransform) : new Rect();
+        // The moon icon and its name ("CRESCENT MOON") hang under the level number while a moon is up. Count them as
+        // part of the level block, or the Map Suite lines were placed straight on top of the moon.
+        if (level != null && level.objectMoon != null && level.objectMoon.activeInHierarchy)
+        {
+            if (level.iconMoon != null && level.iconMoon.isActiveAndEnabled)
+                number = Union(number, Bounds(level.iconMoon.rectTransform));
+            if (level.textMoon != null && level.textMoon.isActiveAndEnabled && !string.IsNullOrEmpty(level.textMoon.text))
+                number = Union(number, Bounds(level.textMoon.rectTransform));
+        }
         Rect quota = quotaVisible ? Bounds(GoalUI.instance.uiText.rectTransform) :
             new Rect(area.xMax-_modsLabel.fontSizeMax,area.yMax-_modsLabel.fontSizeMax*3f,0,0);
         bool haulVisible = HaulUI.instance != null && HaulUI.instance.uiText != null &&
@@ -598,6 +608,10 @@ internal sealed class LevelInfoHud : MonoBehaviour
         SetBlock(_descriptionLabel, right, top, width, top - bottom);
         _descriptionLabel.enabled = false; // Only RenderDetails may enable this, inside real Tab.
     }
+
+    private static Rect Union(Rect a, Rect b) =>
+        a.width <= 0f && a.height <= 0f ? b : b.width <= 0f && b.height <= 0f ? a :
+        Rect.MinMaxRect(Mathf.Min(a.xMin, b.xMin), Mathf.Min(a.yMin, b.yMin), Mathf.Max(a.xMax, b.xMax), Mathf.Max(a.yMax, b.yMax));
 
     private static void SetBlock(TextMeshProUGUI label, float right, float top, float width, float height)
     {

@@ -41,7 +41,12 @@ public static class LootSafetyRules
         return "$" + (Math.Floor(value / 100f) / 10f).ToString("0.#", CultureInfo.InvariantCulture) + "K";
     }
 
-    public static string Notice(int count, int value, bool marked) =>
-        $"New loot appeared: {count} valuable{(count == 1 ? "" : "s")} worth {Money(value)}" +
-        (marked ? ", marked on the map" : "");
+    public static string Notice(int count, int value, bool marked, bool russian = false)
+    {
+        if (!russian)
+            return $"New loot appeared: {count} valuable{(count == 1 ? "" : "s")} worth {Money(value)}" + (marked ? ", marked on the map" : "");
+        int m10 = count % 10, m100 = count % 100;
+        string word = m10 == 1 && m100 != 11 ? "ценность" : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? "ценности" : "ценностей";
+        return $"Появилась новая добыча: {count} {word} на {Money(value)}" + (marked ? ", отмечено на карте" : "");
+    }
 }

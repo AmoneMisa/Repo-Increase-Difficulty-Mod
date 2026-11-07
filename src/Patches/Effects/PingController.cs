@@ -41,6 +41,7 @@ internal static class PingController
         public bool Local;                   // placed by this client (counts toward the local cap)
         public string Sender;
         public PingOutline Graphic; // the native highlight (null if it couldn't spawn)
+        public EnemyParent Enemy;   // enemy pings: the monster (its icon on screen and on the map)
     }
 
     private static readonly List<ActivePing> _pings = new();
@@ -66,7 +67,7 @@ internal static class PingController
         // Ping Anywhere is the base unlock. Ping Info only enriches its announcements.
         if (!OwnsPingAnywhere())
         {
-            Announce("Requires Ping Anywhere", Color.gray, "");
+            Announce(Localization.GameLanguage.Russian ? "Нужен навык «Пинг повсюду»" : "Requires Ping Anywhere", Color.gray, "");
             return;
         }
 
@@ -118,7 +119,7 @@ internal static class PingController
             }
             else
             {
-                Announce("Requires the Ping Anywhere perk", Color.gray, "");
+                Announce(Localization.GameLanguage.Russian ? "Нужен навык «Пинг повсюду»" : "Requires the Ping Anywhere perk", Color.gray, "");
                 return;
             }
         }
@@ -360,7 +361,13 @@ internal static class PingController
             graphic.AttachBeacon(duration, tint);
             PingTargets.Flare(type, pos, duration);
         }
-        else if (type == PingType.Enemy) graphic.UseReticle();
+        EnemyParent monster = type == PingType.Enemy && physGrab != null ? physGrab.GetComponentInParent<EnemyParent>() : null;
+        if (type == PingType.Enemy)
+        {
+            graphic.UseReticle();
+            // Each kind of monster has its own icon, drawn from the monster itself (Visuals.MonsterIcons).
+            graphic.UseMonsterCallout(Visuals.MonsterIcons.Get(monster), tint);
+        }
         // No pinged object gets a silhouette outline: weapons, upgrades and drones get their icon callout, and
         // every object (loot, items, carts, vehicles, cosmetic boxes too) the locator arrow and underglow.
         if (type != PingType.Location && type != PingType.Enemy && kind != WeaponKind.None && kind != WeaponKind.Soul)
@@ -381,6 +388,7 @@ internal static class PingController
             Local = local,
             Sender = sender,
             Graphic = graphic,
+            Enemy = monster,
         });
         PingAudio.Play(type);
         return tint;
@@ -443,8 +451,32 @@ internal static class PingController
             if (p.Graphic != null && p.Graphic.target != null)
                 p.Pos = p.Graphic.target.centerPoint;
             else if (p.Graphic != null && p.Graphic.PlayerTarget != null)
-                p.Pos = p.Graphic.PlayerTarget.transform.position + Vector3.up * .8f;
+                p.Pos = Visuals.WingedCirclet.MarkerPoint(p.Graphic.PlayerTarget);
         }
+    }
+
+    // Fixed ping words, translated on the reader's side: a teammate's ping arrives already worded by their game.
+    private static readonly (string En, string Ru)[] Words =
+    {
+        ("Cosmetic Box", "Коробка косметики"), ("Cosmetic (", "Косметика ("), ("Location", "Место"), ("Player", "Игрок"),
+        ("Enemy", "Враг"), ("Scooter", "Самокат"), ("Valuable", "Ценность"), ("Upgrade", "Улучшение"), ("Weapon", "Оружие"),
+        ("Item", "Предмет"), ("Object", "Объект"), ("You", "Вы"),
+        ("Battery Crystal", "Кристалл батареи"), ("Skill Box", "Коробка навыков"), ("Mystery Box", "Ящик-сюрприз"),
+        ("Challenge Shrine", "Святилище испытаний"),
+    };
+
+    private static string Localize(string text)
+    {
+        if (string.IsNullOrEmpty(text) || !Localization.GameLanguage.Russian) return text;
+        // Whole fixed labels, and the start of a label ("Cosmetic (Rare)").
+        foreach (var (en, ru) in Words)
+            if (text == en || text.StartsWith(en + " |", System.StringComparison.Ordinal) || (en.EndsWith("(") && text.StartsWith(en, System.StringComparison.Ordinal)))
+            { text = ru + text.Substring(en.Length); break; }
+        // Info parts added by the ping perks.
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"\| Tier (\d+)", "| Уровень $1");
+        text = text.Replace("% value", "% стоимости").Replace(" kg", " кг").Replace("(Common)", "(Обычная)").Replace("(Uncommon)", "(Необычная)")
+            .Replace("(Rare)", "(Редкая)").Replace("(UltraRare)", "(Ультраредкая)");
+        return text;
     }
 
     /// <summary>Clear all pings (e.g. on level change) so stale markers don't linger.</summary>
@@ -465,6 +497,7 @@ internal static class PingController
     // Brief native focus-text announcement to complement the world highlight.
     private static void Announce(string text, Color color, string sender)
     {
+        text = Localize(text);
         if (!string.IsNullOrEmpty(sender))
             text += $"  <size=70%>({sender})</size>";
         try

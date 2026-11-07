@@ -65,12 +65,13 @@ internal sealed class ServerInfoHud : MonoBehaviour
             _nativeText.rectTransform.offsetMax = new Vector2(0f, 0f);
         }
         var room=PhotonNetwork.CurrentRoom;
-        string role=room==null ? "" : PhotonNetwork.IsMasterClient ? " | HOST" : " | CLIENT";
+        bool ru=Localization.GameLanguage.Russian;
+        string role=room==null ? "" : PhotonNetwork.IsMasterClient ? (ru?" | ХОСТ":" | HOST") : (ru?" | КЛИЕНТ":" | CLIENT");
         string region=string.IsNullOrEmpty(PhotonNetwork.CloudRegion)?"-":PhotonNetwork.CloudRegion;
-        string ping=PhotonNetwork.IsConnected ? $" | {PhotonNetwork.GetPing()} ms" : "";
-        string players=room!=null ? $" | {room.PlayerCount}/{room.MaxPlayers} players" : "";
-        _nativeText.text=$"SERVER: {SafeState()}{role}\n{region}{ping}{players}";
-        if(room!=null && !string.IsNullOrEmpty(room.Name)) _nativeText.text+=$"\nROOM: {room.Name}";
+        string ping=PhotonNetwork.IsConnected ? $" | {PhotonNetwork.GetPing()} {(ru?"мс":"ms")}" : "";
+        string players=room!=null ? $" | {room.PlayerCount}/{room.MaxPlayers} {(ru?"игроков":"players")}" : "";
+        _nativeText.text=$"{(ru?"СЕРВЕР":"SERVER")}: {SafeState()}{role}\n{region}{ping}{players}";
+        if(room!=null && !string.IsNullOrEmpty(room.Name)) _nativeText.text+=$"\n{(ru?"КОМНАТА":"ROOM")}: {room.Name}";
         _surface.gameObject.SetActive(true);
         _surface.AvoidVitals(HealthUI.instance,EnergyUI.instance);
     }
