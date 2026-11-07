@@ -72,6 +72,7 @@ Check(IncreaseHardMod.Quests.QuestRewards.Money==0,"Disabled quests do not accep
 IncreaseHardMod.ModConfig.QuestsEnabled.Value=true;
 Send(ModNetwork.QuestMoneyRequestEventCode,new object[]{-1000},3);Check(IncreaseHardMod.Quests.QuestRewards.Money==0,"Negative quest payout rejected");
 Send(ModNetwork.QuestMoneyRequestEventCode,new object[]{1000},3);Check(IncreaseHardMod.Quests.QuestRewards.Money==1000,"Host retains personal quest payout routing");
+Check(IncreaseHardMod.Quests.QuestRewards.Actors.Count==1&&IncreaseHardMod.Quests.QuestRewards.Actors[0]==3,"A personal quest payout goes through the per-player cap with the requesting player");
 PhotonNetwork.IsMasterClient=false;Send(ModNetwork.QuestMoneyRequestEventCode,new object[]{1000},3);
 Check(IncreaseHardMod.Quests.QuestRewards.Money==1000,"Non-host does not apply personal quest payout");
 PhotonNetwork.Sent.Clear();network.BroadcastQuestState(quest);network.BroadcastQuestBuff(1,2);

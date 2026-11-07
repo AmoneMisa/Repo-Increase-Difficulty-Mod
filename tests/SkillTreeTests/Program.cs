@@ -7,8 +7,8 @@ void Check(bool ok, string name) { if (!ok) throw new Exception("FAIL " + name);
 
 // ---------------------------------------------------------------- catalogue
 Check(C.PageCost(SkillPage.Recon) == 28 && C.PageCost(SkillPage.Combat) == 43 &&
-      C.PageCost(SkillPage.Survival) == 27 && C.PageCost(SkillPage.Utility) == 23 && C.PageCost(SkillPage.Arsenal) == 39, "Page costs match the plan");
-Check(C.TotalCost() == 160, "Whole tree costs 160 points");
+      C.PageCost(SkillPage.Survival) == 34 && C.PageCost(SkillPage.Utility) == 33 && C.PageCost(SkillPage.Arsenal) == 42, "Page costs match the plan");
+Check(C.TotalCost() == 180, "Whole tree costs 180 points");
 Check(C.All.Where(n => n.Page == SkillPage.Arsenal && !n.Root).All(n => n.MaxLevel >= 3 && n.MaxLevel <= 5), "Weapon and status perks have 3-5 levels");
 
 // Status lengths: longer up to 8 s, poison shorter down to 8 s, never past the cap either way.
@@ -128,5 +128,51 @@ var covered = new[] { "IHM_Stamina", "IHM_HpRegen", "IHM_GunBatteryBullet", "IHM
 Check(covered.All(SkillMigration.IsTreeCovered), "Every tree-covered old upgrade leaves the shop");
 Check(new[] { "IHM_DeathProtect", "IHM_TruckHeal", "IHM_TruckCharge", "IHM_TruckSell", "IHM_ST_PointItem" }.All(id => !SkillMigration.IsTreeCovered(id)),
       "Death Protection, truck upgrades and the Skill Point stay in the shop");
+
+// ---------------------------------------------------------------- skill boxes
+int[] hits = new int[4];
+for (int i = 0; i < 10000; i++) hits[SkillBoxRules.RollPoints((i + 0.5) / 10000, 65, 20, 10, 5)]++;
+Check(hits[0] == 6500 && hits[1] == 2000 && hits[2] == 1000 && hits[3] == 500, "Skill boxes give 0/1/2/3 points 65/20/10/5% of the time");
+Check(SkillBoxRules.RollPoints(0.99, 0, 0, 0, 0) == 0 && SkillBoxRules.RollPoints(1.5, 1, 1, 1, 1) == 3 &&
+      SkillBoxRules.RollPoints(-1, 0, 5, 0, 0) == 1, "Box rolls stay in range with odd input");
+var counts = new HashSet<int>();
+for (int i = 0; i < 100; i++) counts.Add(SkillBoxRules.Count((i + 0.5) / 100, 1, 5));
+Check(counts.SetEquals(new[] { 1, 2, 3, 4, 5 }), "A level gets 1 to 5 skill boxes");
+Check(SkillBoxRules.Count(0.9, 3, 9) <= 5 && SkillBoxRules.Count(0.1, 4, 2) == 4 && SkillBoxRules.Count(0.5, 0, 0) == 0, "Box count is clamped to 0-5");
+
+// ---------------------------------------------------------------- battery crystals on retried levels
+string step = IncreaseHardMod.Modifiers.RetryCrystalRules.RunStep("save1", 4);
+Check(IncreaseHardMod.Modifiers.RetryCrystalRules.IsRetry(step, IncreaseHardMod.Modifiers.RetryCrystalRules.RunStep("save1", 4)),
+      "Replaying the same level step of the same save is a retry");
+Check(!IncreaseHardMod.Modifiers.RetryCrystalRules.IsRetry(step, IncreaseHardMod.Modifiers.RetryCrystalRules.RunStep("save1", 5)) &&
+      !IncreaseHardMod.Modifiers.RetryCrystalRules.IsRetry(step, IncreaseHardMod.Modifiers.RetryCrystalRules.RunStep("save2", 4)) &&
+      !IncreaseHardMod.Modifiers.RetryCrystalRules.IsRetry(null, step) && !IncreaseHardMod.Modifiers.RetryCrystalRules.IsRetry(step, null),
+      "A new level, another save, or a shop/lobby in between is not a retry");
+var crystalCounts = new HashSet<int>();
+for (int i = 0; i < 100; i++) crystalCounts.Add(IncreaseHardMod.Modifiers.RetryCrystalRules.Count((i + 0.5) / 100, 3, 8));
+Check(crystalCounts.SetEquals(new[] { 3, 4, 5, 6, 7, 8 }) && IncreaseHardMod.Modifiers.RetryCrystalRules.Count(0.99, 3, 20) == 8,
+      "A retried level gets 3 to 8 crystals, never more than 8");
+Check(IncreaseHardMod.Modifiers.RetryCrystalRules.Emptiest(new[] { 80f, 20f, 100f }) == 1 &&
+      IncreaseHardMod.Modifiers.RetryCrystalRules.Emptiest(new[] { 100f, 100f }) == -1 &&
+      IncreaseHardMod.Modifiers.RetryCrystalRules.Emptiest(new float[0]) == -1, "A crystal picks the emptiest battery, none when all are full");
+Check(Math.Abs(IncreaseHardMod.Modifiers.RetryCrystalRules.Charge(10f, 20f) - 30f) < .001f &&
+      IncreaseHardMod.Modifiers.RetryCrystalRules.Charge(90f, 20f) == 100f, "A crystal adds 20% and never overfills");
+
+// ---------------------------------------------------------------- newer perks
+Check(PerkRules.DesperationReduction(29, 100, 3, .1f, .3f) > .299f && PerkRules.DesperationReduction(30, 100, 3, .1f, .3f) == 0f &&
+      PerkRules.DesperationReduction(10, 100, 0, .1f, .3f) == 0f, "Desperation: -10% per level only under 30% health");
+Check(PerkRules.DesperationReduction(5, 100, 20, .1f, .3f) <= .9f, "Desperation never blocks more than 90%");
+Check(PerkRules.Reduce(10, .3f) == 7 && PerkRules.Reduce(1, .5f) == 1 && PerkRules.Reduce(0, .5f) == 0, "Reduced hits round in the player's favour but still hurt");
+Check(PerkRules.MeleeStun(2f, 3, .5f, 8f) == 3.5f && PerkRules.MeleeStun(2f, 0, .5f, 8f) == 2f && PerkRules.MeleeStun(7f, 3, .5f, 8f) == 8f &&
+      PerkRules.MeleeStun(10f, 3, .5f, 8f) == 10f, "Heavy Hitter: +0.5 s per level, 8 s cap, never shortens a stun");
+Check(Math.Abs(PerkRules.BatteryDrainMultiplier(3, .15f) - .55f) < .001f && PerkRules.BatteryDrainMultiplier(0, .15f) == 1f &&
+      PerkRules.BatteryDrainMultiplier(10, .2f) == .25f, "Battery Saver: 15% slower per level, never below a quarter");
+Check(PerkRules.MedicSelfHeal(50, 3, .15f) == 73 && PerkRules.MedicShare(50, 3, .15f) == 23 && PerkRules.MedicShare(50, 0, .15f) == 0 &&
+      PerkRules.MedicSelfHeal(50, 0, .15f) == 50, "Field Medic: bigger self heal and a share for nearby teammates");
+Check(PerkRules.LuckyWeights(65, 20, 10, 5, 1, 10).SequenceEqual(new[] { 55, 25, 13, 7 }) &&
+      PerkRules.LuckyWeights(65, 20, 10, 5, 2, 10).SequenceEqual(new[] { 45, 30, 16, 9 }) &&
+      PerkRules.LuckyWeights(65, 20, 10, 5, 0, 10).SequenceEqual(new[] { 65, 20, 10, 5 }), "Lucky Finder shifts skill box odds toward points");
+Check(PerkRules.LuckyWeights(5, 0, 0, 0, 2, 10).Sum() == 5 && PerkRules.LuckyWeights(5, 0, 0, 0, 2, 10)[0] == 0, "Lucky Finder keeps the total and never goes negative");
+Check(PerkRules.LuckyCrystalCharge(20f, 2, 5f) == 30f && PerkRules.LuckyCrystalCharge(20f, 0, 5f) == 20f, "Lucky Finder: +5% crystal charge per level");
 
 Console.WriteLine($"All {checks} skill tree checks passed.");

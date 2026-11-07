@@ -148,6 +148,7 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<Patches.Effects.HostRunControls>();
         netObject.AddComponent<Skills.SkillStore.HostController>();
         netObject.AddComponent<Skills.SkillEffects.StaminaController>();
+        netObject.AddComponent<Skills.SupportPerks.StatusController>();
         netObject.AddComponent<Skills.SkillTreeScreen>();
         netObject.AddComponent<Visuals.IcePrewarm>();
         Object.DontDestroyOnLoad(netObject);

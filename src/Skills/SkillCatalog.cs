@@ -25,15 +25,16 @@ internal static class SkillCatalog
     public const string Technician = P + "Technician", DroneBattery = P + "DroneBattery", Overcharge = P + "Overcharge";
     // Survival
     public const string Survivor = P + "Survivor", StaminaEfficiency = P + "StaminaEfficiency", SecondWind = P + "SecondWind",
-        Armor = P + "Armor", HpRegen = P + "HpRegen";
+        Armor = P + "Armor", HpRegen = P + "HpRegen", Desperation = P + "Desperation", HuntedWarning = P + "HuntedWarning";
     // Utility
     public const string InventorySlot = P + "InventorySlot", Autoscan = P + "Autoscan", HeadBattery = P + "HeadBattery", TumbleWings = P + "TumbleWings";
+    public const string FieldMedic = P + "FieldMedic", BatterySaver = P + "BatterySaver", LuckyFinder = P + "LuckyFinder";
     // Arsenal: damage per weapon, and longer status effects from your own weapons
     public const string Marksman = P + "Marksman", HandgunDamage = P + "HandgunDamage", RevolverDamage = P + "RevolverDamage",
         ShotgunDamage = P + "ShotgunDamage", CartCannonDamage = P + "CartCannonDamage", CartLaserDamage = P + "CartLaserDamage",
         StaffDamage = P + "StaffDamage", CrossbowDamage = P + "CrossbowDamage";
     public const string StatusLab = P + "StatusLab", TranqTime = P + "TranqTime", NetTime = P + "NetTime", FreezeTime = P + "FreezeTime",
-        PoisonRush = P + "PoisonRush";
+        PoisonRush = P + "PoisonRush", HeavyHitter = P + "HeavyHitter";
 
     // Contracts: quest-only perks, earned from special quest contracts and never bought with points
     public const string CartHandling = P + "CartHandling", GentleHands = P + "GentleHands", CalmPresence = P + "CalmPresence",
@@ -96,12 +97,18 @@ internal static class SkillCatalog
         Add(survival, "Survival", SecondWind, "Second Wind", "Второе дыхание", 1, 2, StaminaEfficiency);
         Add(survival, "Survival", Armor, "Armor", "Броня", 2, 5, Survivor);
         Add(survival, "Survival", HpRegen, "HP Regeneration", "Регенерация HP", 3, 3, Survivor);
+        Add(survival, "Survival", Desperation, "Desperation", "Отчаяние", 2, 3, Survivor);
+        Add(survival, "Survival", HuntedWarning, "Hunted Warning", "Чувство погони", 1, 1, Survivor);
 
         var utility = SkillPage.Utility;
         Add(utility, "Gear", InventorySlot, "Inventory Slot", "Слот инвентаря", 3, 4, root: true);
         Add(utility, "Gear", Autoscan, "Autoscan", "Автоскан", 1, 5, root: true);
         Add(utility, "Gear", HeadBattery, "Death Head Battery", "Заряд мёртвой головы", 1, 3, root: true).Vanilla = VanillaUpgrade.DeathHeadBattery;
         Add(utility, "Gear", TumbleWings, "Tumble Wings", "Tumble Wings", 1, 3, root: true).Vanilla = VanillaUpgrade.TumbleWings;
+
+        Add(utility, "Support", FieldMedic, "Field Medic", "Полевой медик", 1, 3, root: true);
+        Add(utility, "Support", BatterySaver, "Battery Saver", "Экономия заряда", 1, 3, root: true);
+        Add(utility, "Support", LuckyFinder, "Lucky Finder", "Везунчик", 2, 2, root: true);
 
         // Cart weapons count for whoever is operating them.
         var arsenal = SkillPage.Arsenal;
@@ -119,6 +126,7 @@ internal static class SkillCatalog
         Add(arsenal, "Status", NetTime, "Longer Net", "Дольше сеть", 1, 3, StatusLab);
         Add(arsenal, "Status", FreezeTime, "Longer Freeze", "Дольше заморозка", 1, 3, StatusLab);
         Add(arsenal, "Status", PoisonRush, "Fast Poison", "Быстрый яд", 1, 3, StatusLab);
+        Add(arsenal, "Status", HeavyHitter, "Heavy Hitter", "Тяжёлый удар", 1, 3, StatusLab);
 
         var contracts = SkillPage.Contracts;
         Add(contracts, "Contracts", CartHandling, "Cart Handling", "Лёгкая тележка", 0, 3, root: true).QuestOnly = true;

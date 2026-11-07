@@ -24,7 +24,7 @@ namespace IncreaseHardMod.Networking;
 public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 {
     // Our private event codes. Must not collide with REPO's (123/124/199) or PUN's
-    // reserved range (200+). In use: 172-173 (skill tree), 174 (quest level end), 177-179, 181-198 (197 = LevelInfoHud.StateEventCode, declared there);
+    // reserved range (200+). In use: 172-173 (skill tree), 174 (quest level end), 175 (SkillBoxEffect.EventCode), 176 (RetryCrystalEffect.EventCode), 177-179, 181-198 (197 = LevelInfoHud.StateEventCode, declared there);
     // 180 is retired (old cart-upgrade state). 170-171 = HostRunControls (failed-level vote).
     // Search every file for "EventCode" before adding one.
     // Host: a player was poisoned or sedated (screen effect on that player's own client only).
@@ -155,6 +155,8 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 
         LevelTimerController.Tick(Time.deltaTime);
         MysteryBoxEffect.Tick();
+        SkillBoxEffect.Tick();
+        RetryCrystalEffect.Tick();
         Quests.QuestManager.Tick(Time.deltaTime);
         RoundStats.Tick(Time.deltaTime);
         LateJoinController.Tick();
@@ -596,6 +598,16 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             if (HostSender(photonEvent)) MysteryBoxEffect.HandleEvent(photonEvent);
             return;
         }
+        if (photonEvent.Code == SkillBoxEffect.EventCode)
+        {
+            if (HostSender(photonEvent)) SkillBoxEffect.HandleEvent(photonEvent);
+            return;
+        }
+        if (photonEvent.Code == RetryCrystalEffect.EventCode)
+        {
+            if (HostSender(photonEvent)) RetryCrystalEffect.HandleEvent(photonEvent);
+            return;
+        }
 
         if (photonEvent.Code == LevelTimerEventCode)
         {
@@ -743,7 +755,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             // Only the host honours the payout request.
             if (ModConfig.QuestsEnabled.Value && PhotonNetwork.IsMasterClient && photonEvent.Sender > 0 &&
                 photonEvent.CustomData is object[] data && data.Length == 1 && data[0] is int amount && amount > 0)
-                Quests.QuestRewards.GrantMoney(amount);
+                Quests.QuestRewards.GrantPersonalMoney(photonEvent.Sender, amount);
             return;
         }
 

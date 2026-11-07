@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 namespace UnityEngine {
  public class Component {public GameObject gameObject=new();public T GetComponent<T>() where T:class=>gameObject.Get<T>();public T GetComponentInParent<T>() where T:class=>GetComponent<T>();public T GetComponentInChildren<T>(bool includeInactive=false) where T:class=>GetComponent<T>();}
  public class GameObject {readonly Dictionary<Type,object> all=new();public T Get<T>()where T:class=>all.TryGetValue(typeof(T),out var v)?v as T:null;public void Add(Component c){c.gameObject=this;all[c.GetType()]=c;}}
@@ -35,6 +35,8 @@ namespace IncreaseHardMod.Modifiers {
 }
 namespace IncreaseHardMod.Patches.Effects {
  public static class MysteryBoxEffect {public const byte EventCode=199;public static int Received;public static void Tick(){}public static void HandleEvent(ExitGames.Client.Photon.EventData e){Received++;}}
+public static class SkillBoxEffect {public const byte EventCode=175;public static int Received;public static void Tick(){}public static void HandleEvent(ExitGames.Client.Photon.EventData e){Received++;}}
+public static class RetryCrystalEffect {public const byte EventCode=176;public static int Received;public static void Tick(){}public static void HandleEvent(ExitGames.Client.Photon.EventData e){Received++;}}
  public static class LevelTimerController {public static int Applied;public static float Last;public static void Tick(float dt){}public static void ApplyNetworkState(float t,bool on){Applied++;Last=t;}}
  public static class RoundStats {public static void Tick(float dt){}public static void ApplyResults(List<PlayerRoundStat> r,RoundLootSummary s){}}
  public class PlayerRoundStat {public string Name;public int BrokenValue,BrokenCount,Delivered,Deaths,Revives;}
@@ -64,7 +66,7 @@ namespace IncreaseHardMod.Visuals {
 namespace IncreaseHardMod.Quests {
  public enum StatKind:byte {Health,Stamina,SprintSpeed,GrabStrength,GrabRange,ThrowStrength,ExtraJump,TumbleLaunch}
  public static class QuestManager {public static int States,Buffs;public static void Tick(float dt){}public static void ReceiveTeamState(object[] d){States++;}public static void ApplyTempBuff(StatKind stat,int amount){Buffs++;}public static int LevelEnds;public static bool LastCompleted;public static void OnLevelCompleted(bool c){LevelEnds++;LastCompleted=c;}}
- public static class QuestRewards {public static int Money;public static void GrantMoney(int amount){Money+=amount;}}
+ public static class QuestRewards {public static int Money;public static void GrantMoney(int amount){Money+=amount;}public static List<int> Actors=new();public static bool GrantPersonalMoney(int actor,int amount){Actors.Add(actor);Money+=amount;return true;}}
  public static class QuestRankProgress {public static void PublishSave(){}}
 }
 namespace IncreaseHardMod.Patches.Effects { public static class LateJoinNetworkDiagnostics { public static void Tick(){} } }

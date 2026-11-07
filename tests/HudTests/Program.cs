@@ -153,4 +153,5 @@ Check(Field<TextMeshProUGUI>("_modsLabel").enabled,"Closing the menu brings the 
 var namesLabel=Field<TextMeshProUGUI>("_modsLabel");
 Check(namesLabel.fontSize<StatsUI.instance.upgradesHeader.fontSize,"Modifier names are smaller than the native UPGRADES heading");
 
+{ bool was=IncreaseHardMod.Patches.Effects.SpectatorMapHud.Showing; IncreaseHardMod.Patches.Effects.SpectatorMapHud.Showing=true; Check(IncreaseHardMod.Patches.Effects.LevelInfoHud.TabOpen,"A dead player's spectator map counts as Tab for the modifier descriptions"); IncreaseHardMod.Patches.Effects.SpectatorMapHud.Showing=was; }
 Console.WriteLine($"HUD_CHECKS_PASSED: {checks}");

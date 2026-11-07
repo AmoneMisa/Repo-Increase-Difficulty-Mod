@@ -59,6 +59,7 @@ internal static class QuestEffect
         [HarmonyPrefix]
         private static void Prefix(bool _completedLevel)
         {
+            if (HostRunControls.HoldingChange) return; // held for the failed-level vote: the level has not ended
             QuestManager.OnLevelCompleted(_completedLevel);
         }
     }

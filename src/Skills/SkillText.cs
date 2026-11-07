@@ -72,10 +72,16 @@ internal static class SkillText
             case C.Armor: return $"-{Pct(PerLevel(ModConfig.ArmorPercentPerLevel.Value, ModConfig.ArmorMaxLevel.Value, id))} damage taken per level (up to -{Pct(Upgrades.SurvivalUpgrades.ArmorCap)}).";
             case C.HpRegen: return $"Slowly regain health, up to {Pct(ModConfig.RegenMaxHpFraction.Value)} of max HP; faster per level.";
 
+            case C.Desperation: return $"-{Pct(ModConfig.SkillDesperationPerLevel.Value)} damage taken per level while your health is under {Pct(ModConfig.SkillDesperationThreshold.Value)}.";
+            case C.HuntedWarning: return "Shows HUNTED on your screen while a monster is chasing you.";
+
             case C.InventorySlot: return "+1 inventory slot per level (keys 4-7).";
             case C.Autoscan: return "Finds nearby valuables for the whole team; reaches farther per level.";
             case C.HeadBattery: return "The game's Death Head Battery upgrade: your death head's battery lasts longer.";
             case C.TumbleWings: return "The game's Tumble Wings upgrade: fly longer after a tumble launch.";
+            case C.FieldMedic: return $"Health packs you use heal {Pct(ModConfig.SkillMedicPerLevel.Value)} more per level; teammates within {ModConfig.SkillMedicRadius.Value:0} m get {Pct(ModConfig.SkillMedicPerLevel.Value)} of the pack per level.";
+            case C.BatterySaver: return $"Battery items that aren't guns or drones drain {Pct(ModConfig.SkillBatterySaverPerLevel.Value)} slower per level while you use them.";
+            case C.LuckyFinder: return $"Skill boxes give points more often, and battery crystals give you +{ModConfig.SkillLuckyCrystalBonus.Value:0}% more charge per level.";
 
             case C.Marksman: return $"+{Pct(root)} damage with every gun.";
             case C.HandgunDamage: return Weapon(id, "Handgun");
@@ -94,6 +100,7 @@ internal static class SkillText
             case C.GentleHands: return $"Loot you carry loses {Pct(ContractPerks.LootPerLevel)} less value per level when it breaks (up to {Pct(ContractPerks.LootPerLevel * 3)}).";
             case C.CalmPresence: return "Monsters chasing you give up sooner once they lose sight of you; more per level.";
             case C.SoftSteps: return $"Your footsteps, landings, voice and the loot you handle alert monsters from {Pct(ContractPerks.NoisePerLevel)} closer per level.";
+            case C.HeavyHitter: return $"Your melee hits stun monsters {Sec(ModConfig.SkillHeavyHitterPerLevel.Value)} longer per level (8 s max).";
             case C.PoisonRush: return $"Poison deals the same damage faster per level: {Sec(ModConfig.PoisonSeconds.Value)} down to 8 s.";
         }
         return "";

@@ -58,8 +58,9 @@ internal sealed class LevelInfoHud : MonoBehaviour
     // In gameplay MenuManager has no current page; any open page (Esc, settings, cosmetics...) covers the
     // HUD, so the mod's HUD text hides with it instead of drawing over the menu.
     internal static bool MenuOpen => MenuManager.instance != null && MenuManager.instance.currentMenuPage != null;
+    // Tab: the game's map, or the mod's spectator map that a dead player opens with the same key.
     internal static bool TabOpen => (MapToolController.instance != null && MapToolController.instance.Active) ||
-        (Map.Instance != null && Map.Instance.Active);
+        (Map.Instance != null && Map.Instance.Active) || SpectatorMapHud.Showing;
     // Guests wait briefly for the host's HUD snapshot, then fall back to the modifiers, economy and shop
     // economy the mod already synced to them. A missing reply must never hide the whole right-side HUD.
     internal static bool InfoReady => GameplayReady &&
@@ -167,6 +168,24 @@ internal sealed class LevelInfoHud : MonoBehaviour
     private bool _layoutQuotaVisible, _layoutHaulVisible, _layoutLevelBelow;
     private float _layoutTop, _layoutBottom, _layoutAvailable;
 
+    private string _emptyReportedFor;
+
+    // One log line per level when Tab is open on a level but there is no description to show at all: tells
+    // whether the level has modifiers here, whether the host's snapshot arrived, and whether Level Info is off.
+    private void ReportEmptyOnce(bool showModifiers)
+    {
+        if (!TabOpen || !SafeRunIsLevel() || _descriptions.Count > 0) return;
+        string key = LevelKey;
+        if (_emptyReportedFor == key) return;
+        _emptyReportedFor = key;
+        bool host = SemiFunc.IsMasterClientOrSingleplayer();
+        var current = ModifierManager.Current;
+        Plugin.Log.LogInfo($"[LevelInfo] Tab open with no modifier descriptions ({key}): host={host}, levelInfo={ModConfig.LevelInfoEnabled.Value}, " +
+                           $"hiddenByKey={_suppressed}, show={showModifiers}, synced={(current != null && current.IsSpecial)}, " +
+                           $"snapshot={(SnapshotReady ? (_snapshotModifiers != null && _snapshotModifiers.IsSpecial).ToString() : "none")}, " +
+                           $"economy={Economy.EconomyEvents.Current?.Name ?? "none"}, entries={_effectDescriptions.Count}.");
+    }
+
     // One log line per level when there is text to show but every block ended up hidden.
     private void ReportHiddenOnce(string mapInfo)
     {
@@ -272,6 +291,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
         }
         RenderDetails();
         ReportHiddenOnce(mapInfo);
+        ReportEmptyOnce(showModifiers);
     }
 
     // Create (or recreate) the native labels once the HUD canvas and a font template exist.
@@ -529,6 +549,19 @@ internal sealed class LevelInfoHud : MonoBehaviour
         float levelTop = Mathf.Max(heading.yMax, number.yMax);
         bool levelBelow = levelTop > 0f && levelTop + gap < top;
         float bottom = levelBelow ? Mathf.Max(floor, levelTop + gap) : floor;
+        // The gap between the quota and the level label is often only about three lines, which Map Suite alone
+        // filled, hiding the names and (in Tab) the descriptions. Use the space under the level label instead
+        // whenever it is bigger.
+        if (levelBelow)
+        {
+            float levelBottom = Mathf.Min(heading.height > 0f ? heading.yMin : float.MaxValue, number.height > 0f ? number.yMin : float.MaxValue);
+            float underTop = levelBottom - gap;
+            if (levelBottom < float.MaxValue && underTop - floor > top - bottom)
+            {
+                top = underTop;
+                bottom = floor;
+            }
+        }
         // Never squeeze the block below a few lines: fall back to the plain screen-ratio floor.
         if (top - bottom < _modsLabel.fontSizeMax * 3f) bottom = Mathf.Min(bottom, floor);
         float available = Mathf.Max(0f, top - bottom);

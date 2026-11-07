@@ -19,6 +19,11 @@ internal sealed class SpectatorMapHud : MonoBehaviour
     private NativeHudPanel _surface;
     private RawImage _image;
     private bool _toggle, _show;
+    private static SpectatorMapHud _instance;
+
+    /// <summary>True while a dead player has the spectator map open (their Tab), for HUD that shows "in Tab".</summary>
+    internal static bool Showing => _instance != null && _instance.isActiveAndEnabled && _instance._show;
+    private void Awake() => _instance = this;
     private float _zoom = 1.5f;
     private Vector2 _pan;
 

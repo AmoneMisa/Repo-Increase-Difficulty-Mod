@@ -15,6 +15,30 @@ public static class QuestRewards
 {
     public static void GrantMoney(int amount) => QuestMoney.Grant(amount);
 
+    // A guest's personal quest is tracked on the guest's own game, so the host can't check it; it pays at most
+    // this many personal-quest rewards per player per level instead.
+    private const int PersonalPaymentsPerLevel = 2;
+    private static readonly Dictionary<int, int> PersonalMoneyPaid = new();
+    private static string _moneyLevel;
+
+    /// <summary>Host: pay a guest's personal-quest money, capped per player per level. False when over the cap.</summary>
+    public static bool GrantPersonalMoney(int actor, int amount)
+    {
+        if (amount <= 0) return false;
+        var run = RunManager.instance;
+        string level = run != null && run.levelCurrent != null ? run.levelsCompleted + ":" + run.levelCurrent.name : "";
+        if (level != _moneyLevel) { PersonalMoneyPaid.Clear(); _moneyLevel = level; }
+        PersonalMoneyPaid.TryGetValue(actor, out int paid);
+        if (paid >= PersonalPaymentsPerLevel)
+        {
+            Plugin.Log.LogWarning($"[Quests] Actor {actor} asked for personal-quest money again this level (${amount}); ignored.");
+            return false;
+        }
+        PersonalMoneyPaid[actor] = paid + 1;
+        GrantMoney(amount);
+        return true;
+    }
+
     /// <summary>Host: a finished team quest gives every player in the run its skill points.</summary>
     public static void GrantSkillPointsToAll(int points, string quest)
     {

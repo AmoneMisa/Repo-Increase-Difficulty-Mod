@@ -155,6 +155,10 @@ public static class ModConfig
     public static ConfigEntry<int> QuestMoneyBase;
     public static ConfigEntry<int> QuestSkillPoints, QuestSkillPointsHighRank;
     public static ConfigEntry<float> QuestSkillPointChance, QuestContractChance;
+    public static ConfigEntry<bool> SkillBoxesEnabled, RetryCrystalsEnabled;
+    public static ConfigEntry<int> RetryCrystalMin, RetryCrystalMax;
+    public static ConfigEntry<float> RetryCrystalCharge;
+    public static ConfigEntry<int> SkillBoxMin, SkillBoxMax, SkillBoxWeight0, SkillBoxWeight1, SkillBoxWeight2, SkillBoxWeight3;
     public static ConfigEntry<bool> QuestFunnyEnabled;
     public static ConfigEntry<bool> QuestItemRewardsEnabled;
     public static ConfigEntry<bool> QuestCosmeticRewardsEnabled;
@@ -307,7 +311,10 @@ public static class ModConfig
     public static ConfigEntry<int> SkillPointBasePrice;
     public static ConfigEntry<UnityEngine.KeyCode> SkillTreeKey;
     public static ConfigEntry<float> SkillRootBonus, SkillWeaponDamageMax, SkillStatusRootSeconds, SkillSecondWindPerLevel,
-        SkillSurvivorStamina, SkillFlashRange, SkillFlashWidthPerLevel, SkillFlashBrightnessPerLevel;
+        SkillSurvivorStamina, SkillFlashRange, SkillFlashWidthPerLevel, SkillFlashBrightnessPerLevel,
+        SkillDesperationPerLevel, SkillDesperationThreshold, SkillHeavyHitterPerLevel, SkillMedicPerLevel, SkillMedicRadius,
+        SkillBatterySaverPerLevel, SkillLuckyCrystalBonus;
+    public static ConfigEntry<int> SkillLuckyBoxShift;
 
     // --- Level Info panel ---
     // Right-side overlay logging each level change (number + name + rolled surprises),
@@ -668,16 +675,17 @@ public static class ModConfig
             "Modifier Tuning", "AutoReviveAtCar", true,
             "AutoRevive: bring the auto-revived player back at the level's spawn point (the truck/car drop-off) and fully heal them, instead of reviving them on the spot where they died. Still only one auto-revive per player per level.");
         LevelTimerSeconds = BindFloat(cfg,
-            "Modifier Tuning", "LevelTimerSeconds", 300f, 30f, 1200f,
+            // New key names (0.8.1) so existing configs pick up the new defaults (7 min, +1 min per kill, +2 min per quota).
+            "Modifier Tuning", "LevelTimerStartSeconds", 420f, 30f, 1800f,
             "LevelTimer: starting countdown in seconds. When it hits 0 the level restarts and rerolls to a fresh layout (progress is not lost, the level is just regenerated).");
         LevelTimerKillBonus = BindFloat(cfg,
-            "Modifier Tuning", "LevelTimerKillBonus", 10f, 0f, 120f,
+            "Modifier Tuning", "LevelTimerKillSeconds", 60f, 0f, 300f,
             "LevelTimer: seconds added to the clock for each enemy killed.");
         LevelTimerDeathPenalty = BindFloat(cfg,
             "Modifier Tuning", "LevelTimerDeathPenalty", 30f, 0f, 300f,
             "LevelTimer: seconds removed from the clock each time a player dies.");
         LevelTimerQuotaBonus = BindFloat(cfg,
-            "Modifier Tuning", "LevelTimerQuotaBonus", 60f, 0f, 300f,
+            "Modifier Tuning", "LevelTimerQuotaSeconds", 120f, 0f, 600f,
             "LevelTimer: seconds added when an extraction point's quota is completed.");
 
         // --- Late Join ---
@@ -748,6 +756,20 @@ public static class ModConfig
             "Chance that a quest comes with skill points at rank F; +5% per contract rank, at most 75%. Funny quests and contracts never give points.");
         QuestContractChance = BindFloat(cfg, "Quests", "ContractChance", .35f, 0f, 1f,
             "Chance per level of a special CONTRACT quest: harder, and it gives every player a level of a quest-only skill tree perk (Contracts page).");
+        SkillBoxesEnabled = cfg.Bind("Skill Boxes", "Enabled", true,
+            "Small glowing boxes on every run level. Walk into one to open it: it gives you 0-3 skill points. Host setting.");
+        SkillBoxMin = BindInt(cfg, "Skill Boxes", "MinPerLevel", 1, 0, 5, "Fewest skill boxes placed on a level.");
+        SkillBoxMax = BindInt(cfg, "Skill Boxes", "MaxPerLevel", 5, 0, 5, "Most skill boxes placed on a level.");
+        SkillBoxWeight0 = BindInt(cfg, "Skill Boxes", "Chance0Points", 65, 0, 100, "Weight of an empty box (0 points). Default 65 of 100.");
+        SkillBoxWeight1 = BindInt(cfg, "Skill Boxes", "Chance1Point", 20, 0, 100, "Weight of a 1-point box. Default 20 of 100.");
+        SkillBoxWeight2 = BindInt(cfg, "Skill Boxes", "Chance2Points", 10, 0, 100, "Weight of a 2-point box. Default 10 of 100.");
+        SkillBoxWeight3 = BindInt(cfg, "Skill Boxes", "Chance3Points", 5, 0, 100, "Weight of a 3-point box. Default 5 of 100.");
+        RetryCrystalsEnabled = cfg.Bind("Battery Crystals", "Enabled", true,
+            "When a level is retried (restart, random map or timer reroll), small battery crystals lie around the map. HP and battery charge carry over between attempts, so walk into a crystal to top up your emptiest battery item. Host setting.");
+        RetryCrystalMin = BindInt(cfg, "Battery Crystals", "MinPerLevel", 3, 0, 8, "Fewest battery crystals on a retried level.");
+        RetryCrystalMax = BindInt(cfg, "Battery Crystals", "MaxPerLevel", 8, 0, 8, "Most battery crystals on a retried level.");
+        RetryCrystalCharge = BindFloat(cfg, "Battery Crystals", "ChargePercent", 20f, 1f, 100f,
+            "Battery charge one crystal adds to the emptiest battery item you hold or carry (20 = about one bar of five).");
         QuestFunnyEnabled = cfg.Bind("Quests", "FunnyQuests", true,
             "Allow silly side-quests (talk to yourself, spin around, pay respects...). At most one per level, small cash reward, no skill points.");
         QuestItemRewardsEnabled = cfg.Bind(
@@ -999,6 +1021,22 @@ public static class ModConfig
             "Beam Width: wider cone per level (0.10 = +10% angle).");
         SkillFlashBrightnessPerLevel = BindFloat(cfg, "Skill Tree", "BrightnessPerLevel", .15f, 0f, 1f,
             "Brightness: brighter and slightly longer beam per level (0.15 = +15%).");
+        SkillDesperationPerLevel = BindFloat(cfg, "Skill Tree", "DesperationPerLevel", .10f, 0f, .3f,
+            "Desperation: less damage taken per level while your health is low (0.10 = -10%). Combines with Armor by multiplying.");
+        SkillDesperationThreshold = BindFloat(cfg, "Skill Tree", "DesperationHealthThreshold", .30f, .05f, .9f,
+            "Desperation works while your health is below this share of max health (0.30 = under 30%).");
+        SkillHeavyHitterPerLevel = BindFloat(cfg, "Skill Tree", "HeavyHitterSecondsPerLevel", .5f, 0f, 3f,
+            "Heavy Hitter: extra seconds of stun per level when your melee weapon stuns a monster (8 s max).");
+        SkillMedicPerLevel = BindFloat(cfg, "Skill Tree", "FieldMedicPerLevel", .15f, 0f, 1f,
+            "Field Medic: health packs you use heal this much more per level (0.15 = +15%), and teammates near you get this share of the pack per level.");
+        SkillMedicRadius = BindFloat(cfg, "Skill Tree", "FieldMedicRadius", 5f, 1f, 20f,
+            "Field Medic: teammates within this many metres share your health pack.");
+        SkillBatterySaverPerLevel = BindFloat(cfg, "Skill Tree", "BatterySaverPerLevel", .15f, 0f, .25f,
+            "Battery Saver: slower drain per level for battery items that are not guns or drones (0.15 = 15% slower).");
+        SkillLuckyBoxShift = BindInt(cfg, "Skill Tree", "LuckyFinderBoxWeightPerLevel", 10, 0, 50,
+            "Lucky Finder: weight per level moved from an empty skill box to 1, 2 and 3 points (default odds 65/20/10/5 become 55/25/13/7, then 45/30/16/9).");
+        SkillLuckyCrystalBonus = BindFloat(cfg, "Skill Tree", "LuckyFinderCrystalBonusPerLevel", 5f, 0f, 50f,
+            "Lucky Finder: extra battery charge per level from each battery crystal you take (5 = +5%).");
 
         // --- Surprise / special-level system ---
                 SpecialLevelChancePercent = BindInt(cfg,

@@ -507,7 +507,7 @@ internal static class RoundStats
         [HarmonyPostfix]
         private static void Postfix(RoundLootSummary __state)
         {
-            if (__state == null) return;
+            if (__state == null || HostRunControls.HoldingChange) return; // held for the failed-level vote
             if (ModConfig.RoundResultsEnabled.Value) Publish(__state);
             else Reset();
         }

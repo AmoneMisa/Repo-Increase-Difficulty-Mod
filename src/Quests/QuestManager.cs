@@ -108,6 +108,9 @@ public static class QuestManager
             _teamQuests.Clear();
             var generated = QuestCatalog.GenerateTeam(ctx, _usedSignatures);
             _teamQuests.AddRange(generated);
+            // Ids unique across levels, so a guest never mistakes this level's quest 1 for the previous level's.
+            _setId++;
+            for (int i = 0; i < _teamQuests.Count; i++) _teamQuests[i].Id = _setId * 16 + i + 1;
             foreach (var q in _teamQuests)
                 Plugin.Log.LogInfo($"[Quests] Team quest [{QuestRankInfo.Label(q.Rank)}] {q.Title} -> {RewardText(q)}");
             Broadcast();
@@ -758,13 +761,19 @@ public static class QuestManager
         TickObservers(dt);
         if (!SemiFunc.IsMasterClientOrSingleplayer() || !SemiFunc.IsMultiplayer())
             return;
-        if (!_dirty)
-            return;
         _broadcastCooldown -= dt;
-        if (_broadcastCooldown > 0f)
+        // Changes go out at most every 0.75 s; the whole set is also re-sent every few seconds, so a player who
+        // joined mid-level (or missed a message while loading) catches up.
+        _resendTimer -= dt;
+        bool resend = _resendTimer <= 0f && _levelActive && _teamQuests.Count > 0;
+        if ((!_dirty && !resend) || _broadcastCooldown > 0f)
             return;
         Broadcast();
     }
+
+    private static int _setId;
+    private static float _resendTimer;
+    private const float ResendSeconds = 8f;
 
     // Host clock for "close every extraction within M:SS". Progress mirrors the elapsed seconds (about once a
     // second) so clients can show the countdown; the quest fails when the clock reaches the limit.
@@ -804,6 +813,7 @@ public static class QuestManager
     {
         _dirty = false;
         _broadcastCooldown = 0.75f;
+        _resendTimer = ResendSeconds;
         if (SemiFunc.IsMultiplayer())
             ModNetwork.Instance?.BroadcastQuestState(Serialize());
     }
@@ -880,8 +890,10 @@ public static class QuestManager
             q.RewardPerk = perk == 255 ? -1 : perk;
             _teamQuests.Add(q);
 
-            // Newly completed since our last snapshot -> credit our own rank + popup.
-            if (q.Completed && (!previous.TryGetValue(q.Id, out bool wasDone) || !wasDone))
+            // Completed since a snapshot in which we saw it still open -> credit our own rank + popup. A quest we never
+            // saw open (we joined after it was done) gives no credit; ids are unique per level, so the previous
+            // level's quests never match.
+            if (q.Completed && previous.TryGetValue(q.Id, out bool wasDone) && !wasDone)
                 CreditLocalCompletion(q);
         }
     }

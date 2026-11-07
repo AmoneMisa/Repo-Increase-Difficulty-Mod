@@ -115,7 +115,13 @@ internal static class CombatDamageUpgrades
             }
             var melee = MeleeOf(__instance);
             if (melee == null) return;
-            __instance.enemyDamage = Scale(__instance.enemyDamage, Multiplier(MeleeId, Wielder(melee)));
+            var wielder = Wielder(melee);
+            __instance.enemyDamage = Scale(__instance.enemyDamage, Multiplier(MeleeId, wielder));
+            // Heavy Hitter: a longer stun from the weapon's own stun. Monsters too big for it still aren't stunned.
+            int heavy = Skills.SkillEffects.Level(wielder, Skills.SkillCatalog.HeavyHitter);
+            if (heavy > 0 && __instance.enemyStun && __instance.enemyStunTime > 0f)
+                __instance.enemyStunTime = Skills.PerkRules.MeleeStun(__instance.enemyStunTime, heavy,
+                    ModConfig.SkillHeavyHitterPerLevel.Value, Skills.SkillCatalog.StatusCapSeconds);
         }
 
         [HarmonyPostfix]

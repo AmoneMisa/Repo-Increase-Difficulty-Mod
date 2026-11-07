@@ -33,7 +33,8 @@ internal static class BatteryLifeUpgrade
     public const string TranqId = "IHM_GunBatteryTranq";
     public const string DroneId = "IHM_DroneBattery";
 
-    private enum Category { None, GunBullet, GunLaser, GunTranq, Drone }
+    // Other: every remaining battery item (trackers, melee, cart weapons...), slowed by the Battery Saver perk.
+    private enum Category { None, GunBullet, GunLaser, GunTranq, Drone, Other }
 
     // Per-battery state: last observed batteryLife + cached category (component lookups are
     // not free, and an item's category never changes). ConditionalWeakTable so destroyed
@@ -109,7 +110,7 @@ internal static class BatteryLifeUpgrade
                 return Category.GunLaser;
             return Category.GunBullet; // any other gun defaults to the bullet catch-all
         }
-        return Category.None;
+        return Category.Other;
     }
 
     // The HUD/world battery widget draws one segment per ItemBattery.batteryBars, so extra shots must add
@@ -274,6 +275,11 @@ internal static class BatteryLifeUpgrade
         if (!ModConfig.PlayerUpgradesEnabled.Value || !SemiFunc.IsMasterClientOrSingleplayer() || battery == null) return 1f;
         var category = Resolve(battery);
         if (category == Category.None) return 1f;
+        if (category == Category.Other)
+        {
+            int saver = Skills.SkillEffects.Level(UserOf(battery), Skills.SkillCatalog.BatterySaver);
+            return Skills.PerkRules.BatteryDrainMultiplier(saver, ModConfig.SkillBatterySaverPerLevel.Value);
+        }
         int level = LevelOf(UserOf(battery), category);
         if (category == Category.Drone)
         {

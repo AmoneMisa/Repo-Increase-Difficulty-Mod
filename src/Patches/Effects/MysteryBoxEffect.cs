@@ -95,7 +95,7 @@ internal static class MysteryBoxEffect
         {
             if (p == null || p.Truck || p.inStartRoom) continue;
             if (p.Room != null && (p.Room.Truck || p.Room.Extraction)) continue;
-            if (TryFloor(p.transform.position, out var floor, out float yaw))
+            if (TryFloor(p.transform.position, Size, out var floor, out float yaw))
                 candidates.Add((floor, yaw));
         }
 
@@ -134,8 +134,15 @@ internal static class MysteryBoxEffect
         return null;
     }
 
-    // Floor under the point, with enough empty space for the crate plus a walking margin.
-    private static bool TryFloor(Vector3 point, out Vector3 floor, out float yaw)
+    /// <summary>Positions of this level's mystery boxes (host), so other placed props keep clear of them.</summary>
+    internal static IEnumerable<Vector3> Positions()
+    {
+        if (_key != LevelKey()) yield break;
+        foreach (var b in Boxes) yield return b.Pos;
+    }
+
+    // Floor under the point, with enough empty space for a box of this size plus a walking margin.
+    internal static bool TryFloor(Vector3 point, Vector3 Size, out Vector3 floor, out float yaw)
     {
         floor = default;
         yaw = 90f * Random.Range(0, 4);

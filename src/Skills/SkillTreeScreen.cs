@@ -27,7 +27,7 @@ internal sealed class SkillTreeScreen : MonoBehaviour
     private static readonly Dictionary<string, string> GroupNames = new()
     {
         ["Map"] = "MAP", ["Ping"] = "PING", ["Flashlight"] = "FLASHLIGHT", ["Damage"] = "DAMAGE", ["Guns"] = "GUN CHARGES",
-        ["Tech"] = "TECH", ["Survival"] = "SURVIVAL", ["Gear"] = "GEAR", ["Weapons"] = "WEAPON DAMAGE", ["Status"] = "STATUS EFFECTS",
+        ["Tech"] = "TECH", ["Survival"] = "SURVIVAL", ["Gear"] = "GEAR", ["Support"] = "SUPPORT", ["Weapons"] = "WEAPON DAMAGE", ["Status"] = "STATUS EFFECTS",
         ["Contracts"] = "EARNED FROM SPECIAL CONTRACTS",
     };
 

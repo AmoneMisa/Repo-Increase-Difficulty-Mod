@@ -81,6 +81,14 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
 
     // ------------------------------------------------------------------ the failed-level vote
 
+    /// <summary>
+    /// True while the current RunManager.ChangeLevel call is being held for the vote. The game calls ChangeLevel
+    /// every frame while everyone is dead; Harmony still runs every postfix (and may run later prefixes) for a
+    /// held call, so the other ChangeLevel patches check this and do nothing — otherwise each frame re-rolls the
+    /// level's modifiers, ends the quests and closes the lobby again.
+    /// </summary>
+    internal static bool HoldingChange { get; private set; }
+
     // Everyone died on a run level: hold the arena transition and vote instead.
     [HarmonyPatch(typeof(RunManager), nameof(RunManager.ChangeLevel))]
     private static class FailedLevel
@@ -89,11 +97,13 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
         [HarmonyPriority(Priority.High)]
         private static bool Prefix(bool _completedLevel, bool _levelFailed)
         {
+            HoldingChange = false;
             if (_bypass || !_levelFailed || _completedLevel || !ModConfig.FailVoteEnabled.Value || _instance == null || !Host) return true;
             bool runLevel;
             try { runLevel = SemiFunc.RunIsLevel(); } catch { runLevel = false; }
             if (!runLevel) return true; // arena, shop, truck: vanilla behaviour
             if (!_instance._voting) _instance.StartVote();
+            HoldingChange = true;
             return false;
         }
     }
@@ -199,7 +209,7 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
         if (!_shown) return;
         if (_panel == null)
         {
-            _panel = NativeHudPanel.Create("IHM_FailVote", new Vector2(460f, 150f), new Vector2(.5f, .62f), Vector2.zero, .7f);
+            _panel = NativeHudPanel.Create("IHM_FailVote", new Vector2(460f, 150f), new Vector2(.5f, .62f), Vector2.zero, 0f); // no backplate (HUD text style rule)
             // Above the level results board (sorting 80): the vote runs while the results are on screen.
             if (_panel != null) _panel.GetComponent<Canvas>().sortingOrder = 90;
             if (_panel == null) return;
