@@ -81,13 +81,21 @@ foreach(bool enabled in new[]{false,true})foreach(bool generated in new[]{false,
 Assert(LootSafetyRules.Shortfall(10000,4000)==6000&&LootSafetyRules.Shortfall(10000,12000)==0&&LootSafetyRules.Shortfall(5000,-50)==5000,"Shortfall is the goal minus reachable loot, never negative");
 Assert(LootSafetyRules.Reachable(false,false,false)&&!LootSafetyRules.Reachable(true,false,false)&&!LootSafetyRules.Reachable(false,true,false),"Loot outside rooms or held by a drone does not count");
 Assert(LootSafetyRules.Reachable(true,true,true),"Fresh spawns count before their room check runs");
-Assert(!LootSafetyRules.Stalled(299,300)&&LootSafetyRules.Stalled(300,300)&&!LootSafetyRules.Stalled(9999,0),"Stall needs the full time and 0 turns it off");
-Assert(LootSafetyRules.Decide(10000,4000,3000,10,300,out int t1)==LootTopUpReason.Shortfall&&t1==6000,"A shortfall tops up the missing value");
-Assert(LootSafetyRules.Decide(10000,20000,3000,10,300,out int t2)==LootTopUpReason.None&&t2==0,"Enough reachable loot and recent progress: no top-up");
-Assert(LootSafetyRules.Decide(10000,20000,3000,300,300,out int t3)==LootTopUpReason.Stall&&t3==7000,"A stalled point gets what it still needs");
-Assert(LootSafetyRules.Decide(10000,20000,10000,900,300,out int t4)==LootTopUpReason.None&&t4==0,"A full point never stalls");
-Assert(LootSafetyRules.Decide(10000,20000,3000,900,0,out _)==LootTopUpReason.None,"Stall top-up can be turned off");
+Assert(LootSafetyRules.Decide(10000,4000,out int t1)==LootTopUpReason.Shortfall&&t1==6000,"A shortfall tops up the missing value");
+Assert(LootSafetyRules.Decide(10000,20000,out int t2)==LootTopUpReason.None&&t2==0,"Enough collectable loot left: never a top-up, however long it takes");
+Assert(LootSafetyRules.Decide(10000,10000,out int t3)==LootTopUpReason.None&&t3==0,"Loot exactly enough for the point: no top-up");
 Assert(LootSafetyRules.KeepSpawning(1,24,25)&&!LootSafetyRules.KeepSpawning(1,25,25)&&!LootSafetyRules.KeepSpawning(0,0,25),"Spawning stops at the target or the cap");
 Assert(LootSafetyRules.Money(900)=="$900"&&LootSafetyRules.Money(12000)=="$12K"&&LootSafetyRules.Money(12550)=="$12.5K"&&LootSafetyRules.Money(-5)=="$0","Money text matches the game's style");
 Assert(LootSafetyRules.Notice(1,4000,false)=="New loot appeared: 1 valuable worth $4K"&&LootSafetyRules.Notice(3,12500,true)=="New loot appeared: 3 valuables worth $12.5K, marked on the map","Notice text");
+// Challenge shrine rules
+var kinds=Enumerable.Range(0,1000).Select(i=>IncreaseHardMod.Challenges.ChallengeRules.Kind(i/1000.0)).Distinct().Count();
+Assert(kinds==5&&IncreaseHardMod.Challenges.ChallengeRules.Kind(1.0)==IncreaseHardMod.Challenges.ChallengeKind.Smash,"Every challenge kind can roll");
+var rewards=Enumerable.Range(0,300).Select(i=>IncreaseHardMod.Challenges.ChallengeRules.Reward(i/300.0)).Distinct().ToList();
+Assert(rewards.Count==3&&!rewards.Contains(IncreaseHardMod.Challenges.ChallengeReward.None),"A win always gives a skill point, an upgrade or a cosmetic box");
+Assert(IncreaseHardMod.Challenges.ChallengeRules.CullTarget(1)==4&&IncreaseHardMod.Challenges.ChallengeRules.CullTarget(6)==8&&IncreaseHardMod.Challenges.ChallengeRules.CullTarget(0)==4,"Cull: 3 + players, at most 8");
+Assert(Enumerable.Range(0,100).All(i=>IncreaseHardMod.Challenges.ChallengeRules.PropCount(i/100.0) is >=6 and <=10)&&IncreaseHardMod.Challenges.ChallengeRules.PropCount(1)==10,"6 to 10 targets or crates");
+Assert(IncreaseHardMod.Challenges.ChallengeRules.DeathFails(IncreaseHardMod.Challenges.ChallengeKind.Hunt)&&!IncreaseHardMod.Challenges.ChallengeRules.DeathFails(IncreaseHardMod.Challenges.ChallengeKind.Targets),"Deaths fail only the fighting challenges");
+Assert(!IncreaseHardMod.Challenges.ChallengeRules.Expired(0,44.9f,IncreaseHardMod.Challenges.ChallengeKind.Targets)&&IncreaseHardMod.Challenges.ChallengeRules.Expired(0,45f,IncreaseHardMod.Challenges.ChallengeKind.Targets),"Target Practice lasts 45 s");
+Assert(IncreaseHardMod.Challenges.ChallengeRules.Status(IncreaseHardMod.Challenges.ChallengeKind.Targets,4,8,30.2f,false)=="TARGET PRACTICE  4/8  0:31"&&IncreaseHardMod.Challenges.ChallengeRules.Status(IncreaseHardMod.Challenges.ChallengeKind.Escort,0,1,90f,false)=="WISP ESCORT  1:30","HUD line text");
+Assert(IncreaseHardMod.Challenges.ChallengeRules.Name(IncreaseHardMod.Challenges.ChallengeKind.Smash,true)=="Разгром","Russian names");
 Console.WriteLine($"PASS: {checks} collection, sample loss, liquid orientation and late join policy checks.");

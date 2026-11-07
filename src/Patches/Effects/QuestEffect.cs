@@ -88,6 +88,8 @@ internal static class QuestEffect
                 weapon = WeaponSource.Hands;
 
             QuestManager.OnEnemyKilled(parent, weapon);
+            Challenges.ChallengeManager.OnEnemyKilled(parent);
+            Skills.BuffPerks.OnKill(enemy); // Hot Barrel, Mending Surge
 
             if (enemy != null && _recentPitContact.TryGetValue(enemy, out float t))
             {
@@ -153,6 +155,7 @@ internal static class QuestEffect
         private static void Postfix()
         {
             QuestManager.OnPlayerDeath();
+            Challenges.ChallengeManager.OnPlayerDeath();
         }
     }
 

@@ -110,25 +110,43 @@ internal static class CombatDamageUpgrades
                 if (tranq && __instance.enemyStun && __instance.enemyStunTime > 0f)
                     __instance.enemyStunTime = TradeOffStun(shooter,
                         Skills.SkillEffects.StatusSeconds(shooter, Skills.SkillEffects.Status.Tranq, __instance.enemyStunTime), 0f);
+                bool cartLaser = weapon == Skills.SkillEffects.Weapon.CartLaser;
                 if (__instance.enemyDamage > 0)
                     __instance.enemyDamage = Scale(__instance.enemyDamage,
-                        Skills.SkillEffects.WeaponMultiplier(shooter, weapon) * Skills.TradeOffs.TargetFactor(shooter, _enemy));
+                        Skills.SkillEffects.WeaponMultiplier(shooter, weapon) * Skills.TradeOffs.TargetFactor(shooter, _enemy) *
+                        Skills.BuffPerks.DamageFactorFor(shooter, false, cartLaser, true)); // Hot Barrel / Overheat
+                Skills.BuffPerks.NoteHit(shooter, _enemy, false, cartLaser, true);
                 return;
             }
             if (__instance.enemyDamage <= 0) return;
+            // Handheld laser gun: its beam is its own hurt collider (no bullet). Trade-offs and Overheat apply.
+            var laserGun = __instance.GetComponentInParent<ItemGunLaser>();
+            if (laserGun != null)
+            {
+                var laserGrab = laserGun.GetComponent<PhysGrabObject>();
+                var laserUser = __instance.playerCausingHurt != null ? __instance.playerCausingHurt : laserGrab != null ? laserGrab.lastPlayerGrabbing : null;
+                __instance.enemyDamage = Scale(__instance.enemyDamage,
+                    Skills.TradeOffs.DamageFactor(laserUser, Skills.TradeOffs.Damage.Gun, _enemy) * Skills.BuffPerks.DamageFactorFor(laserUser, false, true, true));
+                Skills.BuffPerks.NoteHit(laserUser, _enemy, false, true, true);
+                return;
+            }
             // One hook for every player-caused monster hit, so a single saved value is always restored.
             var tumble = TumbleOf(__instance);
             if (tumble != null)
             {
                 __instance.enemyDamage = Scale(__instance.enemyDamage, SurvivalUpgrades.TumbleDamageMultiplier(tumble) *
                     Skills.TradeOffs.DamageFactor(tumble.playerAvatar, Skills.TradeOffs.Damage.Tumble, _enemy));
+                Skills.BuffPerks.NoteHit(tumble.playerAvatar, _enemy, false, false, false);
                 return;
             }
             var melee = MeleeOf(__instance);
             if (melee == null) return;
             var wielder = Wielder(melee);
             __instance.enemyDamage = Scale(__instance.enemyDamage,
-                Multiplier(MeleeId, wielder) * Skills.TradeOffs.DamageFactor(wielder, Skills.TradeOffs.Damage.Melee, _enemy));
+                Multiplier(MeleeId, wielder) * Skills.TradeOffs.DamageFactor(wielder, Skills.TradeOffs.Damage.Melee, _enemy) *
+                Skills.BuffPerks.DamageFactorFor(wielder, true, false, false)); // Battle Trance
+            Skills.BuffPerks.NoteHit(wielder, _enemy, true, false, false);
+            Skills.SupportPerks.Vampire(wielder, _enemy, __instance.enemyDamage);
             // Heavy Hitter: a longer stun from the weapon's own stun. Monsters too big for it still aren't stunned.
             int heavy = Skills.SkillEffects.Level(wielder, Skills.SkillCatalog.HeavyHitter);
             if (heavy > 0 && __instance.enemyStun && __instance.enemyStunTime > 0f)

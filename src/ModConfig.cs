@@ -139,7 +139,8 @@ public static class ModConfig
     // Host-side top-up while an extraction point is open: replaces the game's own soft-lock spawn, counting
     // only loot the team can reach and also topping up when the open point stops making progress.
     public static ConfigEntry<bool> LootSafetyNetEnabled;
-    public static ConfigEntry<float> LootSafetyStallMinutes;
+    public static ConfigEntry<bool> ChallengesEnabled;
+    public static ConfigEntry<float> ChallengeChancePercent;
     public static ConfigEntry<float> LootSafetyMinPlayerDistance;
     public static ConfigEntry<int> LootSafetyMaxSpawns;
     public static ConfigEntry<bool> LootSafetyRevealOnMap;
@@ -223,7 +224,7 @@ public static class ModConfig
     public static ConfigEntry<float> NetSeconds, NetBreakChance;
     public static ConfigEntry<int> NetShots;
     public static ConfigEntry<int> StaffDamage, StaffMaxTargets, StaffCharges;
-    public static ConfigEntry<float> StaffRange, StaffChainRange, StaffAimAngle;
+    public static ConfigEntry<float> StaffRange, StaffChainRange, StaffAimAngle, StaffShockSeconds, StaffPlayerDamagePercent;
     public static ConfigEntry<int> DefenceAbsorb, ProtectionReductionPercent;
     public static ConfigEntry<float> DefenceIdleDrainPerMinute;
     public static ConfigEntry<int> DefenceItemAbsorb;
@@ -323,7 +324,7 @@ public static class ModConfig
     public static ConfigEntry<float> SkillRootBonus, SkillWeaponDamageMax, SkillStatusRootSeconds, SkillSecondWindPerLevel,
         SkillSurvivorStamina, SkillFlashRange, SkillFlashWidthPerLevel, SkillFlashBrightnessPerLevel,
         SkillDesperationPerLevel, SkillDesperationThreshold, SkillHeavyHitterPerLevel, SkillMedicPerLevel, SkillMedicRadius,
-        SkillBatterySaverPerLevel, SkillLuckyCrystalBonus, SkillCrouchSpeedPerLevel;
+        SkillBatterySaverPerLevel, SkillLuckyCrystalBonus, SkillCrouchSpeedPerLevel, SkillVampireMax;
     public static ConfigEntry<int> SkillLuckyBoxShift;
 
     // --- Level Info panel ---
@@ -481,6 +482,10 @@ public static class ModConfig
         NetShots = BindInt(cfg, "Net Launcher", "Shots", 8, 1, 20, "Nets per full battery (one battery bar per net).");
         StaffDamage = BindInt(cfg, "Wizard Staff", "BoltDamage", 75, 1, 1000, "Total lightning damage per bolt, split evenly between the monsters it strikes (75 = 75 to one, 38 + 37 to two, 25 each to three).");
         StaffRange = BindFloat(cfg, "Wizard Staff", "Range", 5f, 1f, 20f, "How far (metres) the first bolt reaches from the staff tip.");
+        StaffShockSeconds = BindFloat(cfg, "Wizard Staff", "ShockSeconds", 4f, 0f, 15f,
+            "Everything a bolt strikes is shocked this long: players move 50% slower and recover stamina half as fast; monsters move 50% slower and deal 25% less damage. 0 turns it off.");
+        StaffPlayerDamagePercent = BindFloat(cfg, "Wizard Staff", "PlayerDamagePercent", 30f, 0f, 100f,
+            "A bolt aimed straight at a teammate strikes them (and chains to nearby players) for this share of its damage. 0 = shock only, no damage.");
         StaffMaxTargets = BindInt(cfg, "Wizard Staff", "MaxTargets", 3, 1, 10, "Most monsters one bolt can strike, including the first (the chain jumps to the nearest unstruck monster).");
         StaffChainRange = BindFloat(cfg, "Wizard Staff", "ChainRange", 5f, 1f, 20f, "Farthest jump (metres) from one struck monster to the next.");
         StaffAimAngle = BindFloat(cfg, "Wizard Staff", "AimAssistAngle", 20f, 0f, 60f, "If the aim line misses, the bolt still finds a monster within this many degrees of it (0 = exact aim only).");
@@ -510,6 +515,8 @@ public static class ModConfig
         PingUnderglowEnabled = Module(cfg, "Ping", "UnderglowEnabled", true, "PingUnderglow",
             "Pinged loot, items, carts and other physical objects get a neon underglow in the ping colour: coloured light on the floor beneath them for as long as the ping lasts. Local visuals only.");
         ItemUnstuckEnabled = Module(cfg, "Item Unstuck", "Enabled", true, "ItemUnstuck", "Master switch for the valuable safety-net features (relocate stuck loot, invulnerable-until-grab, undamaged-value HUD). The relocate/invuln parts are HOST-SIDE (computed by the host).");
+        ChallengesEnabled = Module(cfg, "Challenges", "Enabled", true, "Challenges",
+            "Run levels may get a challenge shrine: crouch on it to start a timed challenge (wisp escort, target practice, hunt, cull or smash). Winning gives a skill point for everyone, an upgrade or a cosmetic box. Host-side.");
         LootSafetyNetEnabled = Module(cfg, "Loot Safety Net", "Enabled", true, "LootSafetyNet",
             "Host-side: while an extraction point is open and the loot the team can reach is not enough to fill it, spawn more (replaces the game's own top-up, which also counts loot nobody can reach). Everyone gets a notice.");
         var spectatorMap = SpectatorMapConfig.Bind(cfg);
@@ -732,10 +739,12 @@ public static class ModConfig
             "Item Unstuck", "InvulnerableUntilGrab", true,
             "Valuables take no damage / lose no value until a player grabs them for the first time (uses the game's own indestructible flag). Host-side.");
 
+        // --- Challenges ---
+        ChallengeChancePercent = BindFloat(cfg,
+            "Challenges", "ShrineChancePercent", 100f, 0f, 100f,
+            "Chance that a run level gets a challenge shrine.");
+
         // --- Loot Safety Net ---
-        LootSafetyStallMinutes = BindFloat(cfg,
-            "Loot Safety Net", "StallMinutes", 5f, 0f, 30f,
-            "If an open extraction point gets no new loot for this many minutes, spawn what it still needs even when loot seems to be left somewhere (it may be hidden or out of reach). 0 turns this off.");
         LootSafetyMinPlayerDistance = BindFloat(cfg,
             "Loot Safety Net", "MinPlayerDistance", 20f, 0f, 60f,
             "New loot prefers spawn spots at least this far (metres) from every player, like the game's own top-up. Closer spots are used only when no far spot is free.");
@@ -1064,6 +1073,8 @@ public static class ModConfig
             "Field Medic: teammates within this many metres share your health pack.");
         SkillBatterySaverPerLevel = BindFloat(cfg, "Skill Tree", "BatterySaverPerLevel", .15f, 0f, .25f,
             "Battery Saver: slower drain per level for battery items that are not guns or drones (0.15 = 15% slower).");
+        SkillVampireMax = BindFloat(cfg, "Skill Tree", "VampirismMax", .29f, 0f, 1f,
+            "Vampirism: share of melee damage dealt that heals you at the last level (0.29 = 29% at 7 of 7, rising evenly per level).");
         SkillCrouchSpeedPerLevel = BindFloat(cfg, "Skill Tree", "CrouchSpeedPerLevel", .05f, 0f, .2f,
             "Crouch Speed: faster walking while crouched, per level (0.05 = +5%, so +15% at the 3-level cap).");
         SkillLuckyBoxShift = BindInt(cfg, "Skill Tree", "LuckyFinderBoxWeightPerLevel", 10, 0, 50,

@@ -6,11 +6,18 @@ int checks = 0;
 void Check(bool ok, string name) { if (!ok) throw new Exception("FAIL " + name); Console.WriteLine("PASS " + name); checks++; }
 
 // ---------------------------------------------------------------- catalogue
-Check(C.NormalPageCost(SkillPage.Recon) == 28 && C.NormalPageCost(SkillPage.Combat) == 43 &&
+Check(C.NormalPageCost(SkillPage.Recon) == 28 && C.NormalPageCost(SkillPage.Combat) == 50 &&
       C.NormalPageCost(SkillPage.Survival) == 37 && C.NormalPageCost(SkillPage.Utility) == 33 && C.NormalPageCost(SkillPage.Arsenal) == 42, "Normal page costs match the plan");
-Check(C.PageCost(SkillPage.Recon) == 34 && C.PageCost(SkillPage.Combat) == 49 && C.PageCost(SkillPage.Survival) == 43 &&
+Check(C.PageCost(SkillPage.Recon) == 34 && C.PageCost(SkillPage.Combat) == 56 && C.PageCost(SkillPage.Survival) == 43 &&
       C.PageCost(SkillPage.Utility) == 39 && C.PageCost(SkillPage.Arsenal) == 48, "Each page adds one trade-off per tier (1+2+3 points)");
-Check(C.TotalCost() == 213, "Whole tree costs 213 points (183 normal + 30 trade-off picks)");
+Check(C.TotalCost() == 220, "Whole tree costs 220 points (190 normal + 30 trade-off picks)");
+Check(C.Find(C.Vampirism) is { Page: SkillPage.Combat, Cost: 1, MaxLevel: 7 } && C.Find(C.Vampirism).Requires.SequenceEqual(new[] { C.MeleeDamage }),
+      "Vampirism: Combat, 7 levels of 1 point, under Melee Damage");
+Check(Math.Abs(PerkRules.VampireShare(7, 7, .29f) - .29f) < 1e-5f && Math.Abs(PerkRules.VampireShare(1, 7, .29f) - .29f / 7f) < 1e-5f &&
+      PerkRules.VampireShare(9, 7, .29f) == PerkRules.VampireShare(7, 7, .29f) && PerkRules.VampireShare(0, 7, .29f) == 0f, "Vampirism reaches 29% at level 7 and never more");
+float carry = 0f;
+int healed = 0; for (int i = 0; i < 10; i++) healed += PerkRules.VampireHeal(10, .29f, ref carry);
+Check(healed == 29 && carry < 1f && PerkRules.VampireHeal(0, .29f, ref carry) == 0, "Vampirism keeps the fractions: ten 10-damage hits heal 29");
 
 // ---------------------------------------------------------------- trade-offs
 var tradeOffs = C.All.Where(n => n.Tier > 0).ToList();
@@ -78,8 +85,11 @@ Check(Near(C.StatusSeconds(15f, 5, 3, compress: true), 8f) && Near(C.StatusSecon
 Check(C.All.Select(n => n.Id).Distinct().Count() == C.All.Count, "Node ids are unique");
 Check(C.All.All(n => n.Id.StartsWith("IHM_ST_")), "Node ids use the tree prefix");
 Check(C.All.All(n => n.MaxLevel >= 1 && (n.QuestOnly ? n.Cost == 0 : n.Cost >= 1)), "Every bought node costs a point; quest-only ones cost none");
-Check(C.All.Where(n => n.QuestOnly).All(n => n.Page == SkillPage.Contracts) && C.All.Count(n => n.QuestOnly) == 4, "The four quest-only perks sit on the Contracts page");
-Check(C.QuestPerk(0)?.Id == C.CartHandling && C.QuestPerkIndex(C.SoftSteps) == 3 && C.QuestPerk(9) == null, "Quest perks are addressed by index");
+Check(C.All.Where(n => n.QuestOnly).All(n => n.Page == SkillPage.Contracts) && C.All.Count(n => n.QuestOnly) == 10, "The ten quest-only perks sit on the Contracts page");
+Check(C.QuestPerk(0)?.Id == C.CartHandling && C.QuestPerkIndex(C.SoftSteps) == 3 && C.QuestPerkIndex(C.MendingSurge) == 9 && C.QuestPerk(10) == null,
+      "Quest perks are addressed by index (new ones appended)");
+Check(new[] { 1, 2, 3 }.Select(PerkRules.BuffSeconds).SequenceEqual(new[] { 3f, 4f, 5f }) && new[] { 1, 2, 3 }.Select(PerkRules.BuffCooldown).SequenceEqual(new[] { 60f, 45f, 30f }) &&
+      Math.Abs(PerkRules.SurgeShare(3) - .15f) < 1e-5f && PerkRules.BuffSeconds(9) == 5f, "Instincts: 3/4/5 s, cooldown 60/45/30 s, surge 5/10/15%");
 Check(C.All.All(n => n.Requires.All(r => C.Find(r) != null)), "Every prerequisite exists");
 Check(C.All.All(n => n.Requires.All(r => C.Find(r).Page == n.Page)), "Prerequisites stay on the node's page");
 Check(C.All.All(n => n.Root == (n.Requires.Length == 0)), "Exactly the nodes without prerequisites are roots");

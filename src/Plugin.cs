@@ -126,6 +126,12 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<ItemUnstuckController>();
         // Loot safety net: host-side top-up while an extraction point is open (replaces the game's own).
         netObject.AddComponent<Valuables.LootSafetyNet>();
+        // Challenge shrines: timed side challenges on run levels (host logic, every client draws the props).
+        netObject.AddComponent<Challenges.ChallengeManager>();
+        // Wizard Staff shock: slows shocked monsters (host) and halves the local player's stamina recovery.
+        netObject.AddComponent<Gear.Shock.Controller>();
+        // Instinct buffs: heal-over-time ticks (host) and the buff lines on each player's HUD.
+        netObject.AddComponent<Skills.BuffPerks.Controller>();
         // Passive left-side lobby/menu server info (region/ping/room), reads Photon state only.
         netObject.AddComponent<ServerInfoHud>();
         // In-shop cart overlay: aggregates ShopManager.shoppingList into a colour-coded panel.

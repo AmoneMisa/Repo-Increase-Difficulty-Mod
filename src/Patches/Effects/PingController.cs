@@ -21,6 +21,7 @@ internal enum PingType : byte
     Crystal = 10,    // battery crystal; these three are local props with no ping identity,
     SkillBox = 11,   // found by PingTargets.TryAim instead of the physics ray
     MysteryBox = 12,
+    Shrine = 13,     // challenge shrine (Challenges.ChallengeManager.TryAim)
 }
 
 /// <summary>Callout icon for item pings. Derived locally from the pinged object, so it needs no network field.</summary>
@@ -320,7 +321,7 @@ internal static class PingController
                            ?? pv.GetComponentInParent<PhysGrabObject>();
         }
 
-        if(type>(byte)PingType.MysteryBox) return;
+        if(type>(byte)PingType.Shrine) return;
         var tint = SpawnPing((PingType)type, pos, physGrab, local: false, sender, player);
         Announce(label, tint, sender);
     }
@@ -544,6 +545,7 @@ internal static class PingController
         PingType.Crystal => new Color(0.55f, 1f, 0.45f),    // crystal green (matches its pickup text)
         PingType.SkillBox => new Color(0.3f, 0.85f, 1f),    // skill box teal
         PingType.MysteryBox => new Color(0.72f, 0.45f, 1f), // mystery box purple, lifted for readability
+        PingType.Shrine => new Color(1f, 0.78f, 0.32f),     // challenge shrine gold
         _ => new Color(.45f,.82f,1f),                         // soft cyan location
     };
 
@@ -559,6 +561,7 @@ internal static class PingController
         PingType.Crystal => "\u25C6",
         PingType.SkillBox => "\u2726",
         PingType.MysteryBox => "?",
+        PingType.Shrine => "\u2726",
         _ => "\u2316",
     };
 
@@ -626,6 +629,23 @@ internal static class PingController
         int clone = name.IndexOf("(Clone)", System.StringComparison.Ordinal);
         if (clone >= 0)
             name = name.Substring(0, clone);
-        return name.Replace("Valuable ", "").Replace("Item ", "").Trim();
+        name = name.Replace("Valuable ", "").Replace("Item ", "").Trim();
+        return WithoutModTag(name);
+    }
+
+    /// <summary>
+    /// Our custom valuables are named "Valuable IHM crystal skull" (the art and the network spawn rely on that
+    /// name), so a player would read "IHM crystal skull". Drop the mod tag and capitalise the words instead.
+    /// </summary>
+    internal static string WithoutModTag(string name)
+    {
+        if (string.IsNullOrEmpty(name) || !name.StartsWith("IHM", System.StringComparison.Ordinal)) return name;
+        string rest = name.Substring(3).TrimStart(' ', '-', '_', ':').Trim();
+        if (rest.Length == 0) return name;
+        var words = rest.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
+        for (int i = 0; i < words.Length; i++)
+            words[i] = words[i] is "pc" or "ram" ? words[i].ToUpperInvariant() // Monoblock PC, RAM Pair
+                : char.ToUpperInvariant(words[i][0]) + words[i].Substring(1);
+        return string.Join(" ", words);
     }
 }

@@ -32,7 +32,7 @@ internal sealed class EnemyStatusVisual : MonoBehaviour
 
     internal static void Apply(Enemy enemy, byte kind, float seconds)
     {
-        if (enemy == null || !enemy.isActiveAndEnabled || kind > 2 ||
+        if (enemy == null || !enemy.isActiveAndEnabled || kind > 3 ||
             float.IsNaN(seconds) || float.IsInfinity(seconds)) return;
         var visual = enemy.GetComponent<EnemyStatusVisual>();
         if (kind == 2 && seconds < 0f)
@@ -42,6 +42,7 @@ internal sealed class EnemyStatusVisual : MonoBehaviour
             return;
         }
         if (seconds <= 0f) return;
+        if (kind == Gear.Shock.EnemyKind) { Gear.Shock.MarkEnemy(enemy, seconds); return; } // its own light, not a tint
         if (visual == null) visual = enemy.gameObject.AddComponent<EnemyStatusVisual>();
         visual.enabled = true;
         if (kind == 0) visual._poisonUntil = Time.time + Mathf.Min(seconds, 600f);

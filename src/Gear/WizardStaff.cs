@@ -19,6 +19,10 @@ namespace IncreaseHardMod.Gear;
 /// Targets: the monster on the aim line within range, otherwise the closest one inside a small aim-assist
 /// cone. The bolt then jumps to the nearest monster not yet struck within the chain range, up to the
 /// configured number of targets. Walls block every jump. The damage is split between the struck monsters.
+///
+/// Players: a bolt aimed straight at a teammate (nothing in between) strikes them and chains to nearby players
+/// instead, at <see cref="ModConfig.StaffPlayerDamagePercent"/> of the damage. A bolt that hit a monster first never
+/// jumps to players. Everything struck is <see cref="Shock">shocked</see>.
 /// </summary>
 internal sealed class WizardStaff : MonoBehaviour
 {
@@ -88,8 +92,33 @@ internal sealed class WizardStaff : MonoBehaviour
 
         var struck = new List<Enemy>();
         var points = new List<Vector3> { origin };
-        var first = FirstTarget(origin, forward, aimEnd, range, shooter);
-        if (first != null)
+        float shock = Mathf.Max(0f, ModConfig.StaffShockSeconds.Value);
+        // A teammate right on the aim line takes the bolt (and it chains through players only).
+        var firstPlayer = FirstPlayer(origin, aimEnd, range, shooter);
+        var first = firstPlayer == null ? FirstTarget(origin, forward, aimEnd, range, shooter) : null;
+        if (firstPlayer != null)
+        {
+            var hitPlayers = new List<PlayerAvatar> { firstPlayer };
+            points.Add(PlayerCenter(firstPlayer));
+            while (hitPlayers.Count < max)
+            {
+                var next = NextPlayer(points[points.Count - 1], hitPlayers, shooter, ModConfig.StaffChainRange.Value);
+                if (next == null) break;
+                hitPlayers.Add(next);
+                points.Add(PlayerCenter(next));
+            }
+            float percent = Mathf.Clamp(ModConfig.StaffPlayerDamagePercent.Value, 0f, 100f) / 100f;
+            int share = damage / hitPlayers.Count, extra = damage % hitPlayers.Count;
+            for (int i = 0; i < hitPlayers.Count; i++)
+            {
+                var p = hitPlayers[i];
+                int hurt = Mathf.RoundToInt((share + (i < extra ? 1 : 0)) * percent);
+                if (hurt > 0 && p.playerHealth != null) p.playerHealth.HurtOther(hurt, points[i + 1], false);
+                if (shock > 0f) Networking.ModNetwork.BroadcastPlayerStatus(p, Networking.ModNetwork.StatusShocked, shock);
+            }
+            Plugin.Log.LogInfo($"[Staff] Bolt struck {hitPlayers.Count} player(s).");
+        }
+        else if (first != null)
         {
             struck.Add(first);
             points.Add(Center(first));
@@ -110,6 +139,7 @@ internal sealed class WizardStaff : MonoBehaviour
                 int hurt = Mathf.Max(1, share + (i < extra ? 1 : 0));
                 hurt = Mathf.Max(1, Mathf.RoundToInt(hurt * Skills.TradeOffs.TargetFactor(shooter, struck[i]))); // Executioner
                 struck[i].Health.Hurt(hurt, direction.sqrMagnitude > .0001f ? direction.normalized : forward);
+                if (shock > 0f) Networking.ModNetwork.BroadcastEnemyStatus(struck[i], Shock.EnemyKind, shock);
             }
         }
         else
@@ -120,8 +150,9 @@ internal sealed class WizardStaff : MonoBehaviour
             points.Add(end);
         }
 
-        if (SemiFunc.IsMultiplayer()) _view.RPC(nameof(IHM_StaffBoltRPC), RpcTarget.All, points.ToArray(), struck.Count);
-        else Show(points.ToArray(), struck.Count);
+        int targets = Mathf.Max(struck.Count, points.Count - 1 - (struck.Count == 0 && firstPlayer == null ? 1 : 0));
+        if (SemiFunc.IsMultiplayer()) _view.RPC(nameof(IHM_StaffBoltRPC), RpcTarget.All, points.ToArray(), targets);
+        else Show(points.ToArray(), targets);
     }
 
     [PunRPC]
@@ -129,6 +160,49 @@ internal sealed class WizardStaff : MonoBehaviour
     {
         if (!SemiFunc.MasterOnlyRPC(info) || points == null || points.Length < 2 || points.Length > 21) return;
         Show(points, struck);
+    }
+
+    private static Vector3 PlayerCenter(PlayerAvatar player) =>
+        player.PlayerVisionTarget != null && player.PlayerVisionTarget.VisionTransform != null
+            ? player.PlayerVisionTarget.VisionTransform.position - Vector3.up * .3f : player.transform.position + Vector3.up * 1f;
+
+    // The first thing on the aim line, when it is another living player (a wall or monster in front: no).
+    private PlayerAvatar FirstPlayer(Vector3 origin, Vector3 aimEnd, float range, PlayerAvatar shooter)
+    {
+        var direction = aimEnd - origin;
+        float distance = Mathf.Min(direction.magnitude + .3f, range);
+        if (direction.sqrMagnitude < .0001f) return null;
+        var hits = Physics.RaycastAll(origin, direction.normalized, distance,
+            (int)SemiFunc.LayerMaskGetVisionObstruct() | LayerMask.GetMask("Player", "Enemy"), QueryTriggerInteraction.Ignore);
+        System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+        foreach (var hit in hits)
+        {
+            var t = hit.collider.transform;
+            if (t.IsChildOf(transform) || (shooter != null && t.IsChildOf(shooter.transform))) continue;
+            if (hit.collider.GetComponentInParent<PhysGrabObject>() != null && hit.collider.GetComponentInParent<PlayerAvatar>() == null &&
+                hit.collider.GetComponentInParent<PlayerTumble>() == null) continue; // held items and loot don't stop the bolt
+            var player = hit.collider.GetComponentInParent<PlayerAvatar>() ?? hit.collider.GetComponentInParent<PlayerTumble>()?.playerAvatar;
+            return player != null && player != shooter && !player.isDisabled ? player : null;
+        }
+        return null;
+    }
+
+    private PlayerAvatar NextPlayer(Vector3 from, List<PlayerAvatar> struck, PlayerAvatar shooter, float chainRange)
+    {
+        PlayerAvatar best = null;
+        float bestDistance = chainRange;
+        var players = SemiFunc.PlayerGetList();
+        if (players == null) return null;
+        foreach (var p in players)
+        {
+            if (p == null || p == shooter || p.isDisabled || struck.Contains(p)) continue;
+            var to = PlayerCenter(p);
+            float distance = Vector3.Distance(from, to);
+            if (distance > bestDistance || Physics.Linecast(from, to, SemiFunc.LayerMaskGetVisionObstruct() & ~LayerMask.GetMask("Player"), QueryTriggerInteraction.Ignore)) continue;
+            bestDistance = distance;
+            best = p;
+        }
+        return best;
     }
 
     private static Vector3 Center(Enemy enemy) =>

@@ -274,6 +274,7 @@ internal sealed class BlackMarketHud : MonoBehaviour
         for (int i = first; i < Mathf.Min(ids.Count, first + 11); i++)
         {
             BlackMarket.Describe(Tabs[_tab], ids[i], out var name, out var tier);
+            name = Localization.ModifierText.T(name);
             bool banned = BlackMarket.IsBanned(Tabs[_tab], ids[i]);
             string cost = banned ? "<color=#7CFF7C>BLOCKED</color>" : "$" + BlackMarket.Price(Tabs[_tab], tier) + "K";
             string color = TierColor(tier);

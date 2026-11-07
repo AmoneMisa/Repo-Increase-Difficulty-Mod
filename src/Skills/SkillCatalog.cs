@@ -20,7 +20,8 @@ internal static class SkillCatalog
         Weight = P + "Weight", Threat = P + "Threat";
     public const string FlashTuning = P + "FlashTuning", BeamWidth = P + "BeamWidth", Brightness = P + "Brightness", BeamColour = P + "BeamColour";
     // Combat
-    public const string Brawler = P + "Brawler", GrenadeDamage = P + "GrenadeDamage", MeleeDamage = P + "MeleeDamage", TumbleDamage = P + "TumbleDamage";
+    public const string Brawler = P + "Brawler", GrenadeDamage = P + "GrenadeDamage", MeleeDamage = P + "MeleeDamage", TumbleDamage = P + "TumbleDamage",
+        Vampirism = P + "Vampirism";
     public const string Gunsmith = P + "Gunsmith", BulletShots = P + "BulletShots", LaserShots = P + "LaserShots", TranqShots = P + "TranqShots";
     public const string Technician = P + "Technician", DroneBattery = P + "DroneBattery", Overcharge = P + "Overcharge";
     // Survival
@@ -52,6 +53,9 @@ internal static class SkillCatalog
     // Contracts: quest-only perks, earned from special quest contracts and never bought with points
     public const string CartHandling = P + "CartHandling", GentleHands = P + "GentleHands", CalmPresence = P + "CalmPresence",
         SoftSteps = P + "SoftSteps";
+    // Instincts: quest-only perks that fire a short buff on a trigger (see BuffPerks). Appended: contract indices stay.
+    public const string Adrenaline = P + "Adrenaline", IronSkin = P + "IronSkin", HotBarrel = P + "HotBarrel",
+        Overheat = P + "Overheat", BattleTrance = P + "BattleTrance", MendingSurge = P + "MendingSurge";
 
     /// <summary>No status from a tree perk lasts longer than this; poison is compressed down to it instead.</summary>
     internal const float StatusCapSeconds = 8f;
@@ -94,6 +98,7 @@ internal static class SkillCatalog
         Add(combat, "Damage", GrenadeDamage, "Grenade Damage", "Урон гранат", 1, 5, Brawler);
         Add(combat, "Damage", MeleeDamage, "Melee Damage", "Урон в ближнем бою", 1, 5, Brawler);
         Add(combat, "Damage", TumbleDamage, "Tumble Damage", "Урон в кувырке", 1, 5, Brawler);
+        Add(combat, "Damage", Vampirism, "Vampirism", "Вампиризм", 1, 7, MeleeDamage);
 
         Add(combat, "Guns", Gunsmith, "Gunsmith", "Заряды оружия", 1, 1, root: true);
         Add(combat, "Guns", BulletShots, "Bullet Gun Shots", "Пули", 1, 5, Gunsmith);
@@ -149,6 +154,12 @@ internal static class SkillCatalog
         Add(contracts, "Contracts", GentleHands, "Gentle Hands", "Бережные руки", 0, 3, root: true).QuestOnly = true;
         Add(contracts, "Contracts", CalmPresence, "Calm Presence", "Спокойствие", 0, 3, root: true).QuestOnly = true;
         Add(contracts, "Contracts", SoftSteps, "Soft Steps", "Тихие шаги", 0, 3, root: true).QuestOnly = true;
+        Add(contracts, "Instincts", Adrenaline, "Adrenaline", "Адреналин", 0, 3, root: true).QuestOnly = true;
+        Add(contracts, "Instincts", IronSkin, "Iron Skin", "Железная кожа", 0, 3, root: true).QuestOnly = true;
+        Add(contracts, "Instincts", HotBarrel, "Hot Barrel", "Раскалённый ствол", 0, 3, root: true).QuestOnly = true;
+        Add(contracts, "Instincts", Overheat, "Overheat", "Перегрев", 0, 3, root: true).QuestOnly = true;
+        Add(contracts, "Instincts", BattleTrance, "Battle Trance", "Боевой транс", 0, 3, root: true).QuestOnly = true;
+        Add(contracts, "Instincts", MendingSurge, "Mending Surge", "Прилив сил", 0, 3, root: true).QuestOnly = true;
     }
 
     // Trade-off skills, page by page. The numbers live only here; the tree text is the Up and Down lines.

@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace IncreaseHardMod.Hud;
 
 /// <summary>A status the local player can be under; each has its own screen frame and card.</summary>
-internal enum PlayerCondition { Frozen, Poisoned, Sedated, Netted }
+internal enum PlayerCondition { Frozen, Poisoned, Sedated, Netted, Shocked }
 
 /// <summary>
 /// The local player's conditions on screen: a themed frame around the screen edges (frost, toxic haze, rope
@@ -34,6 +34,7 @@ internal static class HudConditions
         [PlayerCondition.Poisoned] = new Look { Title = "POISONED", Color = new Color(.66f, 1f, .16f), Lines = new[] { "TOXIC BOLT HIT" } },
         [PlayerCondition.Sedated] = new Look { Title = "SEDATED", Color = new Color(.7f, .62f, 1f), Lines = new[] { "KNOCKED OUT", "WAKING UP SOON" } },
         [PlayerCondition.Netted] = new Look { Title = "NETTED", Color = new Color(1f, .6f, .2f), Lines = new[] { "CAN'T WALK OR JUMP", "STRUGGLE TO BREAK FREE" } },
+        [PlayerCondition.Shocked] = new Look { Title = "SHOCKED", Color = new Color(.55f, .82f, 1f), Lines = new[] { "50% SLOWER", "STAMINA RECOVERS HALF AS FAST" } },
     };
 
     private sealed class View
@@ -119,6 +120,8 @@ internal static class HudConditions
         {
             PlayerCondition.Poisoned => .9f + .1f * Mathf.Sin(now * 5f),
             PlayerCondition.Sedated => .85f + .15f * Mathf.Sin(now * 1.6f),
+            // Electric flicker: mostly lit, with quick irregular dips.
+            PlayerCondition.Shocked => .72f + .28f * Mathf.Abs(Mathf.Sin(now * 23f) * Mathf.Sin(now * 7.3f + 1f)),
             _ => 1f,
         };
         view.Frame.gameObject.SetActive(true);

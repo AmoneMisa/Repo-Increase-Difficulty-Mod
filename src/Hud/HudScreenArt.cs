@@ -23,6 +23,7 @@ internal static class HudScreenArt
             case PlayerCondition.Frozen: Frost(pixels); break;
             case PlayerCondition.Poisoned: Toxic(pixels); break;
             case PlayerCondition.Netted: Net(pixels); break;
+            case PlayerCondition.Shocked: Electric(pixels); break;
             default: Sleepy(pixels); break;
         }
         var texture = new Texture2D(W, H, TextureFormat.RGBA32, false)
@@ -41,6 +42,7 @@ internal static class HudScreenArt
         PlayerCondition.Frozen => HudIcons.Silhouette("snowflake", Snowflake),
         PlayerCondition.Poisoned => HudIcons.Silhouette("biohazard", Biohazard),
         PlayerCondition.Netted => HudIcons.Silhouette("net", NetIcon),
+        PlayerCondition.Shocked => HudIcons.Silhouette("bolt", BoltIcon),
         _ => HudIcons.Silhouette("moon", Moon),
     };
 
@@ -111,6 +113,56 @@ internal static class HudScreenArt
             if (((i + y) / 7) % 2 != 0) continue;
             Max(px, i, y, stripe, .8f);
             Max(px, W - 1 - i, y, stripe, .8f);
+        }
+    }
+
+    // Shocked: a faint blue haze at the edges with jagged lightning arcs crawling in from every side.
+    private static void Electric(Color32[] px)
+    {
+        var haze = new Color(.25f, .45f, 1f);
+        var arc = new Color(.75f, .9f, 1f);
+        for (int y = 0; y < H; y++)
+        for (int x = 0; x < W; x++)
+        {
+            float n = Fbm(x / 26f, y / 26f, 41);
+            Put(px, x, y, haze, Smooth(.17f, 0f, Edge(x, y) - .05f * (n - .5f)) * .5f);
+        }
+        var rng = new System.Random(17);
+        for (int bolt = 0; bolt < 14; bolt++)
+        {
+            // Start on an edge, walk inward in jagged steps, sometimes forking.
+            int side = bolt % 4;
+            float x = side == 0 ? 0 : side == 1 ? W - 1 : (float)rng.NextDouble() * W;
+            float y = side == 2 ? 0 : side == 3 ? H - 1 : (float)rng.NextDouble() * H;
+            float dx = side == 0 ? 1 : side == 1 ? -1 : 0, dy = side == 2 ? 1 : side == 3 ? -1 : 0;
+            int steps = 10 + rng.Next(12);
+            for (int s = 0; s < steps; s++)
+            {
+                float nx = x + dx * (5f + (float)rng.NextDouble() * 6f) + ((float)rng.NextDouble() - .5f) * 10f;
+                float ny = y + dy * (5f + (float)rng.NextDouble() * 6f) + ((float)rng.NextDouble() - .5f) * 10f;
+                float fade = 1f - s / (float)steps;
+                Segment(px, x, y, nx, ny, arc, .95f * fade, 1.4f);
+                if (rng.NextDouble() < .18)
+                    Segment(px, nx, ny, nx + ((float)rng.NextDouble() - .5f) * 22f, ny + ((float)rng.NextDouble() - .5f) * 22f, arc, .7f * fade, 1f);
+                x = nx; y = ny;
+            }
+        }
+    }
+
+    // A soft-edged line segment (lightning arcs).
+    private static void Segment(Color32[] px, float x0, float y0, float x1, float y1, Color color, float alpha, float width)
+    {
+        int steps = (int)Math.Max(1f, Mathf.Max(Mathf.Abs(x1 - x0), Mathf.Abs(y1 - y0)));
+        for (int i = 0; i <= steps; i++)
+        {
+            float t = i / (float)steps, cx = x0 + (x1 - x0) * t, cy = y0 + (y1 - y0) * t;
+            for (int oy = -2; oy <= 2; oy++)
+            for (int ox = -2; ox <= 2; ox++)
+            {
+                float d = Mathf.Sqrt(ox * ox + oy * oy);
+                if (d > width + 1f) continue;
+                Max(px, (int)cx + ox, (int)cy + oy, color, alpha * Clamp01(width + 1f - d));
+            }
         }
     }
 
@@ -195,6 +247,15 @@ internal static class HudScreenArt
     }
 
     // ------------------------------------------------------------------ icons (u -1..1, v 0..1 top-down)
+
+    // A zig-zag lightning bolt (u -1..1 across, v 0..1 top-down).
+    private static bool BoltIcon(float u, float v)
+    {
+        if (v < .04f || v > .96f) return false;
+        float centre = v < .5f ? .25f - v * .9f : -.2f + (v - .5f) * .9f; // upper stroke leans left, lower one right
+        float half = .2f + (v > .44f && v < .56f ? .25f : 0f);           // the wide middle step
+        return Mathf.Abs(u - centre) < half * (1f - Mathf.Abs(v - .5f) * .9f);
+    }
 
     private static bool Snowflake(float u, float v)
     {

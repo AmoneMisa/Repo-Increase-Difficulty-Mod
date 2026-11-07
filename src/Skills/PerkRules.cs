@@ -24,6 +24,30 @@ public static class PerkRules
     /// so 3 x 5% = +15% at max). Never slower than normal.</summary>
     public static float CrouchSpeedFactor(int level, float perLevel) => 1f + Math.Max(0, level) * Math.Max(0f, perLevel);
 
+    /// <summary>Instinct buffs: 3, 4 and 5 seconds at levels 1-3.</summary>
+    public static float BuffSeconds(int level) => 2f + Math.Max(1, Math.Min(3, level));
+
+    /// <summary>Instinct cooldowns: 60, 45 and 30 seconds at levels 1-3 (from the moment the buff starts).</summary>
+    public static float BuffCooldown(int level) => 75f - 15f * Math.Max(1, Math.Min(3, level));
+
+    /// <summary>Mending Surge heals 5%, 10% or 15% of max health over 5 seconds.</summary>
+    public static float SurgeShare(int level) => .05f * Math.Max(1, Math.Min(3, level));
+
+    /// <summary>Vampirism: share of melee damage dealt returned as health, rising evenly to <paramref name="cap"/> at the
+    /// last level (29% at 7 of 7 by default).</summary>
+    public static float VampireShare(int level, int maxLevel, float cap) =>
+        level <= 0 || maxLevel <= 0 ? 0f : Math.Max(0f, Math.Min(1f, cap)) * Math.Min(level, maxLevel) / maxLevel;
+
+    /// <summary>Whole HP to heal now from <paramref name="damage"/> dealt; the fraction carries over in <paramref name="carry"/>.</summary>
+    public static int VampireHeal(int damage, float share, ref float carry)
+    {
+        if (damage <= 0 || share <= 0f) return 0;
+        carry += damage * share;
+        int heal = (int)Math.Floor(carry + 1e-4f); // 10 x 2.9 must add up to 29, not 28.9999
+        carry = Math.Max(0f, carry - heal);
+        return heal;
+    }
+
     /// <summary>Damage after a reduction, rounded in the player's favour, never below 1 for a hit that did damage.</summary>
     public static int Reduce(int damage, float fraction)
     {

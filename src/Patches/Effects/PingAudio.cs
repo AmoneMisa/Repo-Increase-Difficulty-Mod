@@ -12,7 +12,7 @@ internal static class PingAudio
     {
         PingType.Valuable=>"ping_valuable", PingType.Enemy=>"ping_enemy", PingType.Item=>"ping_item",
         PingType.Upgrade=>"ping_upgrade", PingType.Cart=>"ping_cart", PingType.CosmeticBox=>"ping_cosmetic",
-        PingType.Player=>"ping_item", PingType.Weapon=>"ping_item", PingType.Scooter=>"ping_vehicle", PingType.Crystal=>"ping_upgrade", PingType.SkillBox=>"ping_upgrade", PingType.MysteryBox=>"ping_cosmetic", _=>"ping_location",
+        PingType.Player=>"ping_item", PingType.Weapon=>"ping_item", PingType.Scooter=>"ping_vehicle", PingType.Crystal=>"ping_upgrade", PingType.SkillBox=>"ping_upgrade", PingType.MysteryBox=>"ping_cosmetic", PingType.Shrine=>"ping_upgrade", _=>"ping_location",
     };
 
     internal static void Play(PingType type)

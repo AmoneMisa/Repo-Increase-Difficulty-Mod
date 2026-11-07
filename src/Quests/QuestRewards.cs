@@ -234,7 +234,10 @@ public static class QuestRewards
     /// prefabs the game's ValuableDirector uses for its own world cosmetics. Higher-rank quests
     /// bias toward rarer boxes. Returns the rarity label, or null if none could be spawned.
     /// </summary>
-    public static string SpawnCosmetic(QuestRank rank)
+    public static string SpawnCosmetic(QuestRank rank) => SpawnCosmetic(rank, null);
+
+    /// <summary>Same, at an exact spot (a challenge shrine) instead of a random level point.</summary>
+    public static string SpawnCosmetic(QuestRank rank, Vector3? at)
     {
         if (!SemiFunc.IsMasterClientOrSingleplayer())
             return null;
@@ -253,7 +256,7 @@ public static class QuestRewards
         if (setup == null || setup.prefab == null || point == null)
             return null;
 
-        Vector3 pos = point.transform.position + Vector3.up;
+        Vector3 pos = at ?? point.transform.position + Vector3.up;
         if (SemiFunc.IsMultiplayer())
             PhotonNetwork.InstantiateRoomObject(setup.prefab.ResourcePath, pos, Quaternion.identity, 0);
         else

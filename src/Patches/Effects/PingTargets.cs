@@ -29,6 +29,8 @@ internal static class PingTargets
             hit = new Hit { Type = PingType.SkillBox, Marker = skill, Distance = d, Label = SkillBoxEffect.PingLabel(info) };
         if (MysteryBoxEffect.TryAim(ray, maxDistance, out var mystery, out d) && d < hit.Distance)
             hit = new Hit { Type = PingType.MysteryBox, Marker = mystery, Distance = d, Label = MysteryBoxEffect.PingLabel(info) };
+        if (Challenges.ChallengeManager.TryAim(ray, maxDistance, out var shrine, out d) && d < hit.Distance)
+            hit = new Hit { Type = PingType.Shrine, Marker = shrine, Distance = d, Label = Challenges.ChallengeManager.PingLabel(info) };
         return hit.Distance < float.MaxValue;
     }
 
@@ -38,10 +40,11 @@ internal static class PingTargets
         if (type == PingType.Crystal) RetryCrystalEffect.Flare(marker, seconds);
         else if (type == PingType.SkillBox) SkillBoxEffect.Flare(marker, seconds);
         else if (type == PingType.MysteryBox) MysteryBoxEffect.Flare(marker, seconds);
+        else if (type == PingType.Shrine) Challenges.ChallengeManager.Flare(seconds);
     }
 
     internal static bool IsProp(PingType type) =>
-        type == PingType.Crystal || type == PingType.SkillBox || type == PingType.MysteryBox;
+        type == PingType.Crystal || type == PingType.SkillBox || type == PingType.MysteryBox || type == PingType.Shrine;
 
     /// <summary>Ray against a box standing on <paramref name="floor"/>, turned <paramref name="yaw"/> degrees,
     /// <paramref name="size"/> wide/high/deep (slab test in the box's own space).</summary>

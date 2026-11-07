@@ -17,7 +17,7 @@ namespace IncreaseHardMod.Valuables;
 /// rooms, held by a Ghost drone) still counts, so a team can be left with nothing to find and no top-up.
 /// This replaces that check (<see cref="DisableNativeTopUp"/>) and, every few seconds while a point is open:
 ///   * counts only reachable loot (plus valuable boxes) and spawns the shortfall;
-///   * if the point's haul has not risen for <c>StallMinutes</c>, spawns what the point still needs anyway;
+///   * never spawns while that loot could still fill the point, however long the team takes to find it;
 ///   * spawns through the game's own ValuableDirector.SpawnValuable, so networking, value scaling and the
 ///     custom-valuable footprint check all apply, preferring free spots away from every player;
 ///   * marks the new loot on the map, tells everyone with a HUD notice and logs what it did not count.
@@ -37,8 +37,6 @@ internal sealed class LootSafetyNet : MonoBehaviour
     private bool _busy;
 
     private ExtractionPoint _point;
-    private int _bestHaul;
-    private float _lastProgress;
 
     private readonly Dictionary<int, float> _fresh = new();
 
@@ -80,21 +78,12 @@ internal sealed class LootSafetyNet : MonoBehaviour
         if (point != _point)
         {
             _point = point;
-            _bestHaul = round.currentHaul;
-            _lastProgress = now;
             _nextStatusLog = now; // log the first look at every newly opened point
-        }
-        else if (round.currentHaul > _bestHaul)
-        {
-            _bestHaul = round.currentHaul;
-            _lastProgress = now;
         }
 
         var survey = Survey(now);
         int goal = round.extractionHaulGoal;
-        float sinceProgress = now - _lastProgress;
-        float stallSeconds = Mathf.Max(0f, ModConfig.LootSafetyStallMinutes.Value) * 60f;
-        var reason = LootSafetyRules.Decide(goal, survey.Reachable, round.currentHaul, sinceProgress, stallSeconds, out int target);
+        var reason = LootSafetyRules.Decide(goal, survey.Reachable, out int target);
 
         if (ModConfig.LootSafetyLog.Value && (now >= _nextStatusLog || reason != LootTopUpReason.None))
         {
@@ -102,7 +91,7 @@ internal sealed class LootSafetyNet : MonoBehaviour
             Plugin.Log.LogInfo($"[LootNet] Point goal {goal}, in point {round.currentHaul}, reachable loot {survey.Reachable} " +
                 $"({survey.Count} valuables, {survey.BoxValue} in boxes); not counted: outside rooms {survey.OutsideValue} " +
                 $"({survey.OutsideCount}), drone-held {survey.GhostValue} ({survey.GhostCount}); in truck {survey.TruckValue} " +
-                $"({survey.TruckCount}); no haul progress for {Mathf.RoundToInt(sinceProgress)}s." +
+                $"({survey.TruckCount})." +
                 (survey.Excluded.Length > 0 ? " Not counted: " + survey.Excluded : ""));
         }
 
@@ -248,8 +237,6 @@ internal sealed class LootSafetyNet : MonoBehaviour
         {
             _busy = false;
             _cooldownUntil = Time.time + AfterTopUpCooldown;
-            if (reason == LootTopUpReason.Stall)
-                _lastProgress = Time.time; // the next stall top-up needs another full stall
         }
 
         if (spawned.Count == 0)

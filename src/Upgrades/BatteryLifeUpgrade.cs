@@ -277,6 +277,7 @@ internal static class BatteryLifeUpgrade
         if (!ModConfig.PlayerUpgradesEnabled.Value || !SemiFunc.IsMasterClientOrSingleplayer() || battery == null) return perks;
         var category = _states.GetOrCreateValue(battery).Category;
         if ((int)category == -1) category = Resolve(battery);
+        if (IsGun(category) && Challenges.ChallengeManager.FreeGunBattery) return 0f; // Target Practice: free shots
         var fx = category == Category.Drone ? Skills.Fx.BatteryDrones : IsGun(category) ? Skills.Fx.BatteryGuns :
             category == Category.Other ? Skills.Fx.BatteryItems : (Skills.Fx?)null;
         return fx == null ? perks : perks * Skills.TradeOffs.Factor(UserOf(battery), fx.Value);

@@ -80,7 +80,7 @@ Check(PhotonNetwork.Sent.Count==0,"Non-host cannot broadcast authoritative quest
 PhotonNetwork.IsMasterClient=true;network.BroadcastQuestState(quest);network.BroadcastQuestBuff(1,2);
 Check(PhotonNetwork.Sent.Count==2&&PhotonNetwork.Sent.All(e=>e.Receivers==Photon.Realtime.ReceiverGroup.Others),"Locally applied quest broadcasts do not echo back to the host");
 Check(NetworkPayload.Ping(new object[]{(byte)8,1f,2f,3f,"Player","Sender",313},out _),"Player ping kind accepts a replicated avatar view ID");
-Check(!NetworkPayload.Ping(new object[]{(byte)13,1f,2f,3f,"unknown","Sender",0},out _)&&NetworkPayload.Ping(new object[]{(byte)9,1f,2f,3f,"Weapon","Sender",0},out _),"Undefined ping kind remains rejected, weapon pings pass");
+Check(!NetworkPayload.Ping(new object[]{(byte)14,1f,2f,3f,"unknown","Sender",0},out _)&&NetworkPayload.Ping(new object[]{(byte)9,1f,2f,3f,"Weapon","Sender",0},out _),"Undefined ping kind remains rejected, weapon pings pass");
 Check(!NetworkPayload.Ping(new object[]{(byte)8,1f,2f,3f,"Player","Sender",-1},out _),"Player ping rejects a negative view ID");
 int hudCalls=LevelInfoHud.Calls; Send(LevelInfoHud.StateEventCode,new object[]{"request"}); Check(LevelInfoHud.Calls==hudCalls+1,"HUD snapshot event routes to its scoped handler");
 // Poisoned / sedated screen status: host only, local avatar only, current level only, bounded duration.
@@ -155,8 +155,19 @@ int hudCalls=LevelInfoHud.Calls; Send(LevelInfoHud.StateEventCode,new object[]{"
     PhotonNetwork.IsMasterClient=wasMaster;SemiFunc.Players.Clear();
 }
 // Every ping type up to the battery crystal crosses the wire; anything past it is refused.
-foreach(byte kind in new byte[]{9,10,11,12}){int before=PingController.Applied;Send(ModNetwork.PingEventCode,new object[]{kind,1f,2f,3f,"thing","player",0},3);Check(PingController.Applied==before+1,"Ping type "+kind+" is delivered");}
-{int before=PingController.Applied;Send(ModNetwork.PingEventCode,new object[]{(byte)13,1f,2f,3f,"thing","player",0},3);Check(PingController.Applied==before,"Unknown ping type refused");}
+foreach(byte kind in new byte[]{9,10,11,12,13}){int before=PingController.Applied;Send(ModNetwork.PingEventCode,new object[]{kind,1f,2f,3f,"thing","player",0},3);Check(PingController.Applied==before+1,"Ping type "+kind+" is delivered");}
+{int before=PingController.Applied;Send(ModNetwork.PingEventCode,new object[]{(byte)14,1f,2f,3f,"thing","player",0},3);Check(PingController.Applied==before,"Unknown ping type refused");}
+// Instinct buff start: host only.
+Send(IncreaseHardMod.Skills.BuffPerks.EventCode,new object[]{(byte)0,4f},3);Check(IncreaseHardMod.Skills.BuffPerks.Received==0,"Non-host cannot start a buff");
+Send(IncreaseHardMod.Skills.BuffPerks.EventCode,new object[]{(byte)0,4f});Check(IncreaseHardMod.Skills.BuffPerks.Received==1,"Host buff start is delivered");
+// Shrine start request: only the host acts on it (and checks the sender's position itself).
+{bool was=PhotonNetwork.IsMasterClient;PhotonNetwork.IsMasterClient=false;Send(IncreaseHardMod.Challenges.ChallengeManager.StartRequestCode,null,3);
+ Check(IncreaseHardMod.Challenges.ChallengeManager.Requests==0,"A guest ignores shrine start requests");
+ PhotonNetwork.IsMasterClient=true;Send(IncreaseHardMod.Challenges.ChallengeManager.StartRequestCode,null,3);
+ Check(IncreaseHardMod.Challenges.ChallengeManager.Requests==1,"The host receives a guest's shrine start request");PhotonNetwork.IsMasterClient=was;}
+// Challenge state: host only.
+Send(IncreaseHardMod.Challenges.ChallengeManager.EventCode,new object[]{"k"},3);Check(IncreaseHardMod.Challenges.ChallengeManager.Received==0,"Non-host cannot send challenge state");
+Send(IncreaseHardMod.Challenges.ChallengeManager.EventCode,new object[]{"k"});Check(IncreaseHardMod.Challenges.ChallengeManager.Received==1,"Host challenge state is delivered");
 // Loot safety net notice: host only, well-formed only.
 foreach(var raw in new object[]{null,42,new object[]{0,100,true},new object[]{101,100,true},new object[]{3,-1,true},new object[]{3,100,"yes"},new object[]{3,100}})
  Send(ModNetwork.LootNoticeEventCode,raw);

@@ -71,7 +71,7 @@ internal sealed class ItemUnstuckController : MonoBehaviour
         int clone = name.IndexOf("(Clone)", System.StringComparison.Ordinal);
         if (clone >= 0)
             name = name.Substring(0, clone);
-        return name.Replace("Valuable ", "").Trim();
+        return PingController.WithoutModTag(name.Replace("Valuable ", "").Trim());
     }
 
     private static bool SafeRunIsLevel()

@@ -30,6 +30,8 @@ internal static class EnemyDamagePatch
             return;
 
         float mult = EnemyBalance.Damage;
+        // A monster shocked by the Wizard Staff hits 25% softer.
+        if (Gear.Shock.IsShocked(SemiFunc.EnemyGetFromIndex(enemyIndex))) mult *= Gear.Shock.MonsterDamageFactor;
 
         if (Mathf.Approximately(mult, 1f))
             return;

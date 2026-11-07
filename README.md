@@ -163,7 +163,7 @@ only in the shop or truck (the host checks every purchase), and **Refund All** r
 - **Trade-offs (0.8.5):** every page except Contracts has three TRADE-OFFS rows. Each trade-off is better at one
   thing and worse at another; you hold one per row per page. A row opens after enough points in that page's perks
   (rows II and III also need the row below), costs 1/2/3 points, and **Reset Trade-offs** ($5K) refunds only them.
-  The full tree is 213 points.
+  The full tree is 220 points.
 - **Old saves:** bought upgrades are converted into matching perks the first time a save loads.
 - The full design, costs and balance are in [docs/skill-tree-plan.md](docs/skill-tree-plan.md). Every number is in
   the `Skill Tree` and `Player Upgrades` config sections.
@@ -251,8 +251,15 @@ only on a successful extraction.
   failed grab also rescues valuables wedged in window frames or partially embedded in shelves
   (6 seconds by default). Releases grab anchors and briefly protects the valuable during recovery.
   Also keeps valuables invulnerable until first grabbed (host-side anti-softlock).
+- **Challenges (0.8.5)** — a run level may have a glowing challenge shrine (shown on the map). Press **E**
+  (your interact key) next to it to start a timed challenge: **Wisp Escort** (stay near a wisp until it reaches its home),
+  **Target Practice** (shoot every floating target; guns use no battery meanwhile), **Hunt** (kill the marked
+  strongest monster, nobody may die), **Cull** (kill several monsters, nobody may die) or **Smash** (break every
+  crate by hitting, shooting, tumbling into or throwing things at it). Winning gives a skill point for everyone,
+  an upgrade or a cosmetic box. Host-side; the chance per level is in the `Challenges` config section.
 - **Loot Safety Net** — while an extraction point is open, the host spawns more loot when the loot
-  the team can reach is not enough to fill it, or when the point gets no new loot for 5 minutes.
+  the team can still collect (in the point, carried, in boxes, found or not) is not enough to fill it.
+  It never spawns while enough loot is left.
   New loot appears away from players, is marked on the map and everyone sees a notice. Replaces
   the game's own top-up, which also counts loot nobody can reach. Host-side.
 - **Auto Backup Saves** — always protects the checkpoint from automatic deletion after a wipe
@@ -540,7 +547,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 - **Компромиссы (0.8.5):** на каждой странице, кроме Контрактов, есть три ряда TRADE-OFFS. Каждый компромисс
   сильнее в одном и слабее в другом; на странице держится по одному в каждом ряду. Ряд открывается после
   достаточного числа очков в перках страницы (рядам II и III нужен ещё ряд ниже), стоит 1/2/3 очка, а
-  **Reset Trade-offs** ($5K) возвращает очки только за них. Всё дерево стоит 213 очков.
+  **Reset Trade-offs** ($5K) возвращает очки только за них. Всё дерево стоит 220 очков.
 - **Старые сохранения:** купленные улучшения переводятся в подходящие перки при первой загрузке сохранения.
 - Полный дизайн, стоимость и баланс — в [docs/skill-tree-plan.md](docs/skill-tree-plan.md). Все числа настраиваются
   в разделах конфига `Skill Tree` и `Player Upgrades`.
@@ -626,8 +633,16 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
   неудачной попытки (по умолчанию 6 секунд) мод освободит его. Захваты отпускаются, а на время переноса
   включается краткая защита от повреждений. Также сохраняется неуязвимость до первого захвата.
   Работает на стороне хоста.
+- **Испытания (0.8.5)** — на уровне может появиться светящееся святилище испытаний (видно на карте). Нажмите **E**
+  (клавишу взаимодействия) рядом с ним, чтобы начать испытание на время: **Проводи огонька** (держитесь рядом с огоньком, пока он
+  не доберётся домой), **Стрельба по мишеням** (подстрелите все мишени; оружие при этом не тратит заряд),
+  **Охота** (убейте отмеченного сильнейшего монстра, никто не должен умереть), **Зачистка** (убейте нескольких
+  монстров, никто не должен умереть) или **Разгром** (разбейте все ящики ударом, выстрелом, кувырком или броском).
+  Победа даёт очко навыков всем, улучшение или коробку косметики. Работает на стороне хоста; шанс на уровень —
+  в разделе конфига `Challenges`.
 - **Loot Safety Net** — пока точка сдачи открыта, хост добавляет ценности, если тех, до которых
-  команда может добраться, не хватает на её квоту, или если в точку 5 минут не приносят ничего нового.
+  команда ещё может собрать (в точке, в руках, в коробках, найденных или нет), не хватает на её квоту.
+  Пока ценностей хватает, ничего не добавляется.
   Новые ценности появляются вдали от игроков, отмечаются на карте, и все видят сообщение. Заменяет
   встроенную добавку игры, которая учитывает и недоступные ценности. Работает на стороне хоста.
 - **Auto Backup Saves** — всегда защищает чекпоинт, когда игра собирается автоматически удалить

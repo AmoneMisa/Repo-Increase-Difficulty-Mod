@@ -699,8 +699,9 @@ internal sealed class LevelInfoHud : MonoBehaviour
             Economy.EconomyTier.Bad or Economy.EconomyTier.VeryBad => "FF4545",
             _ => "FF9E14",
         };
-        _parts.Add($"<color=#{color}>{name}</color>");
-        _effectDescriptions.Add(description);
+        // Shown in the game's language (Russian when the game is Russian, see Localization/ModifierText).
+        _parts.Add($"<color=#{color}>{Localization.ModifierText.T(name)}</color>");
+        _effectDescriptions.Add(Localization.ModifierText.T(description));
         _effectColors.Add(color);
     }
 
@@ -712,9 +713,9 @@ internal sealed class LevelInfoHud : MonoBehaviour
                 continue;
             string description = flag switch
             {
-                ModifierType.ReducedPlayerHp => $"Start with {mods.PlayerHpPercent}% of current HP. Max HP is unchanged.",
-                ModifierType.ExtraSouls => $"Monsters drop {mods.ExtraSouls} souls.",
-                ModifierType.MoneyLossOnDeath => $"Dying loses {mods.MoneyLossPercent}% of collected money.",
+                ModifierType.ReducedPlayerHp => Localization.ModifierText.ReducedHp(mods.PlayerHpPercent),
+                ModifierType.ExtraSouls => Localization.ModifierText.ExtraSouls(mods.ExtraSouls),
+                ModifierType.MoneyLossOnDeath => Localization.ModifierText.MoneyLoss(mods.MoneyLossPercent),
                 _ => ModConfig.ModifierDescription(flag),
             };
             AddModifier(name, description, Economy.BlackMarket.TierOfModifier(flag));

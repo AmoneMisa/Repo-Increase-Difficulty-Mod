@@ -26,6 +26,8 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     // Our private event codes. Must not collide with REPO's (123/124/199) or PUN's
     // reserved range (200+). In use: 172-173 (skill tree), 174 (quest level end), 175 (SkillBoxEffect.EventCode), 176 (RetryCrystalEffect.EventCode), 177-179, 181-198 (197 = LevelInfoHud.StateEventCode, declared there);
     // 180 is retired (old cart-upgrade state). 170-171 = HostRunControls (failed-level vote). 169 = loot safety net notice.
+    // 168 = Challenges.ChallengeManager.EventCode (challenge shrine state). 167 = Skills.BuffPerks.EventCode (instinct buff start).
+    // 166 = Challenges.ChallengeManager.StartRequestCode (a guest pressed interact at the shrine; host only).
     // Search every file for "EventCode" before adding one.
     // Host: a player was poisoned or sedated (screen effect on that player's own client only).
     public const byte PlayerStatusEventCode = 177;
@@ -396,12 +398,12 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
     }
 
-    internal const byte StatusPoisoned = 0, StatusSedated = 1;
+    internal const byte StatusPoisoned = 0, StatusSedated = 1, StatusShocked = 2;
 
     /// <summary>Host: a player was poisoned or sedated for seconds; only their own client shows it.</summary>
     internal static void BroadcastPlayerStatus(PlayerAvatar avatar, byte kind, float seconds)
     {
-        if (avatar == null || seconds <= 0f || kind > StatusSedated || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+        if (avatar == null || seconds <= 0f || kind > StatusShocked || !SemiFunc.IsMasterClientOrSingleplayer()) return;
         ApplyPlayerStatus(avatar, kind, seconds);
         if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient || avatar.isLocal) return;
         var view = avatar.GetComponent<PhotonView>();
@@ -414,7 +416,8 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     private static void ApplyPlayerStatus(PlayerAvatar avatar, byte kind, float seconds)
     {
         if (avatar == null || !avatar.isLocal) return;
-        Hud.HudConditions.Start(kind == StatusPoisoned ? Hud.PlayerCondition.Poisoned : Hud.PlayerCondition.Sedated, seconds);
+        if (kind == StatusShocked) Gear.Shock.ShockLocal(seconds); // slow + half stamina recovery
+        Hud.HudConditions.Start(kind == StatusPoisoned ? Hud.PlayerCondition.Poisoned : kind == StatusShocked ? Hud.PlayerCondition.Shocked : Hud.PlayerCondition.Sedated, seconds);
     }
 
     /// <summary>Host: a player is netted for seconds, or (NetBroken / NetExpired) their net ended.</summary>
@@ -548,7 +551,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             if (!PhotonNetwork.InRoom || PhotonNetwork.MasterClient == null ||
                 photonEvent.Sender != PhotonNetwork.MasterClient.ActorNumber ||
                 photonEvent.CustomData is not object[] packet || packet.Length != 5 ||
-                packet[0] is not int id || id <= 0 || packet[1] is not byte kind || kind > StatusSedated ||
+                packet[0] is not int id || id <= 0 || packet[1] is not byte kind || kind > StatusShocked ||
                 packet[2] is not float seconds || packet[3] is not double sent || packet[4] is not string level || level != FreezeLevelKey() ||
                 float.IsNaN(seconds) || float.IsInfinity(seconds) || seconds <= 0f || seconds > 30f || double.IsNaN(sent) || double.IsInfinity(sent)) return;
             float age = (float)System.Math.Max(0d, PhotonNetwork.Time - sent);
@@ -571,7 +574,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             if (!PhotonNetwork.InRoom || PhotonNetwork.MasterClient == null ||
                 photonEvent.Sender != PhotonNetwork.MasterClient.ActorNumber ||
                 photonEvent.CustomData is not object[] data || data.Length != 4 ||
-                data[0] is not int id || data[1] is not byte kind || kind > 2 ||
+                data[0] is not int id || data[1] is not byte kind || kind > 3 ||
                 data[2] is not float seconds || data[3] is not double sent ||
                 float.IsNaN(seconds) || float.IsInfinity(seconds) || seconds > 600f ||
                 double.IsNaN(sent) || double.IsInfinity(sent)) return;
@@ -702,6 +705,24 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
                     battery.batteryLife = Mathf.Clamp(battery.batteryLife - (float)data[1], 0f, 100f);
                     return;
                 }
+            return;
+        }
+
+        if (photonEvent.Code == Skills.BuffPerks.EventCode)
+        {
+            if (HostSender(photonEvent)) Skills.BuffPerks.HandleEvent(photonEvent);
+            return;
+        }
+
+        if (photonEvent.Code == Challenges.ChallengeManager.StartRequestCode)
+        {
+            if (PhotonNetwork.IsMasterClient) Challenges.ChallengeManager.HandleStartRequest(photonEvent);
+            return;
+        }
+
+        if (photonEvent.Code == Challenges.ChallengeManager.EventCode)
+        {
+            if (HostSender(photonEvent)) Challenges.ChallengeManager.HandleEvent(photonEvent);
             return;
         }
 

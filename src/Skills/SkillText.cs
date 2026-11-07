@@ -13,34 +13,15 @@ internal static class SkillText
     private static float PerLevel(float oldPerLevel, int oldMax, string node) =>
         oldPerLevel * Mathf.Max(1, oldMax) / Mathf.Max(1, C.Find(node).MaxLevel);
 
-    private static System.Reflection.PropertyInfo _selectedLocale;
-    private static bool _localeLooked;
-
-    /// <summary>The game's language is Russian (Unity Localization, read by reflection: the mod doesn't reference it).</summary>
-    internal static bool Russian
-    {
-        get
-        {
-            try
-            {
-                if (!_localeLooked)
-                {
-                    _localeLooked = true;
-                    var settings = System.Type.GetType("UnityEngine.Localization.Settings.LocalizationSettings, Unity.Localization");
-                    _selectedLocale = settings?.GetProperty("SelectedLocale", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                }
-                var locale = _selectedLocale?.GetValue(null);
-                var identifier = locale?.GetType().GetProperty("Identifier")?.GetValue(locale);
-                var code = identifier?.GetType().GetProperty("Code")?.GetValue(identifier) as string;
-                return code != null && code.StartsWith("ru", System.StringComparison.OrdinalIgnoreCase);
-            }
-            catch { return false; }
-        }
-    }
+    /// <summary>The game's language is Russian (shared check in Localization/ModifierText.cs).</summary>
+    internal static bool Russian => Localization.GameLanguage.Russian;
 
     /// <summary>A node's display name: Russian for trade-offs when the game is Russian.</summary>
     internal static string Name(SkillNode node) =>
         node.Tier > 0 && Russian && !string.IsNullOrEmpty(node.NameRu) ? node.NameRu : node.Name;
+
+    // The instinct line: trigger, buff, then the level ladder shared by all of them.
+    private static string Instinct(string trigger, string buff) => $"When {trigger.Substring(0, 1).ToLowerInvariant()}{trigger.Substring(1)}: {buff} for 3/4/5 s (by level). Cooldown 60/45/30 s.";
 
     internal static string Describe(string id)
     {
@@ -79,6 +60,18 @@ internal static class SkillText
 
             case C.Brawler: return $"+{Pct(root)} melee, grenade and tumble damage.";
             case C.GrenadeDamage: return $"+{Pct(PerLevel(ModConfig.GrenadeDamagePercentPerLevel.Value, ModConfig.GrenadeDamageMaxLevel.Value, id))} grenade damage per level.";
+            case C.Vampirism:
+            {
+                var node = C.Find(id);
+                float max = ModConfig.SkillVampireMax.Value;
+                return $"Melee hits heal you for {(max * 100f / node.MaxLevel).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)}% of the damage dealt per level ({Pct(max)} at max).";
+            }
+            case C.Adrenaline: return Instinct("A monster hurts you", "+30% speed");
+            case C.IronSkin: return Instinct("Your health drops below 35%", "40% less damage taken");
+            case C.HotBarrel: return Instinct("You kill a monster with a bullet gun", "+30% bullet gun damage");
+            case C.Overheat: return Instinct("You hit a monster with a laser", "+30% laser damage");
+            case C.BattleTrance: return Instinct("You land 3 melee hits within 4 s", "+30% melee damage");
+            case C.MendingSurge: return "When you kill a monster: heal 5/10/15% of your max health over 5 s (by level). Cooldown 60/45/30 s.";
             case C.MeleeDamage: return $"+{Pct(PerLevel(ModConfig.MeleeDamagePercentPerLevel.Value, ModConfig.MeleeDamageMaxLevel.Value, id))} melee damage per level.";
             case C.TumbleDamage:
             {

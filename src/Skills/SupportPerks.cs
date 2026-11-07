@@ -87,6 +87,28 @@ internal static class SupportPerks
         }
     }
 
+    // ------------------------------------------------------------------ Vampirism (host)
+
+    private static readonly System.Collections.Generic.Dictionary<string, float> VampireCarry = new();
+
+    /// <summary>Host: a melee hit for <paramref name="damage"/> heals its wielder by their Vampirism share. Only the damage
+    /// the monster can still take counts, so overkill on a nearly dead monster heals nothing extra.</summary>
+    internal static void Vampire(PlayerAvatar wielder, Enemy target, int damage)
+    {
+        if (!SemiFunc.IsMasterClientOrSingleplayer() || wielder == null || wielder.isDisabled || string.IsNullOrEmpty(wielder.steamID)) return;
+        int level = SkillEffects.Level(wielder, C.Vampirism);
+        if (level <= 0 || damage <= 0 || wielder.playerHealth == null) return;
+        if (target != null && target.HasHealth && target.Health != null)
+            damage = Mathf.Min(damage, Mathf.Max(0, target.Health.healthCurrent));
+        float share = PerkRules.VampireShare(level, C.Find(C.Vampirism).MaxLevel, ModConfig.SkillVampireMax.Value);
+        VampireCarry.TryGetValue(wielder.steamID, out float carry);
+        int heal = PerkRules.VampireHeal(damage, share, ref carry);
+        VampireCarry[wielder.steamID] = carry;
+        var health = wielder.playerHealth;
+        if (heal > 0 && health.health > 0 && health.health < health.maxHealth)
+            health.HealOther(Mathf.Min(heal, health.maxHealth - health.health), effect: false);
+    }
+
     // ------------------------------------------------------------------ Field Medic (host)
 
     // ItemHealthPack.Update heals the player who switched the pack on, on the host. Scale that heal for the
@@ -161,8 +183,9 @@ internal static class CrouchSpeedPerk
                     grabber.grabbedPhysGrabObject.GetComponent<ValuableObject>() != null;
         float holding = loot ? TradeOffs.Factor(local, Fx.HoldingLootSpeed) : 1f;
 
-        float walk = TradeOffs.Factor(local, Fx.WalkSpeed) * holding;
-        float sprint = TradeOffs.Factor(local, Fx.SprintSpeed) * holding;
+        float adrenaline = BuffPerks.LocalSpeed; // Adrenaline instinct
+        float walk = TradeOffs.Factor(local, Fx.WalkSpeed) * holding * adrenaline;
+        float sprint = TradeOffs.Factor(local, Fx.SprintSpeed) * holding * adrenaline;
         float crouch = PerkRules.CrouchSpeedFactor(level, ModConfig.SkillCrouchSpeedPerLevel.Value) * TradeOffs.Factor(local, Fx.CrouchSpeed) * holding;
         if (!Mathf.Approximately(walk, _walk)) { float k = walk / _walk; pc.playerOriginalMoveSpeed *= k; pc.MoveSpeed *= k; _walk = walk; }
         if (!Mathf.Approximately(sprint, _sprint)) { float k = sprint / _sprint; pc.playerOriginalSprintSpeed *= k; pc.SprintSpeed *= k; _sprint = sprint; }

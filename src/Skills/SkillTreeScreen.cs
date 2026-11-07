@@ -28,7 +28,7 @@ internal sealed class SkillTreeScreen : MonoBehaviour
     {
         ["Map"] = "MAP", ["Ping"] = "PING", ["Flashlight"] = "FLASHLIGHT", ["Damage"] = "DAMAGE", ["Guns"] = "GUN CHARGES",
         ["Tech"] = "TECH", ["Survival"] = "SURVIVAL", ["Gear"] = "GEAR", ["Support"] = "SUPPORT", ["Weapons"] = "WEAPON DAMAGE", ["Status"] = "STATUS EFFECTS",
-        ["Contracts"] = "EARNED FROM SPECIAL CONTRACTS",
+        ["Contracts"] = "EARNED FROM SPECIAL CONTRACTS", ["Instincts"] = "INSTINCTS · SHORT BUFFS FROM CONTRACTS",
         ["TradeOffs1"] = "TRADE-OFFS I · PICK ONE", ["TradeOffs2"] = "TRADE-OFFS II · PICK ONE", ["TradeOffs3"] = "TRADE-OFFS III · PICK ONE",
     };
 

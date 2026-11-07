@@ -105,6 +105,26 @@ internal sealed class ProcMesh
             Tri(m.MultiplyPoint3x4(local[0]), m.MultiplyPoint3x4(local[k]), m.MultiplyPoint3x4(local[k + 1]));
     }
 
+    /// <summary>Like <see cref="Build(string)"/>, with box-projected UVs so a tiling texture wraps every face:
+    /// each triangle takes the two coordinates across its dominant normal, times <paramref name="uvScale"/> (tiles per metre).</summary>
+    internal Mesh Build(string name, float uvScale)
+    {
+        var mesh = Build(name);
+        var uv = new List<Vector2>(_v.Count);
+        for (int i = 0; i + 2 < _v.Count; i += 3)
+        {
+            var n = Vector3.Cross(_v[i + 1] - _v[i], _v[i + 2] - _v[i]);
+            float ax = Mathf.Abs(n.x), ay = Mathf.Abs(n.y), az = Mathf.Abs(n.z);
+            for (int k = 0; k < 3; k++)
+            {
+                var p = _v[i + k] * uvScale;
+                uv.Add(ax >= ay && ax >= az ? new Vector2(p.z, p.y) : ay >= az ? new Vector2(p.x, p.z) : new Vector2(p.x, p.y));
+            }
+        }
+        mesh.SetUVs(0, uv);
+        return mesh;
+    }
+
     internal Mesh Build(string name)
     {
         var mesh = new Mesh { name = name };
