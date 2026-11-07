@@ -18,7 +18,9 @@ internal enum PingType : byte
     Upgrade = 7,
     Player = 8,
     Weapon = 9,
-    Crystal = 10, // battery crystal (no physics body: found by RetryCrystalEffect.TryAim)
+    Crystal = 10,    // battery crystal; these three are local props with no ping identity,
+    SkillBox = 11,   // found by PingTargets.TryAim instead of the physics ray
+    MysteryBox = 12,
 }
 
 /// <summary>Callout icon for item pings. Derived locally from the pinged object, so it needs no network field.</summary>
@@ -94,14 +96,15 @@ internal static class PingController
             label = "Location";
         }
 
-        // Battery crystals have no colliders: a crystal in front of whatever the ray hit wins.
-        if (RetryCrystalEffect.TryAim(ray, maxDist, out var gem, out float gemDistance) &&
-            (!aimed || gemDistance <= hit.distance + .05f) && !Blocked(ray.origin, gem))
+        // Crystals, skill boxes and mystery boxes are local props the physics ray cannot identify:
+        // one in front of whatever the ray hit wins (a mystery box's own wall is that hit, hence the margin).
+        if (PingTargets.TryAim(ray, maxDist, info, out var prop) &&
+            (!aimed || prop.Distance <= hit.distance + .05f) && !Blocked(ray.origin, ray.GetPoint(prop.Distance)))
         {
-            type = PingType.Crystal;
-            pos = gem;
+            type = prop.Type;
+            pos = prop.Marker;
             physGrab = null;
-            label = RetryCrystalEffect.PingLabel(info);
+            label = prop.Label;
         }
 
         // Location pings need the "Ping Anywhere" upgrade,
@@ -314,7 +317,7 @@ internal static class PingController
                            ?? pv.GetComponentInParent<PhysGrabObject>();
         }
 
-        if(type>(byte)PingType.Crystal) return;
+        if(type>(byte)PingType.MysteryBox) return;
         var tint = SpawnPing((PingType)type, pos, physGrab, local: false, sender, player);
         Announce(label, tint, sender);
     }
@@ -333,7 +336,7 @@ internal static class PingController
             if(old.Sender!=sender || old.Local!=local || old.Type!=type) continue;
             if((physGrab!=null && old.Graphic!=null && old.Graphic.target==physGrab) ||
                 (player!=null && old.Graphic!=null && old.Graphic.PlayerTarget==player) ||
-                ((type==PingType.Location || type==PingType.Crystal) && Vector3.SqrMagnitude(old.Pos-pos)<.09f)) Remove(old);
+                ((type==PingType.Location || PingTargets.IsProp(type)) && Vector3.SqrMagnitude(old.Pos-pos)<.09f)) Remove(old);
         }
         EnforceGlobalCap();
 
@@ -347,11 +350,11 @@ internal static class PingController
         var graphic = player != null ? PingOutline.CreatePlayer(player, pos, tint, duration) :
             PingOutline.Create(physGrab, pos, tint, duration);
         if (type == PingType.Location) graphic.AttachBeacon(duration);
-        else if (type == PingType.Crystal)
+        else if (PingTargets.IsProp(type))
         {
-            // Its own mark: green floor runes and pillar on the crystal, which flares while the ping lasts.
+            // Its own mark: floor runes and a pillar in the prop's colour, and the prop flares while the ping lasts.
             graphic.AttachBeacon(duration, tint);
-            RetryCrystalEffect.Flare(pos, duration);
+            PingTargets.Flare(type, pos, duration);
         }
         else if (type == PingType.Enemy) graphic.UseReticle();
         // No pinged object gets a silhouette outline: weapons, upgrades and drones get their icon callout, and
@@ -536,6 +539,8 @@ internal static class PingController
         PingType.Scooter => new Color(0.9f, 0.85f, 0.6f),   // beige
         PingType.Weapon => new Color(1f, 0.28f, 0.86f),     // neon magenta
         PingType.Crystal => new Color(0.55f, 1f, 0.45f),    // crystal green (matches its pickup text)
+        PingType.SkillBox => new Color(0.3f, 0.85f, 1f),    // skill box teal
+        PingType.MysteryBox => new Color(0.72f, 0.45f, 1f), // mystery box purple, lifted for readability
         _ => new Color(.45f,.82f,1f),                         // soft cyan location
     };
 
@@ -549,6 +554,8 @@ internal static class PingController
         PingType.CosmeticBox => "\u2726",
         PingType.Scooter => "\u25B2",
         PingType.Crystal => "\u25C6",
+        PingType.SkillBox => "\u2726",
+        PingType.MysteryBox => "?",
         _ => "\u2316",
     };
 

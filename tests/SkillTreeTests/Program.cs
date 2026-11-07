@@ -7,8 +7,12 @@ void Check(bool ok, string name) { if (!ok) throw new Exception("FAIL " + name);
 
 // ---------------------------------------------------------------- catalogue
 Check(C.PageCost(SkillPage.Recon) == 28 && C.PageCost(SkillPage.Combat) == 43 &&
-      C.PageCost(SkillPage.Survival) == 34 && C.PageCost(SkillPage.Utility) == 33 && C.PageCost(SkillPage.Arsenal) == 42, "Page costs match the plan");
-Check(C.TotalCost() == 180, "Whole tree costs 180 points");
+      C.PageCost(SkillPage.Survival) == 37 && C.PageCost(SkillPage.Utility) == 33 && C.PageCost(SkillPage.Arsenal) == 42, "Page costs match the plan");
+Check(C.TotalCost() == 183, "Whole tree costs 183 points");
+Check(C.Find(C.CrouchSpeed) is { Page: SkillPage.Survival, Cost: 1, MaxLevel: 3 } && C.Find(C.CrouchSpeed).Requires.SequenceEqual(new[] { C.Survivor }),
+      "Crouch Speed: Survival, 1 point a level, 3 levels, under Survivor");
+Check(Math.Abs(PerkRules.CrouchSpeedFactor(3, .05f) - 1.15f) < 1e-5f && PerkRules.CrouchSpeedFactor(0, .05f) == 1f &&
+      PerkRules.CrouchSpeedFactor(-2, .05f) == 1f && PerkRules.CrouchSpeedFactor(2, -1f) == 1f, "Crouch Speed is +15% at max and never slows you");
 Check(C.All.Where(n => n.Page == SkillPage.Arsenal && !n.Root).All(n => n.MaxLevel >= 3 && n.MaxLevel <= 5), "Weapon and status perks have 3-5 levels");
 
 // Status lengths: longer up to 8 s, poison shorter down to 8 s, never past the cap either way.

@@ -20,6 +20,10 @@ public static class PerkRules
     public static bool DesperationActive(int health, int maxHealth, float threshold) =>
         maxHealth > 0 && health > 0 && health < Math.Round(maxHealth * (double)Math.Max(0f, threshold), 3); // 0.3f * 100 is 30.000001
 
+    /// <summary>Crouch Speed: crouch-walk speed multiplier for <paramref name="level"/> levels (1 + level x perLevel,
+    /// so 3 x 5% = +15% at max). Never slower than normal.</summary>
+    public static float CrouchSpeedFactor(int level, float perLevel) => 1f + Math.Max(0, level) * Math.Max(0f, perLevel);
+
     /// <summary>Damage after a reduction, rounded in the player's favour, never below 1 for a hit that did damage.</summary>
     public static int Reduce(int damage, float fraction)
     {

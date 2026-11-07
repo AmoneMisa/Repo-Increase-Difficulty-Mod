@@ -25,7 +25,8 @@ internal static class SkillCatalog
     public const string Technician = P + "Technician", DroneBattery = P + "DroneBattery", Overcharge = P + "Overcharge";
     // Survival
     public const string Survivor = P + "Survivor", StaminaEfficiency = P + "StaminaEfficiency", SecondWind = P + "SecondWind",
-        Armor = P + "Armor", HpRegen = P + "HpRegen", Desperation = P + "Desperation", HuntedWarning = P + "HuntedWarning";
+        Armor = P + "Armor", HpRegen = P + "HpRegen", Desperation = P + "Desperation", HuntedWarning = P + "HuntedWarning",
+        CrouchSpeed = P + "CrouchSpeed";
     // Utility
     public const string InventorySlot = P + "InventorySlot", Autoscan = P + "Autoscan", HeadBattery = P + "HeadBattery", TumbleWings = P + "TumbleWings";
     public const string FieldMedic = P + "FieldMedic", BatterySaver = P + "BatterySaver", LuckyFinder = P + "LuckyFinder";
@@ -99,6 +100,7 @@ internal static class SkillCatalog
         Add(survival, "Survival", HpRegen, "HP Regeneration", "Регенерация HP", 3, 3, Survivor);
         Add(survival, "Survival", Desperation, "Desperation", "Отчаяние", 2, 3, Survivor);
         Add(survival, "Survival", HuntedWarning, "Hunted Warning", "Чувство погони", 1, 1, Survivor);
+        Add(survival, "Survival", CrouchSpeed, "Crouch Speed", "Скорость в присяде", 1, 3, Survivor);
 
         var utility = SkillPage.Utility;
         Add(utility, "Gear", InventorySlot, "Inventory Slot", "Слот инвентаря", 3, 4, root: true);

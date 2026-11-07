@@ -299,6 +299,41 @@ internal static class MysteryBoxEffect
         SemiFunc.UIFocusText("MYSTERY BOX: " + label, new Color(0.85f, 0.55f, 1f), Color.white, 3f);
     }
 
+    // ---------------------------------------------------------------- pings
+
+    /// <summary>The nearest unopened mystery box the ray passes through (its walls are plain colliders with no ping identity, so physics rays never
+    /// identify it). <paramref name="marker"/> is where the ping marker sits.</summary>
+    internal static bool TryAim(Ray ray, float maxDistance, out Vector3 marker, out float distance)
+    {
+        marker = default;
+        distance = float.MaxValue;
+        if (Boxes.Count == 0 || _key != LevelKey()) return false;
+        foreach (var b in Boxes)
+        {
+            if (b.State != Ready || b.Visual == null || !b.Visual.isActiveAndEnabled) continue;
+            if (!PingTargets.RayBox(ray, b.Pos, b.Yaw, Size, maxDistance, out float d) || d >= distance) continue;
+            distance = d;
+            marker = b.Pos + Vector3.up * (Size.y * 0.5f);
+        }
+        return distance < float.MaxValue;
+    }
+
+    /// <summary>Flare the unopened box at (or nearest to) a pinged marker, on any client.</summary>
+    internal static void Flare(Vector3 near, float seconds)
+    {
+        Box best = null;
+        float bestSq = 1f;
+        foreach (var b in Boxes)
+        {
+            if (b.State != Ready || b.Visual == null) continue;
+            float sq = (b.Pos + Vector3.up * (Size.y * 0.5f) - near).sqrMagnitude;
+            if (sq < bestSq) { bestSq = sq; best = b; }
+        }
+        best?.Visual.Flare(seconds);
+    }
+
+    internal static string PingLabel(bool info) => info ? "Mystery Box (drop 1 soul in)" : "Mystery Box";
+
     // ---------------------------------------------------------------- networking
 
     private static void Broadcast(bool force)
@@ -373,8 +408,11 @@ internal sealed class MysteryBoxVisual : MonoBehaviour
     private Light _light;
     private Material _trim;
     private byte _state;
-    private float _rollStart = -10f, _openedAt = -10f;
+    private float _rollStart = -10f, _openedAt = -10f, _flareUntil = -10f;
     private Vector3 _markRest;
+
+    /// <summary>Pinged: the light and the "?" pulse for <paramref name="seconds"/>.</summary>
+    internal void Flare(float seconds) => _flareUntil = Mathf.Max(_flareUntil, Time.time + Mathf.Max(0.5f, seconds));
 
     internal static MysteryBoxVisual Create(Vector3 floor, float yaw, int index)
     {
@@ -427,7 +465,9 @@ internal sealed class MysteryBoxVisual : MonoBehaviour
         Part("BandS", new Vector3(0f, s.y * 0.45f, -s.z * 0.5f - 0.004f), new Vector3(s.x * 0.8f, 0.05f, 0.01f), _trim, false);
 
         // Floating "?" above the crate, in the game's own font asset.
-        _mark = new GameObject("Mark").transform;
+        // Built with a RectTransform: adding TextMeshPro to a plain Transform swaps it out, which left _mark
+        // pointing at a destroyed Transform and stopped Update (opened boxes never disappeared).
+        _mark = new GameObject("Mark", typeof(RectTransform)).transform;
         _mark.SetParent(transform, false);
         _markRest = new Vector3(0f, s.y + 0.55f, 0f);
         _mark.localPosition = _markRest;
@@ -520,8 +560,11 @@ internal sealed class MysteryBoxVisual : MonoBehaviour
         if (_state == 0)
         {
             _mark.gameObject.SetActive(true);
-            _mark.localPosition = _markRest + Vector3.up * (Mathf.Sin(now * 2f) * 0.06f);
-            _light.intensity = 1.4f + Mathf.Sin(now * 3f) * 0.3f;
+            float flare = PingTargets.FlarePulse(_flareUntil);
+            bool flaring = now < _flareUntil;
+            _mark.localPosition = _markRest + Vector3.up * (Mathf.Sin(now * 2f) * 0.06f + (flaring ? 0.12f : 0f));
+            _mark.localScale = Vector3.one * (flaring ? 1.2f + flare * 0.15f : 1f);
+            _light.intensity = flaring ? 2.6f + flare * 1.2f : 1.4f + Mathf.Sin(now * 3f) * 0.3f;
             _shell.localPosition = Vector3.zero;
         }
         else if (_state == 1)

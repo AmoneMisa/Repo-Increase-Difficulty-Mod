@@ -74,6 +74,7 @@ internal static class SkillText
 
             case C.Desperation: return $"-{Pct(ModConfig.SkillDesperationPerLevel.Value)} damage taken per level while your health is under {Pct(ModConfig.SkillDesperationThreshold.Value)}.";
             case C.HuntedWarning: return "Shows HUNTED on your screen while a monster is chasing you.";
+            case C.CrouchSpeed: return $"+{Pct(ModConfig.SkillCrouchSpeedPerLevel.Value)} speed while crouched per level (+{Pct(ModConfig.SkillCrouchSpeedPerLevel.Value * C.Find(id).MaxLevel)} at max).";
 
             case C.InventorySlot: return "+1 inventory slot per level (keys 4-7).";
             case C.Autoscan: return "Finds nearby valuables for the whole team; reaches farther per level.";

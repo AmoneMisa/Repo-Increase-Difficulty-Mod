@@ -46,6 +46,7 @@ internal static class SupportPerks
 
         private void Update()
         {
+            CrouchSpeedPerk.Tick();
             var local = SemiFunc.PlayerAvatarLocal();
             if (local == null || local.isDisabled || !SemiFunc.RunIsLevel())
             {
@@ -128,5 +129,33 @@ internal static class SupportPerks
             if (healed > 0)
                 Plugin.Log.LogInfo($"[Skills] Field Medic: {SemiFunc.PlayerGetName(__state.User)}'s health pack healed {healed} teammate(s) for {share}.");
         }
+    }
+}
+
+/// <summary>
+/// Crouch Speed (local player's own controller): crouch-walking is faster per level. The game moves a crouching
+/// player by PlayerController.CrouchSpeed and resets it from playerOriginalCrouchSpeed after speed overrides
+/// (slows, hurt, carrying), so both are scaled together, once per change of the bonus. Never touches sprint or walk.
+/// </summary>
+internal static class CrouchSpeedPerk
+{
+    private static PlayerController _controller;
+    private static float _applied = 1f;
+
+    internal static void Tick()
+    {
+        var pc = PlayerController.instance;
+        if (pc == null) { _controller = null; _applied = 1f; return; }
+        if (pc != _controller) { _controller = pc; _applied = 1f; } // a new level builds a new controller
+
+        var local = SemiFunc.PlayerAvatarLocal();
+        int level = local != null ? SkillEffects.Level(local, SkillCatalog.CrouchSpeed) : 0;
+        float want = PerkRules.CrouchSpeedFactor(level, ModConfig.SkillCrouchSpeedPerLevel.Value);
+        if (Mathf.Approximately(want, _applied) || _applied <= 0f) return;
+
+        float k = want / _applied;
+        pc.playerOriginalCrouchSpeed *= k;
+        pc.CrouchSpeed *= k;
+        _applied = want;
     }
 }

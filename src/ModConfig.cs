@@ -323,7 +323,7 @@ public static class ModConfig
     public static ConfigEntry<float> SkillRootBonus, SkillWeaponDamageMax, SkillStatusRootSeconds, SkillSecondWindPerLevel,
         SkillSurvivorStamina, SkillFlashRange, SkillFlashWidthPerLevel, SkillFlashBrightnessPerLevel,
         SkillDesperationPerLevel, SkillDesperationThreshold, SkillHeavyHitterPerLevel, SkillMedicPerLevel, SkillMedicRadius,
-        SkillBatterySaverPerLevel, SkillLuckyCrystalBonus;
+        SkillBatterySaverPerLevel, SkillLuckyCrystalBonus, SkillCrouchSpeedPerLevel;
     public static ConfigEntry<int> SkillLuckyBoxShift;
 
     // --- Level Info panel ---
@@ -1062,6 +1062,8 @@ public static class ModConfig
             "Field Medic: teammates within this many metres share your health pack.");
         SkillBatterySaverPerLevel = BindFloat(cfg, "Skill Tree", "BatterySaverPerLevel", .15f, 0f, .25f,
             "Battery Saver: slower drain per level for battery items that are not guns or drones (0.15 = 15% slower).");
+        SkillCrouchSpeedPerLevel = BindFloat(cfg, "Skill Tree", "CrouchSpeedPerLevel", .05f, 0f, .2f,
+            "Crouch Speed: faster walking while crouched, per level (0.05 = +5%, so +15% at the 3-level cap).");
         SkillLuckyBoxShift = BindInt(cfg, "Skill Tree", "LuckyFinderBoxWeightPerLevel", 10, 0, 50,
             "Lucky Finder: weight per level moved from an empty skill box to 1, 2 and 3 points (default odds 65/20/10/5 become 55/25/13/7, then 45/30/16/9).");
         SkillLuckyCrystalBonus = BindFloat(cfg, "Skill Tree", "LuckyFinderCrystalBonusPerLevel", 5f, 0f, 50f,

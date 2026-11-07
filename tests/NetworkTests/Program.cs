@@ -80,7 +80,7 @@ Check(PhotonNetwork.Sent.Count==0,"Non-host cannot broadcast authoritative quest
 PhotonNetwork.IsMasterClient=true;network.BroadcastQuestState(quest);network.BroadcastQuestBuff(1,2);
 Check(PhotonNetwork.Sent.Count==2&&PhotonNetwork.Sent.All(e=>e.Receivers==Photon.Realtime.ReceiverGroup.Others),"Locally applied quest broadcasts do not echo back to the host");
 Check(NetworkPayload.Ping(new object[]{(byte)8,1f,2f,3f,"Player","Sender",313},out _),"Player ping kind accepts a replicated avatar view ID");
-Check(!NetworkPayload.Ping(new object[]{(byte)11,1f,2f,3f,"unknown","Sender",0},out _)&&NetworkPayload.Ping(new object[]{(byte)9,1f,2f,3f,"Weapon","Sender",0},out _),"Undefined ping kind remains rejected, weapon pings pass");
+Check(!NetworkPayload.Ping(new object[]{(byte)13,1f,2f,3f,"unknown","Sender",0},out _)&&NetworkPayload.Ping(new object[]{(byte)9,1f,2f,3f,"Weapon","Sender",0},out _),"Undefined ping kind remains rejected, weapon pings pass");
 Check(!NetworkPayload.Ping(new object[]{(byte)8,1f,2f,3f,"Player","Sender",-1},out _),"Player ping rejects a negative view ID");
 int hudCalls=LevelInfoHud.Calls; Send(LevelInfoHud.StateEventCode,new object[]{"request"}); Check(LevelInfoHud.Calls==hudCalls+1,"HUD snapshot event routes to its scoped handler");
 // Poisoned / sedated screen status: host only, local avatar only, current level only, bounded duration.
@@ -153,8 +153,8 @@ int hudCalls=LevelInfoHud.Calls; Send(LevelInfoHud.StateEventCode,new object[]{"
     PhotonNetwork.IsMasterClient=wasMaster;SemiFunc.Players.Clear();
 }
 // Every ping type up to the battery crystal crosses the wire; anything past it is refused.
-foreach(byte kind in new byte[]{9,10}){int before=PingController.Applied;Send(ModNetwork.PingEventCode,new object[]{kind,1f,2f,3f,"thing","player",0},3);Check(PingController.Applied==before+1,"Ping type "+kind+" is delivered");}
-{int before=PingController.Applied;Send(ModNetwork.PingEventCode,new object[]{(byte)11,1f,2f,3f,"thing","player",0},3);Check(PingController.Applied==before,"Unknown ping type refused");}
+foreach(byte kind in new byte[]{9,10,11,12}){int before=PingController.Applied;Send(ModNetwork.PingEventCode,new object[]{kind,1f,2f,3f,"thing","player",0},3);Check(PingController.Applied==before+1,"Ping type "+kind+" is delivered");}
+{int before=PingController.Applied;Send(ModNetwork.PingEventCode,new object[]{(byte)13,1f,2f,3f,"thing","player",0},3);Check(PingController.Applied==before,"Unknown ping type refused");}
 // Loot safety net notice: host only, well-formed only.
 foreach(var raw in new object[]{null,42,new object[]{0,100,true},new object[]{101,100,true},new object[]{3,-1,true},new object[]{3,100,"yes"},new object[]{3,100}})
  Send(ModNetwork.LootNoticeEventCode,raw);

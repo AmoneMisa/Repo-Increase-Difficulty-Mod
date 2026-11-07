@@ -201,6 +201,41 @@ internal static class SkillBoxEffect
             SemiFunc.UIFocusText(b.OpenerName.ToUpperInvariant() + " FOUND " + points, teal, Color.white, 3f);
     }
 
+    // ---------------------------------------------------------------- pings
+
+    /// <summary>The nearest unopened skill box the ray passes through (it has no colliders, so physics rays never
+    /// identify it). <paramref name="marker"/> is where the ping marker sits.</summary>
+    internal static bool TryAim(Ray ray, float maxDistance, out Vector3 marker, out float distance)
+    {
+        marker = default;
+        distance = float.MaxValue;
+        if (Boxes.Count == 0 || _key != LevelKey()) return false;
+        foreach (var b in Boxes)
+        {
+            if (b.State != Ready || b.Visual == null || !b.Visual.isActiveAndEnabled) continue;
+            if (!PingTargets.RayBox(ray, b.Pos, 0f, Size * 1.25f, maxDistance, out float d) || d >= distance) continue;
+            distance = d;
+            marker = b.Pos + Vector3.up * (Size.y * 0.5f);
+        }
+        return distance < float.MaxValue;
+    }
+
+    /// <summary>Flare the unopened box at (or nearest to) a pinged marker, on any client.</summary>
+    internal static void Flare(Vector3 near, float seconds)
+    {
+        Box best = null;
+        float bestSq = 1f;
+        foreach (var b in Boxes)
+        {
+            if (b.State != Ready || b.Visual == null) continue;
+            float sq = (b.Pos + Vector3.up * (Size.y * 0.5f) - near).sqrMagnitude;
+            if (sq < bestSq) { bestSq = sq; best = b; }
+        }
+        best?.Visual.Flare(seconds);
+    }
+
+    internal static string PingLabel(bool info) => info ? "Skill Box (0-3 skill points)" : "Skill Box";
+
     // ---------------------------------------------------------------- networking
 
     private static void Broadcast(bool force)
@@ -263,16 +298,24 @@ internal static class SkillBoxEffect
     }
 }
 
-/// <summary>Local-only skill box visual (no colliders). Destroyed with the level scene.</summary>
+/// <summary>
+/// Local-only skill box visual (no colliders). Destroyed with the level scene.
+/// A rounded present: a bevelled body under a slightly wider bevelled lid, two glowing ribbons wrapped round it
+/// and a two-loop bow on top, all faceted meshes (no hard cube silhouette). A ping makes it flare.
+/// </summary>
 internal sealed class SkillBoxVisual : MonoBehaviour
 {
     private static readonly Color Teal = new(0.3f, 0.85f, 1f);
+    private static Mesh _bodyMesh, _trimMesh;
     private Transform _shell, _mark;
     private TextMeshPro _text;
     private Light _light;
     private byte _state;
-    private float _openedAt = -10f;
+    private float _openedAt = -10f, _flareUntil = -10f;
     private Vector3 _markRest;
+
+    /// <summary>Pinged: spin faster, bob and glow brighter for <paramref name="seconds"/>.</summary>
+    internal void Flare(float seconds) => _flareUntil = Mathf.Max(_flareUntil, Time.time + Mathf.Max(0.5f, seconds));
 
     internal static SkillBoxVisual Create(Vector3 floor, float yaw)
     {
@@ -304,15 +347,14 @@ internal sealed class SkillBoxVisual : MonoBehaviour
 
         _shell = new GameObject("Shell").transform;
         _shell.SetParent(transform, false);
-        Part("Body", new Vector3(0f, s.y * 0.5f, 0f), s, body);
-        // Glowing ribbon crossing the lid and the sides, like a wrapped present.
-        float r = 0.04f;
-        Part("RibbonX", new Vector3(0f, s.y * 0.5f, 0f), new Vector3(s.x + 0.01f, s.y + 0.01f, r), trim);
-        Part("RibbonZ", new Vector3(0f, s.y * 0.5f, 0f), new Vector3(r, s.y + 0.01f, s.z + 0.01f), trim);
-        Part("Knot", new Vector3(0f, s.y + 0.03f, 0f), new Vector3(0.1f, 0.06f, 0.1f), trim);
+        EnsureMeshes(s);
+        Part("Body", _bodyMesh, body);
+        Part("Trim", _trimMesh, trim);
 
         // Floating "?" (later "+N") above the box, in the game's own font asset.
-        _mark = new GameObject("Mark").transform;
+        // Built with a RectTransform: adding TextMeshPro to a plain Transform swaps it out, which left _mark
+        // pointing at a destroyed Transform and stopped Update (opened boxes never disappeared).
+        _mark = new GameObject("Mark", typeof(RectTransform)).transform;
         _mark.SetParent(transform, false);
         _markRest = new Vector3(0f, s.y + 0.45f, 0f);
         _mark.localPosition = _markRest;
@@ -336,15 +378,36 @@ internal sealed class SkillBoxVisual : MonoBehaviour
         _light.shadows = LightShadows.None;
     }
 
-    private void Part(string name, Vector3 pos, Vector3 size, Material mat)
+    // Shared by every skill box (kept across levels). Built from the box's floor up to Size.y.
+    private static void EnsureMeshes(Vector3 s)
     {
-        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        go.name = name;
+        if (_bodyMesh != null && _trimMesh != null) return;
+        Matrix4x4 At(float x, float y, float z, Vector3 size, Vector3 euler = default) =>
+            Visuals.ProcMesh.TRS(new Vector3(x, y, z), euler, size);
+        _bodyMesh = new Visuals.ProcMesh()
+            .ChamferBox(At(0f, s.y * 0.39f, 0f, new Vector3(s.x * 0.9f, s.y * 0.78f, s.z * 0.9f)), 0.16f)
+            .ChamferBox(At(0f, s.y * 0.84f, 0f, new Vector3(s.x, s.y * 0.24f, s.z)), 0.3f)
+            .Build("IHM Skill Box Body");
+        float r = 0.045f;
+        _trimMesh = new Visuals.ProcMesh()
+            // Ribbons wrap over the lid and down both sides; slightly proud of the body so they read as bands.
+            .ChamferBox(At(0f, s.y * 0.5f, 0f, new Vector3(r, s.y * 1.02f, s.z * 1.04f)), 0.35f)
+            .ChamferBox(At(0f, s.y * 0.5f, 0f, new Vector3(s.x * 1.04f, s.y * 1.02f, r)), 0.35f)
+            // Bow: two flattened loops tilted up and out from a small knot.
+            .Diamond(At(-0.075f, s.y + 0.045f, 0f, new Vector3(0.15f, 0.07f, 0.06f), new Vector3(0f, 0f, -28f)))
+            .Diamond(At(0.075f, s.y + 0.045f, 0f, new Vector3(0.15f, 0.07f, 0.06f), new Vector3(0f, 0f, 28f)))
+            .ChamferBox(At(0f, s.y + 0.03f, 0f, new Vector3(0.06f, 0.055f, 0.06f)), 0.3f)
+            .Build("IHM Skill Box Trim");
+        _bodyMesh.hideFlags = _trimMesh.hideFlags = HideFlags.HideAndDontSave;
+    }
+
+    private void Part(string name, Mesh mesh, Material mat)
+    {
+        // Mesh only, no collider: walk-through, never blocks players, monsters or loot.
+        var go = new GameObject(name, typeof(MeshFilter), typeof(MeshRenderer));
         go.transform.SetParent(_shell, false);
-        go.transform.localPosition = pos;
-        go.transform.localScale = size;
+        go.GetComponent<MeshFilter>().sharedMesh = mesh;
         go.GetComponent<MeshRenderer>().sharedMaterial = mat;
-        Destroy(go.GetComponent<Collider>()); // walk-through: never blocks players, monsters or loot
     }
 
     private static TMP_FontAsset _font;
@@ -373,9 +436,12 @@ internal sealed class SkillBoxVisual : MonoBehaviour
         float now = Time.time;
         if (_state == 0)
         {
-            _mark.localPosition = _markRest + Vector3.up * (Mathf.Sin(now * 2.2f) * 0.05f);
-            _shell.localRotation = Quaternion.Euler(0f, now * 25f, 0f);
-            _light.intensity = 1.1f + Mathf.Sin(now * 3f) * 0.25f;
+            bool flaring = now < _flareUntil;
+            float flare = PingTargets.FlarePulse(_flareUntil);
+            _mark.localPosition = _markRest + Vector3.up * (Mathf.Sin(now * 2.2f) * 0.05f + (flaring ? 0.1f : 0f));
+            _shell.localRotation = Quaternion.Euler(0f, now * (flaring ? 90f : 25f), 0f);
+            _shell.localPosition = Vector3.up * (flaring ? 0.04f + flare * 0.03f : 0f);
+            _light.intensity = flaring ? 2.2f + flare : 1.1f + Mathf.Sin(now * 3f) * 0.25f;
         }
         else
         {

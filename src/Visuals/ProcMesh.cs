@@ -66,6 +66,45 @@ internal sealed class ProcMesh
         return this;
     }
 
+    /// <summary>Unit cube with bevelled edges and corners (-0.5..0.5, faces inset by <paramref name="bevel"/>),
+    /// transformed by <paramref name="m"/>: 6 faces, 12 edge bevels and 8 corner facets, so it reads rounded.</summary>
+    internal ProcMesh ChamferBox(Matrix4x4 m, float bevel = .12f)
+    {
+        float h = .5f, i = .5f - Mathf.Clamp(bevel, .01f, .45f);
+        Vector3 V(int axis, float a, float b, float c)
+        {
+            // a on `axis`, b and c on the next two axes (cyclic), so every face is built the same way.
+            var v = Vector3.zero;
+            v[axis] = a; v[(axis + 1) % 3] = b; v[(axis + 2) % 3] = c;
+            return v;
+        }
+        for (int axis = 0; axis < 3; axis++)
+            foreach (float s in new[] { -1f, 1f })
+            {
+                Facet(m, V(axis, s * h, -i, -i), V(axis, s * h, i, -i), V(axis, s * h, i, i), V(axis, s * h, -i, i));
+                // The edge bevels between this face's axis and the next one, and the corner facets.
+                foreach (float t in new[] { -1f, 1f })
+                {
+                    Facet(m, V(axis, s * h, t * i, -i), V(axis, s * h, t * i, i), V(axis, s * i, t * h, i), V(axis, s * i, t * h, -i));
+                    if (axis == 0)
+                        foreach (float u in new[] { -1f, 1f })
+                            Facet(m, new Vector3(s * h, t * i, u * i), new Vector3(s * i, t * h, u * i), new Vector3(s * i, t * i, u * h));
+                }
+            }
+        return this;
+    }
+
+    // A convex face given in the unit shape's own space, wound to face away from its centre, then transformed.
+    private void Facet(Matrix4x4 m, params Vector3[] local)
+    {
+        var centroid = Vector3.zero;
+        foreach (var p in local) centroid += p;
+        if (Vector3.Dot(Vector3.Cross(local[1] - local[0], local[2] - local[0]), centroid) < 0f)
+            System.Array.Reverse(local);
+        for (int k = 1; k + 1 < local.Length; k++)
+            Tri(m.MultiplyPoint3x4(local[0]), m.MultiplyPoint3x4(local[k]), m.MultiplyPoint3x4(local[k + 1]));
+    }
+
     internal Mesh Build(string name)
     {
         var mesh = new Mesh { name = name };
