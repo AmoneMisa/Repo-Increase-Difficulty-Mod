@@ -37,6 +37,18 @@ internal static class SkillCatalog
     public const string StatusLab = P + "StatusLab", TranqTime = P + "TranqTime", NetTime = P + "NetTime", FreezeTime = P + "FreezeTime",
         PoisonRush = P + "PoisonRush", HeavyHitter = P + "HeavyHitter";
 
+    // Trade-offs: one pick per tier per page (see TradeOffRules). Ids are save keys: never rename.
+    public const string GunnersFocus = P + "TO_GunnersFocus", Bruiser = P + "TO_Bruiser", GlassCannon = P + "TO_GlassCannon",
+        Overdrive = P + "TO_Overdrive", Sharpshooter = P + "TO_Sharpshooter", Berserker = P + "TO_Berserker";
+    public const string HandCannon = P + "TO_HandCannon", CartCommander = P + "TO_CartCommander", LingeringToxins = P + "TO_LingeringToxins",
+        QuickShock = P + "TO_QuickShock", Executioner = P + "TO_Executioner", Overkill = P + "TO_Overkill";
+    public const string ThickSkin = P + "TO_ThickSkin", Sprinter = P + "TO_Sprinter", Juggernaut = P + "TO_Juggernaut",
+        Daredevil = P + "TO_Daredevil", SecondHeart = P + "TO_SecondHeart", LastStand = P + "TO_LastStand", GhostRunner = P + "TO_GhostRunner";
+    public const string Floodlight = P + "TO_Floodlight", Spotlight = P + "TO_Spotlight", Scout = P + "TO_Scout",
+        EchoPing = P + "TO_EchoPing", Oracle = P + "TO_Oracle", HuntersEye = P + "TO_HuntersEye";
+    public const string Tinkerer = P + "TO_Tinkerer", DroneJockey = P + "TO_DroneJockey", MedicsOath = P + "TO_MedicsOath",
+        FortuneSeeker = P + "TO_FortuneSeeker", Overclock = P + "TO_Overclock", Salvager = P + "TO_Salvager";
+
     // Contracts: quest-only perks, earned from special quest contracts and never bought with points
     public const string CartHandling = P + "CartHandling", GentleHands = P + "GentleHands", CalmPresence = P + "CalmPresence",
         SoftSteps = P + "SoftSteps";
@@ -130,11 +142,122 @@ internal static class SkillCatalog
         Add(arsenal, "Status", PoisonRush, "Fast Poison", "Быстрый яд", 1, 3, StatusLab);
         Add(arsenal, "Status", HeavyHitter, "Heavy Hitter", "Тяжёлый удар", 1, 3, StatusLab);
 
+        AddTradeOffs();
+
         var contracts = SkillPage.Contracts;
         Add(contracts, "Contracts", CartHandling, "Cart Handling", "Лёгкая тележка", 0, 3, root: true).QuestOnly = true;
         Add(contracts, "Contracts", GentleHands, "Gentle Hands", "Бережные руки", 0, 3, root: true).QuestOnly = true;
         Add(contracts, "Contracts", CalmPresence, "Calm Presence", "Спокойствие", 0, 3, root: true).QuestOnly = true;
         Add(contracts, "Contracts", SoftSteps, "Soft Steps", "Тихие шаги", 0, 3, root: true).QuestOnly = true;
+    }
+
+    // Trade-off skills, page by page. The numbers live only here; the tree text is the Up and Down lines.
+    private static void AddTradeOffs()
+    {
+        var combat = SkillPage.Combat;
+        AddTradeOff(combat, 1, GunnersFocus, "Gunner's Focus", "Фокус стрелка", "+15% gun damage", "-15% melee and grenade damage",
+            "+15% урона оружием", "-15% урона в ближнем бою и гранатами",
+            (Fx.GunDamage, 1.15f), (Fx.CartDamage, 1.15f), (Fx.MeleeDamage, .85f), (Fx.GrenadeDamage, .85f));
+        AddTradeOff(combat, 1, Bruiser, "Bruiser", "Громила", "+15% melee and tumble damage", "-15% gun damage",
+            "+15% урона в ближнем бою и в кувырке", "-15% урона оружием",
+            (Fx.MeleeDamage, 1.15f), (Fx.TumbleDamage, 1.15f), (Fx.GunDamage, .85f), (Fx.CartDamage, .85f));
+        AddTradeOff(combat, 2, GlassCannon, "Glass Cannon", "Стеклянная пушка", "+25% damage with everything", "+20% damage taken",
+            "+25% урона всем", "+20% получаемого урона",
+            (Fx.DamageDealt, 1.25f), (Fx.DamageTaken, 1.2f));
+        AddTradeOff(combat, 2, Overdrive, "Overdrive", "Форсаж", "Hold monsters in your grab 40% longer; your melee and tranquilizer stuns last 30% longer", "All your battery items drain 25% faster",
+            "Монстров можно держать захватом на 40% дольше; оглушения в ближнем бою и транквилизатором на 30% дольше", "Все ваши предметы с батареей разряжаются на 25% быстрее",
+            (Fx.GrabHold, 1.4f), (Fx.StunLength, 1.3f), (Fx.BatteryItems, 1.25f), (Fx.BatteryGuns, 1.25f), (Fx.BatteryDrones, 1.25f));
+        AddTradeOff(combat, 3, Sharpshooter, "Sharpshooter", "Снайпер", "+35% gun damage", "25% fewer shots per charge",
+            "+35% урона оружием", "На 25% меньше выстрелов на заряд",
+            (Fx.GunDamage, 1.35f), (Fx.CartDamage, 1.35f), (Fx.BatteryGuns, 1f / .75f));
+        AddTradeOff(combat, 3, Berserker, "Berserker", "Берсерк", "+40% melee damage; melee stuns last 1 s longer", "-30% gun and grenade damage; sprinting costs 20% more stamina",
+            "+40% урона в ближнем бою; оглушение в ближнем бою на 1 с дольше", "-30% урона оружием и гранатами; бег тратит на 20% больше стамины",
+            (Fx.MeleeDamage, 1.4f), (Fx.MeleeStunSeconds, 1f), (Fx.GunDamage, .7f), (Fx.CartDamage, .7f), (Fx.GrenadeDamage, .7f),
+            (Fx.SprintStamina, 1.2f));
+
+        var arsenal = SkillPage.Arsenal;
+        AddTradeOff(arsenal, 1, HandCannon, "Hand Cannon", "Ручная пушка", "+15% handgun, revolver, shotgun, staff and crossbow damage", "-15% cart cannon and cart laser damage",
+            "+15% урона пистолета, револьвера, дробовика, посоха и арбалета", "-15% урона пушки и лазера тележки", (Fx.GunDamage, 1.15f), (Fx.CartDamage, .85f));
+        AddTradeOff(arsenal, 1, CartCommander, "Cart Commander", "Командир тележки", "+20% cart cannon and cart laser damage", "-15% handheld gun damage",
+            "+20% урона пушки и лазера тележки", "-15% урона ручным оружием", (Fx.CartDamage, 1.2f), (Fx.GunDamage, .85f));
+        AddTradeOff(arsenal, 2, LingeringToxins, "Lingering Toxins", "Затяжные токсины", "Your tranquilizer, net, freeze and poison last 25% longer (cap 10 s instead of 8 s)", "-15% direct gun and cart damage",
+            "Ваши транквилизатор, сеть, заморозка и яд длятся на 25% дольше (предел 10 с вместо 8 с)", "-15% прямого урона оружием и тележкой",
+            (Fx.StatusLength, 1.25f), (Fx.StatusCapSeconds, 10f), (Fx.GunDamage, .85f), (Fx.CartDamage, .85f));
+        AddTradeOff(arsenal, 2, QuickShock, "Quick Shock", "Быстрый шок", "+25% gun and cart damage", "Your status effects are 25% shorter",
+            "+25% урона оружием и тележкой", "Ваши статусы на 25% короче",
+            (Fx.GunDamage, 1.25f), (Fx.CartDamage, 1.25f), (Fx.StatusLength, .75f));
+        AddTradeOff(arsenal, 3, Executioner, "Executioner", "Палач", "+50% damage to stunned, frozen, netted or sedated monsters", "-25% damage to every other monster",
+            "+50% урона по оглушённым, замороженным, пойманным в сеть или усыплённым монстрам", "-25% урона по остальным монстрам", (Fx.StunnedTargetDamage, 1.5f), (Fx.OtherTargetDamage, .75f));
+        AddTradeOff(arsenal, 3, Overkill, "Overkill", "Перебор", "+40% gun and cart damage", "Your status effects last half as long",
+            "+40% урона оружием и тележкой", "Ваши статусы длятся вдвое короче",
+            (Fx.GunDamage, 1.4f), (Fx.CartDamage, 1.4f), (Fx.StatusLength, .5f));
+
+        var survival = SkillPage.Survival;
+        AddTradeOff(survival, 1, ThickSkin, "Thick Skin", "Толстая кожа", "-12% damage taken", "8% slower sprint",
+            "-12% получаемого урона", "Бег на 8% медленнее",
+            (Fx.DamageTaken, .88f), (Fx.SprintSpeed, .92f));
+        AddTradeOff(survival, 1, Sprinter, "Sprinter", "Спринтер", "+10% sprint speed", "Sprinting costs 15% more stamina",
+            "+10% скорости бега", "Бег тратит на 15% больше стамины",
+            (Fx.SprintSpeed, 1.1f), (Fx.SprintStamina, 1.15f));
+        AddTradeOff(survival, 2, Juggernaut, "Juggernaut", "Джаггернаут", "-25% damage taken", "15% slower walking, sprinting and crouching",
+            "-25% получаемого урона", "Ходьба, бег и присед на 15% медленнее",
+            (Fx.DamageTaken, .75f), (Fx.WalkSpeed, .85f), (Fx.SprintSpeed, .85f), (Fx.CrouchSpeed, .85f));
+        AddTradeOff(survival, 2, Daredevil, "Daredevil", "Сорвиголова", "+20% walking, sprinting and crouching speed", "+20% damage taken",
+            "+20% скорости ходьбы, бега и приседа", "+20% получаемого урона",
+            (Fx.WalkSpeed, 1.2f), (Fx.SprintSpeed, 1.2f), (Fx.CrouchSpeed, 1.2f), (Fx.DamageTaken, 1.2f));
+        AddTradeOff(survival, 2, SecondHeart, "Second Heart", "Второе сердце", "HP Regeneration works twice as fast", "Health packs heal you 30% less",
+            "Регенерация HP работает вдвое быстрее", "Аптечки лечат вас на 30% меньше", (Fx.RegenRate, 2f), (Fx.SelfHeal, .7f));
+        AddTradeOff(survival, 3, LastStand, "Last Stand", "Последний рубеж", "Once per level, a hit that would kill you leaves you at 1 HP", "-30% max stamina",
+            "Раз за уровень удар, который убил бы вас, оставляет 1 HP", "-30% максимальной стамины", (Fx.MaxStamina, .7f)).Special = true;
+        AddTradeOff(survival, 3, GhostRunner, "Ghost Runner", "Призрак", "Monsters hear you 30% less; +15% crouching speed", "+30% damage taken",
+            "Монстры слышат вас на 30% хуже; +15% скорости в присяде", "+30% получаемого урона", (Fx.Noise, .7f), (Fx.CrouchSpeed, 1.15f), (Fx.DamageTaken, 1.3f));
+
+        var recon = SkillPage.Recon;
+        AddTradeOff(recon, 1, Floodlight, "Floodlight", "Широкий луч", "Flashlight beam 40% wider", "Beam 25% dimmer and shorter",
+            "Луч фонарика на 40% шире", "Луч на 25% тусклее и короче",
+            (Fx.FlashWidth, 1.4f), (Fx.FlashRange, .75f), (Fx.FlashBright, .75f));
+        AddTradeOff(recon, 1, Spotlight, "Spotlight", "Дальний луч", "Flashlight reaches 40% farther and is 25% brighter", "Beam 30% narrower",
+            "Фонарик светит на 40% дальше и на 25% ярче", "Луч на 30% уже",
+            (Fx.FlashRange, 1.4f), (Fx.FlashBright, 1.25f), (Fx.FlashWidth, .7f));
+        AddTradeOff(recon, 2, Scout, "Scout", "Разведчик", "+50% Autoscan reach", "Monsters hear you 15% more",
+            "+50% радиуса автоскана", "Монстры слышат вас на 15% лучше",
+            (Fx.AutoscanReach, 1.5f), (Fx.Noise, 1.15f));
+        AddTradeOff(recon, 2, EchoPing, "Echo Ping", "Эхо-пинг", "Your pings show monsters within 8 m on your map while the ping lasts", "Monsters near the spot you ping come to look",
+            "Ваши пинги показывают на карте монстров в радиусе 8 м, пока пинг виден", "Монстры рядом с отмеченным местом приходят посмотреть").Special = true;
+        AddTradeOff(recon, 3, Oracle, "Oracle", "Оракул", "Your map shows every valuable on the level, found or not", "+20% damage taken",
+            "Ваша карта показывает все ценности уровня, найденные или нет", "+20% получаемого урона",
+            (Fx.DamageTaken, 1.2f)).Special = true;
+        AddTradeOff(recon, 3, HuntersEye, "Hunter's Eye", "Глаз охотника", "Monster dots on your map and monster HP on your pings, as if you had both perks", "Crouching and crawling no longer hide you from monsters' eyes",
+            "Монстры точками на карте и их HP на пингах, как с обоими навыками", "Присед и ползание больше не скрывают вас от глаз монстров").Special = true;
+
+        var utility = SkillPage.Utility;
+        AddTradeOff(utility, 1, Tinkerer, "Tinkerer", "Самоделкин", "Battery items drain 20% slower", "Drone batteries last 20% shorter",
+            "Предметы с батареей разряжаются на 20% медленнее", "Батареи дронов на 20% короче",
+            (Fx.BatteryItems, .8f), (Fx.BatteryDrones, 1.25f));
+        AddTradeOff(utility, 1, DroneJockey, "Drone Jockey", "Дронщик", "Drone batteries last 25% longer", "Battery items drain 15% faster",
+            "Батареи дронов на 25% дольше", "Предметы с батареей разряжаются на 15% быстрее",
+            (Fx.BatteryDrones, .8f), (Fx.BatteryItems, 1.15f));
+        AddTradeOff(utility, 2, MedicsOath, "Medic's Oath", "Клятва медика", "Field Medic gives teammates 50% more", "Health packs heal you 25% less",
+            "Полевой медик даёт союзникам на 50% больше", "Аптечки лечат вас на 25% меньше",
+            (Fx.MedicShare, 1.5f), (Fx.SelfHeal, .75f));
+        AddTradeOff(utility, 2, FortuneSeeker, "Fortune Seeker", "Искатель удачи", "Skill boxes roll as if you had one more Lucky Finder level", "Battery crystals give you half the charge",
+            "Коробки навыков выпадают как с ещё одним уровнем Везунчика", "Кристаллы заряда дают вам вдвое меньше", (Fx.LuckyLevels, 1f), (Fx.CrystalCharge, .5f));
+        AddTradeOff(utility, 3, Overclock, "Overclock", "Разгон", "Battery items and guns drain 30% slower", "-20% grab strength",
+            "Предметы с батареей и оружие разряжаются на 30% медленнее", "-20% силы захвата",
+            (Fx.BatteryItems, .7f), (Fx.BatteryGuns, .7f), (Fx.GrabStrength, .8f));
+        AddTradeOff(utility, 3, Salvager, "Salvager", "Сборщик", "Loot you hold loses 30% less value when it breaks", "You move 10% slower while holding loot",
+            "Лут в руках теряет на 30% меньше ценности при поломке", "Пока держите лут, вы двигаетесь на 10% медленнее", (Fx.LootBreakLoss, .7f), (Fx.HoldingLootSpeed, .9f));
+    }
+
+    private static TradeOff AddTradeOff(SkillPage page, int tier, string id, string name, string nameRu, string up, string down,
+        string upRu, string downRu, params (Fx, float)[] effects)
+    {
+        var node = Add(page, TradeOffRules.Branch(tier), id, name, nameRu, tier, 1, root: true);
+        node.Tier = tier;
+        var tradeOff = TradeOffRules.Define(id, tier, up, down, effects);
+        tradeOff.UpRu = upRu;
+        tradeOff.DownRu = downRu;
+        return tradeOff;
     }
 
     /// <summary>The quest-only perks, in catalogue order (index = the id a quest contract sends).</summary>
@@ -179,18 +302,33 @@ internal static class SkillCatalog
         return QuestPerks.FindIndex(n => n.Id == id);
     }
 
-    /// <summary>Points needed to max every node.</summary>
+    /// <summary>Points needed to max the tree: every normal node, plus one trade-off per tier on each page.</summary>
     internal static int TotalCost()
     {
         int sum = 0;
-        foreach (var node in Nodes) sum += node.TotalCost;
+        foreach (SkillPage page in Enum.GetValues(typeof(SkillPage))) sum += PageCost(page);
         return sum;
     }
 
+    /// <summary>Points to max a page: its normal nodes plus one pick on each trade-off tier it has.</summary>
     internal static int PageCost(SkillPage page)
     {
         int sum = 0;
-        foreach (var node in Nodes) if (node.Page == page) sum += node.TotalCost;
+        var tiers = new HashSet<int>();
+        foreach (var node in Nodes)
+        {
+            if (node.Page != page) continue;
+            if (node.Tier == 0) sum += node.TotalCost;
+            else if (tiers.Add(node.Tier)) sum += node.TotalCost;
+        }
+        return sum;
+    }
+
+    /// <summary>Points to max a page's normal nodes only (what the trade-off gates are measured against).</summary>
+    internal static int NormalPageCost(SkillPage page)
+    {
+        int sum = 0;
+        foreach (var node in Nodes) if (node.Page == page && node.Tier == 0 && !node.QuestOnly) sum += node.TotalCost;
         return sum;
     }
 }

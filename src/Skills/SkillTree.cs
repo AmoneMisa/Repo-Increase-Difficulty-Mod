@@ -30,6 +30,9 @@ internal sealed class SkillNode
     public bool Root;
     /// <summary>Never bought with points: levels come only from special quest contracts (and a refund keeps them).</summary>
     public bool QuestOnly;
+    /// <summary>0 for a normal perk; 1-3 for a trade-off skill (see <see cref="TradeOffRules"/>): one pick per tier
+    /// per page, opened by points spent in that page's normal perks, tiers II and III needing the tier below.</summary>
+    public int Tier;
 
     public int TotalCost => Cost * MaxLevel;
 }
@@ -41,6 +44,8 @@ internal enum BuyBlock : byte
     // Decided by the host's game state rather than the loadout:
     WrongPlace, NotReady, NoMoney, NothingSpent,
     QuestOnly,
+    // Trade-off skills:
+    GateNotMet, TierTaken, NeedLowerTier,
 }
 
 /// <summary>
@@ -101,8 +106,67 @@ internal static class SkillRules
         if (node.QuestOnly) return BuyBlock.QuestOnly;
         foreach (var need in node.Requires)
             if (loadout.Level(need) < 1) return BuyBlock.MissingPrerequisite;
+        if (node.Tier > 0)
+        {
+            var tier = TradeOffBlock(loadout, node);
+            if (tier != BuyBlock.None) return tier;
+        }
         if (loadout.Available < node.Cost * count) return BuyBlock.NotEnoughPoints;
         return BuyBlock.None;
+    }
+
+    /// <summary>Points spent in a page's normal perks (trade-offs and quest-only perks don't count).</summary>
+    internal static int PageSpent(SkillLoadout loadout, SkillPage page)
+    {
+        int sum = 0;
+        foreach (var pair in loadout.Bought)
+        {
+            var node = SkillCatalog.Find(pair.Key);
+            if (node != null && node.Page == page && node.Tier == 0 && !node.QuestOnly && pair.Value > 0) sum += pair.Value * node.Cost;
+        }
+        return sum;
+    }
+
+    /// <summary>The trade-off this loadout holds on a page's tier, or null.</summary>
+    internal static string TierPick(SkillLoadout loadout, SkillPage page, int tier)
+    {
+        foreach (var pair in loadout.Bought)
+        {
+            var node = SkillCatalog.Find(pair.Key);
+            if (node != null && node.Page == page && node.Tier == tier && pair.Value > 0) return node.Id;
+        }
+        return null;
+    }
+
+    // Why a trade-off can't be taken: the page gate, another pick on its tier, or no pick on the tier below.
+    private static BuyBlock TradeOffBlock(SkillLoadout loadout, SkillNode node)
+    {
+        string held = TierPick(loadout, node.Page, node.Tier);
+        if (held != null && held != node.Id) return BuyBlock.TierTaken;
+        if (PageSpent(loadout, node.Page) < TradeOffRules.Gate(node.Page, node.Tier)) return BuyBlock.GateNotMet;
+        if (node.Tier > 1 && TierPick(loadout, node.Page, node.Tier - 1) == null) return BuyBlock.NeedLowerTier;
+        return BuyBlock.None;
+    }
+
+    /// <summary>Points spent on trade-off skills.</summary>
+    internal static int TradeOffSpent(SkillLoadout loadout)
+    {
+        int sum = 0;
+        foreach (var pair in loadout.Bought)
+        {
+            var node = SkillCatalog.Find(pair.Key);
+            if (node != null && node.Tier > 0 && pair.Value > 0) sum += pair.Value * node.Cost;
+        }
+        return sum;
+    }
+
+    /// <summary>Refunds only the trade-off skills; normal perks stay. Returns the points refunded.</summary>
+    internal static int RespecTradeOffs(SkillLoadout loadout)
+    {
+        int refunded = TradeOffSpent(loadout);
+        foreach (var id in new List<string>(loadout.Bought.Keys))
+            if (SkillCatalog.Find(id)?.Tier > 0) loadout.Bought.Remove(id);
+        return refunded;
     }
 
     /// <summary>Host side: apply a buy if it is allowed. Returns the reason when it is not.</summary>
@@ -160,6 +224,17 @@ internal static class SkillRules
                     if (loadout.Level(need) < 1) { loadout.Bought.Remove(id); fixes.Add($"{id}: removed (needs {need})"); changed = true; break; }
             }
         }
+        // Trade-offs: drop any whose gate is no longer met, a second pick on one tier, or a tier above a missing one.
+        for (int tier = 1; tier <= TradeOffRules.Tiers; tier++)
+            foreach (var id in new List<string>(loadout.Bought.Keys))
+            {
+                var node = SkillCatalog.Find(id);
+                if (node == null || node.Tier != tier) continue;
+                loadout.Bought.Remove(id); // judged as if it were not held, so its own pick does not block it
+                var block = TradeOffBlock(loadout, node);
+                if (block == BuyBlock.None) loadout.Bought[id] = 1;
+                else fixes.Add($"{id}: removed ({block})");
+            }
         while (loadout.Available < 0)
         {
             string worst = null;

@@ -13,10 +13,44 @@ internal static class SkillText
     private static float PerLevel(float oldPerLevel, int oldMax, string node) =>
         oldPerLevel * Mathf.Max(1, oldMax) / Mathf.Max(1, C.Find(node).MaxLevel);
 
+    private static System.Reflection.PropertyInfo _selectedLocale;
+    private static bool _localeLooked;
+
+    /// <summary>The game's language is Russian (Unity Localization, read by reflection: the mod doesn't reference it).</summary>
+    internal static bool Russian
+    {
+        get
+        {
+            try
+            {
+                if (!_localeLooked)
+                {
+                    _localeLooked = true;
+                    var settings = System.Type.GetType("UnityEngine.Localization.Settings.LocalizationSettings, Unity.Localization");
+                    _selectedLocale = settings?.GetProperty("SelectedLocale", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                }
+                var locale = _selectedLocale?.GetValue(null);
+                var identifier = locale?.GetType().GetProperty("Identifier")?.GetValue(locale);
+                var code = identifier?.GetType().GetProperty("Code")?.GetValue(identifier) as string;
+                return code != null && code.StartsWith("ru", System.StringComparison.OrdinalIgnoreCase);
+            }
+            catch { return false; }
+        }
+    }
+
+    /// <summary>A node's display name: Russian for trade-offs when the game is Russian.</summary>
+    internal static string Name(SkillNode node) =>
+        node.Tier > 0 && Russian && !string.IsNullOrEmpty(node.NameRu) ? node.NameRu : node.Name;
+
     internal static string Describe(string id)
     {
         float root = SkillEffects.RootBonus, weaponMax = Mathf.Max(0f, ModConfig.SkillWeaponDamageMax.Value);
         string Weapon(string node, string weapon) => $"+{Pct(weaponMax / C.Find(node).MaxLevel)} {weapon} damage per level (+{Pct(weaponMax)} at max).";
+        var tradeOff = TradeOffRules.Find(id);
+        if (tradeOff != null)
+            return Russian && tradeOff.UpRu != null
+                ? $"{tradeOff.UpRu}.  <color=#FF8C8C>Минус: {tradeOff.DownRu}.</color>"
+                : $"{tradeOff.Up}.  <color=#FF8C8C>Downside: {tradeOff.Down}.</color>";
         switch (id)
         {
             case C.MapUplink: return "The map shows how many players are alive.";

@@ -6,9 +6,62 @@ int checks = 0;
 void Check(bool ok, string name) { if (!ok) throw new Exception("FAIL " + name); Console.WriteLine("PASS " + name); checks++; }
 
 // ---------------------------------------------------------------- catalogue
-Check(C.PageCost(SkillPage.Recon) == 28 && C.PageCost(SkillPage.Combat) == 43 &&
-      C.PageCost(SkillPage.Survival) == 37 && C.PageCost(SkillPage.Utility) == 33 && C.PageCost(SkillPage.Arsenal) == 42, "Page costs match the plan");
-Check(C.TotalCost() == 183, "Whole tree costs 183 points");
+Check(C.NormalPageCost(SkillPage.Recon) == 28 && C.NormalPageCost(SkillPage.Combat) == 43 &&
+      C.NormalPageCost(SkillPage.Survival) == 37 && C.NormalPageCost(SkillPage.Utility) == 33 && C.NormalPageCost(SkillPage.Arsenal) == 42, "Normal page costs match the plan");
+Check(C.PageCost(SkillPage.Recon) == 34 && C.PageCost(SkillPage.Combat) == 49 && C.PageCost(SkillPage.Survival) == 43 &&
+      C.PageCost(SkillPage.Utility) == 39 && C.PageCost(SkillPage.Arsenal) == 48, "Each page adds one trade-off per tier (1+2+3 points)");
+Check(C.TotalCost() == 213, "Whole tree costs 213 points (183 normal + 30 trade-off picks)");
+
+// ---------------------------------------------------------------- trade-offs
+var tradeOffs = C.All.Where(n => n.Tier > 0).ToList();
+var tradePages = new[] { SkillPage.Recon, SkillPage.Combat, SkillPage.Survival, SkillPage.Utility, SkillPage.Arsenal };
+Check(tradeOffs.Count == 31, "31 trade-off skills");
+Check(tradePages.All(pg => Enumerable.Range(1, 3).All(t => tradeOffs.Count(n => n.Page == pg && n.Tier == t) >= 2)),
+      "At least two trade-offs on every tier of every page");
+Check(tradeOffs.All(n => n.Page != SkillPage.Contracts && n.Cost == n.Tier && n.MaxLevel == 1 && n.Root && n.Requires.Length == 0 && !n.QuestOnly),
+      "Trade-offs: tier N costs N points, one level, no prerequisites");
+Check(tradeOffs.All(n => TradeOffRules.Find(n.Id) is { } t && t.Tier == n.Tier && t.Up.Length > 0 && t.Down.Length > 0 && (t.Special || t.Effects.Length >= 2)),
+      "Every trade-off has an upside, a downside and effects");
+Check(tradeOffs.All(n => TradeOffRules.Find(n.Id).Special || TradeOffRules.Find(n.Id).Effects.Count(e => e.Fx is Fx.MeleeStunSeconds or Fx.LuckyLevels or Fx.StatusCapSeconds || Math.Abs(e.Value - 1f) > 1e-4f) >= 2),
+      "Every numeric trade-off changes at least two things");
+Check(tradeOffs.All(n => !string.IsNullOrEmpty(TradeOffRules.Find(n.Id).UpRu) && !string.IsNullOrEmpty(TradeOffRules.Find(n.Id).DownRu) && !string.IsNullOrEmpty(n.NameRu)),
+      "Every trade-off has a Russian name, upside and downside");
+Check(tradePages.All(pg => TradeOffRules.Gate(pg, 1) < TradeOffRules.Gate(pg, 2) && TradeOffRules.Gate(pg, 2) < TradeOffRules.Gate(pg, 3) &&
+      TradeOffRules.Gate(pg, 3) <= C.NormalPageCost(pg)), "Gates rise per tier and the last fits inside the page");
+
+// Fill a page's normal perks (catalogue order respects prerequisites) until at least `points` are spent.
+SkillLoadout Spend(SkillPage pg, int points)
+{
+    var lo = new SkillLoadout { Earned = 500 };
+    foreach (var n in C.All.Where(n => n.Page == pg && n.Tier == 0 && !n.QuestOnly))
+        while (SkillRules.PageSpent(lo, pg) < points && SkillRules.Buy(lo, n.Id) == BuyBlock.None) { }
+    return lo;
+}
+var fresh = new SkillLoadout { Earned = 50 };
+Check(SkillRules.CanBuy(fresh, C.GunnersFocus) == BuyBlock.GateNotMet, "Tier I is locked until the page gate");
+var combatLo = Spend(SkillPage.Combat, 12);
+Check(SkillRules.PageSpent(combatLo, SkillPage.Combat) >= 12 && SkillRules.Buy(combatLo, C.GunnersFocus) == BuyBlock.None, "Tier I opens at 12 Combat points");
+Check(SkillRules.CanBuy(combatLo, C.Bruiser) == BuyBlock.TierTaken, "Only one pick per tier");
+Check(SkillRules.CanBuy(combatLo, C.GlassCannon) == BuyBlock.GateNotMet, "Tier II needs its own gate");
+var combat2 = Spend(SkillPage.Combat, 24);
+Check(SkillRules.CanBuy(combat2, C.GlassCannon) == BuyBlock.NeedLowerTier, "Tier II needs a tier I pick");
+Check(SkillRules.Buy(combat2, C.Bruiser) == BuyBlock.None && SkillRules.Buy(combat2, C.Overdrive) == BuyBlock.None, "Tier II after tier I");
+Check(SkillRules.CanBuy(combat2, C.GunnersFocus) == BuyBlock.TierTaken, "The other tier I pick stays closed");
+Check(SkillRules.CanBuy(combat2, C.Sharpshooter) == BuyBlock.GateNotMet, "Tier III needs 36 Combat points");
+int normalBefore = combat2.Spent - SkillRules.TradeOffSpent(combat2);
+Check(SkillRules.TradeOffSpent(combat2) == 3 && SkillRules.RespecTradeOffs(combat2) == 3 && combat2.Level(C.Bruiser) == 0 &&
+      combat2.Spent == normalBefore, "Trade-off reset refunds only trade-offs");
+Check(SkillRules.Buy(combat2, C.GunnersFocus) == BuyBlock.None, "After a reset another tier I pick is allowed");
+var lost = Spend(SkillPage.Combat, 24);
+SkillRules.Buy(lost, C.GunnersFocus); SkillRules.Buy(lost, C.GlassCannon);
+lost.Bought.Remove(C.GrenadeDamage); lost.Bought.Remove(C.MeleeDamage); lost.Bought.Remove(C.TumbleDamage);
+var lostFixes = SkillRules.Sanitize(lost);
+Check(lost.Level(C.GlassCannon) == 0 && lostFixes.Any(f => f.Contains("TO_GlassCannon")), "Sanitize drops a trade-off whose gate is gone");
+Check(Math.Abs(TradeOffRules.Factor(id => id == C.GlassCannon || id == C.Juggernaut, Fx.DamageTaken) - 1.2f * .75f) < 1e-4f,
+      "Damage-taken factors multiply");
+Check(TradeOffRules.Factor(_ => false, Fx.GunDamage) == 1f && TradeOffRules.Sum(id => id == C.Berserker, Fx.MeleeStunSeconds) == 1f, "No trade-offs, no change");
+Check(Math.Abs(TradeOffRules.StatusSeconds(6f, 1.25f, 10f) - 7.5f) < 1e-4f && TradeOffRules.StatusSeconds(9f, 1.25f, 10f) == 10f &&
+      TradeOffRules.StatusSeconds(12f, 1.25f, 10f) == 12f && TradeOffRules.StatusSeconds(8f, .5f, 8f) == 4f, "Status length: longer up to the cap, shorter by the factor");
 Check(C.Find(C.CrouchSpeed) is { Page: SkillPage.Survival, Cost: 1, MaxLevel: 3 } && C.Find(C.CrouchSpeed).Requires.SequenceEqual(new[] { C.Survivor }),
       "Crouch Speed: Survival, 1 point a level, 3 levels, under Survivor");
 Check(Math.Abs(PerkRules.CrouchSpeedFactor(3, .05f) - 1.15f) < 1e-5f && PerkRules.CrouchSpeedFactor(0, .05f) == 1f &&

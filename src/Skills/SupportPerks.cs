@@ -101,9 +101,11 @@ internal static class SupportPerks
             if (__instance.used || !SemiFunc.IsMasterClientOrSingleplayer() || __instance.itemToggle == null || !__instance.itemToggle.toggleState) return;
             var user = SemiFunc.PlayerAvatarGetFromPhotonID(__instance.itemToggle.playerTogglePhotonID);
             int level = SkillEffects.Level(user, C.FieldMedic);
-            if (level <= 0) return;
+            float self = TradeOffs.Factor(user, Fx.SelfHeal); // Second Heart / Medic's Oath: packs heal you less
+            if (level <= 0 && Mathf.Approximately(self, 1f)) return;
             __state = (__instance.healAmount, false, user, level);
-            __instance.healAmount = PerkRules.MedicSelfHeal(__instance.healAmount, level, ModConfig.SkillMedicPerLevel.Value);
+            int heal = level > 0 ? PerkRules.MedicSelfHeal(__instance.healAmount, level, ModConfig.SkillMedicPerLevel.Value) : __instance.healAmount;
+            __instance.healAmount = Mathf.Max(1, Mathf.RoundToInt(heal * self));
         }
 
         [HarmonyPostfix]
@@ -111,9 +113,10 @@ internal static class SupportPerks
         {
             if (__state.User == null) return;
             __instance.healAmount = __state.Heal;
-            if (__state.Used || !__instance.used) return; // not used this frame (rejected at full health, or still waiting)
+            if (__state.Used || !__instance.used || __state.Level <= 0) return; // not used this frame, or no Field Medic
 
-            int share = PerkRules.MedicShare(__state.Heal, __state.Level, ModConfig.SkillMedicPerLevel.Value);
+            int share = Mathf.RoundToInt(PerkRules.MedicShare(__state.Heal, __state.Level, ModConfig.SkillMedicPerLevel.Value) *
+                                         TradeOffs.Factor(__state.User, Fx.MedicShare)); // Medic's Oath
             float radius = Mathf.Max(0f, ModConfig.SkillMedicRadius.Value);
             var players = SemiFunc.PlayerGetList();
             if (share <= 0 || players == null) return;
@@ -133,29 +136,44 @@ internal static class SupportPerks
 }
 
 /// <summary>
-/// Crouch Speed (local player's own controller): crouch-walking is faster per level. The game moves a crouching
-/// player by PlayerController.CrouchSpeed and resets it from playerOriginalCrouchSpeed after speed overrides
-/// (slows, hurt, carrying), so both are scaled together, once per change of the bonus. Never touches sprint or walk.
+/// Local player's movement and grip from the skill tree: Crouch Speed, the speed trade-offs (Sprinter, Thick Skin,
+/// Juggernaut, Daredevil, Ghost Runner, Salvager while holding loot) and Overclock's weaker grip. The game moves a
+/// player by PlayerController.MoveSpeed / SprintSpeed / CrouchSpeed and resets them from their playerOriginal* copies
+/// after speed overrides (slows, hurt, carrying), so each pair is scaled together, once per change of the factor.
+/// Additions the game or a quest makes later stay unscaled, which keeps every change reversible.
 /// </summary>
 internal static class CrouchSpeedPerk
 {
     private static PlayerController _controller;
-    private static float _applied = 1f;
+    private static PhysGrabber _grabber;
+    private static float _walk = 1f, _sprint = 1f, _crouch = 1f, _grip = 1f;
 
     internal static void Tick()
     {
         var pc = PlayerController.instance;
-        if (pc == null) { _controller = null; _applied = 1f; return; }
-        if (pc != _controller) { _controller = pc; _applied = 1f; } // a new level builds a new controller
+        if (pc == null) { _controller = null; _walk = _sprint = _crouch = 1f; return; }
+        if (pc != _controller) { _controller = pc; _walk = _sprint = _crouch = 1f; } // a new level builds a new controller
 
         var local = SemiFunc.PlayerAvatarLocal();
         int level = local != null ? SkillEffects.Level(local, SkillCatalog.CrouchSpeed) : 0;
-        float want = PerkRules.CrouchSpeedFactor(level, ModConfig.SkillCrouchSpeedPerLevel.Value);
-        if (Mathf.Approximately(want, _applied) || _applied <= 0f) return;
+        var grabber = local != null ? local.physGrabber : null;
+        bool loot = grabber != null && grabber.grabbed && grabber.grabbedPhysGrabObject != null &&
+                    grabber.grabbedPhysGrabObject.GetComponent<ValuableObject>() != null;
+        float holding = loot ? TradeOffs.Factor(local, Fx.HoldingLootSpeed) : 1f;
 
-        float k = want / _applied;
-        pc.playerOriginalCrouchSpeed *= k;
-        pc.CrouchSpeed *= k;
-        _applied = want;
+        float walk = TradeOffs.Factor(local, Fx.WalkSpeed) * holding;
+        float sprint = TradeOffs.Factor(local, Fx.SprintSpeed) * holding;
+        float crouch = PerkRules.CrouchSpeedFactor(level, ModConfig.SkillCrouchSpeedPerLevel.Value) * TradeOffs.Factor(local, Fx.CrouchSpeed) * holding;
+        if (!Mathf.Approximately(walk, _walk)) { float k = walk / _walk; pc.playerOriginalMoveSpeed *= k; pc.MoveSpeed *= k; _walk = walk; }
+        if (!Mathf.Approximately(sprint, _sprint)) { float k = sprint / _sprint; pc.playerOriginalSprintSpeed *= k; pc.SprintSpeed *= k; _sprint = sprint; }
+        if (!Mathf.Approximately(crouch, _crouch)) { float k = crouch / _crouch; pc.playerOriginalCrouchSpeed *= k; pc.CrouchSpeed *= k; _crouch = crouch; }
+
+        // Overclock: a weaker grip (the strength upgrade keeps adding to grabStrength on top).
+        if (grabber != _grabber) { _grabber = grabber; _grip = 1f; }
+        if (grabber != null)
+        {
+            float grip = TradeOffs.Factor(local, Fx.GrabStrength);
+            if (!Mathf.Approximately(grip, _grip)) { grabber.grabStrength *= grip / _grip; _grip = grip; }
+        }
     }
 }

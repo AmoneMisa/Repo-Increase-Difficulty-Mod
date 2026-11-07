@@ -126,6 +126,9 @@ internal static class PingController
         var player = type == PingType.Player ? PlayerAt(hit.collider) : null;
         var tint = SpawnPing(type, pos, physGrab, local: true, sender, player);
         Announce(label, tint, sender);
+        // Echo Ping trade-off: nearby monsters show on your map, and (host) they come to look.
+        Skills.TradeOffs.LocalPinged(pos, ModConfig.PingDurationSeconds.Value);
+        Skills.TradeOffs.HostPinged(SemiFunc.PlayerAvatarLocal(), pos);
 
         int viewID = player != null && player.photonView != null ? player.photonView.ViewID :
             physGrab != null && physGrab.photonView != null ? physGrab.photonView.ViewID : 0;

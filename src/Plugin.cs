@@ -14,7 +14,7 @@ public static class PluginInfo
     // Keep the identity stable across the rename: existing config and integrations use it.
     public const string PLUGIN_GUID = "com.kubai.increasehardmod";
     public const string PLUGIN_NAME = "IncreaseDifficultyMod";
-    public const string PLUGIN_VERSION = "0.8.4";
+    public const string PLUGIN_VERSION = "0.8.5";
 }
 
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -151,6 +151,8 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<Skills.SkillStore.HostController>();
         netObject.AddComponent<Skills.SkillEffects.StaminaController>();
         netObject.AddComponent<Skills.SupportPerks.StatusController>();
+        // Oracle trade-off: every valuable on the local map.
+        netObject.AddComponent<Skills.TradeOffs.OracleController>();
         netObject.AddComponent<Skills.SkillTreeScreen>();
         netObject.AddComponent<Visuals.IcePrewarm>();
         Object.DontDestroyOnLoad(netObject);

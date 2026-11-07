@@ -123,8 +123,10 @@ int hudCalls=LevelInfoHud.Calls; Send(LevelInfoHud.StateEventCode,new object[]{"
     Send(ModNetwork.SkillRequestEventCode,new object[]{(byte)2,"",1},5);
     Check(S.Count==2&&S[1].Op==2&&S[1].Steam=="guest","A personal-quest point request reaches the host for the sender");
     Send(ModNetwork.SkillRequestEventCode,new object[]{(byte)3,"",1},5);
-    Check(S.Count==2,"Unknown skill request kinds are dropped");
-    S.RemoveAt(1);
+    Check(S.Count==3&&S[2].Op==3,"A trade-off reset request reaches the host");
+    Send(ModNetwork.SkillRequestEventCode,new object[]{(byte)4,"",1},5);
+    Check(S.Count==3,"Unknown skill request kinds are dropped");
+    S.RemoveRange(1,2);
     PhotonNetwork.SentData.Clear();
     Send(ModNetwork.SkillRequestEventCode,new object[]{(byte)1,"",1},9);
     Check(S.Count==1&&PhotonNetwork.SentData.Count==1,"A request from an actor without an avatar is answered but never applied");

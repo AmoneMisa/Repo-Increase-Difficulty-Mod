@@ -504,7 +504,7 @@ internal static class MapUpgrade
         }
 
         // Reuse the sprite the game already uses for valuable map dots — no assets to author.
-        private static Sprite MarkerSprite()
+        internal static Sprite MarkerSprite()
         {
             if (Map.Instance == null || Map.Instance.ValuableObject == null)
                 return null;

@@ -53,10 +53,10 @@ internal static class NetworkPayload
 
     // Skill tree: [op (0 buy, 1 respec, 2 personal-quest points), node id, level count] from a client; [op, result, node id] back from the host.
     internal static bool SkillRequest(object raw, out object[] data) => Envelope(raw, 3, 3, out data) &&
-        data[0] is byte op && op <= 2 && Text(data[1], 64) && data[2] is int count && count >= 1 && count <= 10;
+        data[0] is byte op && op <= 3 && Text(data[1], 64) && data[2] is int count && count >= 1 && count <= 10;
 
     internal static bool SkillResult(object raw, out object[] data) => Envelope(raw, 3, 3, out data) &&
-        data[0] is byte op && op <= 2 && data[1] is byte result && result <= 20 && Text(data[2], 64);
+        data[0] is byte op && op <= 3 && data[1] is byte result && result <= 20 && Text(data[2], 64);
 
     internal static bool QuestLevelEnd(object raw, out bool completed)
     {

@@ -317,7 +317,7 @@ public static class ModConfig
 
     // Skill tree (src/Skills, docs/skill-tree-plan.md).
     public static ConfigEntry<bool> SkillSpendAnywhere;
-    public static ConfigEntry<int> SkillRespecCost;
+    public static ConfigEntry<int> SkillRespecCost, SkillTradeOffResetCost;
     public static ConfigEntry<int> SkillPointBasePrice;
     public static ConfigEntry<UnityEngine.KeyCode> SkillTreeKey;
     public static ConfigEntry<float> SkillRootBonus, SkillWeaponDamageMax, SkillStatusRootSeconds, SkillSecondWindPerLevel,
@@ -1030,6 +1030,8 @@ public static class ModConfig
             "Allow spending skill points during a level. Off: points can be spent only in the shop and the truck between levels (the host decides).");
         SkillRespecCost = BindInt(cfg, "Skill Tree", "RespecCostK", 10, 0, 1000,
             "Run money (in $K, the shop's unit) to refund all of your spent skill points. Paid from the team's money, in the shop or truck only. 0 = free.");
+        SkillTradeOffResetCost = BindInt(cfg, "Skill Tree", "TradeOffResetCostK", 5, 0, 1000,
+            "Run money (in $K) to refund only your trade-off skills, so you can pick others. Shop or truck only. 0 = free.");
         SkillPointBasePrice = BindInt(cfg, "Skill Tree", "SkillPointBasePrice", 6000, 500, 1000000,
             "Approximate shop price of the first Skill Point; the game raises it with each one the team buys, like any upgrade. Takes effect on restart.");
         SkillTreeKey = cfg.Bind("Skill Tree", "OpenKey", UnityEngine.KeyCode.K,

@@ -11,7 +11,7 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.8.4`
+- **Version:** `0.8.5`
 
 Version 0.7.12 adds the plush corgi, three Rare wing cosmetics, an Armor HUD row, cleaner pings and a set of shop, HUD and multiplayer fixes ([details](release-notes/v0.7.12.md)).
 
@@ -160,6 +160,10 @@ only in the shop or truck (the host checks every purchase), and **Refund All** r
   Overcharge), Survival (stamina, Second Wind, Armor, HP regeneration), Utility (inventory slots, Autoscan, vanilla
   Death Head Battery and Tumble Wings), Arsenal (damage per weapon, longer status effects) and Contracts
   (quest-only perks from special contract quests: Cart Handling, Gentle Hands, Calm Presence, Soft Steps).
+- **Trade-offs (0.8.5):** every page except Contracts has three TRADE-OFFS rows. Each trade-off is better at one
+  thing and worse at another; you hold one per row per page. A row opens after enough points in that page's perks
+  (rows II and III also need the row below), costs 1/2/3 points, and **Reset Trade-offs** ($5K) refunds only them.
+  The full tree is 213 points.
 - **Old saves:** bought upgrades are converted into matching perks the first time a save loads.
 - The full design, costs and balance are in [docs/skill-tree-plan.md](docs/skill-tree-plan.md). Every number is in
   the `Skill Tree` and `Player Upgrades` config sections.
@@ -387,7 +391,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.8.4`
+- **Версия:** `0.8.5`
 
 В 0.7.12 добавлены плюшевый корги, три редких крыла, строка брони на HUD, более чистые пинги и исправления магазина, HUD и мультиплеера ([подробности](release-notes/v0.7.12.md)).
 
@@ -533,6 +537,10 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
   Overcharge), Выживание (выносливость, Second Wind, броня, регенерация HP), Снаряжение (слоты инвентаря, Autoscan,
   ванильные Death Head Battery и Tumble Wings), Арсенал (урон каждого оружия, более долгие статусы) и Контракты
   (перки только из особых заданий-контрактов: Cart Handling, Gentle Hands, Calm Presence, Soft Steps).
+- **Компромиссы (0.8.5):** на каждой странице, кроме Контрактов, есть три ряда TRADE-OFFS. Каждый компромисс
+  сильнее в одном и слабее в другом; на странице держится по одному в каждом ряду. Ряд открывается после
+  достаточного числа очков в перках страницы (рядам II и III нужен ещё ряд ниже), стоит 1/2/3 очка, а
+  **Reset Trade-offs** ($5K) возвращает очки только за них. Всё дерево стоит 213 очков.
 - **Старые сохранения:** купленные улучшения переводятся в подходящие перки при первой загрузке сохранения.
 - Полный дизайн, стоимость и баланс — в [docs/skill-tree-plan.md](docs/skill-tree-plan.md). Все числа настраиваются
   в разделах конфига `Skill Tree` и `Player Upgrades`.

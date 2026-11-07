@@ -85,7 +85,11 @@ internal static class SurvivalUpgrades
         {
             if (damage <= 0) return;
             if (_tumbleSelfScale < 1f) damage = Mathf.FloorToInt(damage * _tumbleSelfScale);
-            if (hurtByHeal || !ModConfig.ArmorEnabled.Value || __instance.playerAvatar == null) return;
+            if (hurtByHeal || __instance.playerAvatar == null) return;
+            // Trade-offs (Glass Cannon, Juggernaut, Thick Skin...) before Armor, so Armor reduces the result.
+            float taken = Skills.TradeOffs.Factor(__instance.playerAvatar, Skills.Fx.DamageTaken);
+            if (damage > 0 && !Mathf.Approximately(taken, 1f)) damage = Mathf.Max(1, Mathf.RoundToInt(damage * taken));
+            if (!ModConfig.ArmorEnabled.Value) return;
             float level = Level(ArmorId, __instance.playerAvatar, ModConfig.ArmorMaxLevel.Value);
             if (level > 0f) damage = Reduce(damage, Mathf.Min(ArmorCap, ModConfig.ArmorPercentPerLevel.Value * level));
         }
@@ -145,8 +149,10 @@ internal static class SurvivalUpgrades
         private static void Prefix(PhysGrabber __instance, ref float _amount, ref float _multiplier)
         {
             float level = OverchargeLevel(__instance);
-            if (level <= 0) return;
-            float slow = 1f - Mathf.Min(.8f, ModConfig.OverchargeBuildupPerLevel.Value * level);
+            // Overdrive: hold monsters longer before the beam overloads (local grabber only, like Overcharge).
+            float hold = __instance != null && __instance.isLocal ? Skills.TradeOffs.Factor(__instance.playerAvatar, Skills.Fx.GrabHold) : 1f;
+            if (level <= 0 && Mathf.Approximately(hold, 1f)) return;
+            float slow = (level > 0 ? 1f - Mathf.Min(.8f, ModConfig.OverchargeBuildupPerLevel.Value * level) : 1f) / Mathf.Max(.1f, hold);
             _amount *= slow;
             _multiplier *= slow; // also the first-grab jump
         }

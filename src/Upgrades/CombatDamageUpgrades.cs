@@ -57,10 +57,18 @@ internal static class CombatDamageUpgrades
     // fractional probability so the average bonus is exact. Host-only, so no sync is needed.
     private static int Scale(int damage, float multiplier)
     {
-        if (damage <= 0 || multiplier <= 1f) return damage;
-        float scaled = damage * multiplier;
+        if (damage <= 0 || Mathf.Approximately(multiplier, 1f)) return damage;
+        float scaled = damage * Mathf.Max(0f, multiplier);
         int whole = Mathf.FloorToInt(scaled);
-        return whole + (Random.value < scaled - whole ? 1 : 0);
+        return Mathf.Max(1, whole + (Random.value < scaled - whole ? 1 : 0)); // a penalty never turns a hit into 0
+    }
+
+    // Trade-off stun changes (Overdrive longer, Berserker +1 s on melee); never shortens below what it was.
+    private static float TradeOffStun(PlayerAvatar player, float stun, float extraSeconds)
+    {
+        float factor = Skills.TradeOffs.Factor(player, Skills.Fx.StunLength);
+        if (extraSeconds <= 0f && Mathf.Approximately(factor, 1f)) return stun;
+        return Mathf.Min((stun + extraSeconds) * factor, Mathf.Max(stun, Skills.SkillCatalog.StatusCapSeconds) + extraSeconds);
     }
 
     private static readonly ConditionalWeakTable<HurtCollider, TumbleRef> TumbleOwners = new();
@@ -92,7 +100,7 @@ internal static class CombatDamageUpgrades
     private static class MeleeEnemyHurt
     {
         [HarmonyPrefix]
-        private static void Prefix(HurtCollider __instance, out (int Damage, float Stun) __state)
+        private static void Prefix(HurtCollider __instance, Enemy _enemy, out (int Damage, float Stun) __state)
         {
             __state = (__instance.enemyDamage, __instance.enemyStunTime);
             // Guns and cart weapons: the Arsenal perks (damage per weapon, longer tranquilizer stun).
@@ -100,9 +108,11 @@ internal static class CombatDamageUpgrades
             if (weapon != Skills.SkillEffects.Weapon.None)
             {
                 if (tranq && __instance.enemyStun && __instance.enemyStunTime > 0f)
-                    __instance.enemyStunTime = Skills.SkillEffects.StatusSeconds(shooter, Skills.SkillEffects.Status.Tranq, __instance.enemyStunTime);
+                    __instance.enemyStunTime = TradeOffStun(shooter,
+                        Skills.SkillEffects.StatusSeconds(shooter, Skills.SkillEffects.Status.Tranq, __instance.enemyStunTime), 0f);
                 if (__instance.enemyDamage > 0)
-                    __instance.enemyDamage = Scale(__instance.enemyDamage, Skills.SkillEffects.WeaponMultiplier(shooter, weapon));
+                    __instance.enemyDamage = Scale(__instance.enemyDamage,
+                        Skills.SkillEffects.WeaponMultiplier(shooter, weapon) * Skills.TradeOffs.TargetFactor(shooter, _enemy));
                 return;
             }
             if (__instance.enemyDamage <= 0) return;
@@ -110,18 +120,22 @@ internal static class CombatDamageUpgrades
             var tumble = TumbleOf(__instance);
             if (tumble != null)
             {
-                __instance.enemyDamage = Scale(__instance.enemyDamage, SurvivalUpgrades.TumbleDamageMultiplier(tumble));
+                __instance.enemyDamage = Scale(__instance.enemyDamage, SurvivalUpgrades.TumbleDamageMultiplier(tumble) *
+                    Skills.TradeOffs.DamageFactor(tumble.playerAvatar, Skills.TradeOffs.Damage.Tumble, _enemy));
                 return;
             }
             var melee = MeleeOf(__instance);
             if (melee == null) return;
             var wielder = Wielder(melee);
-            __instance.enemyDamage = Scale(__instance.enemyDamage, Multiplier(MeleeId, wielder));
+            __instance.enemyDamage = Scale(__instance.enemyDamage,
+                Multiplier(MeleeId, wielder) * Skills.TradeOffs.DamageFactor(wielder, Skills.TradeOffs.Damage.Melee, _enemy));
             // Heavy Hitter: a longer stun from the weapon's own stun. Monsters too big for it still aren't stunned.
             int heavy = Skills.SkillEffects.Level(wielder, Skills.SkillCatalog.HeavyHitter);
             if (heavy > 0 && __instance.enemyStun && __instance.enemyStunTime > 0f)
                 __instance.enemyStunTime = Skills.PerkRules.MeleeStun(__instance.enemyStunTime, heavy,
                     ModConfig.SkillHeavyHitterPerLevel.Value, Skills.SkillCatalog.StatusCapSeconds);
+            if (__instance.enemyStun && __instance.enemyStunTime > 0f)
+                __instance.enemyStunTime = TradeOffStun(wielder, __instance.enemyStunTime, Skills.TradeOffs.Sum(wielder, Skills.Fx.MeleeStunSeconds));
         }
 
         [HarmonyPostfix]
@@ -142,8 +156,8 @@ internal static class CombatDamageUpgrades
             var grenade = __instance.GetComponent<ItemGrenade>();
             if (grenade == null) return;
             var thrower = grenade.activatorPlayerAvatar != null ? grenade.activatorPlayerAvatar : __instance.playerCausingHurtOverride;
-            float multiplier = Multiplier(GrenadeId, thrower);
-            if (multiplier > 1f) enemyDamage = Mathf.RoundToInt(enemyDamage * multiplier);
+            float multiplier = Multiplier(GrenadeId, thrower) * Skills.TradeOffs.DamageFactor(thrower, Skills.TradeOffs.Damage.Grenade);
+            if (!Mathf.Approximately(multiplier, 1f)) enemyDamage = Mathf.Max(1, Mathf.RoundToInt(enemyDamage * multiplier));
         }
     }
 }

@@ -637,6 +637,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             var pos = new Vector3((float)data[1], (float)data[2], (float)data[3]);
             int viewID = data.Length > 6 ? (int)data[6] : 0;
             PingController.AddNetworkPing((byte)data[0], pos, (string)data[4], (string)data[5], viewID);
+            if (PhotonNetwork.IsMasterClient) Skills.TradeOffs.HostPingedByActor(photonEvent.Sender, pos); // Echo Ping
             return;
         }
 

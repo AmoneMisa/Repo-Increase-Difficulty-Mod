@@ -18,8 +18,14 @@ internal static class SkillEffects
 {
     internal static bool On => ModConfig.PlayerUpgradesEnabled.Value;
 
-    internal static int Level(PlayerAvatar avatar, string node) =>
-        On && avatar != null && !string.IsNullOrEmpty(avatar.steamID) ? SkillStore.Level(avatar.steamID, node) : 0;
+    internal static int Level(PlayerAvatar avatar, string node)
+    {
+        if (!On || avatar == null || string.IsNullOrEmpty(avatar.steamID)) return 0;
+        int level = SkillStore.Level(avatar.steamID, node);
+        // Hunter's Eye works as if you had Monster Dots and Enemy HP.
+        if (level == 0 && (node == C.MonsterDots || node == C.EnemyHp) && SkillStore.Level(avatar.steamID, C.HuntersEye) > 0) return 1;
+        return level;
+    }
     internal static bool Has(PlayerAvatar avatar, string node) => Level(avatar, node) > 0;
     internal static int LocalLevel(string node) => Level(SemiFunc.PlayerAvatarLocal(), node);
     internal static bool LocalHas(string node) => LocalLevel(node) > 0;
@@ -58,7 +64,7 @@ internal static class SkillEffects
         if (Has(shooter, C.Marksman)) multiplier += RootBonus;
         var node = C.Find(NodeFor(weapon));
         if (node != null) multiplier += Mathf.Max(0f, ModConfig.SkillWeaponDamageMax.Value) * Level(shooter, node.Id) / node.MaxLevel;
-        return multiplier;
+        return multiplier * TradeOffs.DamageFactor(shooter, TradeOffs.KindOf(weapon));
     }
 
     internal static Weapon WeaponOf(GameObject source)
@@ -151,7 +157,7 @@ internal static class SkillEffects
             if (poison && seconds > C.StatusCapSeconds) seconds = Mathf.Max(C.StatusCapSeconds, seconds - step);
             else if (!poison && seconds < C.StatusCapSeconds) seconds = Mathf.Min(C.StatusCapSeconds, seconds + step);
         }
-        return seconds;
+        return TradeOffs.StatusSeconds(shooter, seconds);
     }
 
     // ------------------------------------------------------------------ flashlight (every client draws every flashlight)
@@ -247,6 +253,12 @@ internal static class SkillEffects
                 bright += brightness * Mathf.Max(0f, ModConfig.SkillFlashBrightnessPerLevel.Value);
                 colour = BeamColourIndex(owner);
             }
+            if (On && owner != null) // Floodlight / Spotlight trade-offs
+            {
+                angle *= TradeOffs.Factor(owner, Fx.FlashWidth);
+                range *= TradeOffs.Factor(owner, Fx.FlashRange);
+                bright *= TradeOffs.Factor(owner, Fx.FlashBright);
+            }
             light.range = beam.Range * range;
             light.spotAngle = Mathf.Min(170f, beam.Angle * angle);
             light.intensity *= bright; // the game rewrites intensity every frame, so this never compounds
@@ -271,6 +283,8 @@ internal static class SkillEffects
 
             // Survivor: a flat max-stamina bonus. The game only ever adds to EnergyStart, so track what we added.
             float bonus = Has(avatar, C.Survivor) ? Mathf.Max(0f, ModConfig.SkillSurvivorStamina.Value) : 0f;
+            // Last Stand: a share less of the stamina the game itself gives (measured without our own change).
+            bonus += (controller.EnergyStart - _applied) * (TradeOffs.Factor(avatar, Fx.MaxStamina) - 1f);
             if (!Mathf.Approximately(bonus, _applied))
             {
                 controller.EnergyStart += bonus - _applied;

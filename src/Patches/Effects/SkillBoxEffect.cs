@@ -175,7 +175,8 @@ internal static class SkillBoxEffect
         // Lucky Finder moves weight from an empty box to the point results.
         var w = Skills.PerkRules.LuckyWeights(ModConfig.SkillBoxWeight0.Value, ModConfig.SkillBoxWeight1.Value,
             ModConfig.SkillBoxWeight2.Value, ModConfig.SkillBoxWeight3.Value,
-            Skills.SkillEffects.Level(opener, Skills.SkillCatalog.LuckyFinder), ModConfig.SkillLuckyBoxShift.Value);
+            Skills.SkillEffects.Level(opener, Skills.SkillCatalog.LuckyFinder) + Mathf.RoundToInt(Skills.TradeOffs.Sum(opener, Skills.Fx.LuckyLevels)),
+            ModConfig.SkillLuckyBoxShift.Value);
         int points = SkillBoxRules.RollPoints(Random.value, w[0], w[1], w[2], w[3]);
         if (points > 0) SkillStore.GrantPoints(opener.steamID, points, "skill box");
         b.State = Opened;

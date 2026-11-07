@@ -29,12 +29,13 @@ internal sealed class SkillTreeScreen : MonoBehaviour
         ["Map"] = "MAP", ["Ping"] = "PING", ["Flashlight"] = "FLASHLIGHT", ["Damage"] = "DAMAGE", ["Guns"] = "GUN CHARGES",
         ["Tech"] = "TECH", ["Survival"] = "SURVIVAL", ["Gear"] = "GEAR", ["Support"] = "SUPPORT", ["Weapons"] = "WEAPON DAMAGE", ["Status"] = "STATUS EFFECTS",
         ["Contracts"] = "EARNED FROM SPECIAL CONTRACTS",
+        ["TradeOffs1"] = "TRADE-OFFS I · PICK ONE", ["TradeOffs2"] = "TRADE-OFFS II · PICK ONE", ["TradeOffs3"] = "TRADE-OFFS III · PICK ONE",
     };
 
     private readonly HudTreeView _view = new("IHM Skill Tree");
     private bool _open;
     private int _page, _builtPage = -1;
-    private float _refundArmedUntil;
+    private float _refundArmedUntil, _tradeArmedUntil;
     private bool _hinted;
     private string _hintLevel;
 
@@ -124,7 +125,8 @@ internal sealed class SkillTreeScreen : MonoBehaviour
     {
         if (_view.HoveredTab >= 0) { _page = _view.HoveredTab; return; }
         if (_view.HoveredButton == 0) { Refund(); return; }
-        if (_view.HoveredButton == 1) { SetOpen(false); return; }
+        if (_view.HoveredButton == 1) { ResetTradeOffs(); return; }
+        if (_view.HoveredButton == 2) { SetOpen(false); return; }
         var id = _view.HoveredNode;
         if (id == null) return;
         if (id == C.BeamColour && SkillEffects.LocalHas(C.BeamColour))
@@ -141,6 +143,13 @@ internal sealed class SkillTreeScreen : MonoBehaviour
         if (Time.unscaledTime > _refundArmedUntil) { _refundArmedUntil = Time.unscaledTime + 3f; return; } // click again to confirm
         _refundArmedUntil = 0f;
         SkillStore.RequestRespec();
+    }
+
+    private void ResetTradeOffs()
+    {
+        if (Time.unscaledTime > _tradeArmedUntil) { _tradeArmedUntil = Time.unscaledTime + 3f; return; } // click again to confirm
+        _tradeArmedUntil = 0f;
+        SkillStore.RequestTradeOffReset();
     }
 
     // ------------------------------------------------------------------ drawing
@@ -173,15 +182,15 @@ internal sealed class SkillTreeScreen : MonoBehaviour
             if (node.Page != page) continue;
             int level = loadout.Level(node.Id);
             var block = SkillRules.CanBuy(loadout, node.Id);
-            bool locked = block == BuyBlock.MissingPrerequisite, maxed = level >= node.MaxLevel, affordable = block == BuyBlock.None;
+            bool locked = block is BuyBlock.MissingPrerequisite or BuyBlock.GateNotMet or BuyBlock.NeedLowerTier or BuyBlock.TierTaken,
+                maxed = level >= node.MaxLevel, affordable = block == BuyBlock.None;
             bool hover = _view.HoveredNode == node.Id;
-            var look = new HudTreeLook
-            {
-                Name = node.Name,
-                Value = node.Id == C.BeamColour && level > 0 ? SkillEffects.BeamColourNames[SkillEffects.BeamColourIndex(local)].ToUpperInvariant()
-                    : $"[{level}/{node.MaxLevel}]",
-                Linked = level > 0,
-            };
+            string value = node.Id == C.BeamColour && level > 0 ? SkillEffects.BeamColourNames[SkillEffects.BeamColourIndex(local)].ToUpperInvariant()
+                : $"[{level}/{node.MaxLevel}]";
+            // A trade-off still behind its page gate shows how far along the page is.
+            if (node.Tier > 0 && level == 0 && block == BuyBlock.GateNotMet)
+                value = $"{SkillRules.PageSpent(loadout, node.Page)}/{TradeOffRules.Gate(node.Page, node.Tier)}";
+            var look = new HudTreeLook { Name = SkillText.Name(node), Value = value, Linked = level > 0 };
             if (maxed) { look.Edge = accent; look.Fill = accent * new Color(.38f, .38f, .38f, .95f); look.Text = Color.white; look.ValueColour = HudStyle.Title; }
             else if (level > 0) { look.Edge = accent; look.Fill = accent * new Color(.2f, .2f, .2f, .95f); look.Text = Color.white; look.ValueColour = Color.white; }
             else if (locked) { look.Edge = new Color(.35f, .35f, .35f, .9f); look.Fill = new Color(.05f, .05f, .05f, .95f); look.Text = new Color(.5f, .5f, .5f); look.ValueColour = look.Text; }
@@ -192,10 +201,15 @@ internal sealed class SkillTreeScreen : MonoBehaviour
         }
 
         _view.SetTooltip(Tooltip(loadout, canSpend));
-        bool armed = Time.unscaledTime < _refundArmedUntil;
-        int fee = Mathf.Max(0, ModConfig.SkillRespecCost.Value);
-        _view.SetButtons(new[] { armed ? "CLICK AGAIN TO REFUND" : fee > 0 ? $"REFUND ALL (${fee}K)" : "REFUND ALL", "CLOSE  [K]" },
-            new[] { armed ? HudStyle.Bad : HudStyle.Caution, new Color(.8f, .8f, .8f) });
+        bool armed = Time.unscaledTime < _refundArmedUntil, tradeArmed = Time.unscaledTime < _tradeArmedUntil;
+        int fee = Mathf.Max(0, ModConfig.SkillRespecCost.Value), tradeFee = Mathf.Max(0, ModConfig.SkillTradeOffResetCost.Value);
+        _view.SetButtons(new[]
+            {
+                armed ? "CLICK AGAIN TO REFUND" : fee > 0 ? $"REFUND ALL (${fee}K)" : "REFUND ALL",
+                tradeArmed ? "CLICK AGAIN TO RESET" : tradeFee > 0 ? $"RESET TRADE-OFFS (${tradeFee}K)" : "RESET TRADE-OFFS",
+                "CLOSE  [K]",
+            },
+            new[] { armed ? HudStyle.Bad : HudStyle.Caution, tradeArmed ? HudStyle.Bad : HudStyle.Caution, new Color(.8f, .8f, .8f) });
     }
 
     private string Tooltip(SkillLoadout loadout, bool canSpend)
@@ -206,9 +220,17 @@ internal sealed class SkillTreeScreen : MonoBehaviour
                    "1-6 / Q / E change page.</color>";
         int level = loadout.Level(node.Id);
         var text = new StringBuilder();
-        text.Append("<color=#FFD966>").Append(node.Name.ToUpperInvariant()).Append("</color>  [").Append(level).Append('/').Append(node.MaxLevel).Append("]   ");
+        text.Append("<color=#FFD966>").Append(SkillText.Name(node).ToUpperInvariant()).Append("</color>  [").Append(level).Append('/').Append(node.MaxLevel).Append("]   ");
         text.Append(SkillText.Describe(node.Id)).Append('\n');
         if (node.QuestOnly) text.Append("<color=#BBBBBB>Not for points: each finished special contract gives one level");
+        else if (node.Tier > 0 && SkillText.Russian)
+            text.Append("<color=#BBBBBB>Компромисс, уровень ").Append(node.Tier).Append(": ").Append(node.Cost).Append(node.Cost == 1 ? " очко" : " очка")
+                .Append(", один выбор на уровень. Нужно ").Append(TradeOffRules.Gate(node.Page, node.Tier)).Append(" очков в навыках страницы")
+                .Append(node.Tier > 1 ? " и выбор уровня " + (node.Tier - 1) : "");
+        else if (node.Tier > 0)
+            text.Append("<color=#BBBBBB>Trade-off tier ").Append(node.Tier).Append(": ").Append(node.Cost).Append(node.Cost == 1 ? " point" : " points")
+                .Append(", one pick per tier. Needs ").Append(TradeOffRules.Gate(node.Page, node.Tier)).Append(" points in this page's perks")
+                .Append(node.Tier > 1 ? " and a tier " + (node.Tier - 1) + " pick" : "");
         else text.Append("<color=#BBBBBB>Cost: ").Append(node.Cost).Append(node.Cost == 1 ? " point" : " points").Append(node.MaxLevel > 1 ? " per level" : "");
         foreach (var need in node.Requires) text.Append("   ·   Needs: ").Append(C.Find(need)?.Name);
         text.Append("</color>   ");
@@ -219,6 +241,9 @@ internal sealed class SkillTreeScreen : MonoBehaviour
             BuyBlock.MissingPrerequisite => "<color=#FF7373>Locked: learn the perk before it first</color>",
             BuyBlock.NotEnoughPoints => "<color=#FF7373>Not enough points</color>",
             BuyBlock.QuestOnly => "<color=#FF9ED8>Finish a special CONTRACT quest to earn a level</color>",
+            BuyBlock.GateNotMet => $"<color=#FF7373>Locked: {SkillRules.PageSpent(loadout, node.Page)}/{TradeOffRules.Gate(node.Page, node.Tier)} points in this page</color>",
+            BuyBlock.NeedLowerTier => "<color=#FF7373>Locked: pick a trade-off from the tier below first</color>",
+            BuyBlock.TierTaken => "<color=#FFCC4D>You hold another trade-off on this tier: RESET TRADE-OFFS to swap</color>",
             _ => "",
         };
         return text.Append(state).ToString();

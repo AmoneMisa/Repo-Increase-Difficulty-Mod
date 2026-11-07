@@ -56,7 +56,8 @@ internal static class AutoscanUpgrade
                 CustomTargets.Clear();
                 foreach (var target in Object.FindObjectsOfType<ValuableDiscoverCustom>(true)) CustomTargets.Add(target);
             }
-            Scan(avatar.transform.position, level * Mathf.Clamp(ModConfig.AutoscanRangePerLevel.Value, 1f, 30f));
+            Scan(avatar.transform.position, level * Mathf.Clamp(ModConfig.AutoscanRangePerLevel.Value, 1f, 30f) *
+                Skills.TradeOffs.Factor(avatar, Skills.Fx.AutoscanReach)); // Scout
         }
 
         internal static void Scan(Vector3 center, float radius)

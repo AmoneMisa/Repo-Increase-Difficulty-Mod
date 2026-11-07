@@ -270,7 +270,19 @@ internal static class BatteryLifeUpgrade
         return toggle != null ? SemiFunc.PlayerAvatarGetFromPhotonID(toggle.playerTogglePhotonID) : null;
     }
 
+    // Perk drain times the trade-off drain (Overdrive, Tinkerer, Drone Jockey, Sharpshooter, Overclock).
     private static float DrainMultiplier(ItemBattery battery)
+    {
+        float perks = PerkDrainMultiplier(battery);
+        if (!ModConfig.PlayerUpgradesEnabled.Value || !SemiFunc.IsMasterClientOrSingleplayer() || battery == null) return perks;
+        var category = _states.GetOrCreateValue(battery).Category;
+        if ((int)category == -1) category = Resolve(battery);
+        var fx = category == Category.Drone ? Skills.Fx.BatteryDrones : IsGun(category) ? Skills.Fx.BatteryGuns :
+            category == Category.Other ? Skills.Fx.BatteryItems : (Skills.Fx?)null;
+        return fx == null ? perks : perks * Skills.TradeOffs.Factor(UserOf(battery), fx.Value);
+    }
+
+    private static float PerkDrainMultiplier(ItemBattery battery)
     {
         if (!ModConfig.PlayerUpgradesEnabled.Value || !SemiFunc.IsMasterClientOrSingleplayer() || battery == null) return 1f;
         var category = Resolve(battery);
@@ -312,7 +324,7 @@ internal static class BatteryLifeUpgrade
     {
         float multiplier = DrainMultiplier(battery);
         if (battery.batteryLife >= before) return;
-        if (multiplier < 0.999f)
+        if (Mathf.Abs(multiplier - 1f) > 0.001f) // cheaper or (trade-offs) dearer
         {
             battery.batteryLife = Mathf.Clamp(before - Mathf.Max(0f, rawCost) * multiplier, 0f, 100f);
             battery.batteryLifeInt = battery.BatteryBarsGet();

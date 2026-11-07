@@ -70,6 +70,7 @@ internal static class ContractPerks
                 : grab.playerGrabbing.Count > 0 && grab.playerGrabbing[0] != null ? grab.playerGrabbing[0].playerAvatar : grab.lastPlayerGrabbing;
             int level = SkillEffects.Level(handler, C.GentleHands);
             if (level > 0) valueLost *= 1f - LootPerLevel * level; // 15% less at the third level
+            valueLost *= TradeOffs.Factor(handler, Fx.LootBreakLoss); // Salvager
         }
     }
 
@@ -107,6 +108,7 @@ internal static class ContractPerks
         if (Has(ModifierType.LoudFacility)) scale *= 1.5f;
         int level = SkillEffects.Level(player, C.SoftSteps);
         if (level > 0) scale *= 1f - NoisePerLevel * level;
+        scale *= TradeOffs.Factor(player, Fx.Noise); // Ghost Runner quieter, Scout louder
         return scale;
     }
 

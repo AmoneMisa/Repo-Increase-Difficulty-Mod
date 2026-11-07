@@ -23,7 +23,7 @@ internal static class SkillStore
     internal const string Prefix = "IHM_ST_";
     internal const string PointsId = Prefix + "Points";
     internal const string MigratedId = Prefix + "Migrated";
-    internal const byte OpBuy = 0, OpRespec = 1, OpQuestPoints = 2;
+    internal const byte OpBuy = 0, OpRespec = 1, OpQuestPoints = 2, OpTradeOffReset = 3;
     /// <summary>The shop item that grants a point.</summary>
     internal const string PointItemId = Prefix + "PointItem";
 
@@ -135,6 +135,8 @@ internal static class SkillStore
 
     internal static void RequestBuy(string nodeId, int count = 1) => Request(OpBuy, nodeId, count);
     internal static void RequestRespec() => Request(OpRespec, "", 1);
+    /// <summary>Refund only the trade-off skills (cheaper than a full refund).</summary>
+    internal static void RequestTradeOffReset() => Request(OpTradeOffReset, "", 1);
     /// <summary>A finished personal quest's skill points (tracked on this client; the host pays and caps them).</summary>
     internal static void RequestQuestPoints(int points) => Request(OpQuestPoints, "", Math.Max(1, Math.Min(10, points)));
 
@@ -148,7 +150,8 @@ internal static class SkillStore
 
     /// <summary>Host: one player's request. Returns why it failed, or None.</summary>
     internal static BuyBlock HostHandle(string steamId, byte op, string nodeId, int count) =>
-        op == OpRespec ? HostRespec(steamId) : op == OpQuestPoints ? HostQuestPoints(steamId, count) : HostBuy(steamId, nodeId, count);
+        op == OpRespec ? HostRespec(steamId) : op == OpQuestPoints ? HostQuestPoints(steamId, count) :
+        op == OpTradeOffReset ? HostTradeOffReset(steamId) : HostBuy(steamId, nodeId, count);
 
     // Personal quests are tracked by each player's own client, so the host can't check them; it caps what it pays
     // per player per level instead (two personal quests' worth at the highest rank).
@@ -188,6 +191,10 @@ internal static class SkillStore
         string text = block switch
         {
             BuyBlock.None when op == OpRespec => "Skill points refunded",
+            BuyBlock.None when op == OpTradeOffReset => "Trade-off points refunded",
+            BuyBlock.NothingSpent when op == OpTradeOffReset => "No trade-off skills to reset",
+            BuyBlock.NoMoney when op == OpTradeOffReset => $"Trade-off reset costs ${ModConfig.SkillTradeOffResetCost.Value}K",
+            BuyBlock.WrongPlace when op == OpTradeOffReset => "Reset trade-offs in the shop or truck",
             BuyBlock.None => $"Learned {name} ({LocalLevel(nodeId)}/{node?.MaxLevel})",
             BuyBlock.Maxed => $"{name} is already maxed",
             BuyBlock.MissingPrerequisite => $"{name} needs the perk before it",
@@ -197,6 +204,9 @@ internal static class SkillStore
             BuyBlock.NothingSpent => "No skill points spent yet",
             BuyBlock.NotReady => "Skill tree is still loading",
             BuyBlock.QuestOnly => $"{name} comes only from special contracts",
+            BuyBlock.GateNotMet => $"{name} needs more points in this page's perks",
+            BuyBlock.TierTaken => "You already hold a trade-off on this tier (reset trade-offs to swap)",
+            BuyBlock.NeedLowerTier => $"{name} needs a trade-off from the tier below first",
             _ => "Can't learn that",
         };
         HudNotify.Toast(text, block == BuyBlock.None ? HudStyle.Good : HudStyle.Bad, 2.5f, "skills");
@@ -266,6 +276,27 @@ internal static class SkillStore
             if (node != null && node.Vanilla != VanillaUpgrade.None) VanillaAdd(node.Vanilla, steamId, -pair.Value);
         }
         Plugin.Log.LogInfo($"[Skills] {steamId} refunded {loadout.Spent} point(s) for ${fee}K.");
+        return BuyBlock.None;
+    }
+
+    /// <summary>Host: refund only a player's trade-off skills, for the (smaller) trade-off reset fee. Never during a level.</summary>
+    internal static BuyBlock HostTradeOffReset(string steamId)
+    {
+        if (!Host || !Ready || string.IsNullOrEmpty(steamId)) return BuyBlock.NotReady;
+        if (!SemiFunc.RunIsShop() && !SemiFunc.RunIsLobby()) return BuyBlock.WrongPlace;
+        var loadout = LoadoutOf(steamId);
+        int spent = SkillRules.TradeOffSpent(loadout);
+        if (spent <= 0) return BuyBlock.NothingSpent;
+        int fee = Math.Max(0, ModConfig.SkillTradeOffResetCost.Value);
+        if (fee > 0)
+        {
+            int money = SemiFunc.StatGetRunCurrency();
+            if (money < fee) return BuyBlock.NoMoney;
+            SemiFunc.StatSetRunCurrency(money - fee);
+        }
+        foreach (var pair in loadout.Bought)
+            if (SkillCatalog.Find(pair.Key)?.Tier > 0) Write(pair.Key, steamId, 0);
+        Plugin.Log.LogInfo($"[Skills] {steamId} reset trade-offs: refunded {spent} point(s) for ${fee}K.");
         return BuyBlock.None;
     }
 

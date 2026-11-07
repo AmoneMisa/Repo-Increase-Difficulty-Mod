@@ -207,7 +207,8 @@ internal static class RetryCrystalEffect
     /// <summary>Charge one crystal gives this player: the config value plus their Lucky Finder bonus.</summary>
     private static float ChargeFor(PlayerAvatar player) =>
         Skills.PerkRules.LuckyCrystalCharge(ModConfig.RetryCrystalCharge.Value,
-            Skills.SkillEffects.Level(player, Skills.SkillCatalog.LuckyFinder), ModConfig.SkillLuckyCrystalBonus.Value);
+            Skills.SkillEffects.Level(player, Skills.SkillCatalog.LuckyFinder), ModConfig.SkillLuckyCrystalBonus.Value) *
+        Skills.TradeOffs.Factor(player, Skills.Fx.CrystalCharge); // Fortune Seeker
 
     private static string ItemName(ItemBattery battery)
     {

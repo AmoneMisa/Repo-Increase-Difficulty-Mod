@@ -94,7 +94,8 @@ internal static class HpRegenUpgrade
             }
 
             // Rate = level * percent-of-maxHP per second. Accumulate until >= 1 HP.
-            float perSecond = level * ModConfig.RegenPercentPerLevel.Value * ph.maxHealth * Patches.Effects.HealPowerEffect.Multiplier;
+            float perSecond = level * ModConfig.RegenPercentPerLevel.Value * ph.maxHealth * Patches.Effects.HealPowerEffect.Multiplier *
+                              Skills.TradeOffs.Factor(avatar, Skills.Fx.RegenRate); // Second Heart
             _accumulated += perSecond * Mathf.Max(0f, dt);
 
             if (_accumulated < 1f)

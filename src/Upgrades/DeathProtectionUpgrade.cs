@@ -68,13 +68,19 @@ internal static class DeathProtectionUpgrade
                 return;
 
             var upgrade = RepoUpgrades.GetUpgrade(Id);
-            if (upgrade == null || upgrade.GetLevel(avatar.steamID) <= 0)
+            bool charge = upgrade != null && upgrade.GetLevel(avatar.steamID) > 0;
+            // Death Protection charges first; the Last Stand trade-off (once per level) after them.
+            if (!charge && !Skills.TradeOffs.SpendLastStand(avatar))
                 return;
 
-            // Spend one charge and clamp the blow so it leaves the player at 1 HP.
-            upgrade.RemoveLevel(avatar);
+            // Clamp the blow so it leaves the player at 1 HP.
             damage = __instance.health - 1;
-            Plugin.Log.LogInfo($"[Upgrades] Death Protection saved {avatar.steamID}; charges left {upgrade.GetLevel(avatar.steamID)}.");
+            if (charge)
+            {
+                upgrade.RemoveLevel(avatar);
+                Plugin.Log.LogInfo($"[Upgrades] Death Protection saved {avatar.steamID}; charges left {upgrade.GetLevel(avatar.steamID)}.");
+            }
+            else Plugin.Log.LogInfo($"[Skills] Last Stand saved {avatar.steamID} this level.");
         }
     }
 }

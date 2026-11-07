@@ -42,7 +42,9 @@ internal static class StaminaUpgrade
         // Skill tree: Stamina Efficiency, on the old ladder of StaminaMaxLevel levels.
         float level = avatar != null && avatar.isLocal
             ? Skills.SkillEffects.Equivalent(avatar, Skills.SkillCatalog.StaminaEfficiency, ModConfig.StaminaMaxLevel.Value) : 0f;
-        if (controller == null || level <= 0 || rawDrain <= 0f || float.IsNaN(rawDrain) || float.IsInfinity(rawDrain))
+        // Sprinter / Berserker trade-offs: sprinting costs more.
+        float trade = avatar != null && avatar.isLocal ? Skills.TradeOffs.Factor(avatar, Skills.Fx.SprintStamina) : 1f;
+        if (controller == null || (level <= 0 && Mathf.Approximately(trade, 1f)) || rawDrain <= 0f || float.IsNaN(rawDrain) || float.IsInfinity(rawDrain))
         {
             if (controller != null) States.Remove(controller);
             return current - rawDrain;
@@ -50,7 +52,7 @@ internal static class StaminaUpgrade
         var state = States.GetValue(controller, _ => new State());
         // Recharge, jump, slide or an external stamina edit starts a new accumulation interval.
         if (!state.HasLast || current != state.LastResult) state.Pending = 0d;
-        double drain = state.Pending + (double)rawDrain * DrainMultiplier(ModConfig.StaminaPercentPerLevel.Value, level);
+        double drain = state.Pending + (double)rawDrain * DrainMultiplier(ModConfig.StaminaPercentPerLevel.Value, level) * trade;
         float result = (float)Math.Max(0d, (double)current - drain);
         result = Mathf.Min(current, result);
         state.Pending = drain - ((double)current - result);

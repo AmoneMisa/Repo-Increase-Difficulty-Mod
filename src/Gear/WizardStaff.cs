@@ -108,6 +108,7 @@ internal sealed class WizardStaff : MonoBehaviour
                 var direction = points[i + 1] - points[i];
                 QuestEffect.NoteGunHit(struck[i]);
                 int hurt = Mathf.Max(1, share + (i < extra ? 1 : 0));
+                hurt = Mathf.Max(1, Mathf.RoundToInt(hurt * Skills.TradeOffs.TargetFactor(shooter, struck[i]))); // Executioner
                 struck[i].Health.Hurt(hurt, direction.sqrMagnitude > .0001f ? direction.normalized : forward);
             }
         }
