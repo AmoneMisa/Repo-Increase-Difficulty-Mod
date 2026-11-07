@@ -159,6 +159,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         RetryCrystalEffect.Tick();
         Quests.QuestManager.Tick(Time.deltaTime);
         RoundStats.Tick(Time.deltaTime);
+        LateJoinCache.Tick();
         LateJoinController.Tick();
         // Client-side: keep every enemy's per-player dictionaries in sync with mid-run joins
         // (and mid-run enemy spawns) so late joiners don't crash the enemy AI coroutines.

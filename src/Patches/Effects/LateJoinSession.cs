@@ -122,7 +122,11 @@ internal static class LateJoinSession
 internal static class LateJoinReadyPatch
 {
     [HarmonyPostfix]
-    private static void Postfix() => LateJoinController.OpenRoom("generation complete");
+    private static void Postfix()
+    {
+        LateJoinCache.LevelReady();
+        LateJoinController.OpenRoom("generation complete");
+    }
 }
 
 // Friends, invites and steam://joinlobby all use this native connection coroutine.

@@ -25,6 +25,8 @@ internal static class LateJoinController
     {
         if (!ModConfig.LateJoinEnabled.Value)
             return;
+        if (LateJoinCache.Busy)
+            return; // the old level's join cache is still being cleared; the safety check reopens afterwards
         try
         {
             LateJoinSession.OpenRoom(reason);

@@ -85,4 +85,5 @@ namespace IncreaseHardMod
 namespace IncreaseHardMod.Patches.Effects
 {
     public static class LateJoinController { public static void OpenRoom(string reason) => LateJoinSession.OpenRoom(reason); }
+    public static class LateJoinCache { public static void LevelReady() { } }
 }
