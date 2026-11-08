@@ -83,6 +83,19 @@ internal static class SkillText
             case C.Overheat: return Instinct("You hit a monster with a laser", "+30% laser damage");
             case C.BattleTrance: return Instinct("You land 3 melee hits within 4 s", "+30% melee damage");
             case C.MendingSurge: return "When you kill a monster: heal 5/10/15% of your max health over 5 s (by level). Cooldown 60/45/30 s.";
+
+            case C.CourierAlly: return "Your courier can carry the item in your hands to a teammate. Valuables are not allowed.";
+            case C.CourierCart: return "Your courier can tow the nearest free C.A.R.T. to you.";
+            case C.CourierLoad: return $"Your courier lifts heavier items: +{Courier.CourierRules.LoadPerLevel:0.#} kg per level (base {Courier.CourierRules.BaseLoad:0.#} kg).";
+            case C.CourierSpeed: return $"Your courier moves {Pct(Courier.CourierRules.SpeedPerLevel)} faster per level.";
+            case C.CourierDash: return $"Unlocks Dash: your courier runs {Pct(Courier.CourierRules.DashFactor - 1f)} faster for {Courier.CourierRules.DashSeconds:0} s. Cooldown {Courier.CourierRules.DashCooldown:0} s.";
+            case C.CourierFlight: return "Your courier can fly: it hovers over gaps and obstacles and goes straight where walking has no way through.";
+            case C.CourierArmor: return $"Your courier takes {Pct(Courier.CourierRules.ArmorPerLevel)} less damage per level ({Pct(Courier.CourierRules.ArmorPerLevel * C.Find(id).MaxLevel)} at max).";
+            case C.CourierHealth: return $"Your courier has {Pct(Courier.CourierRules.HealthPerLevel)} more health per level (double at max).";
+            case C.CourierStealth: return $"Monsters notice and go for your courier {Pct(Courier.CourierRules.AggressionPerLevel)} less per level.";
+            case C.CourierPack: return $"+1 backpack slot per level: your courier carries up to {Courier.CourierRules.MaxSlots} stashed items (base {Courier.CourierRules.BaseSlots}).";
+            case C.CourierRecovery: return $"A knocked-out courier comes back to the truck {Courier.CourierRules.RecoveryPerLevel:0} s sooner per level (base {Courier.CourierRules.RespawnSeconds:0} s).";
+            case C.CourierLuck: return $"+{Pct(Courier.CourierRules.LuckPerLevel)} chance per level that your courier finds a random upgrade on a level (base {Pct(Courier.CourierRules.BaseFindChance)}).";
             case C.MeleeDamage: return $"+{Pct(PerLevel(ModConfig.MeleeDamagePercentPerLevel.Value, ModConfig.MeleeDamageMaxLevel.Value, id))} melee damage per level.";
             case C.TumbleDamage:
             {
@@ -199,6 +212,19 @@ internal static class SkillText
             case C.Overheat: return InstinctRu("вы попадаете по монстру лазером", "+30% к урону лазера");
             case C.BattleTrance: return InstinctRu("вы наносите 3 удара в ближнем бою за 4 с", "+30% к урону в ближнем бою");
             case C.MendingSurge: return "Когда вы убиваете монстра: восстанавливаете 5/10/15% максимального здоровья за 5 с (по уровню). Перезарядка 60/45/30 с.";
+
+            case C.CourierAlly: return "Курьер может отнести предмет из ваших рук союзнику. Ценности переносить нельзя.";
+            case C.CourierCart: return "Курьер может пригнать к вам ближайшую свободную тележку.";
+            case C.CourierLoad: return $"Курьер поднимает предметы тяжелее: +{Courier.CourierRules.LoadPerLevel:0.#} кг за уровень (база {Courier.CourierRules.BaseLoad:0.#} кг).";
+            case C.CourierSpeed: return $"Курьер двигается на {Pct(Courier.CourierRules.SpeedPerLevel)} быстрее за уровень.";
+            case C.CourierDash: return $"Открывает рывок: курьер бежит на {Pct(Courier.CourierRules.DashFactor - 1f)} быстрее {Courier.CourierRules.DashSeconds:0} с. Перезарядка {Courier.CourierRules.DashCooldown:0} с.";
+            case C.CourierFlight: return "Курьер умеет летать: парит над провалами и препятствиями и летит напрямик, где пешком не пройти.";
+            case C.CourierArmor: return $"Курьер получает на {Pct(Courier.CourierRules.ArmorPerLevel)} меньше урона за уровень ({Pct(Courier.CourierRules.ArmorPerLevel * C.Find(id).MaxLevel)} на максимуме).";
+            case C.CourierHealth: return $"У курьера на {Pct(Courier.CourierRules.HealthPerLevel)} больше здоровья за уровень (вдвое больше на максимуме).";
+            case C.CourierStealth: return $"Монстры замечают курьера и бросаются на него на {Pct(Courier.CourierRules.AggressionPerLevel)} реже за уровень.";
+            case C.CourierPack: return $"+1 слот рюкзака за уровень: курьер носит до {Courier.CourierRules.MaxSlots} спрятанных предметов (база {Courier.CourierRules.BaseSlots}).";
+            case C.CourierRecovery: return $"Выбитый курьер возвращается к машине на {Courier.CourierRules.RecoveryPerLevel:0} с раньше за уровень (база {Courier.CourierRules.RespawnSeconds:0} с).";
+            case C.CourierLuck: return $"+{Pct(Courier.CourierRules.LuckPerLevel)} к шансу за уровень, что курьер найдёт на уровне случайное улучшение (база {Pct(Courier.CourierRules.BaseFindChance)}).";
             case C.MeleeDamage: return $"+{Pct(PerLevel(ModConfig.MeleeDamagePercentPerLevel.Value, ModConfig.MeleeDamageMaxLevel.Value, id))} к урону в ближнем бою за уровень.";
             case C.TumbleDamage:
             {

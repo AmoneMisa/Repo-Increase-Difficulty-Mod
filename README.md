@@ -11,7 +11,7 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.8.6`
+- **Version:** `0.9.0`
 
 Version 0.7.12 adds the plush corgi, three Rare wing cosmetics, an Armor HUD row, cleaner pings and a set of shop, HUD and multiplayer fixes ([details](release-notes/v0.7.12.md)).
 
@@ -211,6 +211,27 @@ with this mod's own models, animations and sounds.
 
 Each drone, orb and gun has its own on/off switch in the `Modules` section of the config.
 
+### Courier pet
+
+A courier is a small walking helper with a delivery backpack that follows you all run. **Unlock one from the gacha**:
+open the courier menu (`G`) and pull with a gacha coin. Every pull unlocks one of five animals: penguin and chicken
+(25% each), cat and beaver (20%), owl (rare, 10%). A duplicate gives half a coin back. Everyone starts with one free
+coin; more are **found rarely on levels** (a glowing, chiming gold token, about one level in five, first come first
+served). Recolour its body, second colour and cap/backpack (12 swatches) in the lobby, the shop or next to the truck.
+Couriers idle, run, fly, get petted and change mood (happy, focused, surprised, sad, sleepy).
+
+- **Pet it** like the game's Elsa: aim your grab at any courier and grab. It wriggles free with Elsa's pink hearts, a happy face and one of three sounds of its own animal; keep holding to keep petting.
+- **Courier menu** (`G`, arrows to move, `Enter` to pick): charge the item in your hands at the charging station and
+  bring it back; fetch an item from the truck; put the item in your hands into its backpack and take items out
+  (1 slot, up to 3); drop everything and follow; gacha; appearance.
+- **Monsters go for couriers.** A monster nearby may notice it and come to look, and one right next to it knocks it
+  back and hurts it. A knocked-out courier drops what it carries and returns to the truck after 45 s.
+- **Courier perk page** (skill tree page 7, 40 points): *Ally Delivery*, *Cart Delivery*, *Carry Weight*,
+  *Bigger Backpack* (up to 3 slots), *Courier Speed*, *Dash*, *Flight*, *Courier Health* (up to double),
+  *Tough Courier* (up to 40% less damage), *Low Profile* (monsters go for it less), *Quick Recovery* and
+  *Lucky Finds* (a rare random upgrade on a level).
+- The host simulates every courier; items it carries or stashes can't be grabbed by anyone else.
+
 ### Team ping system
 
 Press the ping key to mark what you aim at. Items use a thin 2-pixel contour of their actual
@@ -295,7 +316,8 @@ only on a successful extraction.
 | Reset local audio and voice | `Left Ctrl + F9` | Voice Recovery |
 | Spectator map (hold) | `Tab` | Spectator Map |
 | Map zoom in / out (Map Zoom perks) | `-` / `=` | Player Upgrades |
-| Open / close the skill tree | `K` (pages `1`–`6`, `Q` / `E`) | Skill Tree |
+| Open / close the skill tree | `K` (pages `1`–`7`, `Q` / `E`) | Skill Tree |
+| Courier menu / pet a courier | `G` / grab it | Courier |
 | Map vote | `NumPad 1–6` or click | Map Vote |
 | Extra inventory slots | `4`–`7` | Inventory Slots |
 
@@ -403,7 +425,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.8.6`
+- **Версия:** `0.9.0`
 
 В 0.7.12 добавлены плюшевый корги, три редких крыла, строка брони на HUD, более чистые пинги и исправления магазина, HUD и мультиплеера ([подробности](release-notes/v0.7.12.md)).
 
@@ -672,6 +694,26 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 - **Photon HUD** — опциональная диагностика, пробует серверы регионов Photon (в обычной игре держи выключенным).
 - **Diagnostics** — переключатели, отключающие все патчи или все рантайм-объекты для поиска проблем.
 
+### Курьер-питомец
+
+Курьер — маленький помощник с рюкзаком, который весь забег ходит за вами. **Получите его из гачи**: откройте меню
+курьера (`G`) и крутите за монету. Каждая прокрутка открывает одно из пяти животных: пингвин и курочка (по 25%), котик
+и бобёр (по 20%), сова (редкая, 10%). Повтор возвращает половину монеты. У каждого есть одна бесплатная монета; новые
+**изредка попадаются на уровнях** (светящийся звенящий золотой жетон, примерно на каждом пятом уровне, достаётся
+первому). Цвета тела, дополнительный и кепки с рюкзаком (12 цветов) меняются в лобби, магазине или у машины. Курьеры
+стоят, бегают, летают, радуются поглаживанию и меняют настроение (радость, сосредоточенность, удивление, грусть, сон).
+
+- **Погладить** как Эльзу: наведите захват на любого курьера и схватите. Он выскользнет с розовыми сердечками, как у Эльзы, довольной мордочкой и одним из трёх звуков своего животного; держите захват, чтобы гладить дальше.
+- **Меню курьера** (`G`, стрелки, `Enter`): зарядить предмет из рук на станции и вернуть; принести предмет из машины;
+  убрать предмет из рук в рюкзак курьера и достать обратно (1 слот, до 3); бросить всё и идти за вами; гача; внешний вид.
+- **Монстры нападают на курьеров.** Монстр рядом может заметить курьера и подойти, а вплотную — отбросить и ранить.
+  Выбитый курьер роняет груз и через 45 с возвращается к машине.
+- **Страница перков «Курьер»** (7-я страница дерева, 40 очков): *Доставка союзнику*, *Доставка тележки*,
+  *Грузоподъёмность*, *Большой рюкзак* (до 3 слотов), *Скорость курьера*, *Рывок*, *Полёт*, *Здоровье курьера*
+  (до двух раз больше), *Крепкий курьер* (до 40% меньше урона), *Незаметность* (монстры реже нападают),
+  *Быстрое восстановление* и *Удачные находки* (редкое случайное улучшение на уровне).
+- Всех курьеров считает хост; предметы у курьера в руках или в рюкзаке никто другой схватить не может.
+
 ### Клавиши по умолчанию
 
 | Действие | Клавиша | Секция конфига |
@@ -683,7 +725,8 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 | Сбросить локальный звук и голос | `Left Ctrl + F9` | Voice Recovery |
 | Карта наблюдателя (удержание) | `Tab` | Spectator Map |
 | Зум карты + / − (перки Map Zoom) | `-` / `=` | Player Upgrades |
-| Открыть / закрыть дерево навыков | `K` (страницы `1`–`6`, `Q` / `E`) | Skill Tree |
+| Открыть / закрыть дерево навыков | `K` (страницы `1`–`7`, `Q` / `E`) | Skill Tree |
+| Меню курьера / погладить курьера | `G` / захват | Courier |
 | Голосование за карту | `NumPad 1–6` или мышь | Map Vote |
 | Дополнительные слоты | `4`–`7` | Inventory Slots |
 

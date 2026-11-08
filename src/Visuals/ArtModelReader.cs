@@ -42,6 +42,12 @@ internal static class ArtModelReader
 {
     public int version, fps, frames;
     public ArtPart[] parts;
+    public ArtPivot[] pivots; // optional: named turning points for animated groups (courier pets)
+}
+[Serializable] internal sealed class ArtPivot
+{
+    public string name;
+    public Vector3 position;
 }
 [Serializable] internal sealed class ArtPart
 {

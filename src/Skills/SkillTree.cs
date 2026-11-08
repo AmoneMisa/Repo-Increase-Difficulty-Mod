@@ -7,7 +7,7 @@ namespace IncreaseHardMod.Skills;
 // No UnityEngine here, so tests/SkillTreeTests can run it directly. Storage, networking and
 // effects live elsewhere and only ask this model what is allowed. See docs/skill-tree-plan.md.
 
-internal enum SkillPage : byte { Recon = 0, Combat = 1, Survival = 2, Utility = 3, Arsenal = 4, Contracts = 5 }
+internal enum SkillPage : byte { Recon = 0, Combat = 1, Survival = 2, Utility = 3, Arsenal = 4, Contracts = 5, Courier = 6 }
 
 /// <summary>Vanilla upgrades a node drives through the game's own PunManager upgrade call.</summary>
 internal enum VanillaUpgrade : byte { None = 0, DeathHeadBattery = 1, TumbleWings = 2 }

@@ -9,7 +9,7 @@ namespace IncreaseHardMod.Skills;
 
 /// <summary>
 /// The skill tree screen: opened with the skill tree key (K) or the Esc menu's SKILL TREE button during a run.
-/// Mouse: click a perk to learn a level, click a page tab, refund or close at the bottom. Keys: 1-6 or Q / E for
+/// Mouse: click a perk to learn a level, click a page tab, refund or close at the bottom. Keys: 1-7 or Q / E for
 /// pages, K or Esc to close. Viewing works anywhere; spending only where the host allows it (shop and truck).
 /// While open, the cursor is free and the player's movement, aim and Esc menu are held back.
 /// </summary>
@@ -18,9 +18,9 @@ internal sealed class SkillTreeScreen : MonoBehaviour
     private static SkillTreeScreen _instance;
     private static bool _openRequested;
 
-    private static readonly SkillPage[] Pages = { SkillPage.Recon, SkillPage.Combat, SkillPage.Survival, SkillPage.Utility, SkillPage.Arsenal, SkillPage.Contracts };
-    private static readonly string[] PageNames = { "RECON", "COMBAT", "SURVIVAL", "UTILITY", "ARSENAL", "CONTRACTS" };
-    private static readonly string[] PageNamesRu = { "РАЗВЕДКА", "БОЙ", "ВЫЖИВАНИЕ", "СНАРЯЖЕНИЕ", "АРСЕНАЛ", "КОНТРАКТЫ" };
+    private static readonly SkillPage[] Pages = { SkillPage.Recon, SkillPage.Combat, SkillPage.Survival, SkillPage.Utility, SkillPage.Arsenal, SkillPage.Contracts, SkillPage.Courier };
+    private static readonly string[] PageNames = { "RECON", "COMBAT", "SURVIVAL", "UTILITY", "ARSENAL", "CONTRACTS", "COURIER" };
+    private static readonly string[] PageNamesRu = { "РАЗВЕДКА", "БОЙ", "ВЫЖИВАНИЕ", "СНАРЯЖЕНИЕ", "АРСЕНАЛ", "КОНТРАКТЫ", "КУРЬЕР" };
     private static bool Ru => SkillText.Russian;
     private static string L(string en, string ru) => Ru ? ru : en;
     private static readonly string[] TabLabels = { "1", "2", "3", "4", "5", "6" };
@@ -244,9 +244,9 @@ internal sealed class SkillTreeScreen : MonoBehaviour
         if (node == null)
             return Ru
                 ? "<color=#BBBBBB>Наведите на навык, чтобы узнать, что он делает. Очки дают «Очко навыка» в магазине и выполненные задания. " +
-                  "1-6 / Q / E меняют страницу.</color>"
+                  "1-7 / Q / E меняют страницу.</color>"
                 : "<color=#BBBBBB>Hover a perk to see what it does. Points come from the shop's Skill Point and from finished quests. " +
-                  "1-6 / Q / E change page.</color>";
+                  "1-7 / Q / E change page.</color>";
         int level = loadout.Level(node.Id);
         var text = new StringBuilder();
         text.Append("<color=#FFD966>").Append(SkillText.Name(node).ToUpperInvariant()).Append("</color>  [").Append(level).Append('/').Append(node.MaxLevel).Append("]   ");

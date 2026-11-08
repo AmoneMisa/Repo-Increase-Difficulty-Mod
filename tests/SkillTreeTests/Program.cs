@@ -1,4 +1,4 @@
-using IncreaseHardMod.Skills;
+﻿using IncreaseHardMod.Skills;
 using C = IncreaseHardMod.Skills.SkillCatalog;
 
 // Engine-free checks of the skill tree model (src/Skills): catalogue, buy rules, sanitising and save migration.
@@ -10,8 +10,34 @@ Check(C.NormalPageCost(SkillPage.Recon) == 34 && C.NormalPageCost(SkillPage.Comb
       C.NormalPageCost(SkillPage.Survival) == 43 && C.NormalPageCost(SkillPage.Utility) == 41 && C.NormalPageCost(SkillPage.Arsenal) == 42, "Normal page costs match the plan");
 Check(C.PageCost(SkillPage.Recon) == 40 && C.PageCost(SkillPage.Combat) == 56 && C.PageCost(SkillPage.Survival) == 49 &&
       C.PageCost(SkillPage.Utility) == 47 && C.PageCost(SkillPage.Arsenal) == 48, "Each page adds one trade-off per tier (1+2+3 points)");
-Check(C.TotalCost() == 240, "Whole tree costs 240 points (210 normal + 30 trade-off picks)");
-Check(C.Find(C.Vampirism) is { Page: SkillPage.Combat, Cost: 1, MaxLevel: 7 } && C.Find(C.Vampirism).Requires.SequenceEqual(new[] { C.MeleeDamage }),
+Check(C.TotalCost() == 280, "Whole tree costs 280 points (250 normal + 30 trade-off picks)");
+
+{
+    int look = IncreaseHardMod.Courier.CourierRules.PackLook(3, 5, IncreaseHardMod.Courier.CourierRules.DefaultSwatch, 11);
+    IncreaseHardMod.Courier.CourierRules.UnpackLook(look, out int an, out int m1, out int m2, out int m3);
+    Check(an == 3 && m1 == 5 && m2 == IncreaseHardMod.Courier.CourierRules.DefaultSwatch && m3 == 11, "Courier look packs and unpacks animal and three colour slots");
+    int slot = IncreaseHardMod.Courier.CourierRules.DefaultSwatch; var seen = new HashSet<int>();
+    for (int k = 0; k < 13; k++) { slot = IncreaseHardMod.Courier.CourierRules.NextSwatch(slot, 1); seen.Add(slot); }
+    Check(seen.Count == 13 && slot == IncreaseHardMod.Courier.CourierRules.DefaultSwatch && IncreaseHardMod.Courier.CourierRules.NextSwatch(0, -1) == IncreaseHardMod.Courier.CourierRules.DefaultSwatch,
+          "Courier colours cycle through 12 swatches and the natural colour, both ways");
+    Check(IncreaseHardMod.Courier.CourierRules.Respawn(0) == 45f && IncreaseHardMod.Courier.CourierRules.Respawn(3) == 15f && IncreaseHardMod.Courier.CourierRules.Respawn(9) == 10f,
+          "Courier respawn: 45 s, 10 s sooner per Quick Recovery level, never under 10 s");
+    Check(Math.Abs(IncreaseHardMod.Courier.CourierRules.MaxLoad(3) - 10.5f) < 1e-4 && Math.Abs(IncreaseHardMod.Courier.CourierRules.FindChance(3) - .08f) < 1e-4 && Math.Abs(IncreaseHardMod.Courier.CourierRules.DamageTaken(100f, 3) - 70f) < 1e-3,
+          "Courier load, find chance and armor scale per level");
+    Check(C.PageCost(SkillPage.Courier) == 40, "Courier page costs 40 points");
+    Check(Math.Abs(IncreaseHardMod.Courier.CourierRules.DamageTaken(100f, 4) - 60f) < 1e-3 && Math.Abs(IncreaseHardMod.Courier.CourierRules.DamageTaken(100f, 9) - 60f) < 1e-3,
+          "Tough Courier: at most 40% less damage");
+    Check(Math.Abs(IncreaseHardMod.Courier.CourierRules.Health(5) - 200f) < 1e-3 && Math.Abs(IncreaseHardMod.Courier.CourierRules.Health(9) - 200f) < 1e-3 &&
+          Math.Abs(IncreaseHardMod.Courier.CourierRules.Health(0) - 100f) < 1e-3, "Courier Health: up to double");
+    Check(IncreaseHardMod.Courier.CourierRules.Slots(0) == 1 && IncreaseHardMod.Courier.CourierRules.Slots(2) == 3 && IncreaseHardMod.Courier.CourierRules.Slots(7) == 3,
+          "Courier backpack: 1 slot, up to 3");
+    Check(Math.Abs(IncreaseHardMod.Courier.CourierRules.Aggression(3) - .4f) < 1e-4 && IncreaseHardMod.Courier.CourierRules.Aggression(0) == 1f,
+          "Low Profile: 20% less monster aggression per level");
+    var pulls = new int[5]; var rng = new Random(7);
+    for (int k = 0; k < 20000; k++) pulls[IncreaseHardMod.Courier.CourierRules.Pull(rng.NextDouble())]++;
+    Check(pulls[3] > 1600 && pulls[3] < 2400 && pulls[0] > 4500 && pulls.All(n => n > 0) && IncreaseHardMod.Courier.CourierRules.Pull(.999999) == 4,
+          "Gacha: every animal can drop; the owl is rarest (10%), penguin and chicken commonest (25%)");
+}Check(C.Find(C.Vampirism) is { Page: SkillPage.Combat, Cost: 1, MaxLevel: 7 } && C.Find(C.Vampirism).Requires.SequenceEqual(new[] { C.MeleeDamage }),
       "Vampirism: Combat, 7 levels of 1 point, under Melee Damage");
 Check(Math.Abs(PerkRules.VampireShare(7, 7, .29f) - .29f) < 1e-5f && Math.Abs(PerkRules.VampireShare(1, 7, .29f) - .29f / 7f) < 1e-5f &&
       PerkRules.VampireShare(9, 7, .29f) == PerkRules.VampireShare(7, 7, .29f) && PerkRules.VampireShare(0, 7, .29f) == 0f, "Vampirism reaches 29% at level 7 and never more");

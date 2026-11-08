@@ -218,6 +218,12 @@ public static class ModConfig
     public static ConfigEntry<bool> FlameCartEnabled;
     // Extra C.A.R.T.s: Soul C.A.R.T. (souls only, value cap), Wide C.A.R.T., Double-Decker C.A.R.T.
     public static ConfigEntry<bool> CustomCartsEnabled;
+    // Courier pet: every player's helper that charges, fetches and delivers items.
+    public static ConfigEntry<bool> CourierEnabled;
+    public static ConfigEntry<int> CourierLook, CourierOwned, CourierCoins, CourierFragments;
+    public static ConfigEntry<bool> CourierStarterCoinGiven;
+    public static ConfigEntry<float> CourierCoinChance;
+    public static ConfigEntry<UnityEngine.KeyCode> CourierMenuKey;
     public static ConfigEntry<int> SoulCartValueCap;
     public static ConfigEntry<int> FlameDamagePerTick, FlameBatteryDamage, FlameCartValueCap, FlameCartPriceMinK, FlameCartPriceMaxK;
     public static ConfigEntry<float> FlameTickSeconds, FlameRange, FlameConeAngle;
@@ -471,6 +477,14 @@ public static class ModConfig
         IcePistolEnabled = Module(cfg, "Gear", "IcePistolEnabled", true, "IcePistol", "Sell the Pulse Ice Pistol.");
         StickyPistolEnabled = Module(cfg, "Gear", "StickyPistolEnabled", true, "StickyPistol", "Sell the Sticky Pistol.");
         FlameCartEnabled = Module(cfg, "Gear", "FlameCartEnabled", true, "FlameCart", "Sell the Flamethrower C.A.R.T. (a wheeled flamethrower turret with a loot storage box).");
+        CourierEnabled = Module(cfg, "Courier", "Enabled", true, "Courier", "Every player gets a courier pet that follows them, charges and fetches items and can be petted by grabbing it, like Elsa. The host's setting decides.");
+        CourierLook = cfg.Bind("Courier", "Look", 0, "Your courier's animal and colours (set from the courier menu; saved here).");
+        CourierOwned = cfg.Bind("Courier", "OwnedAnimals", 0, "Courier animals you unlocked from the gacha (bit mask: 1 penguin, 2 chicken, 4 cat, 8 owl, 16 beaver).");
+        CourierCoins = cfg.Bind("Courier", "GachaCoins", 0, "Your gacha coins (found rarely on levels; one pull each).");
+        CourierFragments = cfg.Bind("Courier", "CoinHalves", 0, "Half coins from duplicate pulls; two make a coin.");
+        CourierStarterCoinGiven = cfg.Bind("Courier", "StarterCoinGiven", false, "Whether you already got the free starter coin.");
+        CourierCoinChance = BindFloat(cfg, "Courier", "CoinChancePerLevel", Courier.CourierRules.CoinChance, 0f, 1f, "HOST: chance that a gacha coin is hidden somewhere on a level.");
+        CourierMenuKey = cfg.Bind("Courier", "MenuKey", UnityEngine.KeyCode.G, "Opens the courier command menu. Arrow keys move, Enter/Right picks, Left goes back.");
         CustomCartsEnabled = Module(cfg, "Gear", "CustomCartsEnabled", true, "CustomCarts", "Sell the Soul C.A.R.T. (small, souls only), the Wide C.A.R.T. and the Double-Decker C.A.R.T.");
         SoulCartValueCap = BindInt(cfg, "Carts", "SoulCartValueCap", 55000, 1000, 1000000, "Most soul value the Soul C.A.R.T. carries; a soul that would go over it is pushed back out.");
         FlameDamagePerTick = BindInt(cfg, "Flamethrower", "DamagePerTick", 10, 1, 200, "Damage dealt to every monster inside the flame each tick.");

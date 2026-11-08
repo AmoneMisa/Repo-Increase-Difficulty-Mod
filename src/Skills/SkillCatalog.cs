@@ -58,6 +58,12 @@ internal static class SkillCatalog
     public const string Adrenaline = P + "Adrenaline", IronSkin = P + "IronSkin", HotBarrel = P + "HotBarrel",
         Overheat = P + "Overheat", BattleTrance = P + "BattleTrance", MendingSurge = P + "MendingSurge";
 
+    // Courier: the pet courier's jobs and abilities (see Courier/CourierPerks). Ids are save keys: never rename.
+    public const string CourierAlly = P + "CourierAlly", CourierCart = P + "CourierCart", CourierLoad = P + "CourierLoad",
+        CourierSpeed = P + "CourierSpeed", CourierDash = P + "CourierDash", CourierFlight = P + "CourierFlight",
+        CourierArmor = P + "CourierArmor", CourierRecovery = P + "CourierRecovery", CourierLuck = P + "CourierLuck",
+        CourierHealth = P + "CourierHealth", CourierStealth = P + "CourierStealth", CourierPack = P + "CourierPack";
+
     /// <summary>No status from a tree perk lasts longer than this; poison is compressed down to it instead.</summary>
     internal const float StatusCapSeconds = 8f;
 
@@ -159,6 +165,20 @@ internal static class SkillCatalog
         AddTradeOffs();
 
         var contracts = SkillPage.Contracts;
+        var courier = SkillPage.Courier;
+        Add(courier, "Logistics", CourierAlly, "Ally Delivery", "Доставка союзнику", 2, 1, root: true);
+        Add(courier, "Logistics", CourierCart, "Cart Delivery", "Доставка тележки", 2, 1, root: true);
+        Add(courier, "Logistics", CourierLoad, "Carry Weight", "Грузоподъёмность", 1, 3, root: true);
+        Add(courier, "Logistics", CourierPack, "Bigger Backpack", "Большой рюкзак", 2, 2, root: true);
+        Add(courier, "Mobility", CourierSpeed, "Courier Speed", "Скорость курьера", 1, 3, root: true);
+        Add(courier, "Mobility", CourierDash, "Dash", "Рывок", 2, 1, CourierSpeed);
+        Add(courier, "Mobility", CourierFlight, "Flight", "Полёт", 3, 1, CourierDash);
+        Add(courier, "Support", CourierHealth, "Courier Health", "Здоровье курьера", 1, 5, root: true);
+        Add(courier, "Support", CourierArmor, "Tough Courier", "Крепкий курьер", 1, 4, root: true);
+        Add(courier, "Support", CourierStealth, "Low Profile", "Незаметность", 1, 3, root: true);
+        Add(courier, "Support", CourierRecovery, "Quick Recovery", "Быстрое восстановление", 1, 3, CourierArmor);
+        Add(courier, "Support", CourierLuck, "Lucky Finds", "Удачные находки", 2, 3, root: true);
+
         Add(contracts, "Contracts", CartHandling, "Cart Handling", "Лёгкая тележка", 0, 3, root: true).QuestOnly = true;
         Add(contracts, "Contracts", GentleHands, "Gentle Hands", "Бережные руки", 0, 3, root: true).QuestOnly = true;
         Add(contracts, "Contracts", CalmPresence, "Calm Presence", "Спокойствие", 0, 3, root: true).QuestOnly = true;
