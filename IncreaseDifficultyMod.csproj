@@ -6,7 +6,7 @@
     <Product>IncreaseDifficultyMod</Product>
     <!-- Preserve code/resource identities and saved integrations after the public rename. -->
     <RootNamespace>IncreaseHardMod</RootNamespace>
-    <Version>0.9.0</Version>
+    <Version>0.9.1</Version>
     <LangVersion>latest</LangVersion>
     <!-- Unity fixture DLLs must never become candidates for resolving the game's Assembly-CSharp. -->
     <DefaultItemExcludes>$(DefaultItemExcludes);tests\UnityCloneRegression\Library\**;tests\UnityCloneRegression\Temp\**;tests\UnityCloneRegression\Logs\**;tests\UnityCloneRegression\UserSettings\**</DefaultItemExcludes>
@@ -44,6 +44,8 @@
   <ItemGroup>
     <EmbeddedResource Include="src\Textures\*.png" />
     <EmbeddedResource Include="src\Art\*.png" />
+    <!-- Prepared monster silhouettes (made by MonsterIcons from the monsters themselves); fixed names keep spaces intact. -->
+    <EmbeddedResource Include="src\MonsterIcons\*.png" LogicalName="IHM.MonsterIcon.%(Filename)%(Extension)" />
     <EmbeddedResource Include="src\Art\*.bundle" />
     <EmbeddedResource Include="src\Audio\*.wav" />
   </ItemGroup>

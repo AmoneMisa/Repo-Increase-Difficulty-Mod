@@ -259,6 +259,12 @@ internal static class FlameCartItem
         Box(root, "Arm", new Vector3(0f, .50f, .28f), new Vector3(.26f, .50f, .24f), layer);
         Box(root, "Gun head", new Vector3(0f, .83f, .62f), new Vector3(.30f, .20f, .62f), layer);
         Box(root, "Fuel tanks", new Vector3(0f, 1.0f, .17f), new Vector3(.36f, .26f, .30f), layer);
+        // The donor's "Center of Mass" child went with its other parts; without it Unity centres the mass among the
+        // tall gun colliders (high and forward), so the cart pivots off-centre and twists on floor contact.
+        // PhysGrabObject.Awake reads this child by name.
+        var com = new GameObject("Center of Mass").transform;
+        com.SetParent(go.transform, false);
+        com.localPosition = new Vector3(0f, .12f, -.02f);
         const float half = StorageHalf, h = StorageHeight;
         float y = BoxMount.y + h / 2f, z = BoxMount.z;
         Box(root, "Storage wall L", new Vector3(-half, y, z), new Vector3(.03f, h, half * 2f), layer);
@@ -405,7 +411,8 @@ internal sealed class FlameCart : MonoBehaviour
     public SemiZuperFlames nativeFlames;
     internal static Material NativeFireMaterial;
 
-    private const float MaxTraverse = 70f;
+    private const float MaxTraverse = 115f, MinPitch = -35f, MaxPitch = 45f;
+    private float _damageCarry;
     private PhysGrabObject _pgo;
     private ItemBattery _battery;
     private ItemToggle _toggle;
@@ -467,7 +474,8 @@ internal sealed class FlameCart : MonoBehaviour
         float reach = ModConfig.FlameRange.Value + 2f;
         var best = view.position + view.forward * reach;
         float bestDistance = reach;
-        int count = Physics.RaycastNonAlloc(view.position, view.forward, AimHits, reach, SemiFunc.LayerMaskGetVisionObstruct(), QueryTriggerInteraction.Ignore);
+        // Monsters count too, so the barrels converge on the monster under the crosshair, not the wall behind it.
+        int count = Physics.RaycastNonAlloc(view.position, view.forward, AimHits, reach, (int)SemiFunc.LayerMaskGetVisionObstruct() | LayerMask.GetMask("Enemy"), QueryTriggerInteraction.Ignore);
         for (int i = 0; i < count; i++)
         {
             var hit = AimHits[i];
@@ -493,7 +501,7 @@ internal sealed class FlameCart : MonoBehaviour
         if (direction.sqrMagnitude < .64f) direction = view.forward;
         var e = Quaternion.LookRotation(direction).eulerAngles;
         float yaw = Mathf.Clamp(Mathf.DeltaAngle(forward.eulerAngles.y, e.y), -MaxTraverse, MaxTraverse);
-        float pitch = Mathf.Clamp(Mathf.DeltaAngle(0f, e.x), -20f, 25f);
+        float pitch = Mathf.Clamp(Mathf.DeltaAngle(0f, e.x), MinPitch, MaxPitch);
         return Quaternion.Euler(pitch, forward.eulerAngles.y + yaw, 0f);
     }
 
@@ -567,7 +575,8 @@ internal sealed class FlameCart : MonoBehaviour
         bool was = _firing;
         _firing = on;
         _operatorViewId = on ? viewId : -1;
-        _tick = .3f; // first burn shortly after ignition
+        _tick = .05f; // first burn almost at once after ignition
+        _damageCarry = 0f;
         if (!sound) return;
         if (on && !was) _ignite?.Play(Nozzle);
         if (!on && was) _off?.Play(Nozzle);
@@ -585,10 +594,14 @@ internal sealed class FlameCart : MonoBehaviour
         }
         _tick -= Time.deltaTime;
         if (_tick > 0f) return;
-        _tick = Mathf.Max(.25f, ModConfig.FlameTickSeconds.Value);
-        int damage = ModConfig.FlameDamagePerTick.Value;
-        Burn(damage);
-        float perTick = 100f * damage / Mathf.Max(1f, ModConfig.FlameBatteryDamage.Value);
+        float step = Mathf.Max(.1f, ModConfig.FlameTickSeconds.Value);
+        _tick += step;
+        // Damage per second split into small ticks; the fraction carries over so low rates still add up exactly.
+        _damageCarry += ModConfig.FlameDamagePerSecond.Value * step;
+        int damage = Mathf.FloorToInt(_damageCarry);
+        _damageCarry -= damage;
+        if (damage > 0) Burn(damage);
+        float perTick = 100f * step / Mathf.Max(1f, ModConfig.FlameFuelSeconds.Value);
         _battery.batteryLife = Mathf.Max(0f, _battery.batteryLife - perTick);
         if (_battery.batteryLife <= 0f) Stop();
     }
@@ -596,7 +609,8 @@ internal sealed class FlameCart : MonoBehaviour
     private void Burn(int damage)
     {
         var origin = Nozzle;
-        var aim = AimRotation() * Vector3.forward;
+        // Hurt along the barrels you see (the flame jet comes out of the head), not the raw crosshair ray.
+        var aim = head != null ? head.forward : AimRotation() * Vector3.forward;
         float range = ModConfig.FlameRange.Value;
         float cone = ModConfig.FlameConeAngle.Value;
         if (EnemyDirector.instance != null) EnemyDirector.instance.SetInvestigate(origin, 15f);
@@ -609,7 +623,8 @@ internal sealed class FlameCart : MonoBehaviour
             var to = point - origin;
             float distance = to.magnitude;
             if (distance > range + .5f) continue;
-            if (distance > 1.2f && Vector3.Angle(aim, to) > cone) continue;
+            // Monsters are bodies, not points: widen the cone by about half a monster's width at that distance.
+            if (distance > 1.2f && Vector3.Angle(aim, to) > cone + Mathf.Atan2(.6f, distance) * Mathf.Rad2Deg) continue;
             if (Blocked(origin, to, distance, enemy)) continue;
             enemy.Health.Hurt(damage, to.sqrMagnitude > .0001f ? to.normalized : aim);
         }
@@ -645,8 +660,8 @@ internal sealed class FlameCart : MonoBehaviour
             pitch = -Mathf.Atan2(local.y, new Vector2(local.x, local.z).magnitude) * Mathf.Rad2Deg;
         }
         // Eased (not linear) so the turret settles on target without jerking as the cart bumps along.
-        _turretYaw = Mathf.SmoothDampAngle(_turretYaw, Mathf.Clamp(yaw, -MaxTraverse, MaxTraverse), ref _yawSpeed, .09f, 240f);
-        _headPitch = Mathf.SmoothDampAngle(_headPitch, Mathf.Clamp(pitch, -20f, 25f), ref _pitchSpeed, .11f, 140f);
+        _turretYaw = Mathf.SmoothDampAngle(_turretYaw, Mathf.Clamp(yaw, -MaxTraverse, MaxTraverse), ref _yawSpeed, .045f, 540f);
+        _headPitch = Mathf.SmoothDampAngle(_headPitch, Mathf.Clamp(pitch, MinPitch, MaxPitch), ref _pitchSpeed, .05f, 360f);
         turret.localRotation = Quaternion.Euler(0f, _turretYaw, 0f);
         if (head != null) head.localRotation = Quaternion.Euler(_headPitch, 0f, 0f);
     }

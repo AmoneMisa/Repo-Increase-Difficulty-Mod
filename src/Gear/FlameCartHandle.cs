@@ -117,6 +117,60 @@ internal sealed class FlameCartHandle : MonoBehaviour
         _rb.velocity = Vector3.up * 2.2f; // clear the floor before turning
     }
 
+    // ------------------------------------------------------------------ air cushion
+
+    // While pushed on the handle the cart rides on an air cushion: it floats RideHeight above the highest floor
+    // under (and just ahead of) it, so it rises onto a stair step before the chassis reaches the edge, and glides
+    // down again. Anything higher than MaxClimb (tables, walls) is not floor. Released, it settles under gravity.
+    private const float RideHeight = .3f, MaxClimb = .65f, LookAhead = .35f;
+    private static readonly RaycastHit[] GroundHits = new RaycastHit[16];
+    private static readonly Vector3[] Probes =
+    {
+        new(0f, 0f, 0f), new(.38f, 0f, .62f), new(-.38f, 0f, .62f), new(.38f, 0f, -.62f), new(-.38f, 0f, -.62f), new(0f, 0f, .75f),
+    };
+
+    /// <summary>Vertical velocity that keeps the cart floating; the current one when there is no floor below.</summary>
+    private float Hover(Vector3 horizontalVelocity, float currentY)
+    {
+        float bottom = transform.position.y;
+        var yaw = Quaternion.Euler(0f, transform.eulerAngles.y, 0f);
+        var ahead = horizontalVelocity * LookAhead;
+        float ground = float.NegativeInfinity;
+        foreach (var probe in Probes)
+        {
+            var p = transform.position + yaw * probe;
+            ground = Mathf.Max(ground, FloorAt(p, bottom));
+            if (ahead.sqrMagnitude > .0001f) ground = Mathf.Max(ground, FloorAt(p + ahead, bottom));
+        }
+        if (float.IsNegativeInfinity(ground)) return currentY; // over a drop: fall normally
+
+        // A slow 1.5 cm bob sells the cushion; the spring keeps the ride height.
+        float desired = ground + RideHeight + Mathf.Sin(Time.time * 3f) * .015f;
+        float wantY = Mathf.Clamp((desired - bottom) * 10f, -4f, 5f);
+        return Mathf.MoveTowards(currentY, wantY, 60f * Time.fixedDeltaTime);
+    }
+
+    // Highest walkable surface under a point, no higher than MaxClimb above the cart's bottom.
+    private float FloorAt(Vector3 point, float bottom)
+    {
+        var origin = new Vector3(point.x, bottom + MaxClimb + .25f, point.z);
+        int count = Physics.RaycastNonAlloc(origin, Vector3.down, GroundHits, MaxClimb + 1.6f,
+            SemiFunc.LayerMaskGetVisionObstruct(), QueryTriggerInteraction.Ignore);
+        float best = float.NegativeInfinity;
+        for (int i = 0; i < count; i++)
+        {
+            var hit = GroundHits[i];
+            var c = hit.collider;
+            if (c == null || c.transform.IsChildOf(transform)) continue;
+            // Loose things (loot, items, players, monsters) are not floor.
+            if (c.attachedRigidbody != null && !c.attachedRigidbody.isKinematic) continue;
+            if (c.GetComponentInParent<PlayerAvatar>() != null || c.GetComponentInParent<EnemyParent>() != null) continue;
+            if (hit.point.y > bottom + MaxClimb) continue;
+            if (hit.point.y > best) best = hit.point.y;
+        }
+        return best;
+    }
+
     private void FixedUpdate()
     {
         if (_rb == null || _pgo == null || !SemiFunc.IsMasterClientOrSingleplayer()) return;
@@ -135,21 +189,32 @@ internal sealed class FlameCartHandle : MonoBehaviour
         bool forward = Vector3.Dot(playerVelocity, transform.forward) > 0f;
         float topSpeed = avatar.isSprinting ? 7f : 5f;
         if (avatar.isSprinting && forward) { near = 3f; far = 4f; }
-        float t = Mathf.Clamp01(Vector3.Dot(_rb.velocity, g.transform.forward) / topSpeed);
+        // Look direction flattened to yaw: vanilla uses the full camera forward, which is harmless for a low cart,
+        // but this one is tall and you look down at its box, and that pitch pulled the target in under your feet.
+        var look = g.transform.forward;
+        look.y = 0f;
+        if (look.sqrMagnitude < .01f) look = avatar.transform.forward;
+        look.Normalize();
+        float t = Mathf.Clamp01(Vector3.Dot(_rb.velocity, look) / topSpeed);
         float distance = Mathf.Lerp(near, far, t);
-        var target = avatar.transform.position - (g.transform.rotation * Vector3.back) * distance;
+        var target = avatar.transform.position + look * distance;
+        target.y = transform.position.y; // steer flat: on stairs the player's height must not slow the push
         float pull = Mathf.Clamp01(Vector3.Distance(transform.position, target));
         var wanted = Vector3.ClampMagnitude((target - transform.position).normalized * 5f * pull, 5f);
         float y = _rb.velocity.y;
         var v = Vector3.MoveTowards(_rb.velocity, wanted, pull * 2f);
-        _rb.velocity = Vector3.ClampMagnitude(new Vector3(v.x, y, v.z), 5f);
+        var flat = Vector3.ClampMagnitude(new Vector3(v.x, 0f, v.z), 5f);
+        _rb.velocity = new Vector3(flat.x, Hover(flat, y), flat.z);
 
         // Face away from the player (gun side forward). Gentler while firing: the turret aims, not the cart.
-        var facing = Quaternion.Euler(0f, Quaternion.LookRotation(g.transform.position - transform.position, Vector3.up).eulerAngles.y + 180f, 0f);
+        // Measured flat from the player's feet; right next to the player that direction is noise, so hold the heading.
+        var away = transform.position - avatar.transform.position;
+        away.y = 0f;
         var current = Quaternion.Euler(0f, _rb.rotation.eulerAngles.y, 0f);
+        var facing = away.sqrMagnitude > .36f ? Quaternion.LookRotation(away, Vector3.up) : current;
         (facing * Quaternion.Inverse(current)).ToAngleAxis(out float angle, out var axis);
         if (angle > 180f) angle -= 360f;
-        float cap = _flame != null && _flame.Firing ? 1.5f : 4f;
+        float cap = _flame != null && _flame.Firing ? 2.5f : 4f;
         float turn = Mathf.Clamp(Mathf.Clamp(Mathf.Abs(angle) / 180f, .2f, 1f) * 20f, 0f, cap);
         var spin = Vector3.ClampMagnitude(Mathf.Deg2Rad * angle * axis.normalized * turn, cap);
         _rb.angularVelocity = Vector3.ClampMagnitude(Vector3.MoveTowards(_rb.angularVelocity, spin, turn), cap);

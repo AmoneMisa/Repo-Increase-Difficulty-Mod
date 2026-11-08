@@ -225,8 +225,9 @@ public static class ModConfig
     public static ConfigEntry<float> CourierCoinChance;
     public static ConfigEntry<UnityEngine.KeyCode> CourierMenuKey;
     public static ConfigEntry<int> SoulCartValueCap;
-    public static ConfigEntry<int> FlameDamagePerTick, FlameBatteryDamage, FlameCartValueCap, FlameCartPriceMinK, FlameCartPriceMaxK;
-    public static ConfigEntry<float> FlameTickSeconds, FlameRange, FlameConeAngle;
+    public static ConfigEntry<float> WideCartWidth;
+    public static ConfigEntry<int> FlameDamagePerSecond, FlameCartValueCap, FlameCartPriceMinK, FlameCartPriceMaxK;
+    public static ConfigEntry<float> FlameTickSeconds, FlameFuelSeconds, FlameRange, FlameConeAngle;
     // Wizard Staff: chain-lightning wand (handgun base, revolver price).
     public static ConfigEntry<bool> StaffEnabled, NetLauncherEnabled;
     public static ConfigEntry<bool> WingCosmeticsEnabled, SharkCosmeticsEnabled, StarlightCosmeticsEnabled, LegateCosmeticsEnabled, FairyCosmeticsEnabled, GildedCosmeticsEnabled,
@@ -369,6 +370,7 @@ public static class ModConfig
     public static ConfigEntry<int> ShopPriceBaselinePlayers;
     public static ConfigEntry<float> ShopPricePerExtraPlayer;
     public static ConfigEntry<int> ShopDuplicatesExtra;
+    public static ConfigEntry<int> ShopExtraItems, ShopExtraUpgrades;
 
     // --- Diagnostics ---
     // Temporary kill-switches to isolate whether the mod interferes with the game's
@@ -487,9 +489,11 @@ public static class ModConfig
         CourierMenuKey = cfg.Bind("Courier", "MenuKey", UnityEngine.KeyCode.G, "Opens the courier command menu. Arrow keys move, Enter/Right picks, Left goes back.");
         CustomCartsEnabled = Module(cfg, "Gear", "CustomCartsEnabled", true, "CustomCarts", "Sell the Soul C.A.R.T. (small, souls only), the Wide C.A.R.T. and the Double-Decker C.A.R.T.");
         SoulCartValueCap = BindInt(cfg, "Carts", "SoulCartValueCap", 55000, 1000, 1000000, "Most soul value the Soul C.A.R.T. carries; a soul that would go over it is pushed back out.");
-        FlameDamagePerTick = BindInt(cfg, "Flamethrower", "DamagePerTick", 10, 1, 200, "Damage dealt to every monster inside the flame each tick.");
-        FlameTickSeconds = BindFloat(cfg, "Flamethrower", "TickSeconds", 1f, 0.25f, 5f, "Seconds between flame damage ticks.");
-        FlameBatteryDamage = BindInt(cfg, "Flamethrower", "BatteryDamage", 700, 50, 10000, "Total per-target damage one full battery provides (fuel is used per tick, whether or not anything is hit).");
+        WideCartWidth = BindFloat(cfg, "Carts", "WideCartWidth", 1.25f, 1f, 1.5f, "How much wider the Wide C.A.R.T. is than the big C.A.R.T. (1.25 = 25% wider). Above about 1.3 it may not fit through doorways. Applies after a game restart.");
+        // New keys (not DamagePerTick/TickSeconds/BatteryDamage): saved values of the old keys would keep the slow flame.
+        FlameDamagePerSecond = BindInt(cfg, "Flamethrower", "DamagePerSecond", 24, 1, 500, "Damage per second dealt to every monster inside the flame, applied in small fast ticks.");
+        FlameTickSeconds = BindFloat(cfg, "Flamethrower", "DamageTickSeconds", 0.25f, 0.1f, 2f, "Seconds between flame damage ticks. Smaller = smoother, more immediate damage.");
+        FlameFuelSeconds = BindFloat(cfg, "Flamethrower", "FuelSeconds", 60f, 5f, 600f, "Seconds of continuous flame one full battery provides (used whether or not anything is hit).");
         FlameRange = BindFloat(cfg, "Flamethrower", "Range", 7f, 2f, 15f, "Flame reach in metres, in the direction the operator looks.");
         FlameConeAngle = BindFloat(cfg, "Flamethrower", "ConeHalfAngle", 30f, 5f, 80f, "Half-angle of the flame cone in degrees.");
         FlameCartValueCap = BindInt(cfg, "Flamethrower", "CargoValueCap", 25000, 0, 1000000, "Most loot value its storage box (the Hauler's storage system) holds; loot that would exceed it is refused. 0 = the Hauler's own limit.");
@@ -962,6 +966,10 @@ public static class ModConfig
         ShopDuplicatesExtra = BindInt(cfg,
             "Shop", "DuplicatesExtra", 0, 0, 10,
             "Allow the same item (e.g. a gun) to appear more than once in a single shop by adding this many extra copies of each item to the shop pool. 0 = vanilla (usually one of each).");
+        ShopExtraItems = BindInt(cfg, "Shop", "ExtraItems", 4, 0, 20,
+            "Extra different regular items (weapons, tools, drones...) stocked per shop visit on top of the game's 8. Never copies of the same item; they go on free shelf slots, using a bigger free slot when no slot of their own size is left.");
+        ShopExtraUpgrades = BindInt(cfg, "Shop", "ExtraUpgrades", 3, 0, 20,
+            "Extra different upgrades stocked per shop visit on top of the game's 3, on free shelf slots (a bigger free slot when no slot of their own size is left).");
 
         // --- Truck upgrades ---
                 TruckHealPercentPerLevel = BindFloat(cfg,

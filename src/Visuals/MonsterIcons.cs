@@ -13,7 +13,6 @@ namespace IncreaseHardMod.Visuals;
 internal static class MonsterIcons
 {
     internal const int Size = 128, Pad = 10, Outline = 3;
-    private const int MaxTries = 4;
 
     private sealed class Entry { public Texture2D Texture; public readonly Dictionary<int, Sprite> Sprites = new(); public int Tries; public float RetryAt; }
     private static readonly Dictionary<string, Entry> Cache = new();
@@ -28,15 +27,71 @@ internal static class MonsterIcons
     {
         string key = Key(enemy);
         if (key == null) return null;
+        LoadPrepared();
         if (!Cache.TryGetValue(key, out var entry)) Cache[key] = entry = new Entry();
         if (entry.Texture != null) return entry.Texture;
-        if (entry.Tries >= MaxTries || Time.unscaledTime < entry.RetryAt) return null;
+        // No give-up limit: a monster that is despawned, invisible (Hidden) or culled out of view simply can't be drawn
+        // yet. The old cap of 4 tries left such monsters without an icon for the whole session. Back off instead.
+        if (Time.unscaledTime < entry.RetryAt) return null;
         entry.Tries++;
-        entry.RetryAt = Time.unscaledTime + 2f;
+        entry.RetryAt = Time.unscaledTime + Mathf.Min(1f + entry.Tries, 10f);
         try { entry.Texture = Capture(enemy); }
         catch (System.Exception e) { Plugin.Log.LogWarning($"[MonsterIcons] {key}: icon capture failed: {e.Message}"); }
         if (entry.Texture != null) { Plugin.Log.LogInfo($"[MonsterIcons] Made the icon for {key}."); Save(key, entry.Texture); }
+        else if (entry.Tries == 5) Plugin.Log.LogInfo($"[MonsterIcons] {key}: no drawable shape yet (spawned={enemy.Spawned}); still trying.");
         return entry.Texture;
+    }
+
+    private const string ResourcePrefix = "IHM.MonsterIcon.";
+    private static bool _prepared;
+
+    /// <summary>
+    /// Ready-made icons, so a monster has its icon from the very first ping even while it is hidden or out of view:
+    /// the set shipped inside the mod (src/MonsterIcons) and every icon this PC captured before (BepInEx/IHM_MonsterIcons,
+    /// which Save writes). Runtime capture stays as the fallback for monsters in neither, e.g. other mods' monsters.
+    /// </summary>
+    private static void LoadPrepared()
+    {
+        if (_prepared) return;
+        _prepared = true;
+        int shipped = 0, local = 0;
+        try
+        {
+            var asm = typeof(MonsterIcons).Assembly;
+            foreach (string resource in asm.GetManifestResourceNames())
+            {
+                if (!resource.StartsWith(ResourcePrefix) || !resource.EndsWith(".png")) continue;
+                using var stream = asm.GetManifestResourceStream(resource);
+                if (stream == null) continue;
+                using var ms = new System.IO.MemoryStream();
+                stream.CopyTo(ms);
+                string key = resource.Substring(ResourcePrefix.Length, resource.Length - ResourcePrefix.Length - 4);
+                if (Add(key, ms.ToArray())) shipped++;
+            }
+        }
+        catch (System.Exception e) { Plugin.Log.LogWarning($"[MonsterIcons] Couldn't load the shipped icons: {e.Message}"); }
+        try
+        {
+            string folder = System.IO.Path.Combine(BepInEx.Paths.BepInExRootPath, "IHM_MonsterIcons");
+            if (System.IO.Directory.Exists(folder))
+                foreach (string file in System.IO.Directory.GetFiles(folder, "*.png"))
+                {
+                    string key = System.IO.Path.GetFileNameWithoutExtension(file);
+                    if (Cache.ContainsKey(key)) continue; // shipped set first
+                    if (Add(key, System.IO.File.ReadAllBytes(file))) local++;
+                }
+        }
+        catch (System.Exception e) { Plugin.Log.LogWarning($"[MonsterIcons] Couldn't load saved icons: {e.Message}"); }
+        Plugin.Log.LogInfo($"[MonsterIcons] Prepared icons: {shipped} shipped, {local} saved on this PC.");
+    }
+
+    private static bool Add(string key, byte[] png)
+    {
+        var texture = new Texture2D(2, 2, TextureFormat.RGBA32, true)
+            { name = "IHM Monster Icon " + key, wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear, hideFlags = HideFlags.HideAndDontSave };
+        if (!texture.LoadImage(png)) { Object.Destroy(texture); return false; }
+        Cache[key] = new Entry { Texture = texture };
+        return true;
     }
 
     /// <summary>The icon as a map sprite, sized <paramref name="worldSize"/> units across on the map.</summary>

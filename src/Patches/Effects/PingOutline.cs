@@ -156,7 +156,7 @@ internal sealed class PingOutline : MaskableGraphic
     {
         if (_calloutIcon == null) return;
         if (_pointMarker) { _calloutIcon.canvasRenderer.SetAlpha(0f); return; }
-        float s = Mathf.Clamp(Screen.height / 1080f, .8f, 2.5f) * ModConfig.PingMarkerScale.Value;
+        float s = MarkerScale();
         if (_calloutSquare && HasReticle)
         {
             // Monster: the icon fills the reticle's inner ring, centred on the target (no side box).
@@ -225,12 +225,16 @@ internal sealed class PingOutline : MaskableGraphic
         if (_calloutIcon != null) _calloutIcon.canvasRenderer.SetAlpha(0f);
     }
 
+    // Base size of every ping marker: screen-height scaling times the player's MarkerScale, at 70% of the old default.
+    private static float MarkerScale() => Mathf.Clamp(Screen.height / 1080f, .8f, 2.5f) * ModConfig.PingMarkerScale.Value * .7f;
+
     private void PlaceReticle(Rect rectangle, float alpha)
     {
         float age = Time.time - _born;
         float intro = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(age / .25f));
-        float minimum = 90f * Mathf.Clamp(Screen.height / 1080f, .8f, 2.5f) * ModConfig.PingMarkerScale.Value;
-        float side = Mathf.Max(minimum, Mathf.Max(rectangle.width, rectangle.height) * 1.2f);
+        float minimum = 64f * MarkerScale();
+        // Frames the target, but a monster right in front of you no longer blows the reticle up to half the screen.
+        float side = Mathf.Clamp(Mathf.Max(rectangle.width, rectangle.height) * 1.05f, minimum, minimum * 1.8f);
         // Snaps in from slightly larger, like a lock-on.
         side *= Mathf.Lerp(1.45f, 1f, intro);
         float pulse = 1f + Mathf.Sin(age * 4f) * .015f;
@@ -275,7 +279,7 @@ internal sealed class PingOutline : MaskableGraphic
         {
             var screen=HudProjection.WorldToScreen(camera,target!=null?target.centerPoint:PlayerTarget!=null?Visuals.WingedCirclet.MarkerPoint(PlayerTarget):_point);
             if(screen.z<=camera.nearClipPlane || !HudProjection.DisplayRect(camera).Contains(screen)) {Hide();return;}
-            _markerScale=Mathf.Clamp(Screen.height/1080f,.8f,2.5f)*ModConfig.PingMarkerScale.Value;
+            _markerScale=MarkerScale();
             var size=new Vector2(96f,44f)*_markerScale;
             rectangle=new Rect((Vector2)screen-size*.5f,size);
         }

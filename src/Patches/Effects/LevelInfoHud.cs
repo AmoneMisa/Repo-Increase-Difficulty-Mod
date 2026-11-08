@@ -391,15 +391,24 @@ internal sealed class LevelInfoHud : MonoBehaviour
         _descriptionLabel.enableAutoSizing = false;
         _descriptionLabel.overflowMode = TextOverflowModes.Page;
         var rt = _descriptionLabel.rectTransform;
-        // Reserve a small footer only inside the remaining details region. Neither the
-        // map block nor paged descriptions can overlap the native level/inventory band.
-        float footer = _detailsPageLabel.fontSize * 3f;
-        if (rt.rect.height < footer) return;
-        rt.sizeDelta = new Vector2(rt.sizeDelta.x, rt.rect.height - footer);
+        // The paging footer (one line per hint) is reserved only when there is something to page, so a short
+        // region is not lost to an empty footer. Neither block can overlap the native level/inventory band.
+        bool namesPaged = _modsLabel.enabled && _modsLabel.textInfo.pageCount > 1;
         int pages = 1;
         if (rt.rect.height >= _descriptionLabel.fontSize && !string.IsNullOrEmpty(_descriptionLabel.text))
         {
             _descriptionLabel.enabled = true;
+            _descriptionLabel.ForceMeshUpdate();
+            pages = Mathf.Max(1, _descriptionLabel.textInfo.pageCount);
+        }
+        int footerLines = (namesPaged ? 1 : 0) + (mapPages > 1 ? 1 : 0) + (pages > 1 ? 1 : 0);
+        float footer = 0f;
+        if (footerLines > 0)
+        {
+            if (pages == 1) footerLines++; // shrinking for the footer may push the text onto a second page
+            footer = _detailsPageLabel.fontSize * 1.4f * footerLines;
+            if (rt.rect.height - footer < _descriptionLabel.fontSize) { _descriptionLabel.enabled = false; return; }
+            rt.sizeDelta = new Vector2(rt.sizeDelta.x, rt.rect.height - footer);
             _descriptionLabel.ForceMeshUpdate();
             pages = Mathf.Max(1, _descriptionLabel.textInfo.pageCount);
         }
@@ -553,7 +562,10 @@ internal sealed class LevelInfoHud : MonoBehaviour
                 top = Mathf.Min(top, listBottom - gap);
             }
         }
-        float floor = area.yMin + area.height * 0.24f;
+        // Outside Tab the floor keeps clear of the native HUD band at the bottom. In Tab that band holds only the
+        // centred inventory slots, while the right column under the LEVEL label is empty: with the 24% floor the
+        // descriptions got under one line there and were switched off.
+        float floor = area.yMin + area.height * (TabOpen ? 0.1f : 0.24f);
         // The native level label (number, moon) only limits the block when it sits BELOW the quota area.
         // After the HUD changes it can sit beside or above it, which left no room and hid every label.
         float levelTop = Mathf.Max(heading.yMax, number.yMax);

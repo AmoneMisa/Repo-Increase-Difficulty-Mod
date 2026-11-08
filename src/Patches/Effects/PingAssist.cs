@@ -42,7 +42,15 @@ internal sealed class PingAssist : MonoBehaviour
         var pings = PingController.Active;
         bool any = camera != null && pings.Count > 0 && (range || compass || path) && HUDCanvas.instance != null;
         if (!any) { HideAll(); ClearPaths(null); return; }
-        if (_panel == null && !BuildPanel()) return;
+        // The panel lives under the game's HUD; when that is rebuilt (level change) Unity destroys it together with
+        // every pooled label and arrow. Reusing those dead pool entries threw a NullReferenceException every frame.
+        if (_panel == null || HasDeadEntries())
+        {
+            if (_panel != null) Destroy(_panel.gameObject);
+            _panel = null;
+            _labels.Clear(); _arrows.Clear(); _arrowLabels.Clear();
+            if (!BuildPanel()) return;
+        }
         _panel.gameObject.SetActive(true);
 
         var display = HudProjection.DisplayRect(camera);
@@ -65,6 +73,14 @@ internal sealed class PingAssist : MonoBehaviour
         for (int i = label; i < _labels.Count; i++) _labels[i].gameObject.SetActive(false);
         for (int i = arrow; i < _arrows.Count; i++) { _arrows[i].gameObject.SetActive(false); _arrowLabels[i].gameObject.SetActive(false); }
         if (path) UpdatePaths(pings); else ClearPaths(null);
+    }
+
+    private bool HasDeadEntries()
+    {
+        foreach (var l in _labels) if (l == null) return true;
+        foreach (var a in _arrows) if (a == null) return true;
+        foreach (var l in _arrowLabels) if (l == null) return true;
+        return false;
     }
 
     private static float Scale() => Mathf.Clamp(Screen.height / 1080f, .8f, 2.5f) * ModConfig.PingMarkerScale.Value;
