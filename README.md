@@ -11,7 +11,7 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.8.6`
+- **Version:** `0.8.7`
 
 Version 0.7.12 adds the plush corgi, three Rare wing cosmetics, an Armor HUD row, cleaner pings and a set of shop, HUD and multiplayer fixes ([details](release-notes/v0.7.12.md)).
 
@@ -258,7 +258,7 @@ only on a successful extraction.
   crate by hitting, shooting, tumbling into or throwing things at it). Since 0.8.6 also **Monster Waves** (three
   waves of monsters come at the shrine one after another, nobody may die), **Vigil** (stand in the shrine's ring for
   40 s while its light draws monsters), **Spark Hunt** (collect 8 sparks spread over the level) and **Offering** (bring
-  loot worth 15% of the level's loot into the shrine's ring), **Mushroom Path** (mushrooms light up in a sequence;
+  loot worth 15% of the level's loot into the shrine's ring); since 0.8.7 also **Mushroom Path** (mushrooms light up in a sequence;
   jump on them in the same order, three rounds) and **Capture the Flag** (type the answer to a sum in chat, carry the
   flag to its base, then hold it for 2 minutes against monsters with nobody dying). Winning gives a skill point for everyone,
   an upgrade or a cosmetic box. Host-side; the chance per level is in the `Challenges` config section.
@@ -403,7 +403,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.8.6`
+- **Версия:** `0.8.7`
 
 В 0.7.12 добавлены плюшевый корги, три редких крыла, строка брони на HUD, более чистые пинги и исправления магазина, HUD и мультиплеера ([подробности](release-notes/v0.7.12.md)).
 
@@ -645,7 +645,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
   монстров, никто не должен умереть) или **Разгром** (разбейте все ящики ударом, выстрелом, кувырком или броском).
   С 0.8.6 также **Волны монстров** (три волны монстров идут к святилищу одна за другой, никто не должен умереть),
   **Бдение** (простойте в кругу святилища 40 с, пока его свет притягивает монстров), **Сбор искр** (соберите 8 искр
-  по уровню), **Подношение** (принесите в круг святилища добычу на 15% стоимости всей добычи уровня), **Грибная тропа**
+  по уровню), **Подношение** (принесите в круг святилища добычу на 15% стоимости всей добычи уровня); с 0.8.7 также **Грибная тропа**
   (грибы загораются по очереди; прыгайте по ним в том же порядке, три раунда) и **Захват флага** (напишите в чат ответ
   на пример, отнесите флаг на базу и удержите его 2 минуты против монстров, чтобы никто не умер).
   Победа даёт очко навыков всем, улучшение или коробку косметики. Работает на стороне хоста; шанс на уровень —
