@@ -258,7 +258,9 @@ only on a successful extraction.
   crate by hitting, shooting, tumbling into or throwing things at it). Since 0.8.6 also **Monster Waves** (three
   waves of monsters come at the shrine one after another, nobody may die), **Vigil** (stand in the shrine's ring for
   40 s while its light draws monsters), **Spark Hunt** (collect 8 sparks spread over the level) and **Offering** (bring
-  loot worth 15% of the level's loot into the shrine's ring). Winning gives a skill point for everyone,
+  loot worth 15% of the level's loot into the shrine's ring), **Mushroom Path** (mushrooms light up in a sequence;
+  jump on them in the same order, three rounds) and **Capture the Flag** (type the answer to a sum in chat, carry the
+  flag to its base, then hold it for 2 minutes against monsters with nobody dying). Winning gives a skill point for everyone,
   an upgrade or a cosmetic box. Host-side; the chance per level is in the `Challenges` config section.
 - **Loot Safety Net** — while an extraction point is open, the host spawns more loot when the loot
   the team can still collect (in the point, carried, in boxes, found or not) is not enough to fill it.
@@ -643,7 +645,9 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
   монстров, никто не должен умереть) или **Разгром** (разбейте все ящики ударом, выстрелом, кувырком или броском).
   С 0.8.6 также **Волны монстров** (три волны монстров идут к святилищу одна за другой, никто не должен умереть),
   **Бдение** (простойте в кругу святилища 40 с, пока его свет притягивает монстров), **Сбор искр** (соберите 8 искр
-  по уровню) и **Подношение** (принесите в круг святилища добычу на 15% стоимости всей добычи уровня).
+  по уровню), **Подношение** (принесите в круг святилища добычу на 15% стоимости всей добычи уровня), **Грибная тропа**
+  (грибы загораются по очереди; прыгайте по ним в том же порядке, три раунда) и **Захват флага** (напишите в чат ответ
+  на пример, отнесите флаг на базу и удержите его 2 минуты против монстров, чтобы никто не умер).
   Победа даёт очко навыков всем, улучшение или коробку косметики. Работает на стороне хоста; шанс на уровень —
   в разделе конфига `Challenges`.
 - **Loot Safety Net** — пока точка сдачи открыта, хост добавляет ценности, если тех, до которых

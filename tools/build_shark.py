@@ -31,6 +31,9 @@ import bmesh
 import bpy
 from mathutils import Matrix, Vector
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import cosmetic_kit as CK  # noqa: E402  (shared wear texture)
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--root', type=Path, required=True)
 parser.add_argument('--base', type=Path)
@@ -80,7 +83,14 @@ def material(name, color, rough=.75, metal=0., emit=0., image=None, tint=False):
     p.inputs['Base Color'].default_value = (*color, 1); p.inputs['Roughness'].default_value = rough
     p.inputs['Metallic'].default_value = metal
     p.inputs['Emission Color'].default_value = (*color, 1); p.inputs['Emission Strength'].default_value = emit
-    if image:
+    if image is None and emit < .8:
+        # worn plush: the shared grey wear texture multiplied by the colour (the slot tint still applies in game)
+        tex = m.node_tree.nodes.new('ShaderNodeTexImage'); tex.image = bpy.data.images.load(str(SRC / CK.WEAR))
+        mix = m.node_tree.nodes.new('ShaderNodeMix'); mix.data_type = 'RGBA'; mix.blend_type = 'MULTIPLY'; mix.inputs['Factor'].default_value = 1
+        m.node_tree.links.new(tex.outputs['Color'], mix.inputs['A']); mix.inputs['B'].default_value = (*color, 1)
+        m.node_tree.links.new(mix.outputs['Result'], p.inputs['Base Color'])
+        m['texture'] = CK.WEAR; m['multiply'] = True
+    elif image:
         tex = m.node_tree.nodes.new('ShaderNodeTexImage'); tex.image = bpy.data.images.load(str(SRC / image)); tex.interpolation = 'Linear'
         m.node_tree.links.new(tex.outputs['Color'], p.inputs['Base Color'])
         m['texture'] = image
@@ -504,6 +514,7 @@ def export(key, parts, pivots, crown):
     lo = Vector((1e9, 1e9, 1e9)); hi = -lo
     tris = 0
     for ob in parts:
+        box_uv(ob, 2.2)
         me = ob.data
         bm = bmesh.new(); bm.from_mesh(me); bmesh.ops.triangulate(bm, faces=bm.faces[:]); bm.to_mesh(me); bm.free(); me.update()
         pts = [ob.matrix_world @ v.co for v in me.vertices]
@@ -517,7 +528,7 @@ def export(key, parts, pivots, crown):
             mats_out.append({'name': m.name, 'texture': m.get('texture', ''), 'color': {'r': base[0], 'g': base[1], 'b': base[2], 'a': 1},
                              'transmission': 0, 'emission': p.inputs['Emission Strength'].default_value,
                              'roughness': p.inputs['Roughness'].default_value, 'metallic': p.inputs['Metallic'].default_value,
-                             'tint': bool(m.get('tint', False))})
+                             'tint': bool(m.get('tint', False)), 'multiply': bool(m.get('multiply', False))})
         uv_layer = me.uv_layers.active
         verts = []; normals = []; uv = []; tri = []
         for poly in me.polygons:
@@ -532,7 +543,7 @@ def export(key, parts, pivots, crown):
             tri.extend([start, start + 2, start + 1])
         tris += len(tri) // 3
         mi = index[m.name]
-        color = {'r': 1, 'g': 1, 'b': 1, 'a': 1} if mats_out[mi]['texture'] else mats_out[mi]['color']
+        color = {'r': 1, 'g': 1, 'b': 1, 'a': 1} if mats_out[mi]['texture'] and not mats_out[mi]['multiply'] else mats_out[mi]['color']
         records.append({'name': ob.name, 'group': ob.get('group', 'static'), 'phase': 0, 'material': mi, 'vertices': verts, 'normals': normals,
                         'uv': uv, 'triangles': tri, 'color': color, 'texture': mats_out[mi]['texture'],
                         'rest': {'position': vec(C @ center), 'rotation': {'x': 0, 'y': 0, 'z': 0, 'w': 1}, 'scale': {'x': 1, 'y': 1, 'z': 1}}, 'samples': []})
@@ -606,14 +617,28 @@ def bpy_render():
 bpy.render_render = bpy_render
 
 
+def box_uv(ob, scale=6.):
+    """Box-projected UVs for a mesh that has none, so the wear texture lands on it (scale = tiles per metre)."""
+    me = ob.data
+    if me.uv_layers: return
+    layer = me.uv_layers.new(name='UVMap')
+    for poly in me.polygons:
+        n = poly.normal; ax, ay, az = abs(n.x), abs(n.y), abs(n.z)
+        for li in poly.loop_indices:
+            co = me.vertices[me.loops[li].vertex_index].co * scale
+            layer.data[li].uv = (co.y, co.z) if ax >= ay and ax >= az else (co.x, co.z) if ay >= az else (co.x, co.y)
+
+
 def build_all():
     reset()
+    CK.configure(ROOT); CK.ensure_wear()
     plate_texture()
     M = mats()
     built = {}
     for key, (title, slot, fn) in STYLES.items():
         if ARGS.only and key not in ARGS.only.split(','): continue
         parts, pivots, crown = fn(M)
+        parts = CK.bake_parts(key, CK.merge(parts))       # baked pattern and soft shadows, like the other sets
         export(key, parts, pivots, crown)
         built[key] = (slot, parts)
     return built

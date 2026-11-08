@@ -754,3 +754,173 @@ internal sealed class FloorRingVisual : MonoBehaviour
 
     private void OnDestroy() { if (_glow != null) Destroy(_glow); }
 }
+
+/// <summary>A Mushroom Path mushroom: a pale stem and a spotted dome cap in its own colour, solid to stand on. It
+/// glows and chimes its own note when lit (the sequence playing, a correct step, a round cleared) and flashes red on
+/// a mistake. Seven colours and seven notes, so the sequence can be remembered by colour or by ear.</summary>
+internal sealed class MushroomVisual : MonoBehaviour
+{
+    internal static readonly Color[] Colours =
+    {
+        new(1f, .32f, .3f), new(1f, .62f, .2f), new(1f, .9f, .3f), new(.4f, .95f, .4f),
+        new(.3f, .8f, 1f), new(.5f, .45f, 1f), new(1f, .45f, .9f),
+    };
+    private Material _cap;
+    private Light _light;
+    private Transform _body;
+    private Color _colour;
+    private int _index;
+    private float _glow, _target;
+
+    internal static MushroomVisual Create(Vector3 floor, int index)
+    {
+        var root = new GameObject("IHM Challenge Mushroom");
+        root.transform.SetPositionAndRotation(floor, Quaternion.Euler(0f, index * 51f, 0f));
+        var v = root.AddComponent<MushroomVisual>();
+        v._index = index;
+        v._colour = Colours[Mathf.Abs(index) % Colours.Length];
+        v._body = new GameObject("Body").transform;
+        v._body.SetParent(root.transform, false);
+        float h = Challenges.ChallengeRules.MushroomCapHeight, r = Challenges.ChallengeRules.MushroomCapRadius;
+        ChallengeProps.Part(v._body, "Stem", ChallengeProps.Mesh("MushroomStem", m => m
+            .Crystal(ProcMesh.TRS(new Vector3(0f, h * .5f, 0f), Vector3.zero, new Vector3(.3f, h, .3f)), 10, -.5f, .5f)
+            .Crystal(ProcMesh.TRS(new Vector3(0f, .05f, 0f), Vector3.zero, new Vector3(.42f, .1f, .42f)), 10, -.5f, .5f)),
+            ChallengeProps.Mat(new Color(.93f, .88f, .78f), .08f, .2f, 0f));
+        ChallengeProps.Part(v._body, "Gills", ChallengeProps.Mesh("MushroomGills", m => m
+            .Crystal(ProcMesh.TRS(new Vector3(0f, h + .015f, 0f), Vector3.zero, new Vector3(r * 1.9f, .04f, r * 1.9f)), 16, -.5f, .5f)),
+            ChallengeProps.Mat(new Color(.55f, .42f, .36f), 0f, .1f, 0f));
+        v._cap = ChallengeProps.Mat(v._colour, .25f, .55f, 0f);
+        ChallengeProps.Part(v._body, "Cap", ChallengeProps.Mesh("MushroomCap", m => m
+            .Crystal(ProcMesh.TRS(new Vector3(0f, h + .14f, 0f), Vector3.zero, new Vector3(r * 2.05f, .32f, r * 2.05f)), 16, -.5f, -.22f)), v._cap);
+        ChallengeProps.Part(v._body, "Spots", ChallengeProps.Mesh("MushroomSpots", m =>
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                float a = i * 60f + 20f, d = i % 2 == 0 ? r * .62f : r * .32f;
+                var at = Quaternion.Euler(0f, a, 0f) * new Vector3(0f, 0f, d);
+                float y = h + .07f + .1f * (1f - d / r);
+                m.ChamferBox(ProcMesh.TRS(at + Vector3.up * y, new Vector3(-20f * d / r, a, 0f), new Vector3(.1f, .03f, .1f)), .35f);
+            }
+            return m;
+        }), ChallengeProps.Mat(new Color(1f, .98f, .94f), .15f, .4f, 0f));
+        v._light = ChallengeProps.Lamp(root.transform, new Vector3(0f, h + .5f, 0f), v._colour, 3.2f, .25f);
+        // Solid to stand on: a flat top just under the cap's crown, and the stem.
+        var cap = root.AddComponent<BoxCollider>();
+        cap.center = new Vector3(0f, h + .06f, 0f);
+        cap.size = new Vector3(r * 1.8f, .14f, r * 1.8f);
+        var stem = root.AddComponent<BoxCollider>();
+        stem.center = new Vector3(0f, h * .5f, 0f);
+        stem.size = new Vector3(.28f, h, .28f);
+        return v;
+    }
+
+    /// <summary>Light it up now (sequence, step or round flash), with its own note.</summary>
+    internal void Lit(bool chime)
+    {
+        _glow = 1f;
+        if (!chime) return;
+        var cue = Visuals.ItemAudio.Cue("ping_upgrade", .5f);
+        cue.Pitch = .75f + .1f * (Mathf.Abs(_index) % Colours.Length); cue.PitchRandom = 0f;
+        cue.Play(transform.position + Vector3.up);
+    }
+
+    internal void Mistake() { _glow = -1f; Visuals.ItemAudio.Cue("ping_cosmetic", .45f).Play(transform.position + Vector3.up); }
+
+    internal void Hold(bool on) => _target = on ? 1f : 0f;
+
+    private void Update()
+    {
+        float dt = Time.deltaTime;
+        // _glow > 0: own colour, < 0: red, fading back to _target (held lit while the sequence shows it).
+        _glow = _glow >= 0f ? Mathf.MoveTowards(_glow, _target, dt * 2.2f) : Mathf.MoveTowards(_glow, 0f, dt * 1.6f);
+        var colour = _glow < 0f ? ChallengeProps.Lose : _colour;
+        float k = Mathf.Abs(_glow);
+        if (_cap != null) _cap.SetColor("_EmissionColor", colour * (.25f + 2.6f * k));
+        if (_light != null) { _light.color = colour; _light.intensity = .25f + 2.8f * k; }
+        if (_body != null) _body.localScale = new Vector3(1f + .06f * k, 1f - .05f * k * Mathf.Sin(Time.time * 18f), 1f + .06f * k);
+    }
+
+    private void OnDestroy() { if (_cap != null) Destroy(_cap); }
+}
+
+/// <summary>Capture the Flag: a gold-tipped pole with a red banner that waves (its mesh bends each frame). Rides above
+/// its carrier's head, rests where it fell, or stands planted in its base.</summary>
+internal sealed class FlagVisual : MonoBehaviour
+{
+    private const int Cols = 8, Rows = 4;
+    private const float Width = .62f, Height = .4f;
+    private Mesh _cloth;
+    private Vector3[] _vertices;
+    private Vector3 _goal;
+    private bool _snap = true;
+
+    internal static FlagVisual Create(Vector3 at)
+    {
+        var root = new GameObject("IHM Challenge Flag");
+        root.transform.position = at;
+        var v = root.AddComponent<FlagVisual>();
+        v._goal = at;
+        ChallengeProps.Part(root.transform, "Pole", ChallengeProps.Mesh("FlagPole", m => m
+            .Crystal(ProcMesh.TRS(new Vector3(0f, .8f, 0f), Vector3.zero, new Vector3(.045f, 1.6f, .045f)), 8, -.5f, .5f)),
+            ChallengeProps.Textured("metal", new Color(.42f, .42f, .45f), .45f, .7f, ChallengeTex.Metal));
+        ChallengeProps.Part(root.transform, "Finial", ChallengeProps.Mesh("FlagFinial", m => m
+            .Crystal(ProcMesh.TRS(new Vector3(0f, 1.66f, 0f), Vector3.zero, new Vector3(.09f, .16f, .09f)), 6)), ChallengeProps.Mat(ChallengeProps.Gold, .8f, .7f, .6f));
+        // The banner: a grid in the pole's XY plane, both faces, bent each frame.
+        v._vertices = new Vector3[(Cols + 1) * (Rows + 1)];
+        var tris = new List<int>();
+        for (int y = 0; y < Rows; y++)
+            for (int x = 0; x < Cols; x++)
+            {
+                int i = y * (Cols + 1) + x;
+                tris.AddRange(new[] { i, i + Cols + 1, i + 1, i + 1, i + Cols + 1, i + Cols + 2 });   // front
+                tris.AddRange(new[] { i, i + 1, i + Cols + 1, i + 1, i + Cols + 2, i + Cols + 1 });   // back
+            }
+        v._cloth = new Mesh { name = "IHM Flag Cloth" };
+        v.Bend(0f);
+        v._cloth.SetTriangles(tris, 0);
+        var banner = ChallengeProps.Part(root.transform, "Banner", v._cloth, ChallengeProps.Mat(new Color(.9f, .14f, .12f), .45f, .3f, 0f));
+        banner.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        ChallengeProps.Part(root.transform, "Emblem", ChallengeProps.Mesh("FlagEmblem", m => m
+            .Diamond(ProcMesh.TRS(new Vector3(Width * .45f, 1.4f, 0f), Vector3.zero, new Vector3(.13f, .17f, .03f)))), ChallengeProps.Mat(ChallengeProps.Gold, 1f, .7f, .5f));
+        ChallengeProps.Lamp(root.transform, new Vector3(.2f, 1.4f, 0f), new Color(1f, .4f, .3f), 4f, 1.1f);
+        ChallengeProps.Halo(root.transform, new Vector3(0f, 1.66f, 0f), .5f, new Color(1f, .8f, .4f, .5f));
+        ChallengeProps.MapDot(root, ChallengeProps.Hunt);
+        return v;
+    }
+
+    private void Bend(float time)
+    {
+        for (int y = 0; y <= Rows; y++)
+            for (int x = 0; x <= Cols; x++)
+            {
+                float u = x / (float)Cols, v = y / (float)Rows;
+                float wave = Mathf.Sin(time * 5f - u * 5.5f + v * .8f) * .07f * u;
+                _vertices[y * (Cols + 1) + x] = new Vector3(u * Width, 1.18f + v * Height - u * u * .05f, wave);
+            }
+        _cloth.vertices = _vertices;
+        _cloth.RecalculateNormals();
+        _cloth.RecalculateBounds();
+    }
+
+    /// <summary>Where the pole's foot should be; it glides there (snaps the first time).</summary>
+    internal void MoveTo(Vector3 foot)
+    {
+        _goal = foot;
+        if (_snap) { transform.position = foot; _snap = false; }
+    }
+
+    private void Update()
+    {
+        transform.position = Vector3.Lerp(transform.position, _goal, 1f - Mathf.Exp(-Time.deltaTime * 14f));
+        var cam = Camera.main;
+        if (cam != null)
+        {
+            // Turn the banner side-on to the viewer so it reads as a flag from anywhere.
+            var to = transform.position - cam.transform.position; to.y = 0f;
+            if (to.sqrMagnitude > .01f) transform.rotation = Quaternion.LookRotation(to) * Quaternion.Euler(0f, 20f, 0f);
+        }
+        Bend(Time.time);
+    }
+
+    private void OnDestroy() { if (_cloth != null) Destroy(_cloth); }
+}

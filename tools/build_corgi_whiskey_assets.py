@@ -213,11 +213,11 @@ def bandana():
             d.line([(x0 + (x1 - x0) * t0 + inset * (1 - t0), y0 + 14 + (y1 - y0 - 30) * t0),
                     (x0 + (x1 - x0) * t1 + inset * (1 - t1), y0 + 14 + (y1 - y0 - 30) * t1)], fill=(205, 120, 105), width=4)
     cream = (238, 228, 210)
-    cx, cy = S // 2, int(S * .56)                              # paw print, below the hanging tongue
-    d.ellipse([cx - 52, cy + 2, cx + 52, cy + 84], fill=cream)
-    d.ellipse([cx - 70, cy + 30, cx - 26, cy + 86], fill=cream); d.ellipse([cx + 26, cy + 30, cx + 70, cy + 86], fill=cream)
+    cx, cy, k = S // 2, int(S * .42), .5                       # a small paw print in the wide upper part of the flap
+    d.ellipse([cx - 52 * k, cy + 2 * k, cx + 52 * k, cy + 84 * k], fill=cream)
+    d.ellipse([cx - 70 * k, cy + 30 * k, cx - 26 * k, cy + 86 * k], fill=cream); d.ellipse([cx + 26 * k, cy + 30 * k, cx + 70 * k, cy + 86 * k], fill=cream)
     for dx, dy, r in ((-62, -22, 21), (-24, -50, 23), (24, -50, 23), (62, -22, 21)):
-        d.ellipse([cx + dx - r, cy + dy - r * 1.15, cx + dx + r, cy + dy + r * 1.15], fill=cream)
+        d.ellipse([cx + (dx - r) * k, cy + (dy - r * 1.15) * k, cx + (dx + r) * k, cy + (dy + r * 1.15) * k], fill=cream)
     img.filter(ImageFilter.GaussianBlur(.6)).save(ART / 'v11_corgi_bandana.png')
 
 

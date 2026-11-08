@@ -97,7 +97,8 @@ public static class ModConfig
     public static ConfigEntry<float> SoulsExplodeHarderFactor;
     public static ConfigEntry<int> SpreadUpgradesCount;
     public static ConfigEntry<int> MysteryBoxCount, MysteryBoxMoneyMin, MysteryBoxMoneyMax;
-    public static ConfigEntry<int> MysteryBoxWeightUpgrade, MysteryBoxWeightMoney, MysteryBoxWeightWeapon;
+    public static ConfigEntry<int> MysteryBoxWeightUpgrade, MysteryBoxWeightMoney, MysteryBoxWeightWeapon, MysteryBoxWeightCostume;
+    public static ConfigEntry<bool> CostumeRewardsEnabled;
     public static ConfigEntry<string> SpreadUpgradesAllowed;
     public static ConfigEntry<bool> LogSpreadUpgradeNames;
     public static ConfigEntry<bool> AutoReviveAtCar;
@@ -218,7 +219,8 @@ public static class ModConfig
     public static ConfigEntry<float> FlameTickSeconds, FlameRange, FlameConeAngle;
     // Wizard Staff: chain-lightning wand (handgun base, revolver price).
     public static ConfigEntry<bool> StaffEnabled, NetLauncherEnabled;
-    public static ConfigEntry<bool> WingCosmeticsEnabled, SharkCosmeticsEnabled, StarlightCosmeticsEnabled, LegateCosmeticsEnabled, FairyCosmeticsEnabled;
+    public static ConfigEntry<bool> WingCosmeticsEnabled, SharkCosmeticsEnabled, StarlightCosmeticsEnabled, LegateCosmeticsEnabled, FairyCosmeticsEnabled, GildedCosmeticsEnabled,
+        SeerCosmeticsEnabled, JesterCosmeticsEnabled, BrideCosmeticsEnabled, AngelCosmeticsEnabled;
     public static ConfigEntry<bool> ScreenEffectsEnabled;
     public static ConfigEntry<bool> GuaranteedStrengthEnabled;
     public static ConfigEntry<float> NetSeconds, NetBreakChance;
@@ -478,6 +480,11 @@ public static class ModConfig
         ScreenEffectsEnabled = Module(cfg, "Screen Effects", "Enabled", true, "ScreenEffects", "When you are frozen, poisoned, sedated (tranquilized) or netted, show a themed frame around the screen edges and a status card at the left with a time bar. Local only.");
         WingCosmeticsEnabled = Module(cfg, "Cosmetics", "WingsEnabled", true, "WingCosmetics", "Add three Rare back-wing cosmetics (Astral Night, Solar Seraph, Prism Chime) to the Body Top slot. Everyone in the lobby needs this setting to see them. Takes effect on restart.");
         SharkCosmeticsEnabled = Module(cfg, "Cosmetics", "PlushSharkEnabled", true, "SharkCosmetics", "Add the six-part Plush Shark set: hood (Hat), headphones (Ears), suit with dorsal fin (Body Top), tail (Body Bottom) and two fin sleeves (Arm Right, Arm Left). The blue plush takes the colour you pick in the cosmetics menu. Everyone in the lobby needs this setting to see them. Takes effect on restart.");
+        SeerCosmeticsEnabled = Module(cfg, "Cosmetics", "SeerEnabled", true, "SeerCosmetics", "Add the Horned Seer set: a hood with crescent horns, chains, crystals and a blindfold (Hat), a black robe with a tattered green shawl and a deer-skull pauldron (Body Top), a long ragged robe with a green veil and crystal chains (Body Bottom) and bell sleeves (Arm Right, Arm Left). The green takes the colour you pick in the cosmetics menu. Takes effect on restart.");
+        JesterCosmeticsEnabled = Module(cfg, "Cosmetics", "JesterEnabled", true, "JesterCosmetics", "Add the Card Jester set: a three-pointed hat with bells and playing cards (Hat), a smiling porcelain mask (Face Top), a red-and-black doublet with a ruff and peplum (Body Top), wide split trousers (Body Bottom) and puffed sleeves (Arm Right, Arm Left). The red takes the colour you pick in the cosmetics menu. Takes effect on restart.");
+        BrideCosmeticsEnabled = Module(cfg, "Cosmetics", "BrideEnabled", true, "BrideCosmetics", "Add the Ghost Bride set: a blue rose crown with a tattered veil (Hat), a lace corset (Body Top), a long tattered lace skirt (Body Bottom) and torn lace gloves (Arm Right, Arm Left). The lace takes the colour you pick in the cosmetics menu. Takes effect on restart.");
+        AngelCosmeticsEnabled = Module(cfg, "Cosmetics", "AngelEnabled", true, "AngelCosmetics", "Add the Mossy Stone Angel set: a stone veil with a moss crown (Hat), a stone robe with a ruffled collar, with or without tall folded stone wings (Body Top), a long draped robe with moss (Body Bottom) and ruffled sleeves (Arm Right, Arm Left). The stone takes the colour you pick in the cosmetics menu. Takes effect on restart.");
+        GildedCosmeticsEnabled = Module(cfg, "Cosmetics", "GildedEnabled", true, "GildedCosmetics", "Add the Gilded Shadow set: a gold-trimmed hood (Hat), a corset with an open coat, spiked shoulders and a necklace (Body Top), a long open veil skirt over shorts with chains and moon pendants (Body Bottom), puff sleeves (Arm Right, Arm Left) and stockings with black boots, one dark and one cream (Leg Right, Leg Left). The brown fabric and the stockings take the colour you pick in the cosmetics menu. Everyone in the lobby needs this setting to see them. Takes effect on restart.");
         FairyCosmeticsEnabled = Module(cfg, "Cosmetics", "FairyEnabled", true, "FairyCosmetics", "Add the Petal Fairy set: a pink crop top with choker and flowers (Body Top), the same top with four glowing petal wings (Body Top), a wrap skirt over striped shorts (Body Bottom), off-shoulder sleeves (Arm Right, Arm Left) and striped stockings with slouch boots (Leg Right, Leg Left). The pink fabric, wings and stocking stripes take the colour you pick in the cosmetics menu. Everyone in the lobby needs this setting to see them. Takes effect on restart.");
         LegateCosmeticsEnabled = Module(cfg, "Cosmetics", "LegateEnabled", true, "LegateCosmetics", "Add the Legate set: a silver muscle cuirass with baldric and belt (Body Top), the same cuirass with a red mantle and long cape (Body Top), a war skirt of tooled leather strips (Body Bottom) and red leather bracers (Arm Right, Arm Left). The red cloth and leather take the colour you pick in the cosmetics menu. Everyone in the lobby needs this setting to see them. Takes effect on restart.");
         StarlightCosmeticsEnabled = Module(cfg, "Cosmetics", "StarlightEnabled", true, "StarlightCosmetics", "Add the seven-part Starlight Gown set: galaxy bodice with choker (Body Top), high-low skirt with lace hems and belt (Body Bottom), lace sleeves (Arm Right, Arm Left), thigh-high galaxy boots (Leg Right, Leg Left) and drop earrings (Ears). The galaxy fabric, its glowing stars, the lace and the gems take the colour you pick in the cosmetics menu. Everyone in the lobby needs this setting to see them. Takes effect on restart.");
@@ -683,6 +690,12 @@ public static class ModConfig
         MysteryBoxWeightMoney = BindInt(cfg,
             "Modifier Tuning", "MysteryBoxWeightMoney", 30, 0, 100,
             "MysteryBoxes: relative chance of a money prize.");
+        MysteryBoxWeightCostume = BindInt(cfg,
+            "Modifier Tuning", "MysteryBoxWeightCostume", 15, 0, 100,
+            "MysteryBoxes: relative chance of a costume piece: every player unlocks one of the mod's costume parts they don't own yet.");
+        CostumeRewardsEnabled = cfg.Bind(
+            "Quests", "CostumeRewardsEnabled", true,
+            "Costume pieces as rewards: challenge shrines, mystery boxes, special contracts and rank A+ quests can give every player one of the mod's costume parts they don't own yet (a Rare cosmetic token once they own them all).");
         MysteryBoxWeightWeapon = BindInt(cfg,
             "Modifier Tuning", "MysteryBoxWeightWeapon", 35, 0, 100,
             "MysteryBoxes: relative chance of a weapon or grenade that only exists on this level (it is not added to your saved items).");

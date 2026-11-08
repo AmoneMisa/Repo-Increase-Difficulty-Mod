@@ -44,7 +44,6 @@
   <ItemGroup>
     <EmbeddedResource Include="src\Textures\*.png" />
     <EmbeddedResource Include="src\Art\*.png" />
-    <EmbeddedResource Include="src\Art\*.mesh.json" />
     <EmbeddedResource Include="src\Art\*.bundle" />
     <EmbeddedResource Include="src\Audio\*.wav" />
   </ItemGroup>
@@ -117,6 +116,41 @@
   </ItemGroup>
 
   <!-- Deployment is explicit so packaging/building never adds a second active DLL to a profile. -->
+  <!-- Models are plain JSON in the repo but embedded gzipped (about a tenth of the size); EmbeddedArt.ReadText inflates
+       them at load. The resource names stay the same, so the loaders' name lookups are unchanged. -->
+  <UsingTask TaskName="GzipArt" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Files ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <OutputDir Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.IO.Compression" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        Directory.CreateDirectory(OutputDir);
+        foreach (var file in Files)
+        {
+            string source = file.GetMetadata("FullPath");
+            string target = Path.Combine(OutputDir, Path.GetFileName(source));
+            if (File.Exists(target) && File.GetLastWriteTimeUtc(target) >= File.GetLastWriteTimeUtc(source)) continue;
+            using (var input = File.OpenRead(source))
+            using (var output = File.Create(target))
+            using (var zip = new GZipStream(output, CompressionLevel.Optimal))
+                input.CopyTo(zip);
+        }
+      ]]></Code>
+    </Task>
+  </UsingTask>
+  <Target Name="CompressArt" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <ArtModel Include="src\Art\*.mesh.json" />
+    </ItemGroup>
+    <GzipArt Files="@(ArtModel)" OutputDir="$(IntermediateOutputPath)art" />
+    <ItemGroup>
+      <EmbeddedResource Include="@(ArtModel->'$(IntermediateOutputPath)art\%(Filename)%(Extension)')" LogicalName="IncreaseHardMod.src.Art.%(Filename)%(Extension)" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="DeployToGame" AfterTargets="Build" Condition="'$(DeployToGame)' == 'true'">
     <MakeDir Directories="$(PluginsDir)" />
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PluginsDir)" />

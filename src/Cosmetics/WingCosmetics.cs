@@ -13,7 +13,9 @@ namespace IncreaseHardMod.Cosmetics;
 /// three Rare back wings (Body Top), the six-part Plush Shark set (hood, headphones, suit, tail, two fin sleeves)
 /// the seven-part Starlight Gown set (bodice, skirt, two lace sleeves, two boots, earrings) and the Legate set
 /// (silver cuirass with or without the red mantle and cape, war skirt, two bracers) and the Petal Fairy set (crop top
-/// with or without glowing petal wings, wrap skirt, two sleeves, two striped stockings with boots), each part in its
+/// with or without glowing petal wings, wrap skirt, two sleeves, two striped stockings with boots) and the Gilded Shadow
+/// set (hood, corset and coat, veiled skirt, two puff sleeves, two stockings with boots), plus the Horned Seer, Card
+/// Jester, Ghost Bride and Mossy Stone Angel sets, each part in its
 /// own slot so it mixes with anything else. Plush, galaxy fabric, lace and gems are tintable: they take the colour
 /// the player picks for that slot in the cosmetics menu (the galaxy's glowing stars too).
 /// Each prefab is a small template: a Cosmetic root with one "Visuals" mesh parent. The meshes are built when the
@@ -28,7 +30,7 @@ internal static class WingCosmetics
         public readonly SemiFunc.CosmeticType Type;
         public readonly SemiFunc.Rarity Rarity;
         public readonly bool Tintable;
-        public readonly string Set;   // "wings", "shark", "starlight", "legate", "fairy": each set has its own config switch
+        public readonly string Set;   // "wings", "shark", "starlight", "legate", "fairy", "gilded", "seer", "jester", "bride", "angel": each set has its own config switch
         public Definition(string key, string title, SemiFunc.CosmeticType type = SemiFunc.CosmeticType.BodyTop, string slot = "Body Top",
             SemiFunc.Rarity rarity = SemiFunc.Rarity.Rare, bool tintable = false, string set = "wings")
         { Key = key; Title = title; Type = type; Slot = slot; Rarity = rarity; Tintable = tintable; Set = set; }
@@ -64,6 +66,37 @@ internal static class WingCosmetics
         new("fairy_sleeve_l", "Petal Fairy Sleeve Left", SemiFunc.CosmeticType.ArmLeft, "Arm Left", SemiFunc.Rarity.Uncommon, true, "fairy"),
         new("fairy_leg_r", "Petal Fairy Stocking Right", SemiFunc.CosmeticType.LegRight, "Leg Right", SemiFunc.Rarity.Uncommon, true, "fairy"),
         new("fairy_leg_l", "Petal Fairy Stocking Left", SemiFunc.CosmeticType.LegLeft, "Leg Left", SemiFunc.Rarity.Uncommon, true, "fairy"),
+        new("gilded_hood", "Gilded Shadow Hood", SemiFunc.CosmeticType.Hat, "Hat", SemiFunc.Rarity.Rare, true, "gilded"),
+        new("gilded_top", "Gilded Shadow Corset and Coat", SemiFunc.CosmeticType.BodyTop, "Body Top", SemiFunc.Rarity.Rare, true, "gilded"),
+        new("gilded_skirt", "Gilded Shadow Veil Skirt", SemiFunc.CosmeticType.BodyBottom, "Body Bottom", SemiFunc.Rarity.UltraRare, true, "gilded"),
+        new("gilded_sleeve_r", "Gilded Shadow Sleeve Right", SemiFunc.CosmeticType.ArmRight, "Arm Right", SemiFunc.Rarity.Uncommon, true, "gilded"),
+        new("gilded_sleeve_l", "Gilded Shadow Sleeve Left", SemiFunc.CosmeticType.ArmLeft, "Arm Left", SemiFunc.Rarity.Uncommon, true, "gilded"),
+        new("gilded_leg_r", "Gilded Shadow Stocking Right", SemiFunc.CosmeticType.LegRight, "Leg Right", SemiFunc.Rarity.Uncommon, true, "gilded"),
+        new("gilded_leg_l", "Gilded Shadow Stocking Left", SemiFunc.CosmeticType.LegLeft, "Leg Left", SemiFunc.Rarity.Uncommon, true, "gilded"),
+        new("seer_hood", "Horned Seer Hood", SemiFunc.CosmeticType.Hat, "Hat", SemiFunc.Rarity.Rare, true, "seer"),
+        new("seer_robe", "Horned Seer Robe", SemiFunc.CosmeticType.BodyTop, "Body Top", SemiFunc.Rarity.Rare, true, "seer"),
+        new("seer_skirt", "Horned Seer Robe Skirt", SemiFunc.CosmeticType.BodyBottom, "Body Bottom", SemiFunc.Rarity.UltraRare, true, "seer"),
+        new("seer_sleeve_r", "Horned Seer Sleeve Right", SemiFunc.CosmeticType.ArmRight, "Arm Right", SemiFunc.Rarity.Uncommon, true, "seer"),
+        new("seer_sleeve_l", "Horned Seer Sleeve Left", SemiFunc.CosmeticType.ArmLeft, "Arm Left", SemiFunc.Rarity.Uncommon, true, "seer"),
+        new("jester_hat", "Card Jester Hat", SemiFunc.CosmeticType.Hat, "Hat", SemiFunc.Rarity.Rare, true, "jester"),
+        new("jester_mask", "Card Jester Mask", SemiFunc.CosmeticType.FaceTop, "Face Top", SemiFunc.Rarity.Uncommon, true, "jester"),
+        new("jester_doublet", "Card Jester Doublet", SemiFunc.CosmeticType.BodyTop, "Body Top", SemiFunc.Rarity.Rare, true, "jester"),
+        new("jester_trousers", "Card Jester Breeches", SemiFunc.CosmeticType.BodyBottom, "Body Bottom", SemiFunc.Rarity.Rare, true, "jester"),
+        new("jester_leg_r", "Card Jester Trouser Leg Right", SemiFunc.CosmeticType.LegRight, "Leg Right", SemiFunc.Rarity.Uncommon, true, "jester"),
+        new("jester_leg_l", "Card Jester Trouser Leg Left", SemiFunc.CosmeticType.LegLeft, "Leg Left", SemiFunc.Rarity.Uncommon, true, "jester"),
+        new("jester_sleeve_r", "Card Jester Sleeve Right", SemiFunc.CosmeticType.ArmRight, "Arm Right", SemiFunc.Rarity.Uncommon, true, "jester"),
+        new("jester_sleeve_l", "Card Jester Sleeve Left", SemiFunc.CosmeticType.ArmLeft, "Arm Left", SemiFunc.Rarity.Uncommon, true, "jester"),
+        new("bride_veil", "Ghost Bride Veil", SemiFunc.CosmeticType.Hat, "Hat", SemiFunc.Rarity.Rare, true, "bride"),
+        new("bride_corset", "Ghost Bride Corset", SemiFunc.CosmeticType.BodyTop, "Body Top", SemiFunc.Rarity.Rare, true, "bride"),
+        new("bride_skirt", "Ghost Bride Skirt", SemiFunc.CosmeticType.BodyBottom, "Body Bottom", SemiFunc.Rarity.UltraRare, true, "bride"),
+        new("bride_glove_r", "Ghost Bride Glove Right", SemiFunc.CosmeticType.ArmRight, "Arm Right", SemiFunc.Rarity.Uncommon, true, "bride"),
+        new("bride_glove_l", "Ghost Bride Glove Left", SemiFunc.CosmeticType.ArmLeft, "Arm Left", SemiFunc.Rarity.Uncommon, true, "bride"),
+        new("angel_veil", "Stone Angel Veil", SemiFunc.CosmeticType.Hat, "Hat", SemiFunc.Rarity.Rare, true, "angel"),
+        new("angel_robe", "Stone Angel Robe", SemiFunc.CosmeticType.BodyTop, "Body Top", SemiFunc.Rarity.Uncommon, true, "angel"),
+        new("angel_robe_wings", "Stone Angel Robe and Wings", SemiFunc.CosmeticType.BodyTop, "Body Top", SemiFunc.Rarity.UltraRare, true, "angel"),
+        new("angel_skirt", "Stone Angel Robe Skirt", SemiFunc.CosmeticType.BodyBottom, "Body Bottom", SemiFunc.Rarity.Rare, true, "angel"),
+        new("angel_sleeve_r", "Stone Angel Sleeve Right", SemiFunc.CosmeticType.ArmRight, "Arm Right", SemiFunc.Rarity.Uncommon, true, "angel"),
+        new("angel_sleeve_l", "Stone Angel Sleeve Left", SemiFunc.CosmeticType.ArmLeft, "Arm Left", SemiFunc.Rarity.Uncommon, true, "angel"),
     };
 
     private static GameObject _templates;
@@ -87,7 +120,8 @@ internal static class WingCosmetics
 
     internal static void Register()
     {
-        if (_registered || !ModConfig.WingCosmeticsEnabled.Value && !ModConfig.SharkCosmeticsEnabled.Value && !ModConfig.StarlightCosmeticsEnabled.Value && !ModConfig.LegateCosmeticsEnabled.Value && !ModConfig.FairyCosmeticsEnabled.Value) return;
+        if (_registered || !ModConfig.WingCosmeticsEnabled.Value && !ModConfig.SharkCosmeticsEnabled.Value && !ModConfig.StarlightCosmeticsEnabled.Value && !ModConfig.LegateCosmeticsEnabled.Value && !ModConfig.FairyCosmeticsEnabled.Value && !ModConfig.GildedCosmeticsEnabled.Value && !ModConfig.SeerCosmeticsEnabled.Value && !ModConfig.JesterCosmeticsEnabled.Value
+            && !ModConfig.BrideCosmeticsEnabled.Value && !ModConfig.AngelCosmeticsEnabled.Value) return;
         _registered = true;
         // Templates live under an inactive holder: Unity never runs their Awake, while instances made by
         // PlayerCosmetics (parented to the player) are active and build their meshes.
@@ -103,6 +137,11 @@ internal static class WingCosmetics
                 "starlight" => ModConfig.StarlightCosmeticsEnabled.Value,
                 "legate" => ModConfig.LegateCosmeticsEnabled.Value,
                 "fairy" => ModConfig.FairyCosmeticsEnabled.Value,
+                "gilded" => ModConfig.GildedCosmeticsEnabled.Value,
+                "seer" => ModConfig.SeerCosmeticsEnabled.Value,
+                "jester" => ModConfig.JesterCosmeticsEnabled.Value,
+                "bride" => ModConfig.BrideCosmeticsEnabled.Value,
+                "angel" => ModConfig.AngelCosmeticsEnabled.Value,
                 _ => ModConfig.WingCosmeticsEnabled.Value,
             };
             if (!enabled) continue;
@@ -269,17 +308,19 @@ internal sealed class WingCosmeticVisual : MonoBehaviour
         return null;
     }
 
+    private static readonly string[] TiledPrefixes = { "starlight_", "legate_", "fairy_", "gilded_", "seer_", "jester_", "bride_", "angel_", "cosmetic_wear" };
+
     private static Material MakeMaterial(ValuableArtMaterial data)
     {
         var template = Template();
         var loaded = string.IsNullOrEmpty(data.texture) ? null : UpgradeIcons.LoadTexture(data.texture);
-        bool tiled = data.texture != null && (data.texture.StartsWith("starlight_", StringComparison.Ordinal) || data.texture.StartsWith("legate_", StringComparison.Ordinal) || data.texture.StartsWith("fairy_", StringComparison.Ordinal));   // fabrics and trims repeat
+        bool tiled = data.texture != null && System.Array.Exists(TiledPrefixes, prefix => data.texture.StartsWith(prefix, StringComparison.Ordinal));   // fabrics and trims repeat
         if (loaded != null) { loaded.wrapMode = tiled ? TextureWrapMode.Repeat : TextureWrapMode.Clamp; loaded.filterMode = FilterMode.Bilinear; }
         var glow = string.IsNullOrEmpty(data.emissionTexture) ? null : UpgradeIcons.LoadTexture(data.emissionTexture);
         if (glow != null) { glow.wrapMode = tiled ? TextureWrapMode.Repeat : TextureWrapMode.Clamp; glow.filterMode = FilterMode.Bilinear; }
         var texture = loaded != null ? loaded : Texture2D.whiteTexture;
         // Tintable textures are grey and take their colour from the material (the slot tint replaces it in game).
-        Color colour = string.IsNullOrEmpty(data.texture) || data.tint ? data.color : Color.white;
+        Color colour = string.IsNullOrEmpty(data.texture) || data.tint || data.multiply ? data.color : Color.white;
         Material material;
         if (template != null)
         {

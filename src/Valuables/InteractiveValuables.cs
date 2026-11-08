@@ -60,6 +60,7 @@ internal static class InteractiveValuables
     private static void Make(ValuableObject donor, CollectionEntry entry)
     {
         string key=entry.Key;float mass=entry.Mass;
+        if(key=="skeleton")mass=CollectionCatalog.TotalMass(entry); // one rigid prop now: the stand carries the bones' mass too
         var volume=key=="cannon"||key=="bomb"||key=="skeleton"?ValuableVolume.Type.Big:key=="centrifuge"||key=="monoblock_pc"?ValuableVolume.Type.Medium:ValuableVolume.Type.Small;
         if (Registered.Contains(key)) return;
         GameObject go = null;
@@ -156,7 +157,6 @@ internal static class InteractiveValuables
                         }
                         continue;
                     }
-                    if(key=="skeleton"&&binding.group!="static"&&!binding.group.StartsWith("caster_",StringComparison.Ordinal))continue;
                     if(key=="bomb")
                     {
                         var shell=CollisionChild(go,"Bomb collision "+binding.group);shell.transform.localPosition=binding.node.localPosition;
@@ -180,7 +180,8 @@ internal static class InteractiveValuables
                     BoxCollider(go,"Collection collision "+binding.group,binding.node.localPosition+bounds.center,Vector3.Max(bounds.size,new Vector3(.006f,.006f,.006f)));
                 }
                 if(key=="robot_vacuum"||key=="skeleton")go.AddComponent<FloorPropMotion>();
-                if(key=="skeleton"||key=="centrifuge")go.AddComponent<CollectionPhysics>();
+                if(key=="centrifuge")go.AddComponent<CollectionPhysics>();
+                if(key=="skeleton")go.AddComponent<SkeletonSway>(); // bones hang in a joint chain and sway; nothing can come loose
                 if(CollectionLights.Applies(key))go.AddComponent<CollectionLights>();
                 if(key=="maneki_neko")go.AddComponent<ManekiMotion>();
             }

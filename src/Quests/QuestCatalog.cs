@@ -91,6 +91,8 @@ public static class QuestCatalog
             if (ModConfig.QuestTempStatRewardsEnabled.Value) pool.Add(RewardType.TempStat);
             if (q.Rank >= QuestRank.A && ModConfig.QuestCosmeticRewardsEnabled.Value)
                 pool.Add(RewardType.Cosmetic);
+            if (q.Rank >= QuestRank.A && ModConfig.CostumeRewardsEnabled.Value)
+                pool.Add(RewardType.Costume);
 
             if (pool.Count > 0 && Random.value < 0.5f)
             {
@@ -243,6 +245,8 @@ public static class QuestCatalog
             q.RewardAmount = 1;
             q.RewardPoints = 0;
             q.RewardPerk = Random.Range(0, perks);
+            // Some contracts pay a costume piece for everyone instead of the perk.
+            if (ModConfig.CostumeRewardsEnabled.Value && Random.value < .35f) { q.RewardType = RewardType.Costume; q.RewardPerk = -1; }
             return q;
         }
         return null;

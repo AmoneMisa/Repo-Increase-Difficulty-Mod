@@ -336,10 +336,12 @@ def corgi():
     limbs = []
     for side in (1, -1):
         tag = 'r' if side > 0 else 'l'
-        limbs.append(('corgi_paw_f' + tag, [E((side * .088, .13, .085), (.06, .1, .072)), E((side * .088, .2, .075), (.065, .06, .074))],
-                      Vector((side * .088, .06, .15)), side * .088, .072, 1.))
-        limbs.append(('corgi_foot_b' + tag, [E((side * .17, .04, .075), (.072, .1, .07))],
-                      Vector((side * .15, -.04, .11)), side * .175, .07, .95))
+        # each leg carries a shoulder / hip piece that sinks well into the body, so no gap shows at the join
+        limbs.append(('corgi_paw_f' + tag, [E((side * .088, .13, .085), (.06, .1, .072)), E((side * .088, .2, .075), (.065, .06, .074)),
+                                            E((side * .085, .02, .12), (.058, .085, .075))],
+                      Vector((side * .086, .03, .11)), side * .088, .072, 1.))          # pivot inside the shoulder join
+        limbs.append(('corgi_foot_b' + tag, [E((side * .17, .04, .075), (.072, .1, .07)), E((side * .155, -.08, .1), (.065, .085, .075))],
+                      Vector((side * .16, -.05, .095)), side * .175, .07, .95))         # pivot inside the hip join
     for group, elems, pivot, x, z, s in limbs:
         limb = blob('Corgi limb', elems)
         limb.data.materials.clear(); limb.data.materials.append(white)
@@ -356,17 +358,44 @@ def corgi():
     global CORGI_PIVOTS
     CORGI_PIVOTS = [{'group': g, 'position': vec(C @ Vector(p))} for g, p in pivots.items()]
 
-    # Red bandana: a collar band hidden under the chin and a triangular flap draped over the chest.
-    bpy.ops.mesh.primitive_torus_add(major_radius=.13, minor_radius=.022, major_segments=40, minor_segments=10, location=(0, .0, .25))
-    collar = bpy.context.object; collar.name = 'Corgi bandana collar'; collar.scale = (1.02, .8, 1)
-    bpy.ops.object.shade_smooth(); parts.append(assign(collar, band))
+    # Red bandana, fitted to the body: a band round the neck (each point found on the real surface, so it never
+    # sticks out where the neck is slimmer) and a triangular flap laid onto the chest the same way.
+    ring = []
+    for k in range(48):
+        a = 2 * math.pi * k / 48
+        # a tilted band: under the chin at the front, rising to the nape behind the head
+        centre = Vector((0, -.03, .245 + .085 * (1 - math.cos(a)) / 2))
+        d = Vector((math.sin(a), math.cos(a), 0))
+        hit, loc, normal, _ = body.ray_cast(centre + d * .3, -d)
+        if hit and (loc - centre).length < .2: ring.append((loc, normal))
+    if len(ring) > 8:
+        # the neckband: a flat strip of the bandana cloth lying on the neck
+        n = len(ring); verts = []; faces = []
+        for k, (loc, normal) in enumerate(ring):
+            tangent = (ring[(k + 1) % n][0] - ring[k - 1][0]).normalized()
+            up = tangent.cross(normal).normalized()
+            if up.z < 0: up = -up
+            for j, w in enumerate((-.02, .02)):
+                verts.append(tuple(loc + normal * .008 + up * w))
+        for k in range(n):
+            a, b = 2 * k, 2 * ((k + 1) % n)
+            faces.append((a, b, b + 1, a + 1)); faces.append((a + 1, b + 1, b, a))   # both sides, so it never vanishes edge-on
+        parts.append(from_data('Corgi bandana collar', verts, faces, band, smooth=True))
+        # the knot at the nape, with two short tails
+        back = min(ring, key=lambda r: r[0].y)
+        knot_at = back[0] + back[1] * .012
+        parts.append(assign(sphere('Corgi bandana knot', knot_at, (.024, .018, .02), band), band))
+        for side in (1, -1):
+            tail = [knot_at + Vector((side * (.01 + .03 * t), -.012 - .01 * t, -.01 - .055 * t)) for t in (0, .5, 1)]
+            parts.append(tube('Corgi bandana tail', tail, .011, band))
     cols, rows = 16, 12; verts = []; uvs = []; faces = []
     for r in range(rows + 1):
-        v = r / rows; z = .105 + (.255 - .105) * v; half = .165 * v + .004
+        v = r / rows; z = .11 + (.25 - .11) * v; half = .118 * v + .004   # stays on the front of the chest
         for c in range(cols + 1):
             u = c / cols; x = -half + 2 * half * u
-            y = .13 * math.sqrt(max(0., 1 - (x / .18) ** 2 - ((z - .19) / .19) ** 2)) + .028
-            verts.append((x, y, z)); uvs.append((.5 + (u - .5) * (.03 + .94 * v), .02 + .96 * v))
+            hit, loc, normal, _ = body.ray_cast(Vector((x, 1, z)), Vector((0, -1, 0)))
+            p = loc + normal * .009 if hit and normal.y > .25 else Vector((x, .1, z))
+            verts.append(tuple(p)); uvs.append((.5 + (u - .5) * (.03 + .94 * v), .02 + .96 * v))
     for r in range(rows):
         for c in range(cols):
             q = r * (cols + 1) + c; faces.append((q, q + 1, q + cols + 2, q + cols + 1))

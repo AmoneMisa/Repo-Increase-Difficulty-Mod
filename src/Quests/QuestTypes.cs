@@ -83,6 +83,7 @@ public enum RewardType : byte
     ShopItem = 5,      // spawns a random general shop item (grenade/health-pack/tool/etc.)
     ExactUpgrade = 6,  // spawns a SPECIFIC upgrade item (chosen by RewardStat)
     QuestPerk = 7,     // special contract: every player gets a level of a quest-only skill tree perk (RewardPerk)
+    Costume = 8,       // every player unlocks one of the mod's costume parts they don't own yet
 }
 
 /// <summary>

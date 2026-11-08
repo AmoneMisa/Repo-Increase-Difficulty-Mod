@@ -262,8 +262,14 @@ internal static class MysteryBoxEffect
         int wUp = Mathf.Max(0, ModConfig.MysteryBoxWeightUpgrade.Value);
         int wMoney = Mathf.Max(0, ModConfig.MysteryBoxWeightMoney.Value);
         int wWeapon = Mathf.Max(0, ModConfig.MysteryBoxWeightWeapon.Value);
-        if (wUp + wMoney + wWeapon == 0) wMoney = 1;
-        int roll = Random.Range(0, wUp + wMoney + wWeapon);
+        int wCostume = ModConfig.CostumeRewardsEnabled.Value ? Mathf.Max(0, ModConfig.MysteryBoxWeightCostume.Value) : 0;
+        if (wUp + wMoney + wWeapon + wCostume == 0) wMoney = 1;
+        int roll = Random.Range(0, wUp + wMoney + wWeapon + wCostume);
+        if (roll >= wUp + wMoney + wWeapon)
+        {
+            Cosmetics.CostumeRewards.GrantToAll("mystery box");
+            return "COSTUME PIECE FOR EVERYONE";
+        }
 
         var drop = b.Pos + Vector3.up * (Size.y + 0.45f);
         var rot = Quaternion.Euler(0f, b.Yaw, 0f);
@@ -273,7 +279,7 @@ internal static class MysteryBoxEffect
             if (item != null && Quests.QuestRewards.SpawnItemAt(item, drop, rot))
                 return "UPGRADE: " + DisplayName(item);
         }
-        else if (roll >= wUp + wMoney)
+        else if (roll >= wUp + wMoney && roll < wUp + wMoney + wWeapon)
         {
             var item = Quests.QuestRewards.PickWeaponOrGrenade();
             if (item != null && Quests.QuestRewards.SpawnItemAt(item, drop, rot))
@@ -298,7 +304,7 @@ internal static class MysteryBoxEffect
         // The game's own focus text: native font, size, glow and placement.
         // The host words the prize; each player reads it in their own language.
         if (Localization.GameLanguage.Russian)
-            label = label.Replace("UPGRADE: ", "УЛУЧШЕНИЕ: ").Replace(" (THIS LEVEL)", " (НА ЭТОТ УРОВЕНЬ)");
+            label = label.Replace("UPGRADE: ", "УЛУЧШЕНИЕ: ").Replace(" (THIS LEVEL)", " (НА ЭТОТ УРОВЕНЬ)").Replace("COSTUME PIECE FOR EVERYONE", "ЧАСТЬ КОСТЮМА ВСЕМ");
         SemiFunc.UIFocusText((Localization.GameLanguage.Russian ? "ЯЩИК-СЮРПРИЗ: " : "MYSTERY BOX: ") + label, new Color(0.85f, 0.55f, 1f), Color.white, 3f);
     }
 

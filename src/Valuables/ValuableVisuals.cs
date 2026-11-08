@@ -25,8 +25,7 @@ internal static class ValuableVisuals
             ?? names.FirstOrDefault(n => n.EndsWith(".v08_" + key + ".mesh.json", StringComparison.Ordinal));
         if (resource == null) throw new FileNotFoundException("Missing valuable art: " + key);
         using var stream = assembly.GetManifestResourceStream(resource);
-        using var reader = new StreamReader(stream);
-        var model = JsonConvert.DeserializeObject<ValuableArtModel>(reader.ReadToEnd(), new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.None, MaxDepth = 64 });
+        var model = JsonConvert.DeserializeObject<ValuableArtModel>(Visuals.EmbeddedArt.ReadText(stream), new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.None, MaxDepth = 64 });
         if (model?.parts == null || model.parts.Length == 0 || model.materials == null) throw new InvalidDataException("Empty valuable model: " + key);
         foreach (var part in model.parts)
         {
@@ -121,7 +120,7 @@ internal static class ValuableVisuals
 [Serializable] internal sealed class ValuableArtLiquid { public float halfWidth,bottom,top,fill,power; }
 [Serializable] internal sealed class ValuableArtPhysics { public Vector3 centerOfMass,motionMin,motionMax;public ValuableArtCollider[] colliders; }
 [Serializable] internal sealed class ValuableArtCollider { public string name;public bool moving;public Vector3[] vertices;public int[] triangles; }
-[Serializable] internal sealed class ValuableArtMaterial { public string name, texture;public Color color;public float transmission, emission, roughness,metallic;public bool tint, tintEmission;public string emissionTexture; }
+[Serializable] internal sealed class ValuableArtMaterial { public string name, texture;public Color color;public float transmission, emission, roughness,metallic;public bool tint, tintEmission, multiply;public string emissionTexture; }
 [Serializable] internal sealed class ValuableArtPart
 {
     public string name, group;public float phase;public int material;

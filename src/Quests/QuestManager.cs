@@ -573,6 +573,10 @@ public static class QuestManager
                 string cube = QuestRewards.SpawnCosmetic(q.Rank);
                 q.RewardItem = cube ?? "cosmetic";
                 break;
+            case RewardType.Costume:
+                Cosmetics.CostumeRewards.GrantToAll("quest " + q.Title);
+                q.RewardItem = "costume piece";
+                break;
             case RewardType.Heal:
                 QuestRewards.HealAll(q.RewardAmount);
                 break;
@@ -656,6 +660,7 @@ public static class QuestManager
     {
         RewardType.Money => $"${QuestMoney.WalletUnits(q.RewardAmount)}K",
         RewardType.Cosmetic => "cosmetic box",
+        RewardType.Costume => "costume piece for everyone",
         RewardType.Heal => $"heal {q.RewardAmount}",
         RewardType.TempStat => $"+{q.RewardAmount} {StatKindInfo.Label(q.RewardStat)} (level)",
         RewardType.ShopItem => "shop item",
@@ -673,6 +678,7 @@ public static class QuestManager
         {
             RewardType.Item => string.IsNullOrEmpty(item) ? "улучшение" : item,
             RewardType.Cosmetic => "коробка косметики",
+            RewardType.Costume => "часть костюма всем",
             RewardType.Heal => $"лечение отряда на {q.RewardAmount} HP",
             RewardType.TempStat => $"+{q.RewardAmount} {QuestText.Stat(q.RewardStat)} (на этот уровень)",
             RewardType.ShopItem => string.IsNullOrEmpty(item) ? "предмет из магазина" : item,
@@ -692,6 +698,8 @@ public static class QuestManager
                 return string.IsNullOrEmpty(q.RewardItem) ? "Reward: upgrade item" : $"Reward: {q.RewardItem}";
             case RewardType.Cosmetic:
                 return "Reward: cosmetic box";
+            case RewardType.Costume:
+                return "Reward: a costume piece for everyone";
             case RewardType.Heal:
                 return $"Reward: heal squad {q.RewardAmount} HP";
             case RewardType.TempStat:

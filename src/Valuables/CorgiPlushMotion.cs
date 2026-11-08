@@ -94,13 +94,14 @@ internal sealed class CorgiPlushMotion : MonoBehaviour
     private static void Paw(Transform paw, float e, float wave)
     {
         if (paw == null) return;
-        paw.localRotation = Quaternion.AngleAxis(-e * (8f + 20f * Mathf.Max(0f, wave)), Vector3.right);
+        // A small paddle about the shoulder join, so the sewn-on leg never pulls out of the body.
+        paw.localRotation = Quaternion.AngleAxis(-e * (4f + 9f * Mathf.Max(0f, wave)), Vector3.right);
     }
 
     private static void Foot(Transform foot, float side, float e, float wave)
     {
         if (foot == null) return;
-        foot.localRotation = Quaternion.AngleAxis(side * e * 12f * wave, Vector3.up) *
-                             Quaternion.AngleAxis(-e * 6f * Mathf.Max(0f, wave), Vector3.right);
+        foot.localRotation = Quaternion.AngleAxis(side * e * 7f * wave, Vector3.up) *
+                             Quaternion.AngleAxis(-e * 3f * Mathf.Max(0f, wave), Vector3.right);
     }
 }

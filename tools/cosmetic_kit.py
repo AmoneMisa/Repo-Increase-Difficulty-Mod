@@ -30,8 +30,27 @@ def B(x, y, z):
 
 
 # ---------------------------------------------------------------- textures (tileable, grey so the tint colours them)
-def save_png(name, arr):
+def grime(h, w, seed):
+    """Worn, lived-in multiplier (tileable): soft grime blotches, darker creases, fine speckle and a few scuffs, the
+    grubby hand-made look of R.E.P.O.'s props instead of flat clean colour."""
+    rng = __import__('random').Random(seed)
+    n = max(h, w)
+    blot = periodic_noise(n, 4, rng); fine = periodic_noise(n, 7, rng); streak = periodic_noise(n, 3, rng)
+    ys = (np.arange(h) * n // h)[:, None]; xs = (np.arange(w) * n // w)[None, :]
+    blot, fine, streak = blot[ys, xs], fine[ys, xs], streak[ys, xs]
+    g = 1 - .15 * np.clip((blot - .5) * 2.4, 0, 1) - .06 * np.clip((.45 - streak) * 3, 0, 1)
+    g *= .95 + .07 * fine
+    speck = np.array([[rng.random() for _ in range(w)] for _ in range(h)])
+    g -= .12 * (speck > .985)
+    g += .06 * (speck < .006)
+    return np.clip(g, .55, 1.06)
+
+
+def save_png(name, arr, worn=True):
     h, w = arr.shape[:2]
+    if worn:
+        g = grime(h, w, sum(map(ord, name)))
+        arr = arr * (g if arr.ndim == 2 else g[..., None])
     img = bpy.data.images.new(name, w, h, alpha=False)
     rgba = np.ones((h, w, 4), np.float32); rgba[..., :3] = np.clip(arr, 0, 1)[..., None] if arr.ndim == 2 else np.clip(arr, 0, 1)
     img.pixels[:] = rgba.ravel()
@@ -55,7 +74,28 @@ def periodic_noise(n, octaves, rng):
 MATS = {}
 
 
-def material(name, color, rough=.6, metal=0., emit=0., image=None, emit_image=None, tint=False, tint_emission=False):
+WEAR = 'cosmetic_wear.png'
+
+
+def ensure_wear():
+    """The shared wear texture every plain material gets (grey, so the material colour and slot tint still apply):
+    grime, scuffs and a few fine scratches."""
+    if (SRC / WEAR).exists() and bpy.data.images.get(WEAR) is not None: return
+    rng = __import__('random').Random(77)
+    n = 256
+    base = np.ones((n, n)) * .97
+    for _ in range(40):
+        x, y = rng.uniform(0, n), rng.uniform(0, n); a = rng.uniform(0, TAU); length = rng.uniform(6, 26)
+        bright = rng.random() < .5
+        for k in range(int(length)):
+            xi, yi = int(x + math.cos(a) * k) % n, int(y + math.sin(a) * k) % n
+            base[yi, xi] = 1.05 if bright else .82
+    save_png(WEAR, base)
+
+
+def material(name, color, rough=.6, metal=0., emit=0., image=None, emit_image=None, tint=False, tint_emission=False, clean=False):
+    if image is None and not clean and emit < .8:
+        ensure_wear(); image = WEAR       # nothing is spotless in R.E.P.O.
     m = bpy.data.materials.new(name); m.use_nodes = True
     nt = m.node_tree; p = nt.nodes['Principled BSDF']
     p.inputs['Base Color'].default_value = (*color, 1); p.inputs['Roughness'].default_value = rough
@@ -73,7 +113,7 @@ def material(name, color, rough=.6, metal=0., emit=0., image=None, emit_image=No
         nt.links.new(tex.outputs['Color'], mix.inputs['A']); mix.inputs['B'].default_value = (*color, 1)
         nt.links.new(mix.outputs['Result'], p.inputs['Emission Color'])
         m['emissionTexture'] = emit_image
-    m['tint'] = tint; m['tintEmission'] = tint_emission; m['color'] = list(color)
+    m['tint'] = tint; m['tintEmission'] = tint_emission; m['color'] = list(color); m['multiply'] = True
     return m
 
 
@@ -103,7 +143,7 @@ def mesh_object(name, verts, faces, mat, group='static', loop_uvs=None, smooth=T
     return ob
 
 
-def surface(name, rows, cols, point, mat, wrap=False, uv=(1., 1.), inside=None, flip=False, group='static'):
+def surface(name, rows, cols, point, mat, wrap=False, uv=(1., 1.), inside=None, flip=False, group='static', hem=None):
     """Grid surface: point(t, s) -> Unity Vector, t in [0,1] over rows, s over columns ([0,1); wraps if wrap).
     UV u = s * uv[0], v = t * uv[1], continuous across the wrap seam."""
     ncol = cols if wrap else cols + 1
@@ -119,7 +159,11 @@ def surface(name, rows, cols, point, mat, wrap=False, uv=(1., 1.), inside=None, 
             faces.append((r * ncol + c, r * ncol + c2, (r + 1) * ncol + c2, (r + 1) * ncol + c))
             u0, u1 = c / cols * uv[0], (c + 1) / cols * uv[0]; v0, v1 = r / rows * uv[1], (r + 1) / rows * uv[1]
             uvs.append(((u0, v0), (u1, v0), (u1, v1), (u0, v1)))
-    return mesh_object(name, verts, faces, mat, group, loop_uvs=uvs, inside=inside, flip=flip)
+    ob = mesh_object(name, verts, faces, mat, group, loop_uvs=uvs, inside=inside, flip=flip)
+    # the lining side of a two-sided sheet carries a rounded hem along its open edges (added when parts are merged)
+    if hem is None: hem = .0065 if flip else 0.
+    if hem: ob['hem'] = hem
+    return ob
 
 
 def tube(name, path, radius, mat, group='static', segs=8, closed=False, cap=True, flat=1., up=None):
@@ -138,17 +182,22 @@ def tube(name, path, radius, mat, group='static', segs=8, closed=False, cap=True
         for j in range(segs):
             ang = TAU * j / segs
             verts.append(B(*(p + a * (r * math.cos(ang)) + b * (r * flat * math.sin(ang)))))
-    faces = []
+    faces, uvs = [], []
+    along = [0.]
+    for i in range(1, n + 1): along.append(along[-1] + (pts[i % n] - pts[i - 1]).length)
     for i in range(n if closed else n - 1):
         i2 = (i + 1) % n
         for j in range(segs):
             j2 = (j + 1) % segs
             faces.append((i * segs + j, i * segs + j2, i2 * segs + j2, i2 * segs + j))
+            u0, u1 = along[i] * 6, along[i + 1] * 6; v0, v1 = j / segs, (j + 1) / segs
+            uvs.append(((u0, v0), (u0, v1), (u1, v1), (u1, v0)))
     if cap and not closed:
         for idx, end in ((0, pts[0]), (n - 1, pts[-1])):
             c = len(verts); verts.append(B(*end))
-            for j in range(segs): faces.append((idx * segs + j, idx * segs + (j + 1) % segs, c))
-    return mesh_object(name, verts, faces, mat, group)
+            for j in range(segs):
+                faces.append((idx * segs + j, idx * segs + (j + 1) % segs, c)); uvs.append(((0, 0), (.1, 0), (.05, .1)))
+    return mesh_object(name, verts, faces, mat, group, loop_uvs=uvs)
 
 
 def ring(name, centre, normal, radius, thick, mat, segs=28, group='static'):
@@ -261,20 +310,27 @@ def export(key, parts, pivots):
             mats_out.append({'name': m.name, 'texture': m.get('texture', ''), 'emissionTexture': m.get('emissionTexture', ''),
                              'color': {'r': col[0], 'g': col[1], 'b': col[2], 'a': 1}, 'transmission': 0,
                              'emission': p.inputs['Emission Strength'].default_value, 'roughness': p.inputs['Roughness'].default_value,
-                             'metallic': p.inputs['Metallic'].default_value, 'tint': bool(m.get('tint', False)),
+                             'metallic': p.inputs['Metallic'].default_value, 'tint': bool(m.get('tint', False)), 'multiply': True,
                              'tintEmission': bool(m.get('tintEmission', False))})
         uv_layer = me.uv_layers.active
+        # Shared vertices: corners with the same position, normal and UV become one vertex (a smooth mesh shares
+        # each one between ~6 triangles), so the embedded model stays a fraction of the size.
         verts = []; normals = []; uv = []; tri = []
+        shared = {}
         for poly in me.polygons:
-            start = len(verts)
+            corner = []
             for li in poly.loop_indices:
                 vi = me.loops[li].vertex_index
-                verts.append(vec(C @ (ob.matrix_world @ me.vertices[vi].co - center)))
-                n = me.corner_normals[li].vector if poly.use_smooth else poly.normal
-                normals.append(vec((C @ n).normalized()))
+                pv = C @ (ob.matrix_world @ me.vertices[vi].co - center)
+                n = (C @ (me.corner_normals[li].vector if poly.use_smooth else poly.normal)).normalized()
                 u = uv_layer.data[li].uv if uv_layer else (0, 0)
-                uv.append({'x': round(float(u[0]), 5), 'y': round(float(u[1]), 5)})
-            tri.extend([start, start + 2, start + 1])
+                k = (round(pv.x, 5), round(pv.y, 5), round(pv.z, 5), round(n.x, 3), round(n.y, 3), round(n.z, 3), round(float(u[0]), 4), round(float(u[1]), 4))
+                idx = shared.get(k)
+                if idx is None:
+                    idx = shared[k] = len(verts)
+                    verts.append({'x': k[0], 'y': k[1], 'z': k[2]}); normals.append({'x': k[3], 'y': k[4], 'z': k[5]}); uv.append({'x': k[6], 'y': k[7]})
+                corner.append(idx)
+            tri.extend([corner[0], corner[2], corner[1]])
         tris += len(tri) // 3
         mi = index[m.name]
         records.append({'name': ob.name, 'group': ob.get('group', 'static'), 'phase': 0, 'material': mi, 'vertices': verts, 'normals': normals,
@@ -330,6 +386,149 @@ def render(path):
     bpy.context.scene.render.filepath = str(path); bpy.ops.render.render(write_still=True)
 
 
+def merge(parts):
+    """Join parts that share a material and an animation group into one object each (fewer game objects per player).
+    Face UVs and smoothing carry over; the order of first appearance is kept."""
+    for ob in list(parts):
+        if ob.get('hem'): parts = parts + hem_roll(ob, ob['hem'])
+    groups = {}
+    for ob in parts:
+        groups.setdefault((ob.data.materials[0].name, ob.get('group', 'static')), []).append(ob)
+    merged = []
+    for (mat_name, group), obs in groups.items():
+        if len(obs) == 1: merged.append(obs[0]); continue
+        bm = bmesh.new()
+        for ob in obs:
+            if not ob.data.uv_layers: ob.data.uv_layers.new(name='UVMap')
+            ob.data.transform(ob.matrix_world)
+            bm.from_mesh(ob.data)
+        me = bpy.data.meshes.new(obs[0].name + ' merged')
+        bm.to_mesh(me); bm.free()
+        target = bpy.data.objects.new(obs[0].name, me); bpy.context.collection.objects.link(target)
+        me.materials.append(obs[0].data.materials[0]); target['group'] = group
+        for ob in obs: bpy.data.objects.remove(ob, do_unlink=True)
+        merged.append(target)
+    return merged
+
+
+def hem_roll(ob, radius, mat=None, group=None):
+    """Rounded hems: a tube along every open edge of a cloth sheet, so the cloth reads as having thickness instead of
+    a paper-thin cut. Returns the tube objects (same material and group as the sheet unless given)."""
+    me = ob.data
+    bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
+    boundary = [e for e in bm.edges if e.is_boundary]
+    links = {}
+    for e in boundary:
+        a, b = e.verts[0].index, e.verts[1].index
+        links.setdefault(a, []).append(b); links.setdefault(b, []).append(a)
+    co = {v.index: ob.matrix_world @ v.co for v in bm.verts}
+    bm.free()
+    used, obs = set(), []
+    for start in list(links):
+        if start in used: continue
+        chain = [start]; used.add(start); prev = None; cur = start
+        while True:
+            nxt = [n for n in links[cur] if n != prev and n not in used]
+            if not nxt: break
+            prev, cur = cur, nxt[0]; chain.append(cur); used.add(cur)
+        if len(chain) < 3: continue
+        closed = start in links[chain[-1]] and len(chain) > 3
+        pts = [Vector((co[i].x, co[i].z, co[i].y)) for i in chain]          # back to Unity order for tube()
+        t = tube(ob.name + ' hem', pts, radius, mat or ob.data.materials[0], group or ob.get('group', 'static'), segs=6, closed=closed)
+        obs.append(t)
+    return obs
+
+
+def box_uv(ob, scale=4.):
+    """Box-projected tiling UVs for a mesh built without any (scale = tiles per metre)."""
+    me = ob.data
+    layer = me.uv_layers.new(name='UVMap')
+    for poly in me.polygons:
+        n = poly.normal; ax, ay, az = abs(n.x), abs(n.y), abs(n.z)
+        for li in poly.loop_indices:
+            co = (ob.matrix_world @ me.vertices[me.loops[li].vertex_index].co) * scale
+            layer.data[li].uv = (co.y, co.z) if ax >= ay and ax >= az else (co.x, co.z) if ay >= az else (co.x, co.y)
+
+
+KEEP_PATTERN = {'starlight_lace.png', 'starlight_trim.png', 'legate_laurel.png', 'legate_strip.png', 'bride_lace.png', 'gilded_filigree.png'}
+
+
+def _bake_size(ob):
+    area = sum(p.area for p in ob.data.polygons)
+    return 512 if area > .12 else 256 if area > .01 else 128
+
+
+def bake_parts(key, parts, others=None):
+    """Bake each part's look into its own texture: the material's pattern (its tiling texture, or the wear texture)
+    times soft ambient occlusion from the whole cosmetic, on a fresh non-overlapping UV unwrap. Folds, overlaps, belts
+    and undersides get real shading. Grey stays grey, so the material colour and the slot tint still apply in game.
+    Parts whose material has an emission texture (glow maps) keep their tiling UVs and are not baked."""
+    scene = bpy.context.scene
+    keep = set(parts)
+    hidden = []
+    for ob in bpy.data.objects:
+        if ob.type == 'MESH' and ob not in keep and not ob.hide_render:
+            ob.hide_render = True; hidden.append(ob)
+    samples = scene.cycles.samples
+    scene.cycles.samples = 48
+    out = []
+    for i, ob in enumerate(parts):
+        mat = ob.data.materials[0]
+        # glow maps and fine motifs (lace, embroidery, tooling) keep their crisp tiling texture instead of a blurred bake
+        if mat.get('emissionTexture') or mat.get('texture', '') in KEEP_PATTERN:
+            out.append(ob); continue
+        me = ob.data
+        if not me.uv_layers: box_uv(ob)
+        tiling = me.uv_layers[0].name
+        bake_uv = me.uv_layers.new(name='Bake'); me.uv_layers.active = bake_uv
+        for o in bpy.context.selected_objects: o.select_set(False)
+        bpy.context.view_layer.objects.active = ob; ob.select_set(True)
+        bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=.015)
+        bpy.ops.object.mode_set(mode='OBJECT')
+        size = _bake_size(ob)
+        name = f'bake_{key}_{i}.png'
+        img = bpy.data.images.new(name, size, size, alpha=False)
+        # bake material: (pattern on the tiling UVs) x (soft AO), emitted, into the image on the Bake UVs
+        bm_ = bpy.data.materials.new('bake tmp'); bm_.use_nodes = True
+        nt = bm_.node_tree; nt.nodes.clear()
+        outn = nt.nodes.new('ShaderNodeOutputMaterial'); emit = nt.nodes.new('ShaderNodeEmission')
+        nt.links.new(emit.outputs['Emission'], outn.inputs['Surface'])
+        uvn = nt.nodes.new('ShaderNodeUVMap'); uvn.uv_map = tiling
+        texname = mat.get('texture', '')
+        src = bpy.data.images.get(texname) or (bpy.data.images.load(str(SRC / texname)) if texname else None)
+        ao = nt.nodes.new('ShaderNodeAmbientOcclusion'); ao.inputs['Distance'].default_value = .12; ao.samples = 16
+        soft = nt.nodes.new('ShaderNodeMix'); soft.data_type = 'RGBA'; soft.inputs['A'].default_value = (.42, .42, .42, 1); soft.inputs['B'].default_value = (1, 1, 1, 1)
+        nt.links.new(ao.outputs['AO'], soft.inputs['Factor'])
+        mul = nt.nodes.new('ShaderNodeMix'); mul.data_type = 'RGBA'; mul.blend_type = 'MULTIPLY'; mul.inputs['Factor'].default_value = 1
+        nt.links.new(soft.outputs['Result'], mul.inputs['B'])
+        if src is not None:
+            tex = nt.nodes.new('ShaderNodeTexImage'); tex.image = src
+            nt.links.new(uvn.outputs['UV'], tex.inputs['Vector']); nt.links.new(tex.outputs['Color'], mul.inputs['A'])
+        else:
+            mul.inputs['A'].default_value = (1, 1, 1, 1)
+        nt.links.new(mul.outputs['Result'], emit.inputs['Color'])
+        target = nt.nodes.new('ShaderNodeTexImage'); target.image = img
+        buv = nt.nodes.new('ShaderNodeUVMap'); buv.uv_map = 'Bake'; nt.links.new(buv.outputs['UV'], target.inputs['Vector'])
+        nt.nodes.active = target
+        me.materials[0] = bm_
+        bpy.ops.object.bake(type='EMIT', margin=4, use_clear=True)
+        img.filepath_raw = str(SRC / name); img.file_format = 'PNG'; img.save()
+        # the part's real material now uses the baked texture on the Bake UVs (only that UV layer is kept)
+        colour = tuple(mat['color']) if 'color' in mat else tuple(mat.node_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value[:3])
+        new = material(mat.name + f' {key} {i}', colour, mat.node_tree.nodes['Principled BSDF'].inputs['Roughness'].default_value,
+                       mat.node_tree.nodes['Principled BSDF'].inputs['Metallic'].default_value,
+                       mat.node_tree.nodes['Principled BSDF'].inputs['Emission Strength'].default_value,
+                       image=name, tint=bool(mat.get('tint')), tint_emission=bool(mat.get('tintEmission')), clean=True)
+        me.materials[0] = new
+        me.uv_layers.remove(me.uv_layers[tiling]); me.uv_layers.active = me.uv_layers['Bake']
+        bpy.data.materials.remove(bm_)
+        out.append(ob)
+    for ob in hidden: ob.hide_render = False
+    scene.cycles.samples = samples
+    return out
+
+
 def run(styles, views, art_dir, prefix, preview, distance=3.0, preview_views=None, setup=None):
     """styles: key -> (slot, build(M) -> (parts, pivots, crown)); setup() -> M (materials, after textures)."""
     setup_scene()
@@ -338,6 +537,8 @@ def run(styles, views, art_dir, prefix, preview, distance=3.0, preview_views=Non
     for key, (slot, fn) in styles.items():
         parts, pivots, crown = fn(M)
         if crown is not None: pivots = dict(pivots, crown=crown)
+        parts = merge(parts)
+        parts = bake_parts(key, parts)
         export(key, parts, pivots)
         built[key] = (slot, parts)
     cam = lights_and_camera()

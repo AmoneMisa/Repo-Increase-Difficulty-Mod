@@ -11,7 +11,7 @@ namespace IncreaseHardMod.Challenges;
 /// <summary>
 /// Shrine challenges: on a run level the host places one challenge shrine. A living player who presses the interact
 /// key (E by default) next to it starts its timed challenge (wisp escort, target practice, hunt, cull, smash, monster waves,
-/// vigil, spark hunt or offering); finishing it in time
+/// vigil, spark hunt, offering, mushroom path or capture the flag); finishing it in time
 /// gives one reward: a skill point for everyone, an upgrade or a cosmetic box at the shrine, plus a quest-rank
 /// completion. Like skill boxes, nothing is a network object: the host owns the state and broadcasts it (event 168);
 /// every client builds the same local props (see <see cref="ChallengeProps"/>) and shows the HUD line.
@@ -50,6 +50,19 @@ internal sealed class ChallengeManager : MonoBehaviour
     private static readonly Dictionary<EnemyParent, float> _waveDead = new();
     private static float _nextWaveAt, _nextLure, _vigilHeld, _nextOfferingScan;
 
+    // Mushroom Path (mirrored): the sequence (mushroom indices), the next step, mistakes so far and when the sequence
+    // starts playing (SharedTime, so every client shows it in step). Host: which mushroom each player stands on.
+    private static readonly List<int> _seq = new();
+    private static int _step, _mistakes;
+    private static float _showStart;
+    private static readonly Dictionary<PlayerAvatar, int> _standing = new();
+
+    // Capture the Flag (mirrored): stage 0 question, 1 flag out (on the shrine, carried or dropped), 2 planted and held.
+    // _wisp is the flag (when nobody carries it) and _home its base. Host: the carrier and the defence wave clock.
+    private static int _flagStage, _qa, _qb, _qop, _carrierView;
+    private static PlayerAvatar _carrier;
+    private static float _nextFlagWave;
+
     // ---- client visuals
     private static ShrineVisual _shrineVisual;
     private static WispVisual _wispVisual;
@@ -59,6 +72,10 @@ internal sealed class ChallengeManager : MonoBehaviour
     private static HuntBeacon _beacon;
     private static readonly List<Component> _propVisuals = new();
     private static ChallengePhase _shownPhase;
+    private static readonly List<MushroomVisual> _mushrooms = new();
+    private static int _shownStep = -1, _shownMistakes = -1, _shownRound = -1, _shownSlot = -1, _shownStage = -1;
+    private static FlagVisual _flagVisual;
+    private static FloorRingVisual _baseVisual;
     private static float _finishedAt = -1f;
     private const float VanishSeconds = 3f; // after the result, everything left shrinks away
 
@@ -110,6 +127,12 @@ internal sealed class ChallengeManager : MonoBehaviour
         if (_homeVisual != null) Destroy(_homeVisual.gameObject);
         if (_beacon != null) Destroy(_beacon.gameObject);
         if (_ringVisual != null) Destroy(_ringVisual.gameObject);
+        if (_flagVisual != null) Destroy(_flagVisual.gameObject);
+        if (_baseVisual != null) Destroy(_baseVisual.gameObject);
+        foreach (var m in _mushrooms) if (m != null) Destroy(m.gameObject);
+        _mushrooms.Clear(); _seq.Clear(); _standing.Clear(); _step = _mistakes = 0; _showStart = 0f;
+        _flagStage = _qa = _qb = _qop = _carrierView = 0; _carrier = null;
+        _shownStep = _shownMistakes = _shownRound = _shownSlot = _shownStage = -1;
         _waveEnemies.Clear(); _waveDead.Clear(); _shownProgress = -1;
         foreach (var v in _propVisuals) if (v != null) Destroy(v.gameObject);
         _propVisuals.Clear();
@@ -210,8 +233,10 @@ internal sealed class ChallengeManager : MonoBehaviour
         float now = Time.time;
         if (_phase == ChallengePhase.Active)
         {
-            if (ChallengeRules.Expired(_startedAt, now, _kind)) Finish(false, "time");
+            if (_kind == ChallengeKind.Flag) FlagStep(now); // keeps its own clock (answer and carry, then the hold)
+            else if (ChallengeRules.Expired(_startedAt, now, _kind)) Finish(false, "time");
             else if (_kind == ChallengeKind.Escort) EscortStep();
+            else if (_kind == ChallengeKind.Mushrooms) MushroomStep();
             else if (_kind == ChallengeKind.Smash && now >= _nextScan) { _nextScan = now + ScanInterval; ScanCrates(); }
             else if (_kind == ChallengeKind.Hunt && (_huntTarget == null || !_huntTarget.Spawned) && _progress == 0) PickHuntTarget();
             else if (_kind == ChallengeKind.Waves) WavesStep(now);
@@ -285,9 +310,17 @@ internal sealed class ChallengeManager : MonoBehaviour
             case ChallengeKind.Vigil: StartVigil(); break;
             case ChallengeKind.Sparks: PlaceSparks(); _total = _props.Count; break;
             case ChallengeKind.Offering: _total = ChallengeRules.OfferingTarget(LevelLootValue()); _nextOfferingScan = 0f; break;
+            case ChallengeKind.Mushrooms: PlaceMushrooms(); StartMushrooms(); break;
+            case ChallengeKind.Flag: StartFlag(); break;
             default: _total = ChallengeRules.CullTarget(Living().Count); break;
         }
         if (_kind == ChallengeKind.Waves && WaveSetups().Count == 0) { _kind = ChallengeKind.Cull; _total = ChallengeRules.CullTarget(Living().Count); }
+        if (_kind == ChallengeKind.Mushrooms && _props.Count < ChallengeRules.MushroomMinCount || _kind == ChallengeKind.Flag && _flagStage < 0)
+        {
+            _kind = ChallengeKind.Vigil; // no flat ground for mushrooms, or nowhere to carry the flag, on this level
+            _props.Clear(); _propDone.Clear(); _propDrift.Clear(); _seq.Clear(); _flagStage = 0;
+            StartVigil();
+        }
         if (_kind == ChallengeKind.Sparks && _props.Count < 4)
         {
             _kind = ChallengeKind.Vigil; // not enough far-off spots for sparks on this level
@@ -477,7 +510,7 @@ internal sealed class ChallengeManager : MonoBehaviour
             return;
         }
         if (now < _nextWaveAt) return;
-        SpawnWave(_progress + 1);
+        SpawnWave(_progress + 1, _shrine);
         _nextLure = now + 4f;
         if (_waveEnemies.Count == 0)
         {
@@ -506,7 +539,7 @@ internal sealed class ChallengeManager : MonoBehaviour
         return list;
     }
 
-    private static void SpawnWave(int wave)
+    private static void SpawnWave(int wave, Vector3 centre)
     {
         var setups = WaveSetups(wave);
         if (setups.Count == 0) return;
@@ -516,7 +549,7 @@ internal sealed class ChallengeManager : MonoBehaviour
             foreach (var p in points)
             {
                 if (p == null || p.Truck || p.inStartRoom || (p.Room != null && p.Room.Truck)) continue;
-                float d = Vector3.Distance(p.transform.position, _shrine);
+                float d = Vector3.Distance(p.transform.position, centre);
                 if (d >= 12f && d <= 32f) spots.Add(p.transform.position);
             }
         if (spots.Count == 0 && points != null)
@@ -654,17 +687,230 @@ internal sealed class ChallengeManager : MonoBehaviour
         if (ChallengeRules.Done(_progress, _total)) Finish(true, "offered");
     }
 
+    // ---------------------------------------------------------------- Mushroom Path
+
+    // Mushrooms on flat floor at the shrine's level, 2-7 m out, with head room to jump on and between them.
+    private static void PlaceMushrooms()
+    {
+        int mask = SemiFunc.LayerMaskGetVisionObstruct();
+        float h = ChallengeRules.MushroomCapHeight;
+        for (int tries = 0; tries < 260 && _props.Count < ChallengeRules.MushroomCount; tries++)
+        {
+            var dir = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f) * Vector3.forward;
+            var above = _shrine + dir * Random.Range(2.2f, 7f) + Vector3.up * 1.5f;
+            if (Physics.Linecast(_shrine + Vector3.up * 1.5f, above, mask, QueryTriggerInteraction.Ignore)) continue;
+            if (!Physics.Raycast(above, Vector3.down, out var hit, 3.5f, mask, QueryTriggerInteraction.Ignore) || Vector3.Angle(hit.normal, Vector3.up) > 12f) continue;
+            if (Mathf.Abs(hit.point.y - _shrine.y) > .35f) continue;
+            if (Physics.CheckBox(hit.point + Vector3.up * (h + 1f), new Vector3(.55f, .9f, .55f), Quaternion.identity, mask, QueryTriggerInteraction.Ignore)) continue;
+            if ((hit.point - _shrine).sqrMagnitude < 2.6f) continue;
+            bool spaced = true;
+            foreach (var q in _props)
+                if (((Vector3)q - hit.point).sqrMagnitude < ChallengeRules.MushroomSpacing * ChallengeRules.MushroomSpacing) { spaced = false; break; }
+            if (!spaced) continue;
+            _props.Add(new Vector4(hit.point.x, hit.point.y, hit.point.z, _props.Count));
+            _propDone.Add(false);
+            _propDrift.Add(false);
+        }
+    }
+
+    private static void StartMushrooms()
+    {
+        _total = ChallengeRules.MushroomRounds;
+        _step = _mistakes = 0;
+        _seq.Clear();
+        _standing.Clear();
+        if (_props.Count < ChallengeRules.MushroomMinCount) return;
+        for (int i = 0; i < ChallengeRules.MushroomLength(1); i++) AddToSequence();
+        _showStart = SharedTime + 3f; // after the start message
+    }
+
+    private static void AddToSequence()
+    {
+        int last = _seq.Count > 0 ? _seq[_seq.Count - 1] : -1, pick;
+        do pick = Random.Range(0, _props.Count); while (pick == last && _props.Count > 1);
+        _seq.Add(pick);
+    }
+
+    private static float ShowEnd() => _showStart + _seq.Count * ChallengeRules.MushroomStep;
+
+    // Feet on a cap: within its radius and about its height above the floor it stands on.
+    private static int MushroomUnder(PlayerAvatar p)
+    {
+        var feet = p.transform.position;
+        float r2 = (ChallengeRules.MushroomCapRadius + .08f) * (ChallengeRules.MushroomCapRadius + .08f);
+        for (int i = 0; i < _props.Count; i++)
+        {
+            var c = (Vector3)_props[i];
+            float dx = feet.x - c.x, dz = feet.z - c.z, dy = feet.y - c.y;
+            if (dx * dx + dz * dz <= r2 && dy >= ChallengeRules.MushroomCapHeight - .2f && dy <= ChallengeRules.MushroomCapHeight + .7f) return i;
+        }
+        return -1;
+    }
+
+    // Landing on a mushroom presses it once; standing there does not press it again until you leave and come back.
+    // While the sequence plays, steps only update where people stand.
+    private static void MushroomStep()
+    {
+        bool showing = SharedTime < ShowEnd();
+        foreach (var p in Living())
+        {
+            int at = MushroomUnder(p);
+            if (!_standing.TryGetValue(p, out int was)) was = -1;
+            if (at == was) continue;
+            _standing[p] = at;
+            if (at < 0 || showing) continue;
+            PressMushroom(at);
+            if (_phase != ChallengePhase.Active || SharedTime < ShowEnd()) return;
+        }
+    }
+
+    private static void PressMushroom(int index)
+    {
+        if (_step >= _seq.Count) return;
+        if (_seq[_step] == index)
+        {
+            _step++;
+            if (_step >= _seq.Count)
+            {
+                _progress++;
+                if (ChallengeRules.Done(_progress, _total)) { Finish(true, "path"); return; }
+                AddToSequence(); // the same path again, one mushroom longer
+                _step = 0;
+                _showStart = SharedTime + 1.8f;
+            }
+        }
+        else
+        {
+            _mistakes++;
+            if (_mistakes >= ChallengeRules.MushroomMistakes) { Finish(false, "mistakes"); return; }
+            _step = 0;
+            _showStart = SharedTime + 1.8f; // watch it again
+        }
+        Broadcast(force: true);
+    }
+
+    // ---------------------------------------------------------------- Capture the Flag
+
+    private static void StartFlag()
+    {
+        _flagStage = -1; // stays -1 if there is nowhere to carry the flag (Begin falls back to Vigil)
+        if (!PlanFlagBase()) return;
+        var q = ChallengeRules.MathQuestion(Random.value, Random.value, Random.value);
+        _qa = q.A; _qb = q.B; _qop = q.Op;
+        _flagStage = 0;
+        _carrier = null; _carrierView = 0;
+        _wisp = _shrine + Vector3.up * 1.05f;
+        _total = (int)ChallengeRules.FlagDefendSeconds;
+        Plugin.Log.LogInfo($"[Challenge] Flag question {ChallengeRules.MathText(_qa, _qb, _qop)} = {ChallengeRules.MathAnswer(_qa, _qb, _qop)}; base at {_home}.");
+    }
+
+    // The flag's base: a level point 22-50 m of walking from the shrine.
+    private static bool PlanFlagBase()
+    {
+        var points = SemiFunc.LevelPointsGetAll();
+        if (points == null || !NavMesh.SamplePosition(_shrine, out var start, 2f, NavMesh.AllAreas)) return false;
+        var shuffled = new List<LevelPoint>(points);
+        for (int i = shuffled.Count - 1; i > 0; i--) { int j = Random.Range(0, i + 1); (shuffled[i], shuffled[j]) = (shuffled[j], shuffled[i]); }
+        var path = new NavMeshPath();
+        foreach (var p in shuffled)
+        {
+            if (p == null || p.Truck || p.inStartRoom || (p.Room != null && p.Room.Truck)) continue;
+            if (!NavMesh.SamplePosition(p.transform.position, out var end, 2f, NavMesh.AllAreas)) continue;
+            if (!NavMesh.CalculatePath(start.position, end.position, NavMesh.AllAreas, path) || path.status != NavMeshPathStatus.PathComplete) continue;
+            float length = 0f;
+            for (int i = 1; i < path.corners.Length; i++) length += Vector3.Distance(path.corners[i - 1], path.corners[i]);
+            if (length < ChallengeRules.FlagMinPath || length > ChallengeRules.FlagMaxPath) continue;
+            _home = end.position;
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>Host: a chat line from <paramref name="who"/>; the right answer to the flag question releases the flag.</summary>
+    private static void OnChat(PlayerAvatar who, string message)
+    {
+        if (!Host || !_has || _phase != ChallengePhase.Active || _kind != ChallengeKind.Flag || _flagStage != 0 || who == null) return;
+        var answer = ChallengeRules.ParseAnswer(message);
+        if (answer == null) return;
+        if (answer.Value != ChallengeRules.MathAnswer(_qa, _qb, _qop))
+        {
+            Plugin.Log.LogInfo($"[Challenge] {SemiFunc.PlayerGetName(who)} answered {answer.Value}: wrong.");
+            return;
+        }
+        Plugin.Log.LogInfo($"[Challenge] {SemiFunc.PlayerGetName(who)} answered the flag question.");
+        _flagStage = 1;
+        Broadcast(force: true);
+    }
+
+    private static void FlagStep(float now)
+    {
+        if (_flagStage < 2)
+        {
+            if (ChallengeRules.Expired(_startedAt, now, ChallengeKind.Flag)) { Finish(false, "time"); return; }
+            if (_flagStage == 0) return;
+            if (_carrier != null && (_carrier.isDisabled || !_carrier.gameObject.activeInHierarchy))
+            {
+                _wisp = _carrier.transform.position + Vector3.up * .1f; // falls where its carrier fell; anyone can pick it up
+                _carrier = null; _carrierView = 0;
+                Broadcast(force: true);
+            }
+            if (_carrier == null)
+            {
+                foreach (var p in Living())
+                    if ((p.transform.position + Vector3.up * .9f - _wisp).sqrMagnitude <= ChallengeRules.FlagPickupRadius * ChallengeRules.FlagPickupRadius)
+                    {
+                        _carrier = p;
+                        _carrierView = p.photonView != null ? p.photonView.ViewID : 0;
+                        Broadcast(force: true);
+                        break;
+                    }
+                return;
+            }
+            _wisp = _carrier.transform.position + Vector3.up * 1.15f;
+            var d = _carrier.transform.position - _home;
+            if (Mathf.Abs(d.y) < 2f && d.x * d.x + d.z * d.z <= ChallengeRules.FlagBaseRadius * ChallengeRules.FlagBaseRadius)
+            {
+                // Planted: from now on nobody may die for two minutes while the monsters come for it.
+                _flagStage = 2;
+                _carrier = null; _carrierView = 0;
+                _wisp = _home;
+                _startedAt = now;
+                _progress = 0;
+                _waveEnemies.Clear(); _waveDead.Clear();
+                _nextFlagWave = now + 4f;
+                _nextLure = now + 6f;
+                Plugin.Log.LogInfo("[Challenge] Flag planted at its base.");
+                Broadcast(force: true);
+            }
+            return;
+        }
+        float held = now - _startedAt;
+        _progress = Mathf.FloorToInt(held);
+        if (held >= ChallengeRules.FlagDefendSeconds) { Finish(true, "held"); return; }
+        if (now >= _nextFlagWave)
+        {
+            _nextFlagWave = now + ChallengeRules.FlagWaveEvery;
+            SpawnWave(Mathf.Min(3, 1 + Mathf.FloorToInt(held / ChallengeRules.FlagWaveEvery)), _home);
+        }
+        if (now >= _nextLure) { _nextLure = now + 6f; try { SemiFunc.EnemyInvestigate(_home, 45f); } catch { } }
+    }
+
+    private static float RemainingNow(float now) => _kind == ChallengeKind.Flag && _flagStage == 2
+        ? Mathf.Max(0f, ChallengeRules.FlagDefendSeconds - (now - _startedAt))
+        : ChallengeRules.Remaining(_startedAt, now, _kind);
+
     internal static void OnEnemyKilled(EnemyParent enemy)
     {
         if (!Host || !_has || _phase != ChallengePhase.Active) return;
-        if (_kind == ChallengeKind.Waves && enemy != null && _waveEnemies.Contains(enemy) && !_waveDead.ContainsKey(enemy)) _waveDead[enemy] = Time.time;
+        if (_kind is ChallengeKind.Waves or ChallengeKind.Flag && enemy != null && _waveEnemies.Contains(enemy) && !_waveDead.ContainsKey(enemy)) _waveDead[enemy] = Time.time;
         if (_kind == ChallengeKind.Cull) { _progress++; if (ChallengeRules.Done(_progress, _total)) Finish(true, "kills"); else Broadcast(force: true); }
         else if (_kind == ChallengeKind.Hunt && enemy != null && enemy == _huntTarget) { _progress = 1; Finish(true, "hunted"); }
     }
 
     internal static void OnPlayerDeath()
     {
-        if (!Host || !_has || _phase != ChallengePhase.Active || !ChallengeRules.DeathFails(_kind)) return;
+        if (!Host || !_has || _phase != ChallengePhase.Active) return;
+        if (!ChallengeRules.DeathFails(_kind) && !(_kind == ChallengeKind.Flag && _flagStage == 2)) return;
         Finish(false, "death");
     }
 
@@ -672,7 +918,8 @@ internal sealed class ChallengeManager : MonoBehaviour
     {
         _phase = won ? ChallengePhase.Won : ChallengePhase.Lost;
         _wispWaiting = false;
-        if (_kind == ChallengeKind.Waves && !won) RemoveDeadWaveMonsters(Time.time, all: true); // a lost wave leaves with the shrine
+        if (_kind == ChallengeKind.Waves && !won || _kind == ChallengeKind.Flag) RemoveDeadWaveMonsters(Time.time, all: true); // shrine monsters leave with it
+        _carrier = null; _carrierView = 0;
         if (won) GiveReward();
         Plugin.Log.LogInfo($"[Challenge] {_kind} {(won ? "won" : "lost")} ({why}); reward {_reward}.");
         Broadcast(force: true);
@@ -680,7 +927,7 @@ internal sealed class ChallengeManager : MonoBehaviour
 
     private static void GiveReward()
     {
-        _reward = ChallengeRules.Reward(Random.value);
+        _reward = ChallengeRules.Reward(Random.value, ModConfig.CostumeRewardsEnabled.Value);
         var at = _shrine + Vector3.up * 1.4f;
         if (_reward == ChallengeReward.Upgrade)
         {
@@ -689,6 +936,8 @@ internal sealed class ChallengeManager : MonoBehaviour
         }
         else if (_reward == ChallengeReward.Cosmetic && Quests.QuestRewards.SpawnCosmetic(Quests.QuestRank.F, at) == null)
             _reward = ChallengeReward.SkillPoint;
+        if (_reward == ChallengeReward.Costume)
+            Cosmetics.CostumeRewards.GrantToAll("shrine " + ChallengeRules.Name(_kind, false));
         if (_reward == ChallengeReward.SkillPoint)
             Quests.QuestRewards.GrantSkillPointsToAll(1, "challenge " + ChallengeRules.Name(_kind, false));
         foreach (var p in Living())
@@ -701,8 +950,8 @@ internal sealed class ChallengeManager : MonoBehaviour
     {
         if (!SemiFunc.IsMultiplayer() || !PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient || !_has) return;
         float now = Time.time;
-        string signature = $"{_key}|{_phase}|{_kind}|{_progress}|{_total}|{_props.Count}|{_wispWaiting}|{PhotonNetwork.CurrentRoom.PlayerCount}";
-        bool moving = _phase == ChallengePhase.Active && _kind == ChallengeKind.Escort;
+        string signature = $"{_key}|{_phase}|{_kind}|{_progress}|{_total}|{_props.Count}|{_wispWaiting}|{PhotonNetwork.CurrentRoom.PlayerCount}|{_step}|{_mistakes}|{_seq.Count}|{_flagStage}|{_carrierView}";
+        bool moving = _phase == ChallengePhase.Active && (_kind == ChallengeKind.Escort || _kind == ChallengeKind.Flag && _carrierView != 0);
         if (!force && signature == _sent && !(moving && now >= _nextSync) && now < _nextSync + 8f) return;
         _sent = signature;
         _nextSync = now + SyncInterval;
@@ -713,12 +962,18 @@ internal sealed class ChallengeManager : MonoBehaviour
             props[i * 4] = _props[i].x; props[i * 4 + 1] = _props[i].y; props[i * 4 + 2] = _props[i].z; props[i * 4 + 3] = _props[i].w;
             flags[i] = (byte)((_propDone[i] ? 1 : 0) | (_propDrift[i] ? 2 : 0));
         }
-        float remaining = _phase == ChallengePhase.Active ? ChallengeRules.Remaining(_startedAt, now, _kind) : 0f;
+        float remaining = _phase == ChallengePhase.Active ? RemainingNow(now) : 0f;
+        // Mushroom Path and Capture the Flag: step, mistakes, show start (ms of SharedTime), flag stage, question,
+        // carrier view, then the sequence.
+        var extra = new int[8 + _seq.Count];
+        extra[0] = _step; extra[1] = _mistakes; extra[2] = Mathf.RoundToInt(_showStart * 1000f); extra[3] = _flagStage;
+        extra[4] = _qa; extra[5] = _qb; extra[6] = _qop; extra[7] = _carrierView;
+        for (int i = 0; i < _seq.Count; i++) extra[8 + i] = _seq[i];
         var data = new object[]
         {
             _key, new[] { _shrine.x, _shrine.y, _shrine.z, _yaw },
             new[] { (int)_kind, (int)_phase, _progress, _total, _huntView, (int)_reward, _wispWaiting ? 1 : 0 },
-            remaining, new[] { _wisp.x, _wisp.y, _wisp.z, _home.x, _home.y, _home.z }, props, flags,
+            remaining, new[] { _wisp.x, _wisp.y, _wisp.z, _home.x, _home.y, _home.z }, props, flags, extra,
         };
         PhotonNetwork.RaiseEvent(EventCode, data, new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
     }
@@ -726,16 +981,18 @@ internal sealed class ChallengeManager : MonoBehaviour
     /// <summary>Client: apply the host's challenge state (ModNetwork checks the sender is the host).</summary>
     internal static void HandleEvent(EventData e)
     {
-        if (e.CustomData is not object[] d || d.Length != 7 || d[0] is not string key || key.Length > 256 ||
+        if (e.CustomData is not object[] d || d.Length != 8 || d[0] is not string key || key.Length > 256 ||
             d[1] is not float[] shrine || shrine.Length != 4 || d[2] is not int[] meta || meta.Length != 7 || d[3] is not float remaining ||
             d[4] is not float[] wisp || wisp.Length != 6 || d[5] is not float[] props || d[6] is not byte[] flags ||
-            props.Length != flags.Length * 4 || flags.Length > 20)
+            props.Length != flags.Length * 4 || flags.Length > 20 || d[7] is not int[] extra || extra.Length < 8 || extra.Length > 8 + 16)
             return;
+        for (int i = 8; i < extra.Length; i++) if (extra[i] < 0 || extra[i] >= flags.Length) return;
+        if (extra[3] < 0 || extra[3] > 2 || extra[6] < 0 || extra[6] > 2) return;
         foreach (var f in shrine) if (!Networking.NetworkPayload.Finite(f)) return;
         foreach (var f in wisp) if (!Networking.NetworkPayload.Finite(f)) return;
         foreach (var f in props) if (!Networking.NetworkPayload.Finite(f)) return;
         if (!Networking.NetworkPayload.Finite(remaining) || meta[0] < 0 || meta[0] >= ChallengeRules.KindCount || meta[1] < 0 || meta[1] > 3 ||
-            meta[5] < 0 || meta[5] > 3)
+            meta[5] < 0 || meta[5] > 4)
             return;
         if (key != _key || !_has) { Clear(); _key = key; _has = true; }
         _shrine = new Vector3(shrine[0], shrine[1], shrine[2]);
@@ -746,6 +1003,10 @@ internal sealed class ChallengeManager : MonoBehaviour
         _endsAtLocal = Time.time + remaining;
         _wisp = new Vector3(wisp[0], wisp[1], wisp[2]);
         _home = new Vector3(wisp[3], wisp[4], wisp[5]);
+        _step = extra[0]; _mistakes = extra[1]; _showStart = extra[2] / 1000f; _flagStage = extra[3];
+        _qa = extra[4]; _qb = extra[5]; _qop = extra[6]; _carrierView = extra[7];
+        _seq.Clear();
+        for (int i = 8; i < extra.Length; i++) _seq.Add(extra[i]);
         if (_props.Count != flags.Length) { foreach (var v in _propVisuals) if (v != null) Destroy(v.gameObject); _propVisuals.Clear(); }
         _props.Clear(); _propDone.Clear(); _propDrift.Clear();
         for (int i = 0; i < flags.Length; i++)
@@ -774,6 +1035,10 @@ internal sealed class ChallengeManager : MonoBehaviour
             if (_wispVisual != null) { Destroy(_wispVisual.gameObject); _wispVisual = null; }
             if (_beacon != null) { Destroy(_beacon.gameObject); _beacon = null; }
             if (_ringVisual != null) { Destroy(_ringVisual.gameObject); _ringVisual = null; }
+            if (_flagVisual != null) { Destroy(_flagVisual.gameObject); _flagVisual = null; }
+            if (_baseVisual != null) { Destroy(_baseVisual.gameObject); _baseVisual = null; }
+            foreach (var m in _mushrooms) if (m != null) Destroy(m.gameObject);
+            _mushrooms.Clear();
             foreach (var v in _propVisuals) if (v != null) Destroy(v.gameObject);
             _propVisuals.Clear();
             Localization.HudStatus.Clear(StatusKey);
@@ -831,6 +1096,35 @@ internal sealed class ChallengeManager : MonoBehaviour
             }
         }
 
+        // Mushroom Path: build the mushrooms, play the sequence, flash steps, mistakes and cleared rounds.
+        if (_kind == ChallengeKind.Mushrooms && _props.Count > 0)
+        {
+            while (_mushrooms.Count < _props.Count)
+            {
+                var c = _props[_mushrooms.Count];
+                _mushrooms.Add(MushroomVisual.Create(new Vector3(c.x, c.y, c.z), (int)c.w));
+            }
+            foreach (var m in _mushrooms) if (m != null) m.transform.localScale = Vector3.one * shrink;
+            if (active) MushroomLights();
+        }
+
+        // Capture the Flag: the flag once it is out, and its base ring while the challenge runs.
+        if (_kind == ChallengeKind.Flag && _flagStage >= 1 && (active || finished))
+        {
+            if (_flagVisual == null) _flagVisual = FlagVisual.Create(_wisp);
+            _flagVisual.MoveTo(FlagFoot());
+            _flagVisual.transform.localScale = Vector3.one * shrink;
+        }
+        if (_kind == ChallengeKind.Flag && active && _flagStage >= 0)
+        {
+            if (_baseVisual == null)
+            {
+                _baseVisual = FloorRingVisual.Create(_home, ChallengeRules.FlagBaseRadius, ChallengeProps.Hunt);
+                ChallengeProps.MapDot(_baseVisual.gameObject, ChallengeProps.Hunt);
+            }
+        }
+        else if (_baseVisual != null) _baseVisual.transform.localScale = Vector3.one * shrink;
+
         // Hunt beacon over the marked monster.
         if (_kind == ChallengeKind.Hunt && active && _huntView != 0 && _beacon == null)
         {
@@ -841,10 +1135,61 @@ internal sealed class ChallengeManager : MonoBehaviour
         else if (!active && _beacon != null) { Destroy(_beacon.gameObject); _beacon = null; }
 
         // HUD line while it runs.
-        float remaining = Host ? ChallengeRules.Remaining(_startedAt, Time.time, _kind) : Mathf.Max(0f, _endsAtLocal - Time.time);
-        if (active) Localization.HudStatus.Show(StatusKey, ChallengeRules.Status(_kind, _progress, _total, remaining, Russian));
+        float remaining = Host ? RemainingNow(Time.time) : Mathf.Max(0f, _endsAtLocal - Time.time);
+        if (active) Localization.HudStatus.Show(StatusKey, StatusLine(remaining));
         else Localization.HudStatus.Clear(StatusKey);
 
+    }
+
+    private static string StatusLine(float remaining)
+    {
+        if (_kind == ChallengeKind.Flag)
+            return ChallengeRules.FlagStatus(_flagStage, ChallengeRules.MathText(_qa, _qb, _qop), _carrierView != 0 || Host && _carrier != null ? 1 : 0, remaining, Russian);
+        string line = ChallengeRules.Status(_kind, _progress, _total, remaining, Russian);
+        if (_kind != ChallengeKind.Mushrooms) return line;
+        string turn = SharedTime < ShowEnd() ? (Russian ? "СМОТРИТЕ" : "WATCH")
+            : (Russian ? "ШАГ " : "STEP ") + (_step + 1) + "/" + _seq.Count;
+        return $"{line}  {turn}  {(Russian ? "ОШИБКИ" : "MISSES")} {_mistakes}/{ChallengeRules.MushroomMistakes}";
+    }
+
+    // The sequence lights each mushroom in turn (every client on the same shared clock); a step lights the one stepped
+    // on, a mistake flashes them all red, a cleared round flashes them all.
+    private static void MushroomLights()
+    {
+        float t = SharedTime;
+        int slot = t >= _showStart && t < ShowEnd() ? Mathf.FloorToInt((t - _showStart) / ChallengeRules.MushroomStep) : -1;
+        bool lit = slot >= 0 && (t - _showStart) - slot * ChallengeRules.MushroomStep < ChallengeRules.MushroomStep * .72f;
+        for (int i = 0; i < _mushrooms.Count; i++)
+            if (_mushrooms[i] != null) _mushrooms[i].Hold(lit && slot < _seq.Count && _seq[slot] == i);
+        if (slot != _shownSlot)
+        {
+            _shownSlot = slot;
+            if (slot >= 0 && slot < _seq.Count && _seq[slot] < _mushrooms.Count && _mushrooms[_seq[slot]] != null) _mushrooms[_seq[slot]].Lit(true);
+        }
+        if (_shownRound >= 0 && _progress > _shownRound)
+        {
+            foreach (var m in _mushrooms) if (m != null) m.Lit(false);
+        }
+        else if (_shownMistakes >= 0 && _mistakes > _shownMistakes)
+        {
+            foreach (var m in _mushrooms) if (m != null) m.Mistake();
+            SemiFunc.UIFocusText(Russian ? "НЕ ТОТ ГРИБ! СМОТРИТЕ ЕЩЁ РАЗ" : "WRONG MUSHROOM! WATCH AGAIN", ChallengeProps.Lose, Color.white, 2.5f);
+        }
+        else if (_shownStep >= 0 && _step > _shownStep && _step - 1 < _seq.Count && _seq[_step - 1] < _mushrooms.Count && _mushrooms[_seq[_step - 1]] != null)
+            _mushrooms[_seq[_step - 1]].Lit(true);
+        _shownStep = _step; _shownMistakes = _mistakes; _shownRound = _progress;
+    }
+
+    // The flag's pole foot: over its carrier's head, or where it rests (on the shrine, where it fell, or in its base).
+    private static Vector3 FlagFoot()
+    {
+        PlayerAvatar carrier = null;
+        if (Host) carrier = _carrier;
+        else if (_carrierView != 0) { var view = PhotonView.Find(_carrierView); carrier = view != null ? view.GetComponent<PlayerAvatar>() : null; }
+        if (carrier != null && _flagStage == 1) return carrier.transform.position + Vector3.up * 1.1f - carrier.transform.forward * .25f;
+        if (_flagStage == 2) return _home;
+        bool onShrine = (_wisp - (_shrine + Vector3.up * 1.05f)).sqrMagnitude < .01f;
+        return onShrine ? _shrine + Vector3.up * .9f : _wisp - Vector3.up * .1f; // standing on the shrine, or lying where it fell
     }
 
     // "[E] START · TARGET PRACTICE" up close (the player's own interact key), just the challenge name from afar.
@@ -863,13 +1208,23 @@ internal sealed class ChallengeManager : MonoBehaviour
         if (_phase != _shownPhase)
         {
             if (_phase == ChallengePhase.Active)
-                SemiFunc.UIFocusText(ChallengeRules.Name(_kind, Russian).ToUpperInvariant() + ": " + ChallengeRules.Goal(_kind, _total, Russian), ChallengeProps.Gold, Color.white, 4f);
+                SemiFunc.UIFocusText(ChallengeRules.Name(_kind, Russian).ToUpperInvariant() + ": " +
+                    (_kind == ChallengeKind.Flag ? ChallengeRules.MathText(_qa, _qb, _qop) + " = ? " : "") + ChallengeRules.Goal(_kind, _total, Russian), ChallengeProps.Gold, Color.white, 5f);
             else if (_phase == ChallengePhase.Won)
                 SemiFunc.UIFocusText((Russian ? "ИСПЫТАНИЕ ПРОЙДЕНО: " : "CHALLENGE COMPLETE: ") + ChallengeRules.RewardText(_reward, Russian).ToUpperInvariant(), ChallengeProps.Win, Color.white, 4f);
             else if (_phase == ChallengePhase.Lost)
                 SemiFunc.UIFocusText(Russian ? "ИСПЫТАНИЕ ПРОВАЛЕНО" : "CHALLENGE FAILED", ChallengeProps.Lose, Color.white, 3f);
             _shownPhase = _phase;
             _shownProgress = _progress;
+        }
+        // Capture the Flag: the answer is in, the flag is planted.
+        if (_kind == ChallengeKind.Flag && _phase == ChallengePhase.Active && _flagStage != _shownStage)
+        {
+            if (_shownStage >= 0 && _flagStage == 1)
+                SemiFunc.UIFocusText(Russian ? "ВЕРНО! ВОЗЬМИТЕ ФЛАГ У СВЯТИЛИЩА И НЕСИТЕ К КРАСНОМУ КРУГУ" : "CORRECT! TAKE THE FLAG FROM THE SHRINE TO THE RED RING", ChallengeProps.Win, Color.white, 4f);
+            else if (_flagStage == 2)
+                SemiFunc.UIFocusText(Russian ? "ФЛАГ УСТАНОВЛЕН! ПРОДЕРЖИТЕСЬ 2 МИНУТЫ, НИКТО НЕ ДОЛЖЕН УМЕРЕТЬ" : "FLAG PLANTED! HOLD FOR 2 MINUTES, NOBODY MAY DIE", ChallengeProps.Hunt, Color.white, 4f);
+            _shownStage = _flagStage;
         }
         // Monster Waves: announce each new wave as the previous one falls.
         if (_kind == ChallengeKind.Waves && _phase == ChallengePhase.Active && _progress != _shownProgress)
@@ -906,6 +1261,31 @@ internal sealed class ChallengeManager : MonoBehaviour
     internal static void Flare(float seconds) { if (_shrineVisual != null) _shrineVisual.Flare(seconds); }
 
     // ================================================================ hooks
+
+    // Chat answers for Capture the Flag: in multiplayer every message reaches the host through ChatMessageSendRPC
+    // (the game checks the sender owns that avatar); in singleplayer ChatMessageSend speaks it locally.
+    [HarmonyPatch(typeof(PlayerAvatar), nameof(PlayerAvatar.ChatMessageSendRPC))]
+    private static class ChatReceived
+    {
+        [HarmonyPostfix]
+        private static void Postfix(PlayerAvatar __instance, string _message, PhotonMessageInfo _info)
+        {
+            if (!SemiFunc.IsMultiplayer() || !PhotonNetwork.IsMasterClient || __instance == null) return;
+            if (__instance.photonView == null || _info.Sender == null || _info.Sender.ActorNumber != __instance.photonView.OwnerActorNr) return;
+            OnChat(__instance, _message);
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerAvatar), nameof(PlayerAvatar.ChatMessageSend))]
+    private static class ChatSentAlone
+    {
+        [HarmonyPostfix]
+        private static void Postfix(PlayerAvatar __instance, string _message)
+        {
+            if (SemiFunc.IsMultiplayer()) return;
+            OnChat(__instance, _message);
+        }
+    }
 
     // Gun shots (every client runs ShootBulletRPC; the host scores it).
     [HarmonyPatch(typeof(ItemGun), nameof(ItemGun.ShootBulletRPC))]

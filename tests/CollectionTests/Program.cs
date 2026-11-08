@@ -89,13 +89,26 @@ Assert(LootSafetyRules.Money(900)=="$900"&&LootSafetyRules.Money(12000)=="$12K"&
 Assert(LootSafetyRules.Notice(1,4000,false)=="New loot appeared: 1 valuable worth $4K"&&LootSafetyRules.Notice(3,12500,true)=="New loot appeared: 3 valuables worth $12.5K, marked on the map","Notice text");
 // Challenge shrine rules
 var kinds=Enumerable.Range(0,1000).Select(i=>IncreaseHardMod.Challenges.ChallengeRules.Kind(i/1000.0)).Distinct().Count();
-Assert(kinds==9&&IncreaseHardMod.Challenges.ChallengeRules.Kind(1.0)==IncreaseHardMod.Challenges.ChallengeKind.Offering,"Every challenge kind can roll");
+Assert(kinds==11&&IncreaseHardMod.Challenges.ChallengeRules.Kind(1.0)==IncreaseHardMod.Challenges.ChallengeKind.Flag,"Every challenge kind can roll");
+{
+var CR=typeof(IncreaseHardMod.Challenges.ChallengeRules);
+var qs=Enumerable.Range(0,600).Select(i=>IncreaseHardMod.Challenges.ChallengeRules.MathQuestion(i%3/3.0+.01,(i*37%100)/100.0,(i*61%100)/100.0)).ToList();
+Assert(qs.All(q=>q.Op==2?q.A is >=12 and <=98&&q.B is >=3 and <=9:q.A is >=100 and <=999&&q.B is >=100 and <=999&&(q.Op==0||q.A>=q.B))&&qs.Select(q=>q.Op).Distinct().Count()==3,"Flag questions: 3-digit sums and differences (never negative), 2-digit times 1-digit");
+Assert(IncreaseHardMod.Challenges.ChallengeRules.MathAnswer(387,244,0)==631&&IncreaseHardMod.Challenges.ChallengeRules.MathAnswer(387,244,1)==143&&IncreaseHardMod.Challenges.ChallengeRules.MathAnswer(14,6,2)==84&&IncreaseHardMod.Challenges.ChallengeRules.MathText(387,244,0)=="387 + 244","Flag answers and question text");
+Assert(IncreaseHardMod.Challenges.ChallengeRules.ParseAnswer("631")==631&&IncreaseHardMod.Challenges.ChallengeRules.ParseAnswer(" it's 631!")==631&&IncreaseHardMod.Challenges.ChallengeRules.ParseAnswer("hello")==null&&IncreaseHardMod.Challenges.ChallengeRules.ParseAnswer("-5")==-5,"Chat answers: first whole number in the line");
+Assert(IncreaseHardMod.Challenges.ChallengeRules.MushroomLength(1)==3&&IncreaseHardMod.Challenges.ChallengeRules.MushroomLength(3)==5,"Mushroom Path rounds are 3, 4, 5 long");
+Assert(IncreaseHardMod.Challenges.ChallengeRules.Status(IncreaseHardMod.Challenges.ChallengeKind.Mushrooms,1,3,90f,false)=="MUSHROOM PATH  ROUND 2/3  1:30","Mushroom HUD line");
+Assert(IncreaseHardMod.Challenges.ChallengeRules.FlagStatus(0,"387 + 244",0,61f,false)=="CAPTURE THE FLAG  387 + 244 = ?  (answer in chat)  1:01"&&IncreaseHardMod.Challenges.ChallengeRules.FlagStatus(2,"",0,120f,true)=="ЗАХВАТ ФЛАГА  УДЕРЖИВАЙТЕ  2:00","Flag HUD lines");
+Assert(!IncreaseHardMod.Challenges.ChallengeRules.DeathFails(IncreaseHardMod.Challenges.ChallengeKind.Mushrooms)&&IncreaseHardMod.Challenges.ChallengeRules.Seconds(IncreaseHardMod.Challenges.ChallengeKind.Flag)==150f,"Mushrooms are not fatal; the flag has 150 s to answer and carry");
+}
 Assert(IncreaseHardMod.Challenges.ChallengeRules.WaveSize(1,1)==1&&IncreaseHardMod.Challenges.ChallengeRules.WaveSize(3,2)==3&&IncreaseHardMod.Challenges.ChallengeRules.WaveSize(3,4)==4&&IncreaseHardMod.Challenges.ChallengeRules.WaveSize(5,6)==4,"Waves grow 1,2,3 (+1 for 3+ players), at most 4");
 Assert(IncreaseHardMod.Challenges.ChallengeRules.DeathFails(IncreaseHardMod.Challenges.ChallengeKind.Waves)&&!IncreaseHardMod.Challenges.ChallengeRules.DeathFails(IncreaseHardMod.Challenges.ChallengeKind.Vigil),"Deaths fail Monster Waves, not Vigil");
 Assert(IncreaseHardMod.Challenges.ChallengeRules.OfferingTarget(0)==2000&&IncreaseHardMod.Challenges.ChallengeRules.OfferingTarget(40000)==6000&&IncreaseHardMod.Challenges.ChallengeRules.OfferingTarget(1e7)==20000,"Offering: 15% of level loot, $2K-$20K");
 Assert(IncreaseHardMod.Challenges.ChallengeRules.Status(IncreaseHardMod.Challenges.ChallengeKind.Waves,1,3,100f,false)=="MONSTER WAVES  WAVE 2/3  1:40"&&IncreaseHardMod.Challenges.ChallengeRules.Status(IncreaseHardMod.Challenges.ChallengeKind.Offering,1500,6000,60f,false)=="OFFERING  $1.5K/$6K  1:00","New shrine HUD lines");
 var rewards=Enumerable.Range(0,300).Select(i=>IncreaseHardMod.Challenges.ChallengeRules.Reward(i/300.0)).Distinct().ToList();
 Assert(rewards.Count==3&&!rewards.Contains(IncreaseHardMod.Challenges.ChallengeReward.None),"A win always gives a skill point, an upgrade or a cosmetic box");
+var withCostumes=Enumerable.Range(0,400).Select(i=>IncreaseHardMod.Challenges.ChallengeRules.Reward(i/400.0,true)).ToList();
+Assert(withCostumes.Distinct().Count()==4&&withCostumes.Count(r=>r==IncreaseHardMod.Challenges.ChallengeReward.Costume)==100,"With costume rewards on, a costume piece is one of four equal shrine rewards");
 Assert(IncreaseHardMod.Challenges.ChallengeRules.CullTarget(1)==5&&IncreaseHardMod.Challenges.ChallengeRules.CullTarget(6)==9&&IncreaseHardMod.Challenges.ChallengeRules.CullTarget(0)==5,"Cull: 4 + players, at most 9");
 Assert(Enumerable.Range(0,100).All(i=>IncreaseHardMod.Challenges.ChallengeRules.PropCount(i/100.0) is >=6 and <=10)&&IncreaseHardMod.Challenges.ChallengeRules.PropCount(1)==10,"6 to 10 targets or crates");
 Assert(IncreaseHardMod.Challenges.ChallengeRules.DeathFails(IncreaseHardMod.Challenges.ChallengeKind.Hunt)&&!IncreaseHardMod.Challenges.ChallengeRules.DeathFails(IncreaseHardMod.Challenges.ChallengeKind.Targets),"Deaths fail only the fighting challenges");

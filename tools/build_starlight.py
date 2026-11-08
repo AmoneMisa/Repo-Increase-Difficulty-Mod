@@ -32,6 +32,9 @@ import bpy
 import numpy as np
 from mathutils import Matrix, Vector
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import cosmetic_kit as CK  # noqa: E402  (shared wear texture and grime)
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--root', type=Path, required=True)
 parser.add_argument('--base', type=Path)
@@ -59,6 +62,9 @@ GEM = (.25, .45, 1.)
 # ---------------------------------------------------------------- textures (tileable, grey so the tint colours them)
 def save_png(name, arr):
     h, w = arr.shape[:2]
+    if name != 'starlight_stars.png':           # the glow map stays clean; the fabric gets worn
+        g = CK.grime(h, w, sum(map(ord, name)))
+        arr = arr * (g if arr.ndim == 2 else g[..., None])
     img = bpy.data.images.new(name, w, h, alpha=False)
     rgba = np.ones((h, w, 4), np.float32); rgba[..., :3] = np.clip(arr, 0, 1)[..., None] if arr.ndim == 2 else np.clip(arr, 0, 1)
     img.pixels[:] = rgba.ravel()
@@ -131,6 +137,8 @@ MATS = {}
 
 
 def material(name, color, rough=.6, metal=0., emit=0., image=None, emit_image=None, tint=False, tint_emission=False):
+    if image is None and emit < .8:
+        image = CK.WEAR                          # worn silver, leather and lining
     m = bpy.data.materials.new(name); m.use_nodes = True
     nt = m.node_tree; p = nt.nodes['Principled BSDF']
     p.inputs['Base Color'].default_value = (*color, 1); p.inputs['Roughness'].default_value = rough
@@ -520,6 +528,7 @@ def export(key, parts, pivots):
     mats_out = []; index = {}; records = []; tris = 0
     lo = Vector((1e9,) * 3); hi = -lo
     for ob in parts:
+        box_uv(ob)
         me = ob.data
         bm = bmesh.new(); bm.from_mesh(me); bmesh.ops.triangulate(bm, faces=bm.faces[:]); bm.to_mesh(me); bm.free(); me.update()
         pts = [ob.matrix_world @ v.co for v in me.vertices]
@@ -533,7 +542,7 @@ def export(key, parts, pivots):
             mats_out.append({'name': m.name, 'texture': m.get('texture', ''), 'emissionTexture': m.get('emissionTexture', ''),
                              'color': {'r': col[0], 'g': col[1], 'b': col[2], 'a': 1}, 'transmission': 0,
                              'emission': p.inputs['Emission Strength'].default_value, 'roughness': p.inputs['Roughness'].default_value,
-                             'metallic': p.inputs['Metallic'].default_value, 'tint': bool(m.get('tint', False)),
+                             'metallic': p.inputs['Metallic'].default_value, 'tint': bool(m.get('tint', False)), 'multiply': True,
                              'tintEmission': bool(m.get('tintEmission', False))})
         uv_layer = me.uv_layers.active
         verts = []; normals = []; uv = []; tri = []
@@ -602,12 +611,26 @@ def render(path):
     bpy.context.scene.render.filepath = str(path); bpy.ops.render.render(write_still=True)
 
 
+def box_uv(ob, scale=6.):
+    """Box-projected UVs for a mesh that has none, so the wear texture lands on it (scale = tiles per metre)."""
+    me = ob.data
+    if me.uv_layers: return
+    layer = me.uv_layers.new(name='UVMap')
+    for poly in me.polygons:
+        n = poly.normal; ax, ay, az = abs(n.x), abs(n.y), abs(n.z)
+        for li in poly.loop_indices:
+            co = me.vertices[me.loops[li].vertex_index].co * scale
+            layer.data[li].uv = (co.y, co.z) if ax >= ay and ax >= az else (co.x, co.z) if ay >= az else (co.x, co.y)
+
+
 setup_scene()
+CK.configure(ROOT); CK.ensure_wear()
 textures()
 M = make_mats()
 built = {}
 for key, (slot, fn) in STYLES.items():
     parts, pivots, _ = fn(M)
+    parts = CK.bake_parts(key, CK.merge(parts))           # baked pattern and soft shadows (glowing galaxy keeps its tiling)
     export(key, parts, pivots)
     built[key] = (slot, parts)
 cam = lights_and_camera()

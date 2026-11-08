@@ -22,8 +22,7 @@ internal static class ItemArt
         {
             if (!name.EndsWith("." + key + ".mesh.json", StringComparison.Ordinal)) continue;
             using var stream = asm.GetManifestResourceStream(name);
-            using var reader = new StreamReader(stream);
-            model = ArtModelReader.Parse(reader.ReadToEnd(), key);
+            model = ArtModelReader.Parse(EmbeddedArt.ReadText(stream), key);
             Models[key] = model;
             return model;
         }
