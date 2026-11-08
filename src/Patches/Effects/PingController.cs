@@ -366,7 +366,7 @@ internal static class PingController
         {
             graphic.UseReticle();
             // Each kind of monster has its own icon, drawn from the monster itself (Visuals.MonsterIcons).
-            graphic.UseMonsterCallout(Visuals.MonsterIcons.Get(monster), tint);
+            graphic.UseMonsterIcon(monster, tint);
         }
         // No pinged object gets a silhouette outline: weapons, upgrades and drones get their icon callout, and
         // every object (loot, items, carts, vehicles, cosmetic boxes too) the locator arrow and underglow.

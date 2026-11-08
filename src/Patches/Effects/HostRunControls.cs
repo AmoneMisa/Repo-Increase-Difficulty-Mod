@@ -52,6 +52,7 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
     {
         if (!Host || RunManager.instance == null || !SemiFunc.RunIsLevel()) return;
         Plugin.Log.LogInfo("[Run] Host restarts the level.");
+        Economy.CurrencyPayout.RollBackAttempt();   // what the failed attempt earned goes with it
         Change(RunManager.ChangeLevelType.Normal); // a run level that was not completed reloads itself
     }
 
@@ -59,6 +60,7 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
     {
         if (!Host || RunManager.instance == null) return;
         Plugin.Log.LogInfo("[Run] Moving to a random map.");
+        if (SemiFunc.RunIsLevel()) Economy.CurrencyPayout.RollBackAttempt();   // the level is replayed on another map
         Change(RunManager.ChangeLevelType.RunLevel);
     }
 

@@ -162,7 +162,24 @@ public static class QuestRewards
             return null;
 
         Vector3 pos = point.transform.position + Vector3.up;
-        return SpawnItemAt(item, pos, Quaternion.identity) ? item.name : null;
+        return SpawnItemAt(item, pos, Quaternion.identity) ? Label(item) : null;
+    }
+
+    /// <summary>The item's readable name for the HUD: the mod's upgrades by their display name ("Heal Power"),
+    /// game items by their item name, never the internal prefab name ("IHM Upgrade IHM_TruckHeal").</summary>
+    internal static string Label(Item item)
+    {
+        if (item == null) return "item";
+        const string prefix = "IHM Upgrade ";
+        if (item.name != null && item.name.StartsWith(prefix, System.StringComparison.Ordinal))
+        {
+            var def = Upgrades.PlayerUpgradeRegistry.FindDefinition(item.name.Substring(prefix.Length));
+            if (def != null && !string.IsNullOrEmpty(def.DisplayName)) return def.DisplayName;
+        }
+        if (!string.IsNullOrWhiteSpace(item.itemName) && item.itemName != "N/A" && !item.itemName.StartsWith("ITEM.", System.StringComparison.Ordinal))
+            return item.itemName;
+        string name = (item.name ?? "item").Replace("(Clone)", "").Trim();
+        return name.StartsWith("Item ", System.StringComparison.Ordinal) ? name.Substring(5) : name;
     }
 
     /// <summary>Room-instantiate a catalogue Item at an exact spot (host only). Level-found items are

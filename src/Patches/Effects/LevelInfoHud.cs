@@ -695,6 +695,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
         (ModifierType.LoudFacility, "Loud Facility"),
         (ModifierType.GreasedWheels, "Greased Wheels"),
         (ModifierType.ShortMemory, "Short Memory"),
+        (ModifierType.ThornyMonsters, "Thorny Monsters"),
     };
 
     internal static string NameOf(ModifierType m)

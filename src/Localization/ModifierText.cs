@@ -84,6 +84,7 @@ internal static class ModifierText
         ["Loud Facility"] = "Гулкий комплекс",
         ["Greased Wheels"] = "Смазанные колёса",
         ["Short Memory"] = "Короткая память",
+        ["Thorny Monsters"] = "Колючие монстры",
 
         // ---- surprise modifiers: descriptions
         ["Loot breaks and loses value more easily."] = "Лут легче ломается и теряет ценность.",
@@ -118,6 +119,8 @@ internal static class ModifierText
             "Свежесмазанные колёса: тележки толкать гораздо легче, даже полные и в горку.",
         ["Monsters forget quickly: once they lose sight of you, they give up the chase sooner."] =
             "Монстры быстро забывают: потеряв вас из виду, они раньше бросают погоню.",
+        ["About half the monsters grew thorns: hitting them with a melee weapon reflects up to 10% of the damage back at you."] =
+            "Примерно у половины монстров выросли шипы: удар оружием ближнего боя возвращает вам до 10% урона.",
         ["Mystery boxes appear around the map. Drop one monster soul into a box to roll a random upgrade, money, or a weapon/grenade for this level only. Each box takes one soul."] =
             "По карте расставлены мистические коробки. Бросьте в коробку душу монстра — выпадет случайное улучшение, деньги или оружие/граната только на этот уровень. Каждая коробка берёт одну душу.",
 

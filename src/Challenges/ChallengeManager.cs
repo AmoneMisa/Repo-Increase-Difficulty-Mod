@@ -239,6 +239,7 @@ internal sealed class ChallengeManager : MonoBehaviour
             else if (_kind == ChallengeKind.Mushrooms) MushroomStep();
             else if (_kind == ChallengeKind.Smash && now >= _nextScan) { _nextScan = now + ScanInterval; ScanCrates(); }
             else if (_kind == ChallengeKind.Hunt && (_huntTarget == null || !_huntTarget.Spawned) && _progress == 0) PickHuntTarget();
+            else if (_kind == ChallengeKind.Cull) CullStep(now);
             else if (_kind == ChallengeKind.Waves) WavesStep(now);
             else if (_kind == ChallengeKind.Vigil) VigilStep(now);
             else if (_kind == ChallengeKind.Sparks && now >= _nextScan) { _nextScan = now + ScanInterval; ScanSparks(); }
@@ -312,7 +313,7 @@ internal sealed class ChallengeManager : MonoBehaviour
             case ChallengeKind.Offering: _total = ChallengeRules.OfferingTarget(LevelLootValue()); _nextOfferingScan = 0f; break;
             case ChallengeKind.Mushrooms: PlaceMushrooms(); StartMushrooms(); break;
             case ChallengeKind.Flag: StartFlag(); break;
-            default: _total = ChallengeRules.CullTarget(Living().Count); break;
+            default: _total = ChallengeRules.CullTarget(Living().Count); _waveEnemies.Clear(); _waveDead.Clear(); _nextWaveAt = Time.time + 2f; break;
         }
         if (_kind == ChallengeKind.Waves && WaveSetups().Count == 0) { _kind = ChallengeKind.Cull; _total = ChallengeRules.CullTarget(Living().Count); }
         if (_kind == ChallengeKind.Mushrooms && _props.Count < ChallengeRules.MushroomMinCount || _kind == ChallengeKind.Flag && _flagStage < 0)
@@ -539,7 +540,7 @@ internal sealed class ChallengeManager : MonoBehaviour
         return list;
     }
 
-    private static void SpawnWave(int wave, Vector3 centre)
+    private static void SpawnWave(int wave, Vector3 centre, int exactCount = 0)
     {
         var setups = WaveSetups(wave);
         if (setups.Count == 0) return;
@@ -555,7 +556,7 @@ internal sealed class ChallengeManager : MonoBehaviour
         if (spots.Count == 0 && points != null)
             foreach (var p in points) if (p != null && !p.Truck && !p.inStartRoom) spots.Add(p.transform.position);
         if (spots.Count == 0) return;
-        int count = ChallengeRules.WaveSize(wave, Living().Count);
+        int count = exactCount > 0 ? exactCount : ChallengeRules.WaveSize(wave, Living().Count);
         for (int i = 0; i < count; i++)
         {
             var setup = setups[Random.Range(0, setups.Count)];
@@ -895,6 +896,22 @@ internal sealed class ChallengeManager : MonoBehaviour
         if (now >= _nextLure) { _nextLure = now + 6f; try { SemiFunc.EnemyInvestigate(_home, 45f); } catch { } }
     }
 
+    // Cull brings its own monsters: up to three of the shrine's alive at once (never more than are still needed), spawned
+    // 12-32 m from the shrine and drawn to it, so it can always be finished. Kills of any monster still count.
+    private static void CullStep(float now)
+    {
+        int alive = 0;
+        foreach (var e in _waveEnemies) if (e != null && !_waveDead.ContainsKey(e) && e.Spawned) alive++;
+        int needed = _total - _progress;
+        if (now >= _nextWaveAt && alive < Mathf.Min(3, needed))
+        {
+            _nextWaveAt = now + 4f;
+            SpawnWave(1 + Mathf.Min(2, _progress / 2), _shrine, 1);   // tougher pools as the count climbs
+            _nextLure = now + 2f;
+        }
+        if (now >= _nextLure) { _nextLure = now + 6f; try { SemiFunc.EnemyInvestigate(_shrine, 45f); } catch { } }
+    }
+
     private static float RemainingNow(float now) => _kind == ChallengeKind.Flag && _flagStage == 2
         ? Mathf.Max(0f, ChallengeRules.FlagDefendSeconds - (now - _startedAt))
         : ChallengeRules.Remaining(_startedAt, now, _kind);
@@ -902,7 +919,7 @@ internal sealed class ChallengeManager : MonoBehaviour
     internal static void OnEnemyKilled(EnemyParent enemy)
     {
         if (!Host || !_has || _phase != ChallengePhase.Active) return;
-        if (_kind is ChallengeKind.Waves or ChallengeKind.Flag && enemy != null && _waveEnemies.Contains(enemy) && !_waveDead.ContainsKey(enemy)) _waveDead[enemy] = Time.time;
+        if (_kind is ChallengeKind.Waves or ChallengeKind.Flag or ChallengeKind.Cull && enemy != null && _waveEnemies.Contains(enemy) && !_waveDead.ContainsKey(enemy)) _waveDead[enemy] = Time.time;
         if (_kind == ChallengeKind.Cull) { _progress++; if (ChallengeRules.Done(_progress, _total)) Finish(true, "kills"); else Broadcast(force: true); }
         else if (_kind == ChallengeKind.Hunt && enemy != null && enemy == _huntTarget) { _progress = 1; Finish(true, "hunted"); }
     }
@@ -918,7 +935,7 @@ internal sealed class ChallengeManager : MonoBehaviour
     {
         _phase = won ? ChallengePhase.Won : ChallengePhase.Lost;
         _wispWaiting = false;
-        if (_kind == ChallengeKind.Waves && !won || _kind == ChallengeKind.Flag) RemoveDeadWaveMonsters(Time.time, all: true); // shrine monsters leave with it
+        if (_kind == ChallengeKind.Waves && !won || _kind is ChallengeKind.Flag or ChallengeKind.Cull) RemoveDeadWaveMonsters(Time.time, all: true); // shrine monsters leave with it
         _carrier = null; _carrierView = 0;
         if (won) GiveReward();
         Plugin.Log.LogInfo($"[Challenge] {_kind} {(won ? "won" : "lost")} ({why}); reward {_reward}.");

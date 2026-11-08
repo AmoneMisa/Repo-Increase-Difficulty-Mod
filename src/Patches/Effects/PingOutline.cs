@@ -114,13 +114,29 @@ internal sealed class PingOutline : MaskableGraphic
     private bool _calloutSquare;
     private Color _calloutTint = Color.white;
 
-    /// <summary>Enemy pings: the monster's own silhouette icon in the callout box beside the reticle, in the ping colour.</summary>
-    internal void UseMonsterCallout(Texture icon, Color tint)
+    private EnemyParent _iconMonster;     // waiting for this monster's icon to be captured
+    private float _iconRetryAt;
+
+    /// <summary>Enemy pings: the monster's own silhouette icon in the centre of the reticle, in the ping colour. If
+    /// its icon isn't captured yet (the monster was half hidden), the ping keeps trying while it lasts.</summary>
+    internal void UseMonsterIcon(EnemyParent monster, Color tint)
     {
-        if (icon == null) return;
+        if (monster == null) return;
         _calloutSquare = true;
         _calloutTint = tint;
+        var icon = Visuals.MonsterIcons.Get(monster);
+        if (icon != null) AddCalloutIcon(icon);
+        else _iconMonster = monster;
+    }
+
+    private void RetryMonsterIcon()
+    {
+        if (_iconMonster == null || _calloutIcon != null || Time.unscaledTime < _iconRetryAt) return;
+        _iconRetryAt = Time.unscaledTime + .5f;
+        var icon = Visuals.MonsterIcons.Get(_iconMonster);
+        if (icon == null) return;
         AddCalloutIcon(icon);
+        _iconMonster = null;
     }
 
     private void AddCalloutIcon(Texture texture)
@@ -141,6 +157,18 @@ internal sealed class PingOutline : MaskableGraphic
         if (_calloutIcon == null) return;
         if (_pointMarker) { _calloutIcon.canvasRenderer.SetAlpha(0f); return; }
         float s = Mathf.Clamp(Screen.height / 1080f, .8f, 2.5f) * ModConfig.PingMarkerScale.Value;
+        if (_calloutSquare && HasReticle)
+        {
+            // Monster: the icon fills the reticle's inner ring, centred on the target (no side box).
+            _calloutBox = default;
+            var centre = _calloutIcon.rectTransform;
+            float inner = _reticleInner != null ? _reticleInner.rectTransform.sizeDelta.x : 60f * s;
+            centre.anchoredPosition = rectangle.center;
+            centre.sizeDelta = Vector2.one * inner * .62f;
+            _calloutIcon.color = _calloutTint;
+            _calloutIcon.canvasRenderer.SetAlpha(alpha * .95f);
+            return;
+        }
         var size = (_calloutSquare ? new Vector2(76f, 76f) : new Vector2(118f, 60f)) * s;
         float gap = 46f * s;
         var display = HudProjection.DisplayRect(camera);
@@ -258,6 +286,7 @@ internal sealed class PingOutline : MaskableGraphic
         float fade=Mathf.Clamp01((_until-Time.time)/.35f);
         canvasRenderer.SetAlpha(fade);
         if (HasReticle) PlaceReticle(rectangle, fade);
+        RetryMonsterIcon();
         PlaceCallout(camera, rectangle, fade);
         SetVerticesDirty();
     }

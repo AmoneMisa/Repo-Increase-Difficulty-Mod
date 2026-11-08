@@ -95,6 +95,7 @@ internal static class GearItems
                 MakeDecoy(grenade);
 
             FlameCartItem.Build();
+            CustomCarts.Build();
         }
         catch (Exception e)
         {

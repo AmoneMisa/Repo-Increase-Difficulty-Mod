@@ -163,7 +163,7 @@ only in the shop or truck (the host checks every purchase), and **Refund All** r
 - **Trade-offs (0.8.5):** every page except Contracts has three TRADE-OFFS rows. Each trade-off is better at one
   thing and worse at another; you hold one per row per page. A row opens after enough points in that page's perks
   (rows II and III also need the row below), costs 1/2/3 points, and **Reset Trade-offs** ($5K) refunds only them.
-  The full tree is 230 points.
+  The full tree is 240 points.
 - **Old saves:** bought upgrades are converted into matching perks the first time a save loads.
 - The full design, costs and balance are in [docs/skill-tree-plan.md](docs/skill-tree-plan.md). Every number is in
   the `Skill Tree` and `Player Upgrades` config sections.
@@ -552,7 +552,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 - **Компромиссы (0.8.5):** на каждой странице, кроме Контрактов, есть три ряда TRADE-OFFS. Каждый компромисс
   сильнее в одном и слабее в другом; на странице держится по одному в каждом ряду. Ряд открывается после
   достаточного числа очков в перках страницы (рядам II и III нужен ещё ряд ниже), стоит 1/2/3 очка, а
-  **Reset Trade-offs** ($5K) возвращает очки только за них. Всё дерево стоит 230 очков.
+  **Reset Trade-offs** ($5K) возвращает очки только за них. Всё дерево стоит 240 очков.
 - **Старые сохранения:** купленные улучшения переводятся в подходящие перки при первой загрузке сохранения.
 - Полный дизайн, стоимость и баланс — в [docs/skill-tree-plan.md](docs/skill-tree-plan.md). Все числа настраиваются
   в разделах конфига `Skill Tree` и `Player Upgrades`.

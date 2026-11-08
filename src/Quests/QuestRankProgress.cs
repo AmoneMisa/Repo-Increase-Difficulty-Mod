@@ -8,25 +8,27 @@ namespace IncreaseHardMod.Quests;
 /// Per-player quest-rank persistence. Each player advances their OWN contract rank by
 /// completing quests: every <see cref="ModConfig.QuestCompletionsPerRank"/> completions
 /// bumps them one rank (F -> E -> ... -> SSS). We only need to persist a single running
-/// count of lifetime completions per Steam ID; the rank is derived from it, so a player's
+/// count of completions per Steam ID; the rank is derived from it, so a player's
 /// rank naturally reflects how many quests THEY were present for.
 ///
-/// Ranks are kept separately for each save: a new save starts at rank F. The save is the host's save file
-/// (guests learn it from a room property the host publishes, since the game clears their own save name).
+/// Ranks belong to one run: a new save starts at rank F. The run is the host's save file name plus a run
+/// generation: when the game deletes a save (a game over), the next run reuses the same name, so the host bumps
+/// that name's generation and every count of the lost run stops applying. Guests learn the "name#generation" from
+/// a room property the host publishes, since the game clears their own save name.
 ///
 /// Stored as a tiny hand-rolled text file next to the BepInEx config
-/// (quest_ranks.txt, one "save|steamID=completions" line each) rather than a ConfigEntry, since
-/// this is churny runtime state, not a user-tunable knob. Lines from before per-save ranks
-/// ("steamID=completions") are moved to the first save that player plays.
+/// (quest_ranks.txt, one "save|steamID=completions" line each, plus "gen|save=N" for bumped generations) rather
+/// than a ConfigEntry, since this is churny runtime state, not a user-tunable knob.
 /// </summary>
 public static class QuestRankProgress
 {
     private static readonly Dictionary<string, int> Completions = new();
     private static bool _loaded;
     private const string SaveProperty = "ihm_save";
+    private const string GenPrefix = "gen|";
     private static string _published;
 
-    /// <summary>The save the current run belongs to: the host's save file name.</summary>
+    /// <summary>The run the current quests belong to: the host's save file name, with its run generation.</summary>
     internal static string CurrentSave()
     {
         try
@@ -35,22 +37,55 @@ public static class QuestRankProgress
                 return Photon.Pun.PhotonNetwork.CurrentRoom?.CustomProperties[SaveProperty] is string hostSave && hostSave.Length > 0
                     ? hostSave : "unsaved";
             string own = StatsManager.instance != null ? StatsManager.instance.saveFileCurrent : null;
-            return string.IsNullOrEmpty(own) ? "unsaved" : own;
+            return string.IsNullOrEmpty(own) ? "unsaved" : WithGeneration(own);
         }
         catch { return "unsaved"; }
     }
 
-    /// <summary>Host: publish the save name so guests rank against the same save. Cheap; call every frame.</summary>
+    // A save's first run keeps the plain name (so existing counts stay where they are); later runs add "#2", "#3"...
+    private static string WithGeneration(string save)
+    {
+        EnsureLoaded();
+        return Completions.TryGetValue(GenPrefix + save, out int gen) && gen > 1 ? save + "#" + gen.ToString(CultureInfo.InvariantCulture) : save;
+    }
+
+    /// <summary>Host: publish the run key so guests rank against the same run. Cheap; call every frame.</summary>
     internal static void PublishSave()
     {
         if (!Photon.Pun.PhotonNetwork.InRoom || !Photon.Pun.PhotonNetwork.IsMasterClient || StatsManager.instance == null) return;
-        string save = StatsManager.instance.saveFileCurrent;
-        if (string.IsNullOrEmpty(save) || save == _published) return;
+        if (string.IsNullOrEmpty(StatsManager.instance.saveFileCurrent)) return;
+        string save = CurrentSave();
+        if (save == _published) return;
         var room = Photon.Pun.PhotonNetwork.CurrentRoom;
         if (room == null) return;
         if (room.CustomProperties[SaveProperty] is string current && current == save) { _published = save; return; }
         room.SetCustomProperties(new ExitGames.Client.Photon.Hashtable { [SaveProperty] = save });
         _published = save;
+    }
+
+    /// <summary>
+    /// Host: the game deleted a save (game over, or leaving before the first level was done). The next run will reuse
+    /// the same name, so it gets a new generation and starts every player at rank F; the lost run's counts are dropped.
+    /// </summary>
+    [HarmonyLib.HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.SaveFileDelete))]
+    private static class OnSaveDeleted
+    {
+        [HarmonyLib.HarmonyPostfix]
+        private static void Postfix(string saveFileName)
+        {
+            if (string.IsNullOrEmpty(saveFileName) || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+            EnsureLoaded();
+            string run = WithGeneration(saveFileName);
+            var gone = new List<string>();
+            foreach (var key in Completions.Keys)
+                if (key.StartsWith(run + "|", System.StringComparison.Ordinal)) gone.Add(key);
+            foreach (var key in gone) Completions.Remove(key);
+            Completions.TryGetValue(GenPrefix + saveFileName, out int gen);
+            Completions[GenPrefix + saveFileName] = System.Math.Max(1, gen) + 1;
+            Save();
+            _published = null;
+            Plugin.Log.LogInfo($"[Quests] Save {saveFileName} was deleted: quest ranks start over for its next run ({gone.Count} count(s) dropped).");
+        }
     }
 
     private static string Key(string steamId) => CurrentSave() + "|" + steamId;
@@ -75,7 +110,10 @@ public static class QuestRankProgress
                     continue;
                 string id = line.Substring(0, eq).Trim();
                 string val = line.Substring(eq + 1).Trim();
-                if (id.Length > 0 && int.TryParse(val, NumberStyles.Integer, CultureInfo.InvariantCulture, out int c))
+                // Lines from before per-save ranks ("steamID=completions") are a lifetime total across every save:
+                // they never belonged to one run, so they are dropped rather than handed to a save.
+                if (id.IndexOf('|') < 0) continue;
+                if (int.TryParse(val, NumberStyles.Integer, CultureInfo.InvariantCulture, out int c))
                     Completions[id] = c;
             }
         }
@@ -105,18 +143,7 @@ public static class QuestRankProgress
         if (string.IsNullOrEmpty(steamId))
             return 0;
         EnsureLoaded();
-        string key = Key(steamId);
-        if (Completions.TryGetValue(key, out int c)) return c;
-        // Legacy global count (before per-save ranks): hand it to the first real save this player plays.
-        if (!key.StartsWith("unsaved|", System.StringComparison.Ordinal) && Completions.TryGetValue(steamId, out int legacy))
-        {
-            Completions.Remove(steamId);
-            Completions[key] = legacy;
-            Save();
-            Plugin.Log.LogInfo($"[Quests] Moved {legacy} earlier quest completion(s) to save {CurrentSave()}.");
-            return legacy;
-        }
-        return 0;
+        return Completions.TryGetValue(Key(steamId), out int c) ? c : 0;
     }
 
     /// <summary>
@@ -150,7 +177,7 @@ public static class QuestRankProgress
         intoRank = c;
     }
 
-    /// <summary>Derived contract rank for a player from their lifetime completion count.</summary>
+    /// <summary>Derived contract rank for a player from their completions in this run.</summary>
     public static QuestRank GetRank(string steamId)
     {
         Resolve(GetCompletions(steamId), out var rank, out _);

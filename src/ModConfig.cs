@@ -95,6 +95,7 @@ public static class ModConfig
     public static ConfigEntry<int> ExtraGachaCubesPerSpawn;
     public static ConfigEntry<float> DangerousLootDamageFactor;
     public static ConfigEntry<float> SoulsExplodeHarderFactor;
+    public static ConfigEntry<float> ThornyMonstersChance, ThornyMonstersMaxReflect;
     public static ConfigEntry<int> SpreadUpgradesCount;
     public static ConfigEntry<int> MysteryBoxCount, MysteryBoxMoneyMin, MysteryBoxMoneyMax;
     public static ConfigEntry<int> MysteryBoxWeightUpgrade, MysteryBoxWeightMoney, MysteryBoxWeightWeapon, MysteryBoxWeightCostume;
@@ -215,6 +216,9 @@ public static class ModConfig
     public static ConfigEntry<bool> PoisonCrossbowEnabled, DecoyGrenadeEnabled, IcePistolEnabled, StickyPistolEnabled;
     // Flamethrower C.A.R.T.: wheeled flamethrower turret with the Hauler's loot storage box.
     public static ConfigEntry<bool> FlameCartEnabled;
+    // Extra C.A.R.T.s: Soul C.A.R.T. (souls only, value cap), Wide C.A.R.T., Double-Decker C.A.R.T.
+    public static ConfigEntry<bool> CustomCartsEnabled;
+    public static ConfigEntry<int> SoulCartValueCap;
     public static ConfigEntry<int> FlameDamagePerTick, FlameBatteryDamage, FlameCartValueCap, FlameCartPriceMinK, FlameCartPriceMaxK;
     public static ConfigEntry<float> FlameTickSeconds, FlameRange, FlameConeAngle;
     // Wizard Staff: chain-lightning wand (handgun base, revolver price).
@@ -406,6 +410,7 @@ public static class ModConfig
         Modifiers.ModifierType.LoudFacility       => "The acoustics are terrible: monsters hear every footstep, voice and bump 50% farther away.",
         Modifiers.ModifierType.GreasedWheels      => "Freshly oiled wheels: C.A.R.T.s are much easier to push, even full and uphill.",
         Modifiers.ModifierType.ShortMemory        => "Monsters forget quickly: once they lose sight of you, they give up the chase sooner.",
+        Modifiers.ModifierType.ThornyMonsters     => "About half the monsters grew thorns: hitting them with a melee weapon reflects up to 10% of the damage back at you.",
         Modifiers.ModifierType.MysteryBoxes       => "Mystery boxes appear around the map. Drop one monster soul into a box to roll a random upgrade, money, or a weapon/grenade for this level only. Each box takes one soul.",
         _                                         => $"The '{m}' surprise modifier.",
     };
@@ -466,6 +471,8 @@ public static class ModConfig
         IcePistolEnabled = Module(cfg, "Gear", "IcePistolEnabled", true, "IcePistol", "Sell the Pulse Ice Pistol.");
         StickyPistolEnabled = Module(cfg, "Gear", "StickyPistolEnabled", true, "StickyPistol", "Sell the Sticky Pistol.");
         FlameCartEnabled = Module(cfg, "Gear", "FlameCartEnabled", true, "FlameCart", "Sell the Flamethrower C.A.R.T. (a wheeled flamethrower turret with a loot storage box).");
+        CustomCartsEnabled = Module(cfg, "Gear", "CustomCartsEnabled", true, "CustomCarts", "Sell the Soul C.A.R.T. (small, souls only), the Wide C.A.R.T. and the Double-Decker C.A.R.T.");
+        SoulCartValueCap = BindInt(cfg, "Carts", "SoulCartValueCap", 55000, 1000, 1000000, "Most soul value the Soul C.A.R.T. carries; a soul that would go over it is pushed back out.");
         FlameDamagePerTick = BindInt(cfg, "Flamethrower", "DamagePerTick", 10, 1, 200, "Damage dealt to every monster inside the flame each tick.");
         FlameTickSeconds = BindFloat(cfg, "Flamethrower", "TickSeconds", 1f, 0.25f, 5f, "Seconds between flame damage ticks.");
         FlameBatteryDamage = BindInt(cfg, "Flamethrower", "BatteryDamage", 700, 50, 10000, "Total per-target damage one full battery provides (fuel is used per tick, whether or not anything is hit).");
@@ -672,6 +679,12 @@ public static class ModConfig
         SoulsExplodeHarderFactor = BindFloat(cfg,
             "Modifier Tuning", "SoulsExplodeHarderFactor", 2.0f, 0.1f, 10f,
             "SoulsExplodeHarder: multiplies the player damage of enemy-soul explosions (moon 4+). 2.0 = double explosion damage.");
+        ThornyMonstersChance = BindFloat(cfg,
+            "Modifier Tuning", "ThornyMonstersChance", 0.5f, 0f, 1f,
+            "ThornyMonsters: chance that each monster on the level has thorns. 0.5 = about half of them.");
+        ThornyMonstersMaxReflect = BindFloat(cfg,
+            "Modifier Tuning", "ThornyMonstersMaxReflect", 0.10f, 0f, 0.5f,
+            "ThornyMonsters: the most of a melee hit a thorny monster reflects to the attacker. Each thorny monster rolls between a third of this and this.");
         SpreadUpgradesCount = BindInt(cfg,
             "Modifier Tuning", "SpreadUpgradesCount", 3, 0, 10,
             "SpreadUpgrades: how many upgrade item pickups to scatter across the special level. They can't be used on that level, only once back in the truck.");

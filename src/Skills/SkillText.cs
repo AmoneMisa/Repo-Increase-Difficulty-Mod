@@ -56,6 +56,9 @@ internal static class SkillText
 
             case C.Ping: return "Ping players, monsters, loot and places; the team sees pings through walls.";
             case C.TargetInfo: return "Pings name what they mark: prices, rarity, monster and item names.";
+            case C.PingRange: return "Every ping on screen shows how far it is from you, and how high it sits off the floor when it is on a shelf or ledge.";
+            case C.PingPath: return "A glowing path on the floor leads you along the walkable route to each ping (the three newest).";
+            case C.PingCompass: return "Pings you can't see (off screen or behind you) get an arrow on the edge of the screen pointing the way.";
             case C.EnemyHp: return "Pinged monsters show their health.";
             case C.LootCondition: return "Pinged loot shows how much of its value is left.";
             case C.Weight: return "Pinged objects show their weight.";
@@ -110,6 +113,8 @@ internal static class SkillText
             case C.Desperation: return $"-{Pct(ModConfig.SkillDesperationPerLevel.Value)} damage taken per level while your health is under {Pct(ModConfig.SkillDesperationThreshold.Value)}.";
             case C.HuntedWarning: return "Shows HUNTED on your screen while a monster is chasing you.";
             case C.CrouchSpeed: return $"+{Pct(ModConfig.SkillCrouchSpeedPerLevel.Value)} speed while crouched per level (+{Pct(ModConfig.SkillCrouchSpeedPerLevel.Value * C.Find(id).MaxLevel)} at max).";
+            case C.SoulWard: return $"Exploding monster souls hurt you {Pct(SoulPerks.WardPerLevel)} less per level (-{Pct(SoulPerks.WardPerLevel * C.Find(id).MaxLevel)} at max).";
+            case C.SoulKeeper: return $"A monster soul you are holding loses {Pct(SoulPerks.KeeperPerLevel)} less value when it is hit, per level (-{Pct(SoulPerks.KeeperPerLevel * C.Find(id).MaxLevel)} at max).";
 
             case C.InventorySlot: return "+1 inventory slot per level (keys 4-7).";
             case C.Autoscan: return "Finds nearby valuables for the whole team; reaches farther per level.";
@@ -167,6 +172,9 @@ internal static class SkillText
 
             case C.Ping: return "Отмечайте игроков, монстров, добычу и места; команда видит пинги сквозь стены.";
             case C.TargetInfo: return "Пинг называет цель: цену, редкость, имя монстра или предмета.";
+            case C.PingRange: return "Под каждым пингом на экране видно расстояние до него и высота над полом, если он на полке или уступе.";
+            case C.PingPath: return "Светящаяся дорожка на полу ведёт по проходимому пути к каждому пингу (к трём последним).";
+            case C.PingCompass: return "У пингов вне экрана или за спиной на краю экрана появляется стрелка, указывающая направление.";
             case C.EnemyHp: return "У отмеченных монстров видно здоровье.";
             case C.LootCondition: return "У отмеченной добычи видно, сколько стоимости от неё осталось.";
             case C.Weight: return "У отмеченных предметов виден вес.";
@@ -221,6 +229,8 @@ internal static class SkillText
             case C.Desperation: return $"-{Pct(ModConfig.SkillDesperationPerLevel.Value)} получаемого урона за уровень, пока здоровья меньше {Pct(ModConfig.SkillDesperationThreshold.Value)}.";
             case C.HuntedWarning: return "Пока за вами гонится монстр, на экране горит надпись ПОГОНЯ.";
             case C.CrouchSpeed: return $"+{Pct(ModConfig.SkillCrouchSpeedPerLevel.Value)} к скорости в приседе за уровень (+{Pct(ModConfig.SkillCrouchSpeedPerLevel.Value * C.Find(id).MaxLevel)} на максимуме).";
+            case C.SoulWard: return $"Взрывы душ монстров ранят вас на {Pct(SoulPerks.WardPerLevel)} меньше за уровень (-{Pct(SoulPerks.WardPerLevel * C.Find(id).MaxLevel)} на максимуме).";
+            case C.SoulKeeper: return $"Душа монстра в ваших руках теряет при ударах на {Pct(SoulPerks.KeeperPerLevel)} меньше ценности за уровень (-{Pct(SoulPerks.KeeperPerLevel * C.Find(id).MaxLevel)} на максимуме).";
 
             case C.InventorySlot: return "+1 ячейка инвентаря за уровень (клавиши 4-7).";
             case C.Autoscan: return "Находит ценности рядом для всей команды; с каждым уровнем дальше.";

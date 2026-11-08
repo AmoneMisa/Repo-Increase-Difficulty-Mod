@@ -147,6 +147,8 @@ public class Plugin : BaseUnityPlugin
         // Drives the Map Suite 3D markers (L9 cosmetic boxes, L10 monster dots).
         netObject.AddComponent<Upgrades.MapUpgrade.MarkerController>();
         netObject.AddComponent<Upgrades.RespawnList>();
+        // Ping branch perks: distance, height, floor path and screen-edge arrows for pings.
+        netObject.AddComponent<Patches.Effects.PingAssist>();
         // Winged circlet above each player's head, coloured from their own cosmetics colour.
         netObject.AddComponent<Visuals.WingedCircletDriver>();
         // Guest-side log of which level-generation step a mid-level joiner is waiting on.

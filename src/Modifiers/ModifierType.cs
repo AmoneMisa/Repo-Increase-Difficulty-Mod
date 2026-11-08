@@ -55,4 +55,5 @@ public enum ModifierType
     LoudFacility       = 1 << 25, // punish: monsters hear players from much farther away
     GreasedWheels      = 1 << 26, // reward: C.A.R.T.s are easier to push
     ShortMemory        = 1 << 27, // reward: monsters give up chases sooner once they lose sight of you
+    ThornyMonsters     = 1 << 28, // punish: about half the monsters reflect a little melee damage (up to 10%)
 }

@@ -100,9 +100,9 @@ internal static class CombatDamageUpgrades
     private static class MeleeEnemyHurt
     {
         [HarmonyPrefix]
-        private static void Prefix(HurtCollider __instance, Enemy _enemy, out (int Damage, float Stun) __state)
+        private static void Prefix(HurtCollider __instance, Enemy _enemy, out (int Damage, float Stun, PlayerAvatar Wielder, int Dealt) __state)
         {
-            __state = (__instance.enemyDamage, __instance.enemyStunTime);
+            __state = (__instance.enemyDamage, __instance.enemyStunTime, null, 0);
             // Guns and cart weapons: the Arsenal perks (damage per weapon, longer tranquilizer stun).
             var weapon = Skills.SkillEffects.WeaponHit(__instance, out var shooter, out bool tranq);
             if (weapon != Skills.SkillEffects.Weapon.None)
@@ -147,6 +147,8 @@ internal static class CombatDamageUpgrades
                 Skills.BuffPerks.DamageFactorFor(wielder, true, false, false)); // Battle Trance
             Skills.BuffPerks.NoteHit(wielder, _enemy, true, false, false);
             Skills.SupportPerks.Vampire(wielder, _enemy, __instance.enemyDamage);
+            __state.Wielder = wielder;
+            __state.Dealt = __instance.enemyDamage;
             // Heavy Hitter: a longer stun from the weapon's own stun. Monsters too big for it still aren't stunned.
             int heavy = Skills.SkillEffects.Level(wielder, Skills.SkillCatalog.HeavyHitter);
             if (heavy > 0 && __instance.enemyStun && __instance.enemyStunTime > 0f)
@@ -157,8 +159,10 @@ internal static class CombatDamageUpgrades
         }
 
         [HarmonyPostfix]
-        private static void Postfix(HurtCollider __instance, (int Damage, float Stun) __state)
+        private static void Postfix(HurtCollider __instance, Enemy _enemy, bool __result, (int Damage, float Stun, PlayerAvatar Wielder, int Dealt) __state)
         {
+            // Thorny Monsters: a melee hit that landed may sting the wielder back.
+            if (__result && __state.Wielder != null && __state.Dealt > 0) Modifiers.ThornyMonsters.Reflect(__state.Wielder, _enemy, __state.Dealt);
             __instance.enemyDamage = __state.Damage;
             __instance.enemyStunTime = __state.Stun;
         }

@@ -86,7 +86,7 @@ internal static class ExtraCartEffect
         var carts = new List<Item>();
         foreach (var item in stats.itemDictionary.Values)
         {
-            if (item != null && item.itemType == SemiFunc.itemType.cart)
+            if (item != null && item.itemType == SemiFunc.itemType.cart && !Gear.CustomCarts.IsModCart(item.name))
                 carts.Add(item);
         }
 

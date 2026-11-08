@@ -17,7 +17,7 @@ internal static class SkillCatalog
         ValuableTracker = P + "ValuableTracker", MapPings = P + "MapPings", ZoomOne = P + "ZoomOne", ZoomTwo = P + "ZoomTwo",
         CosmeticTracker = P + "CosmeticTracker", BetterMap = P + "BetterMap", MapLandmarks = P + "MapLandmarks";
     public const string Ping = P + "Ping", TargetInfo = P + "TargetInfo", EnemyHp = P + "EnemyHp", LootCondition = P + "LootCondition",
-        Weight = P + "Weight", Threat = P + "Threat";
+        Weight = P + "Weight", Threat = P + "Threat", PingRange = P + "PingRange", PingPath = P + "PingPath", PingCompass = P + "PingCompass";
     public const string FlashTuning = P + "FlashTuning", BeamWidth = P + "BeamWidth", Brightness = P + "Brightness", BeamColour = P + "BeamColour";
     // Combat
     public const string Brawler = P + "Brawler", GrenadeDamage = P + "GrenadeDamage", MeleeDamage = P + "MeleeDamage", TumbleDamage = P + "TumbleDamage",
@@ -27,7 +27,7 @@ internal static class SkillCatalog
     // Survival
     public const string Survivor = P + "Survivor", StaminaEfficiency = P + "StaminaEfficiency", SecondWind = P + "SecondWind",
         Armor = P + "Armor", HpRegen = P + "HpRegen", Desperation = P + "Desperation", HuntedWarning = P + "HuntedWarning",
-        CrouchSpeed = P + "CrouchSpeed";
+        CrouchSpeed = P + "CrouchSpeed", SoulWard = P + "SoulWard", SoulKeeper = P + "SoulKeeper";
     // Utility
     public const string InventorySlot = P + "InventorySlot", Autoscan = P + "Autoscan", HeadBattery = P + "HeadBattery", TumbleWings = P + "TumbleWings",
         HeadRecharge = P + "HeadRecharge", HeadLeap = P + "HeadLeap";
@@ -89,6 +89,9 @@ internal static class SkillCatalog
         Add(recon, "Ping", LootCondition, "Loot Condition", "Состояние добычи", 1, 1, Ping);
         Add(recon, "Ping", Weight, "Target Weight", "Вес цели", 1, 1, Ping);
         Add(recon, "Ping", Threat, "Monster Threat", "Угроза монстра", 1, 1, Ping);
+        Add(recon, "Ping", PingRange, "Range Finder", "Дальномер", 1, 1, Ping);
+        Add(recon, "Ping", PingPath, "Pathfinder", "Путь к пингу", 2, 1, PingRange);
+        Add(recon, "Ping", PingCompass, "Ping Compass", "Компас пингов", 1, 1, Ping);
 
         Add(recon, "Flashlight", FlashTuning, "Flashlight Tuning", "Настройка фонаря", 1, 1, root: true);
         Add(recon, "Flashlight", BeamWidth, "Beam Width", "Ширина луча", 1, 3, FlashTuning);
@@ -120,6 +123,8 @@ internal static class SkillCatalog
         Add(survival, "Survival", Desperation, "Desperation", "Отчаяние", 2, 3, Survivor);
         Add(survival, "Survival", HuntedWarning, "Hunted Warning", "Чувство погони", 1, 1, Survivor);
         Add(survival, "Survival", CrouchSpeed, "Crouch Speed", "Скорость в приседе", 1, 3, Survivor);
+        Add(survival, "Survival", SoulWard, "Soul Ward", "Защита от душ", 1, 3, Survivor);
+        Add(survival, "Survival", SoulKeeper, "Soul Keeper", "Хранитель душ", 1, 3, Survivor);
 
         var utility = SkillPage.Utility;
         Add(utility, "Gear", InventorySlot, "Inventory Slot", "Слот инвентаря", 3, 4, root: true);
