@@ -38,7 +38,7 @@ public class LoadingUI:UnityEngine.MonoBehaviour {public static LoadingUI instan
 public class HUDCanvas:UnityEngine.MonoBehaviour {public static HUDCanvas instance;public UnityEngine.RectTransform rect=>(UnityEngine.RectTransform)transform;}
 public class Map {public static Map Instance;public bool Active;}
 public class MapToolController {public static MapToolController instance;public bool Active;}
-public class LevelUI{public static LevelUI instance;public TMPro.TextMeshProUGUI uiText,textNumber;}
+public class LevelUI{public static LevelUI instance;public TMPro.TextMeshProUGUI uiText,textNumber,iconMoon,textMoon;public UnityEngine.GameObject objectMoon;}
 public class GoalUI{public static GoalUI instance;public TMPro.TextMeshProUGUI uiText;public bool isHidden;}
 public class StatsUI{public static StatsUI instance;public TMPro.TextMeshProUGUI Text,upgradesHeader;}
 public static class SemiFunc{public static bool Menu,IsLevel=true,Shop,TextInput;public static bool MenuLevel()=>Menu;public static bool RunIsLevel()=>IsLevel;public static bool RunIsShop()=>Shop;public static bool NoTextInputsActive()=>!TextInput;public static bool IsMasterClientOrSingleplayer()=>!Photon.Pun.PhotonNetwork.InRoom||Photon.Pun.PhotonNetwork.IsMasterClient;}
@@ -66,3 +66,6 @@ public class HaulUI{public static HaulUI instance;public TMPro.TextMeshProUGUI u
 
 namespace IncreaseHardMod.Hud{internal static class HudStack{public static float Edge=-1f;public static float LowestScreenEdge(HudCorner c)=>c==HudCorner.TopRight?Edge:-1f;}}
 public class MenuManager{public static MenuManager instance;public object currentMenuPage;}
+
+// Status notices used by ModifierText; the HUD tests do not check them.
+namespace IncreaseHardMod.Hud{internal enum HudStyle{Caution}internal static class HudNotify{public static void Status(string key,string text,HudStyle style){}public static void Clear(string key){}}}

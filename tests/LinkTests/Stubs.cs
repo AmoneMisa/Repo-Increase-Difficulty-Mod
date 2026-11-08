@@ -12,3 +12,6 @@ public class StatsManager {
 public class PunManager {public static PunManager instance=new();public int Replications;public void UpdateStat(string dictionary,string key,int value){Replications++;StatsManager.instance.runStats[key]=value;}}
 namespace IncreaseHardMod.Drones {internal static class DroneItems {internal const string LinkAName="Item Drone Link A",LinkBName="Item Drone Link B";}}
 namespace UnityEngine {public static class Time {public static float unscaledTime;}}
+
+// LinkSets names the set in the game language; tests run in English.
+namespace IncreaseHardMod.Localization {internal static class GameLanguage {internal static bool Russian => false;}}
