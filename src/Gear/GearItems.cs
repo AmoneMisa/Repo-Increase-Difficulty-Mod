@@ -387,11 +387,14 @@ internal sealed class GearGun : MonoBehaviour
 
 /// <summary>
 /// Decoy grenade: from the moment it is armed it keeps pinging the enemy director at its position for
-/// <c>DecoySeconds</c>, which sends nearby monsters to investigate it, then removes itself. The vanilla
-/// fuse is pushed far out so the (stripped) explosion logic never fires.
+/// <c>DecoySeconds</c>, which sends nearby monsters to investigate it. The vanilla fuse is held far out while it
+/// lures; when the time is up the fuse is set to zero so the game's own detonation runs (the explosion parts are
+/// stripped). That path makes it one-use like any grenade: it is removed from the run's purchased items and
+/// destroyed, or, in the shop, put back on its shelf. Putting it in an inventory slot disarms it, as with vanilla.
 /// </summary>
 internal sealed class DecoyGrenade : MonoBehaviour
 {
+    private const float HeldFuse = 9999f;
     private ItemGrenade _grenade;
     private float _armedFor = -1f;
     private float _ping;
@@ -399,8 +402,10 @@ internal sealed class DecoyGrenade : MonoBehaviour
     private void Start()
     {
         _grenade = GetComponent<ItemGrenade>();
-        if (_grenade != null)
-            _grenade.tickTime = 9999f;
+        if (_grenade == null) return;
+        _grenade.tickTime = HeldFuse;
+        // The decoy only borrows the vanilla detonation for its removal: no stun or blast may run off it.
+        _grenade.onDetonate = new UnityEngine.Events.UnityEvent();
     }
 
     private void Update()
@@ -408,10 +413,17 @@ internal sealed class DecoyGrenade : MonoBehaviour
         if (_grenade == null || !SemiFunc.IsMasterClientOrSingleplayer())
             return;
 
-        if (_grenade.isActive && _armedFor < 0f)
-            _armedFor = 0f;
-        if (_armedFor < 0f)
+        if (!_grenade.isActive)
+        {
+            // Not armed, disarmed by an inventory slot, or reset on the shop shelf after going off: ready again.
+            _armedFor = -1f;
+            _grenade.tickTime = HeldFuse;
             return;
+        }
+        if (_armedFor < 0f)
+            _armedFor = 0f;
+        if (_armedFor >= ModConfig.DecoySeconds.Value)
+            return; // fuse already released; the game's detonation is under way
 
         _armedFor += Time.deltaTime;
         _ping -= Time.deltaTime;
@@ -421,13 +433,8 @@ internal sealed class DecoyGrenade : MonoBehaviour
             EnemyDirector.instance.SetInvestigate(transform.position, 40f);
         }
 
+        // Time is up: release the fuse so the vanilla grenade goes off this frame (consumed, or reset in the shop).
         if (_armedFor >= ModConfig.DecoySeconds.Value)
-        {
-            var pgo = GetComponent<PhysGrabObject>();
-            if (pgo != null)
-                pgo.DestroyPhysGrabObject();
-            else
-                Destroy(gameObject);
-        }
+            _grenade.tickTime = 0f;
     }
 }
