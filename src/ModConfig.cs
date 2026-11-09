@@ -489,7 +489,7 @@ public static class ModConfig
         CourierMenuKey = cfg.Bind("Courier", "MenuKey", UnityEngine.KeyCode.G, "Opens the courier command menu. Arrow keys move, Enter/Right picks, Left goes back.");
         CustomCartsEnabled = Module(cfg, "Gear", "CustomCartsEnabled", true, "CustomCarts", "Sell the Soul C.A.R.T. (small, souls only), the Wide C.A.R.T. and the Double-Decker C.A.R.T.");
         SoulCartValueCap = BindInt(cfg, "Carts", "SoulCartValueCap", 55000, 1000, 1000000, "Most soul value the Soul C.A.R.T. carries; a soul that would go over it is pushed back out.");
-        WideCartWidth = BindFloat(cfg, "Carts", "WideCartWidth", 1.25f, 1f, 1.5f, "How much wider the Wide C.A.R.T. is than the big C.A.R.T. (1.25 = 25% wider). Above about 1.3 it may not fit through doorways. Applies after a game restart.");
+        WideCartWidth = BindFloat(cfg, "Carts", "WideCartWidth", 1.25f, 1f, 1.5f, "How much wider the Wide C.A.R.T. is than the big C.A.R.T. (1.25 = 25% wider). It is made longer by the rest, so it always has 1.5x the floor space (1.25 wide = 1.2 long). Above about 1.3 it may not fit through doorways. Applies after a game restart.");
         // New keys (not DamagePerTick/TickSeconds/BatteryDamage): saved values of the old keys would keep the slow flame.
         FlameDamagePerSecond = BindInt(cfg, "Flamethrower", "DamagePerSecond", 24, 1, 500, "Damage per second dealt to every monster inside the flame, applied in small fast ticks.");
         FlameTickSeconds = BindFloat(cfg, "Flamethrower", "DamageTickSeconds", 0.25f, 0.1f, 2f, "Seconds between flame damage ticks. Smaller = smoother, more immediate damage.");

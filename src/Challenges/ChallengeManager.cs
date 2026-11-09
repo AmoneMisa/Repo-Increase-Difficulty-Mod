@@ -62,6 +62,9 @@ internal sealed class ChallengeManager : MonoBehaviour
     private static int _flagStage, _qa, _qb, _qop, _carrierView;
     private static PlayerAvatar _carrier;
     private static float _nextFlagWave;
+    private static bool _flagChaser;          // host: the one monster sent after the first carrier was spawned
+    private static LineRenderer _flagGuide;   // local: glowing floor path from this player to the base
+    private static float _flagGuideAt, _flagGuideMetres = -1f;
 
     // ---- client visuals
     private static ShrineVisual _shrineVisual;
@@ -129,6 +132,8 @@ internal sealed class ChallengeManager : MonoBehaviour
         if (_ringVisual != null) Destroy(_ringVisual.gameObject);
         if (_flagVisual != null) Destroy(_flagVisual.gameObject);
         if (_baseVisual != null) Destroy(_baseVisual.gameObject);
+        if (_flagGuide != null) Destroy(_flagGuide.gameObject);
+        _flagGuideMetres = -1f; _flagChaser = false;
         foreach (var m in _mushrooms) if (m != null) Destroy(m.gameObject);
         _mushrooms.Clear(); _seq.Clear(); _standing.Clear(); _step = _mistakes = 0; _showStart = 0f;
         _flagStage = _qa = _qb = _qop = _carrierView = 0; _carrier = null;
@@ -799,7 +804,7 @@ internal sealed class ChallengeManager : MonoBehaviour
         var q = ChallengeRules.MathQuestion(Random.value, Random.value, Random.value);
         _qa = q.A; _qb = q.B; _qop = q.Op;
         _flagStage = 0;
-        _carrier = null; _carrierView = 0;
+        _carrier = null; _carrierView = 0; _flagChaser = false;
         _wisp = _shrine + Vector3.up * 1.05f;
         _total = (int)ChallengeRules.FlagDefendSeconds;
         Plugin.Log.LogInfo($"[Challenge] Flag question {ChallengeRules.MathText(_qa, _qb, _qop)} = {ChallengeRules.MathAnswer(_qa, _qb, _qop)}; base at {_home}.");
@@ -862,12 +867,16 @@ internal sealed class ChallengeManager : MonoBehaviour
                     {
                         _carrier = p;
                         _carrierView = p.photonView != null ? p.photonView.ViewID : 0;
+                        // Taking the flag is noticed: one monster comes for the first carrier.
+                        if (!_flagChaser) { _flagChaser = true; SpawnWave(1, p.transform.position, 1); _nextLure = now + 3f; }
                         Broadcast(force: true);
                         break;
                     }
                 return;
             }
             _wisp = _carrier.transform.position + Vector3.up * 1.15f;
+            // Monsters nearby keep being drawn to whoever carries the flag.
+            if (now >= _nextLure) { _nextLure = now + 6f; try { SemiFunc.EnemyInvestigate(_carrier.transform.position, 30f); } catch { } }
             var d = _carrier.transform.position - _home;
             if (Mathf.Abs(d.y) < 2f && d.x * d.x + d.z * d.z <= ChallengeRules.FlagBaseRadius * ChallengeRules.FlagBaseRadius)
             {
@@ -1130,8 +1139,10 @@ internal sealed class ChallengeManager : MonoBehaviour
         {
             if (_flagVisual == null) _flagVisual = FlagVisual.Create(_wisp);
             _flagVisual.MoveTo(FlagFoot());
-            _flagVisual.transform.localScale = Vector3.one * shrink;
+            bool mine = _flagStage == 1 && LocalCarries();
+            _flagVisual.transform.localScale = Vector3.one * shrink * (mine ? .7f : 1f);
         }
+        UpdateFlagGuide(active);
         if (_kind == ChallengeKind.Flag && active && _flagStage >= 0)
         {
             if (_baseVisual == null)
@@ -1161,7 +1172,10 @@ internal sealed class ChallengeManager : MonoBehaviour
     private static string StatusLine(float remaining)
     {
         if (_kind == ChallengeKind.Flag)
-            return ChallengeRules.FlagStatus(_flagStage, ChallengeRules.MathText(_qa, _qb, _qop), _carrierView != 0 || Host && _carrier != null ? 1 : 0, remaining, Russian);
+        {
+            string flag = ChallengeRules.FlagStatus(_flagStage, ChallengeRules.MathText(_qa, _qb, _qop), _carrierView != 0 || Host && _carrier != null ? 1 : 0, remaining, Russian);
+            return _flagStage == 1 && _flagGuideMetres >= 0f ? $"{flag}  {(Russian ? "БАЗА" : "BASE")} {Mathf.RoundToInt(_flagGuideMetres)} {(Russian ? "М" : "M")}" : flag;
+        }
         string line = ChallengeRules.Status(_kind, _progress, _total, remaining, Russian);
         if (_kind != ChallengeKind.Mushrooms) return line;
         string turn = SharedTime < ShowEnd() ? (Russian ? "СМОТРИТЕ" : "WATCH")
@@ -1197,13 +1211,75 @@ internal sealed class ChallengeManager : MonoBehaviour
         _shownStep = _step; _shownMistakes = _mistakes; _shownRound = _progress;
     }
 
+    private static bool LocalCarries()
+    {
+        if (Host) return _carrier != null && _carrier.isLocal;
+        if (_carrierView == 0) return false;
+        var view = PhotonView.Find(_carrierView);
+        return view != null && view.IsMine;
+    }
+
+    // While the flag is out (stage 1): a glowing path on the floor from this player to the base, along the walkable
+    // route, refreshed twice a second, and its length for the status line. Everyone sees their own route.
+    private static void UpdateFlagGuide(bool active)
+    {
+        bool want = active && _kind == ChallengeKind.Flag && _flagStage == 1 && PlayerAvatar.instance != null && !PlayerAvatar.instance.isDisabled;
+        if (!want)
+        {
+            if (_flagGuide != null) _flagGuide.enabled = false;
+            _flagGuideMetres = -1f;
+            return;
+        }
+        if (Time.time < _flagGuideAt) return;
+        _flagGuideAt = Time.time + .5f;
+        if (_flagGuide == null)
+        {
+            var go = new GameObject("IHM Flag Guide");
+            _flagGuide = go.AddComponent<LineRenderer>();
+            _flagGuide.useWorldSpace = true;
+            _flagGuide.widthMultiplier = .14f;
+            _flagGuide.numCornerVertices = 3;
+            _flagGuide.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            _flagGuide.receiveShadows = false;
+            var shader = Shader.Find("Sprites/Default") ?? Shader.Find("Unlit/Color");
+            if (shader != null) _flagGuide.material = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
+            var c = ChallengeProps.Hunt;
+            _flagGuide.startColor = new Color(c.r, c.g, c.b, .9f);
+            _flagGuide.endColor = new Color(c.r, c.g, c.b, .35f);
+        }
+        var from = PlayerAvatar.instance.transform.position;
+        var path = new NavMeshPath();
+        if (!NavMesh.SamplePosition(from, out var a, 3f, NavMesh.AllAreas) || !NavMesh.SamplePosition(_home, out var b, 3f, NavMesh.AllAreas) ||
+            !NavMesh.CalculatePath(a.position, b.position, NavMesh.AllAreas, path) || path.corners.Length < 2)
+        {
+            _flagGuide.enabled = false;
+            _flagGuideMetres = Vector3.Distance(from, _home);
+            return;
+        }
+        float metres = 0f;
+        _flagGuide.positionCount = path.corners.Length;
+        for (int i = 0; i < path.corners.Length; i++)
+        {
+            _flagGuide.SetPosition(i, path.corners[i] + Vector3.up * .12f);
+            if (i > 0) metres += Vector3.Distance(path.corners[i - 1], path.corners[i]);
+        }
+        _flagGuide.enabled = true;
+        _flagGuideMetres = metres;
+    }
+
     // The flag's pole foot: over its carrier's head, or where it rests (on the shrine, where it fell, or in its base).
     private static Vector3 FlagFoot()
     {
         PlayerAvatar carrier = null;
         if (Host) carrier = _carrier;
         else if (_carrierView != 0) { var view = PhotonView.Find(_carrierView); carrier = view != null ? view.GetComponent<PlayerAvatar>() : null; }
-        if (carrier != null && _flagStage == 1) return carrier.transform.position + Vector3.up * 1.1f - carrier.transform.forward * .25f;
+        if (carrier != null && _flagStage == 1)
+        {
+            // Over the head and behind is invisible to the carrier in first person: they see it held at the lower right.
+            var cam = carrier.isLocal ? Camera.main : null;
+            if (cam != null) return cam.transform.position + cam.transform.right * .5f + cam.transform.forward * .85f - cam.transform.up * 1.45f;
+            return carrier.transform.position + Vector3.up * 1.1f - carrier.transform.forward * .25f;
+        }
         if (_flagStage == 2) return _home;
         bool onShrine = (_wisp - (_shrine + Vector3.up * 1.05f)).sqrMagnitude < .01f;
         return onShrine ? _shrine + Vector3.up * .9f : _wisp - Vector3.up * .1f; // standing on the shrine, or lying where it fell

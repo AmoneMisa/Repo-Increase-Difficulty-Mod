@@ -327,6 +327,37 @@ internal static class PingController
         Announce(label, tint, sender);
     }
 
+    /// <summary>Enemy ping colour by the game's own monster tier: red for tier 3, yellow for tier 2, light grey for tier 1.</summary>
+    internal static Color TierColor(EnemyParent monster) => monster.difficulty switch
+    {
+        EnemyParent.Difficulty.Difficulty3 => new Color(1f, .32f, .3f),
+        EnemyParent.Difficulty.Difficulty2 => new Color(1f, .84f, .2f),
+        _ => new Color(.82f, .83f, .86f),
+    };
+
+    // The monster an Enemy ping is about. Its PhysGrabObject is not always inside the EnemyParent hierarchy (Headman's
+    // isn't), so the parent lookup alone left such pings without their monster icon: fall back to the monster whose
+    // own rigidbody is the pinged object, then to the nearest spawned monster at the ping point.
+    private static EnemyParent MonsterFor(PhysGrabObject physGrab, Vector3 pos)
+    {
+        var direct = physGrab != null ? physGrab.GetComponentInParent<EnemyParent>() : null;
+        if (direct != null) return direct;
+        var spawned = EnemyDirector.instance != null ? EnemyDirector.instance.enemiesSpawned : null;
+        if (spawned == null) return null;
+        EnemyParent nearest = null;
+        float best = 4f * 4f;
+        foreach (var ep in spawned)
+        {
+            if (ep == null || ep.Enemy == null) continue;
+            var body = ep.Enemy.HasRigidbody ? ep.Enemy.Rigidbody : null;
+            if (physGrab != null && body != null && body.physGrabObject == physGrab) return ep;
+            var at = ep.Enemy.CenterTransform != null ? ep.Enemy.CenterTransform.position : ep.Enemy.transform.position;
+            float d = (at - pos).sqrMagnitude;
+            if (d < best) { best = d; nearest = ep; }
+        }
+        return nearest;
+    }
+
     // Spawn (and track) the native highlight for a ping. If we have no object to frame (Location, or a
     // remote object that despawned), build a tiny invisible proxy at the position so there's something
     // for the graphic to bound.
@@ -334,6 +365,8 @@ internal static class PingController
     {
         var kind = player != null ? WeaponKind.None : CalloutOf(type, physGrab);
         var tint = ColorFor(type, kind);
+        EnemyParent monster = type == PingType.Enemy ? MonsterFor(physGrab, pos) : null;
+        if (monster != null) tint = TierColor(monster); // the whole enemy ping (reticle, icon, chat line) shows its tier
         // Refresh a repeated mark instead of stacking rings/contours at the same place.
         for(int i=_pings.Count-1;i>=0;i--)
         {
@@ -361,10 +394,9 @@ internal static class PingController
             graphic.AttachBeacon(duration, tint);
             PingTargets.Flare(type, pos, duration);
         }
-        EnemyParent monster = type == PingType.Enemy && physGrab != null ? physGrab.GetComponentInParent<EnemyParent>() : null;
         if (type == PingType.Enemy)
         {
-            graphic.UseReticle();
+            graphic.UseReticle(tint);
             // Each kind of monster has its own icon, drawn from the monster itself (Visuals.MonsterIcons).
             graphic.UseMonsterIcon(monster, tint);
         }

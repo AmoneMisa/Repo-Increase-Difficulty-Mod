@@ -16,8 +16,8 @@ internal enum CartKind : byte { Soul = 1, Wide = 2, Double = 3 }
 /// and extraction all stay the game's own):
 ///  - Soul C.A.R.T.: the little Pocket C.A.R.T., 33% dearer than the big C.A.R.T. It carries monster souls only, up
 ///    to $55K of them: anything else, or a soul that would go over the limit, is pushed back out (host).
-///  - Wide C.A.R.T.: the big C.A.R.T. made wider (ModConfig.WideCartWidth, 1.25x by default so it still fits
-///    through doorways); 20% dearer.
+///  - Wide C.A.R.T.: 1.5x the big C.A.R.T.'s floor space; 1.25x wider by default (ModConfig.WideCartWidth, so it
+///    still fits through doorways) and longer by the rest (1.2x); 20% dearer.
 ///  - Double-Decker C.A.R.T.: the big C.A.R.T. 25% shorter with a second deck. The upper deck covers the back of the
 ///    cart; the front stays open down to the lower deck. It weighs as much as two C.A.R.T.s; 25% dearer.
 /// Reshaping moves and scales the cart's own parts (walls, floor, the in-cart volume the haul screen reads), so
@@ -28,6 +28,8 @@ internal static class CustomCarts
     internal const string SoulAsset = "Item Cart Soul", WideAsset = "Item Cart Wide", DoubleAsset = "Item Cart Double";
     internal static bool IsModCart(string assetName) => assetName == SoulAsset || assetName == WideAsset || assetName == DoubleAsset;
 
+    private const float WideArea = 1.5f; // floor space of the Wide C.A.R.T. relative to the big C.A.R.T.
+    private static float WideWidth => Mathf.Clamp(ModConfig.WideCartWidth.Value, 1f, 1.5f);
     private const float DoubleLength = .75f, DoubleHeight = 2f, UpperDeckShare = .6f;
     private const float StandardMass = 8f; // PhysGrabCart.Start sets every cart to this
 
@@ -49,7 +51,7 @@ internal static class CustomCarts
                 $"A little C.A.R.T. built for monster souls: it carries souls only, up to ${ModConfig.SoulCartValueCap.Value / 1000f:0.#}K of them. " +
                 "Anything else, or a soul over the limit, is pushed back out.");
             Make(big, big, WideAsset, "Wide C.A.R.T.", CartKind.Wide, 1.2f, new Color(.3f, .85f, .8f),
-                $"A C.A.R.T. {Mathf.RoundToInt((Mathf.Clamp(ModConfig.WideCartWidth.Value, 1f, 1.5f) - 1f) * 100f)}% wider than the big C.A.R.T., still narrow enough for doorways.");
+                $"A bigger C.A.R.T.: 50% more room than the big C.A.R.T. ({Mathf.RoundToInt((WideWidth - 1f) * 100f)}% wider and {Mathf.RoundToInt((WideArea / WideWidth - 1f) * 100f)}% longer), still narrow enough for doorways.");
             Make(big, big, DoubleAsset, "Double-Decker C.A.R.T.", CartKind.Double, 1.25f, new Color(.55f, .9f, .35f),
                 "A shorter C.A.R.T. with two decks. The upper deck covers the back; slide loot under it through the open front. " +
                 "Heavy: it weighs as much as two C.A.R.T.s.");
@@ -82,7 +84,8 @@ internal static class CustomCarts
         float mass = 0f;
         // 1.5x (the first version) no longer fit through doorways; the width is now a setting, 1.25x by default.
         // Built on every PC from its own config: the host's value drives the physics, so players should keep it equal.
-        if (kind == CartKind.Wide) Reshape(go, new Vector3(Mathf.Clamp(ModConfig.WideCartWidth.Value, 1f, 1.5f), 1f, 1f));
+        // Longer by as much as it is narrower than the first 1.5x version, so the floor keeps 1.5x the space.
+        if (kind == CartKind.Wide) Reshape(go, new Vector3(WideWidth, 1f, WideArea / WideWidth));
         if (kind == CartKind.Double)
         {
             Reshape(go, new Vector3(1f, DoubleHeight, DoubleLength));

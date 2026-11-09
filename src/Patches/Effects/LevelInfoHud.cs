@@ -395,7 +395,10 @@ internal sealed class LevelInfoHud : MonoBehaviour
         // region is not lost to an empty footer. Neither block can overlap the native level/inventory band.
         bool namesPaged = _modsLabel.enabled && _modsLabel.textInfo.pageCount > 1;
         int pages = 1;
-        if (rt.rect.height >= _descriptionLabel.fontSize && !string.IsNullOrEmpty(_descriptionLabel.text))
+        // One full line must fit: Teko's line height is about 1.5x the font size, and a TMP page shorter than a line
+        // draws nothing at all (the descriptions were enabled yet invisible, with no warning).
+        float line = _descriptionLabel.fontSize * 1.6f;
+        if (rt.rect.height >= line && !string.IsNullOrEmpty(_descriptionLabel.text))
         {
             _descriptionLabel.enabled = true;
             _descriptionLabel.ForceMeshUpdate();
@@ -407,11 +410,13 @@ internal sealed class LevelInfoHud : MonoBehaviour
         {
             if (pages == 1) footerLines++; // shrinking for the footer may push the text onto a second page
             footer = _detailsPageLabel.fontSize * 1.4f * footerLines;
-            if (rt.rect.height - footer < _descriptionLabel.fontSize) { _descriptionLabel.enabled = false; return; }
+            if (rt.rect.height - footer < line) { _descriptionLabel.enabled = false; return; }
             rt.sizeDelta = new Vector2(rt.sizeDelta.x, rt.rect.height - footer);
             _descriptionLabel.ForceMeshUpdate();
             pages = Mathf.Max(1, _descriptionLabel.textInfo.pageCount);
         }
+        // Still no line laid out: report it as hidden by layout rather than show an empty block.
+        if (_descriptionLabel.enabled && _descriptionLabel.textInfo.lineCount == 0) _descriptionLabel.enabled = false;
         if (SemiFunc.NoTextInputsActive())
         {
             if (Input.GetKeyDown(KeyCode.RightArrow)) _detailsPage = _detailsPage % pages + 1;
@@ -596,7 +601,8 @@ internal sealed class LevelInfoHud : MonoBehaviour
         _mapLabel.text = TabOpen && SafeRunIsLevel() ? mapInfo : "";
         float mapHeight = string.IsNullOrEmpty(_mapLabel.text) ? 0f :
             _mapLabel.GetPreferredValues(_mapLabel.text, width, Mathf.Infinity).y;
-        float mapBudget = string.IsNullOrEmpty(_modsLabel.text) ? available * 0.8f : available * 0.45f;
+        // The Map Suite block pages itself (, / .), so with modifiers it gets the smaller share and the descriptions the rest.
+        float mapBudget = string.IsNullOrEmpty(_modsLabel.text) ? available * 0.8f : available * 0.35f;
         SetBlock(_mapLabel, right, top, width, Mathf.Min(mapHeight, mapBudget));
         if (_mapLabel.enabled)
         {

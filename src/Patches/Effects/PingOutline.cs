@@ -84,10 +84,42 @@ internal sealed class PingOutline : MaskableGraphic
     internal void AttachBeacon(float duration, Color tint) => _beacon = PingBeacon.Create(_point, duration, tint, emblem: false);
 
     /// <summary>Enemy pings: frame the target with a rotating red reticle instead of a silhouette.</summary>
-    internal void UseReticle()
+    private Color _reticleTint = Color.white;
+
+    /// <summary>Enemy reticle in the given colour (the monster's tier colour).</summary>
+    internal void UseReticle(Color tint)
     {
+        _reticleTint = tint;
         _reticleOuter = ReticleImage("ping_reticle_outer.png");
         _reticleInner = ReticleImage("ping_reticle_inner.png");
+    }
+
+    // The reticle art is drawn red; a white copy (brightness kept as white, alpha and glow unchanged) lets the
+    // RawImage colour give any tint without darkening it. Made once per texture.
+    private static readonly System.Collections.Generic.Dictionary<string, Texture2D> WhiteReticles = new();
+    private static Texture2D WhiteReticle(string name)
+    {
+        if (WhiteReticles.TryGetValue(name, out var cached) && cached != null) return cached;
+        var source = UpgradeIcons.LoadTexture(name);
+        if (source == null) return null;
+        Texture2D white = source;
+        try
+        {
+            var pixels = source.GetPixels32();
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                var p = pixels[i];
+                byte v = (byte)Mathf.Max(p.r, Mathf.Max(p.g, p.b));
+                pixels[i] = new Color32(v, v, v, p.a);
+            }
+            white = new Texture2D(source.width, source.height, TextureFormat.RGBA32, true)
+                { name = source.name + " (white)", wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear, hideFlags = HideFlags.HideAndDontSave };
+            white.SetPixels32(pixels);
+            white.Apply(true, false);
+        }
+        catch (System.Exception e) { Plugin.Log.LogWarning($"[Ping] Reticle recolour unavailable ({e.Message}); using the red art."); white = source; }
+        WhiteReticles[name] = white;
+        return white;
     }
 
     private bool HasReticle => _reticleOuter != null;
@@ -208,7 +240,7 @@ internal sealed class PingOutline : MaskableGraphic
         var go = new GameObject("Reticle", typeof(RectTransform), typeof(CanvasRenderer));
         go.transform.SetParent(_root.transform, false);
         var image = go.AddComponent<RawImage>();
-        image.texture = UpgradeIcons.LoadTexture(texture);
+        image.texture = WhiteReticle(texture);
         image.raycastTarget = false;
         image.maskable = false;
         image.rectTransform.anchorMin = image.rectTransform.anchorMax = Vector2.zero;
@@ -243,7 +275,7 @@ internal sealed class PingOutline : MaskableGraphic
             if (image == null) continue;
             image.rectTransform.anchoredPosition = rectangle.center;
             image.rectTransform.sizeDelta = Vector2.one * side * (image == _reticleInner ? .68f * pulse : 1f);
-            image.color = Color.white;
+            image.color = _reticleTint;
             image.canvasRenderer.SetAlpha(alpha * intro);
         }
         if (_reticleOuter != null) _reticleOuter.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -age * 40f);

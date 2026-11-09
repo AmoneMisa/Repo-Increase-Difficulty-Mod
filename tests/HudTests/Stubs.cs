@@ -24,7 +24,7 @@ namespace TMPro {
  public enum TextAlignmentOptions {Top,TopRight}
  [Flags] public enum FontStyles {Normal=0,UpperCase=1}
  public enum TextOverflowModes {Ellipsis,Page}
- public class TextInfo {public int pageCount=1;}
+ public class TextInfo {public int pageCount=1,lineCount=1;}
  public class TextMeshProUGUI:Component {public object font,fontSharedMaterial;public float fontSize=30,fontSizeMax=30,fontSizeMin=30,characterSpacing,lineSpacing;public FontStyles fontStyle;public Color color;public TextAlignmentOptions alignment;public bool enableWordWrapping,raycastTarget,richText,enableAutoSizing,enabled;public bool isActiveAndEnabled=>enabled&&gameObject.activeInHierarchy;public string text="";public TextOverflowModes overflowMode;public int pageToDisplay=1;public TextInfo textInfo=new();public UnityEngine.Canvas canvas;public RectTransform rectTransform=>(RectTransform)transform;public Bounds textBounds=new(){min=new(0,100),max=new(200,140)};public void ForceMeshUpdate(){}public Vector2 GetPreferredValues(string t,float w,float h)=>new(w,(t.Split('\n').Length)*fontSize);}
 }
 namespace ExitGames.Client.Photon {public class EventData{public byte Code;public int Sender;public object CustomData;}public struct SendOptions{public static SendOptions SendReliable=>new();}}
