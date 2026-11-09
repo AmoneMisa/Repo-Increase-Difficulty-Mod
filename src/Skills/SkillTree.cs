@@ -33,6 +33,8 @@ internal sealed class SkillNode
     /// <summary>0 for a normal perk; 1-3 for a trade-off skill (see <see cref="TradeOffRules"/>): one pick per tier
     /// per page, opened by points spent in that page's normal perks, tiers II and III needing the tier below.</summary>
     public int Tier;
+    /// <summary>The prerequisite must be at its maximum level, not just learned (Flash Stun needs maxed Brightness).</summary>
+    public bool RequiresMaxed;
 
     public int TotalCost => Cost * MaxLevel;
 }
@@ -105,7 +107,7 @@ internal static class SkillRules
         if (loadout.BoughtLevel(id) + loadout.FreeLevel(id) + count > node.MaxLevel) return BuyBlock.Maxed;
         if (node.QuestOnly) return BuyBlock.QuestOnly;
         foreach (var need in node.Requires)
-            if (loadout.Level(need) < 1) return BuyBlock.MissingPrerequisite;
+            if (loadout.Level(need) < (node.RequiresMaxed ? SkillCatalog.Find(need)?.MaxLevel ?? 1 : 1)) return BuyBlock.MissingPrerequisite;
         if (node.Tier > 0)
         {
             var tier = TradeOffBlock(loadout, node);

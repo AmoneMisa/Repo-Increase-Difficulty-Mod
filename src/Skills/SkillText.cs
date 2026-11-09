@@ -67,6 +67,7 @@ internal static class SkillText
             case C.FlashTuning: return $"Your flashlight reaches {Pct(ModConfig.SkillFlashRange.Value)} farther.";
             case C.BeamWidth: return $"+{Pct(ModConfig.SkillFlashWidthPerLevel.Value)} wider beam per level.";
             case C.Brightness: return $"+{Pct(ModConfig.SkillFlashBrightnessPerLevel.Value)} brighter beam per level.";
+            case C.FlashStun: return $"Needs maxed Brightness. Press [{ModConfig.FlashStunKey.Value}] to flare your flashlight: monsters in the beam are stunned for {ModConfig.FlashStunSeconds.Value:0.#} s. Level 1 stuns tier 1 monsters, level 2 also tier 2, level 3 every tier. {ModConfig.FlashStunCooldown.Value:0} s cooldown.";
             case C.BeamColour: return "Choose a beam colour your team sees too. Click again to change it.";
 
             case C.Brawler: return $"+{Pct(root)} melee, grenade and tumble damage.";
@@ -196,6 +197,7 @@ internal static class SkillText
             case C.FlashTuning: return $"Фонарь светит на {Pct(ModConfig.SkillFlashRange.Value)} дальше.";
             case C.BeamWidth: return $"Луч на {Pct(ModConfig.SkillFlashWidthPerLevel.Value)} шире за уровень.";
             case C.Brightness: return $"Луч на {Pct(ModConfig.SkillFlashBrightnessPerLevel.Value)} ярче за уровень.";
+            case C.FlashStun: return $"Нужна максимальная яркость. Нажмите [{ModConfig.FlashStunKey.Value}], чтобы фонарь вспыхнул: монстры в луче оглушены на {ModConfig.FlashStunSeconds.Value:0.#} с. 1 уровень оглушает монстров 1-го уровня опасности, 2 — ещё и 2-го, 3 — всех. Перезарядка {ModConfig.FlashStunCooldown.Value:0} с.";
             case C.BeamColour: return "Выберите цвет луча, его видит и команда. Нажмите ещё раз, чтобы сменить.";
 
             case C.Brawler: return $"+{Pct(root)} к урону в ближнем бою, гранатами и кувырком.";

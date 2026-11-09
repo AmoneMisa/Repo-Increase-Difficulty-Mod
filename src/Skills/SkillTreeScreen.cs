@@ -19,11 +19,23 @@ internal sealed class SkillTreeScreen : MonoBehaviour
     private static bool _openRequested;
 
     private static readonly SkillPage[] Pages = { SkillPage.Recon, SkillPage.Combat, SkillPage.Survival, SkillPage.Utility, SkillPage.Arsenal, SkillPage.Contracts, SkillPage.Courier };
+    // " · BONUS +2 POWER (8 TO NEXT)": the page's main-stat bonus from points spent on it (SectionBonusRules).
+    private static string PageBonusText(SkillLoadout loadout, SkillPage page)
+    {
+        var stats = SectionBonusRules.Stats(page);
+        if (stats.Length == 0 || !ModConfig.SkillPageBonuses.Value) return "";
+        int spent = SkillRules.PageSpent(loadout, page);
+        int levels = SectionBonusRules.Levels(spent), next = SectionBonusRules.ToNext(spent);
+        string names = string.Join(Ru ? " и " : " & ", System.Array.ConvertAll(stats, st => SectionBonusRules.StatName(st, Ru).ToUpperInvariant()));
+        string tail = next > 0 ? L($" ({next} TO NEXT)", $" (ЕЩЁ {next})") : L(" (MAX)", " (МАКС.)");
+        return $" · {L("BONUS", "БОНУС")} +{levels}/{SectionBonusRules.MaxLevels} {names}{tail}";
+    }
+
     private static readonly string[] PageNames = { "RECON", "COMBAT", "SURVIVAL", "UTILITY", "ARSENAL", "CONTRACTS", "COURIER" };
     private static readonly string[] PageNamesRu = { "РАЗВЕДКА", "БОЙ", "ВЫЖИВАНИЕ", "СНАРЯЖЕНИЕ", "АРСЕНАЛ", "КОНТРАКТЫ", "КУРЬЕР" };
     private static bool Ru => SkillText.Russian;
     private static string L(string en, string ru) => Ru ? ru : en;
-    private static readonly string[] TabLabels = { "1", "2", "3", "4", "5", "6" };
+    private static readonly string[] TabLabels = { "1", "2", "3", "4", "5", "6", "7" }; // one per page: the Courier page (7) had no tab
     private static readonly Color[] Accents =
     {
         new(.35f, .9f, 1f), new(1f, .42f, .32f), new(.3f, 1f, .78f), new(.82f, .5f, 1f), new(1f, .84f, .3f), new(1f, .62f, .85f),
@@ -198,7 +210,7 @@ internal sealed class SkillTreeScreen : MonoBehaviour
         bool canSpend = SkillStore.SpendAllowedHere();
         string where = canSpend ? L("CLICK A PERK TO LEARN IT", "НАЖМИТЕ НА НАВЫК, ЧТОБЫ ИЗУЧИТЬ")
             : L("VIEW ONLY: SPEND POINTS IN THE SHOP OR TRUCK", "ТОЛЬКО ПРОСМОТР: ОЧКИ ТРАТЯТСЯ В МАГАЗИНЕ ИЛИ ГРУЗОВИКЕ");
-        _view.SetHeader(L("SKILL TREE", "ДЕРЕВО НАВЫКОВ"), $"{L("PAGE", "СТРАНИЦА")} {_page + 1}/{Pages.Length} · {(Ru ? PageNamesRu : PageNames)[_page]}   ·   {where}",
+        _view.SetHeader(L("SKILL TREE", "ДЕРЕВО НАВЫКОВ"), $"{L("PAGE", "СТРАНИЦА")} {_page + 1}/{Pages.Length} · {(Ru ? PageNamesRu : PageNames)[_page]}{PageBonusText(loadout, page)}   ·   {where}",
             $"{loadout.Available} {Points(loadout.Available, true)}  <size=70%><color=#BBBBBB>({L("EARNED", "ПОЛУЧЕНО")} {loadout.Earned})</color></size>");
         _view.SetTabs(TabLabels, _page, accent);
 

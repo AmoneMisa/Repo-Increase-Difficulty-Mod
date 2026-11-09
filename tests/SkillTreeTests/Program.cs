@@ -1,4 +1,4 @@
-﻿using IncreaseHardMod.Skills;
+using IncreaseHardMod.Skills;
 using C = IncreaseHardMod.Skills.SkillCatalog;
 
 // Engine-free checks of the skill tree model (src/Skills): catalogue, buy rules, sanitising and save migration.
@@ -6,11 +6,11 @@ int checks = 0;
 void Check(bool ok, string name) { if (!ok) throw new Exception("FAIL " + name); Console.WriteLine("PASS " + name); checks++; }
 
 // ---------------------------------------------------------------- catalogue
-Check(C.NormalPageCost(SkillPage.Recon) == 34 && C.NormalPageCost(SkillPage.Combat) == 50 &&
+Check(C.NormalPageCost(SkillPage.Recon) == 40 && C.NormalPageCost(SkillPage.Combat) == 50 &&
       C.NormalPageCost(SkillPage.Survival) == 43 && C.NormalPageCost(SkillPage.Utility) == 41 && C.NormalPageCost(SkillPage.Arsenal) == 42, "Normal page costs match the plan");
-Check(C.PageCost(SkillPage.Recon) == 40 && C.PageCost(SkillPage.Combat) == 56 && C.PageCost(SkillPage.Survival) == 49 &&
+Check(C.PageCost(SkillPage.Recon) == 46 && C.PageCost(SkillPage.Combat) == 56 && C.PageCost(SkillPage.Survival) == 49 &&
       C.PageCost(SkillPage.Utility) == 47 && C.PageCost(SkillPage.Arsenal) == 48, "Each page adds one trade-off per tier (1+2+3 points)");
-Check(C.TotalCost() == 280, "Whole tree costs 280 points (250 normal + 30 trade-off picks)");
+Check(C.TotalCost() == 286, "Whole tree costs 286 points (256 normal + 30 trade-off picks)");
 
 {
     int look = IncreaseHardMod.Courier.CourierRules.PackLook(3, 5, IncreaseHardMod.Courier.CourierRules.DefaultSwatch, 11);
@@ -267,5 +267,28 @@ Check(PerkRules.LuckyWeights(65, 20, 10, 5, 1, 10).SequenceEqual(new[] { 55, 25,
       PerkRules.LuckyWeights(65, 20, 10, 5, 0, 10).SequenceEqual(new[] { 65, 20, 10, 5 }), "Lucky Finder shifts skill box odds toward points");
 Check(PerkRules.LuckyWeights(5, 0, 0, 0, 2, 10).Sum() == 5 && PerkRules.LuckyWeights(5, 0, 0, 0, 2, 10)[0] == 0, "Lucky Finder keeps the total and never goes negative");
 Check(PerkRules.LuckyCrystalCharge(20f, 2, 5f) == 30f && PerkRules.LuckyCrystalCharge(20f, 0, 5f) == 20f, "Lucky Finder: +5% crystal charge per level");
+
+// ---------------------------------------------------------------- Flash Stun
+{
+    var flash = new SkillLoadout { Earned = 40 };
+    flash.Bought[C.FlashTuning] = 1; flash.Bought[C.Brightness] = 2;
+    Check(SkillRules.CanBuy(flash, C.FlashStun) == BuyBlock.MissingPrerequisite, "Flash Stun stays locked until Brightness is maxed");
+    flash.Bought[C.Brightness] = 3;
+    Check(SkillRules.CanBuy(flash, C.FlashStun) == BuyBlock.None && C.Find(C.FlashStun).MaxLevel == 3 && C.Find(C.FlashStun).Page == SkillPage.Recon,
+        "Flash Stun opens with maxed Brightness: three levels on the Recon page");
+}
+
+// ---------------------------------------------------------------- page bonuses
+Check(SectionBonusRules.Levels(0) == 0 && SectionBonusRules.Levels(9) == 0 && SectionBonusRules.Levels(10) == 1 &&
+      SectionBonusRules.Levels(29) == 2 && SectionBonusRules.Levels(30) == 3 && SectionBonusRules.Levels(50) == 3, "Page bonus: +1 per 10 points, at most +3");
+Check(SectionBonusRules.ToNext(0) == 10 && SectionBonusRules.ToNext(14) == 6 && SectionBonusRules.ToNext(30) == 0, "Page bonus shows points to the next level, 0 when maxed");
+Check(SectionBonusRules.Delta(0, 25) == 2 && SectionBonusRules.Delta(3, 0) == -3 && SectionBonusRules.Delta(2, 29) == 0, "Bonus sync grants the difference and takes it all back on a refund");
+Check(SectionBonusRules.Stats(SkillPage.Combat).SequenceEqual(new[] { "Strength" }) && SectionBonusRules.Stats(SkillPage.Survival).SequenceEqual(new[] { "Health" }) &&
+      SectionBonusRules.Stats(SkillPage.Recon).SequenceEqual(new[] { "Speed" }) && SectionBonusRules.Stats(SkillPage.Courier).SequenceEqual(new[] { "Stamina" }) &&
+      SectionBonusRules.Stats(SkillPage.Arsenal).SequenceEqual(new[] { "Launch" }) && SectionBonusRules.Stats(SkillPage.Utility).SequenceEqual(new[] { "Range", "DeathHeadBattery" }) &&
+      SectionBonusRules.Stats(SkillPage.Contracts).Length == 0, "Each page raises its themed game stat; Contracts none");
+foreach (SkillPage page in Enum.GetValues(typeof(SkillPage)))
+    if (SectionBonusRules.Stats(page).Length > 0)
+        Check(C.NormalPageCost(page) >= SectionBonusRules.PointsPerLevel * SectionBonusRules.MaxLevels, $"{page}: its normal perks can reach the full +3 bonus");
 
 Console.WriteLine($"All {checks} skill tree checks passed.");

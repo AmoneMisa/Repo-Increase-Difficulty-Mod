@@ -370,6 +370,9 @@ public static class ModConfig
     public static ConfigEntry<int> ShopPriceBaselinePlayers;
     public static ConfigEntry<float> ShopPricePerExtraPlayer;
     public static ConfigEntry<int> ShopDuplicatesExtra;
+    public static ConfigEntry<bool> SkillPageBonuses;
+    public static ConfigEntry<UnityEngine.KeyCode> FlashStunKey;
+    public static ConfigEntry<float> FlashStunSeconds, FlashStunCooldown;
     public static ConfigEntry<int> ShopExtraItems, ShopExtraUpgrades;
 
     // --- Diagnostics ---
@@ -966,6 +969,11 @@ public static class ModConfig
         ShopDuplicatesExtra = BindInt(cfg,
             "Shop", "DuplicatesExtra", 0, 0, 10,
             "Allow the same item (e.g. a gun) to appear more than once in a single shop by adding this many extra copies of each item to the shop pool. 0 = vanilla (usually one of each).");
+        FlashStunKey = cfg.Bind("Skill Tree", "FlashStunKey", UnityEngine.KeyCode.F, "Flash Stun perk: flares your flashlight to stun monsters in the beam.");
+        FlashStunSeconds = BindFloat(cfg, "Skill Tree", "FlashStunSeconds", 2f, .5f, 6f, "How long Flash Stun stuns monsters in the beam. Host setting.");
+        FlashStunCooldown = BindFloat(cfg, "Skill Tree", "FlashStunCooldown", 45f, 5f, 300f, "Seconds between Flash Stun uses. Host setting.");
+        SkillPageBonuses = cfg.Bind("Skill Tree", "PageBonuses", true,
+            "Every 10 points spent on a skill tree page's perks give +1 level (up to +3) of a main stat, like a shop upgrade: Combat Power, Survival Health, Recon Sprint Speed, Courier Stamina, Arsenal Tumble Launch, Utility Range and Death Head Battery. Host setting.");
         ShopExtraItems = BindInt(cfg, "Shop", "ExtraItems", 4, 0, 20,
             "Extra different regular items (weapons, tools, drones...) stocked per shop visit on top of the game's 8. Never copies of the same item; they go on free shelf slots, using a bigger free slot when no slot of their own size is left.");
         ShopExtraUpgrades = BindInt(cfg, "Shop", "ExtraUpgrades", 3, 0, 20,

@@ -41,6 +41,8 @@ internal static class SkillStore
         RepoUpgrades.RegisterUpgrade(PointsId, null, null, OnChanged);
         RepoUpgrades.RegisterUpgrade(MigratedId, null, null, null);
         RepoUpgrades.RegisterUpgrade(SkillEffects.BeamColourChoiceId, null, null, null);
+        foreach (SkillPage page in Enum.GetValues(typeof(SkillPage)))
+            foreach (string stat in SectionBonusRules.Stats(page)) RepoUpgrades.RegisterUpgrade(BonusId(page, stat), null, null, OnChanged);
 
         // The shop's Skill Point: an upgrade card that gives +1 point to whoever uses it. Repurchasable; the game
         // raises its price with every copy the team buys, like any upgrade.
@@ -98,13 +100,23 @@ internal static class SkillStore
 
     internal static int EarnedPoints(string steamId) => Raw(PointsId, steamId);
 
+    /// <summary>Hidden counter of the game-stat levels a page bonus has granted this player (so respecs remove exactly those).</summary>
+    internal static string BonusId(SkillPage page, string stat) => Prefix + "Bonus" + page + stat;
+    internal static int BonusGranted(SkillPage page, string stat, string steamId) => Raw(BonusId(page, stat), steamId);
+
+    // A vanilla node's free levels are the game stat above what the tree bought, minus what page bonuses added
+    // (Utility's Death Head Battery bonus must not show up as free Death Head Battery perk levels).
+    private static int VanillaOutsideBonus(VanillaUpgrade kind, string steamId) =>
+        VanillaLevel(kind, steamId) - (kind == VanillaUpgrade.DeathHeadBattery
+            ? BonusGranted(SkillPage.Utility, SectionBonusRules.DeathHeadBattery, steamId) : 0);
+
     /// <summary>The level a perk's effect should use for this player.</summary>
     internal static int Level(string steamId, string nodeId)
     {
         var node = SkillCatalog.Find(nodeId);
         if (node == null) return 0;
         int bought = Raw(nodeId, steamId);
-        int free = node.Vanilla != VanillaUpgrade.None ? Math.Max(0, VanillaLevel(node.Vanilla, steamId) - bought) : 0;
+        int free = node.Vanilla != VanillaUpgrade.None ? Math.Max(0, VanillaOutsideBonus(node.Vanilla, steamId) - bought) : 0;
         return Math.Min(node.MaxLevel, bought + free);
     }
 
@@ -120,7 +132,7 @@ internal static class SkillStore
             if (bought > 0) loadout.Bought[node.Id] = bought;
             if (node.Vanilla != VanillaUpgrade.None)
             {
-                int free = Math.Max(0, VanillaLevel(node.Vanilla, steamId) - bought);
+                int free = Math.Max(0, VanillaOutsideBonus(node.Vanilla, steamId) - bought);
                 if (free > 0) loadout.Free[node.Id] = free;
             }
         }
@@ -272,6 +284,7 @@ internal static class SkillStore
         var node = SkillCatalog.Find(nodeId);
         if (node.Vanilla != VanillaUpgrade.None) VanillaAdd(node.Vanilla, steamId, count);
         Plugin.Log.LogInfo($"[Skills] {steamId} bought {nodeId} x{count} -> {loadout.Level(nodeId)}/{node.MaxLevel}; {loadout.Available} point(s) left.");
+        HostSyncBonuses(steamId);
         return BuyBlock.None;
     }
 
@@ -297,6 +310,7 @@ internal static class SkillStore
             if (node != null && node.Vanilla != VanillaUpgrade.None) VanillaAdd(node.Vanilla, steamId, -pair.Value);
         }
         Plugin.Log.LogInfo($"[Skills] {steamId} refunded {loadout.Spent} point(s) for ${fee}K.");
+        HostSyncBonuses(steamId);
         return BuyBlock.None;
     }
 
@@ -318,6 +332,7 @@ internal static class SkillStore
         foreach (var pair in loadout.Bought)
             if (SkillCatalog.Find(pair.Key)?.Tier > 0) Write(pair.Key, steamId, 0);
         Plugin.Log.LogInfo($"[Skills] {steamId} reset trade-offs: refunded {spent} point(s) for ${fee}K.");
+        HostSyncBonuses(steamId);
         return BuyBlock.None;
     }
 
@@ -326,9 +341,41 @@ internal static class SkillStore
     {
         var pun = PunManager.instance;
         if (pun == null || amount == 0) return;
-        string name = kind == VanillaUpgrade.DeathHeadBattery ? "DeathHeadBattery" : "TumbleWings";
+        VanillaCommand(kind == VanillaUpgrade.DeathHeadBattery ? "DeathHeadBattery" : "TumbleWings", steamId, amount);
+    }
+
+    private static void VanillaCommand(string name, string steamId, int amount)
+    {
+        var pun = PunManager.instance;
+        if (pun == null || amount == 0) return;
         if (SemiFunc.IsMultiplayer()) pun.photonView.RPC("TesterUpgradeCommandRPC", RpcTarget.All, steamId, name, amount);
         else pun.TesterUpgradeCommandRPC(steamId, name, amount);
+    }
+
+    /// <summary>
+    /// Host: make a player's page bonuses match their tree. For every page and stat, the game upgrade moves by the
+    /// difference between what the page earns now and what was granted before, through the game's own upgrade
+    /// call, and the granted counter is saved. Run after every buy, refund and trade-off reset, and once per player
+    /// when the save is bound, so existing trees get their bonus too.
+    /// </summary>
+    internal static void HostSyncBonuses(string steamId)
+    {
+        if (!Host || !Ready || string.IsNullOrEmpty(steamId)) return;
+        bool enabled = ModConfig.SkillPageBonuses.Value; // turned off: earlier bonuses are taken back
+        var loadout = LoadoutOf(steamId);
+        foreach (SkillPage page in Enum.GetValues(typeof(SkillPage)))
+        {
+            int spent = enabled ? SkillRules.PageSpent(loadout, page) : 0;
+            foreach (string stat in SectionBonusRules.Stats(page))
+            {
+                int granted = BonusGranted(page, stat, steamId);
+                int delta = SectionBonusRules.Delta(granted, spent);
+                if (delta == 0) continue;
+                VanillaCommand(stat, steamId, delta);
+                Write(BonusId(page, stat), steamId, granted + delta);
+                Plugin.Log.LogInfo($"[Skills] {steamId}: {page} page bonus {stat} {(delta > 0 ? "+" : "")}{delta} -> {granted + delta} ({spent} point(s) on the page).");
+            }
+        }
     }
 
     /// <summary>Host: convert a player's old shop upgrades into tree nodes, once per save (see <see cref="SkillMigration"/>).</summary>
@@ -393,7 +440,7 @@ internal static class SkillStore
             {
                 string steamId = player != null ? player.steamID : null;
                 if (string.IsNullOrEmpty(steamId) || !_done.Add(steamId)) continue;
-                try { HostMigrate(steamId); }
+                try { HostMigrate(steamId); HostSyncBonuses(steamId); }
                 catch (Exception error) { _done.Remove(steamId); Plugin.Log.LogError($"[Skills] Migration for {steamId} failed: {error}"); }
             }
         }

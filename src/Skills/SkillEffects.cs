@@ -261,7 +261,7 @@ internal static class SkillEffects
             }
             light.range = beam.Range * range;
             light.spotAngle = Mathf.Min(170f, beam.Angle * angle);
-            light.intensity *= bright; // the game rewrites intensity every frame, so this never compounds
+            light.intensity *= bright * FlashStun.Flare(owner); // the game rewrites intensity every frame, so this never compounds
             light.color = colour > 0 ? BeamColours[colour] : beam.Colour;
             TintLamp(__instance, beam, colour);
         }

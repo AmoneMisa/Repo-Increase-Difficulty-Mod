@@ -160,6 +160,7 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<Patches.Effects.HostRunControls>();
         netObject.AddComponent<Skills.SkillStore.HostController>();
         netObject.AddComponent<Skills.SkillEffects.StaminaController>();
+        netObject.AddComponent<Skills.FlashStun>();
         netObject.AddComponent<Skills.SupportPerks.StatusController>();
         // Oracle trade-off: every valuable on the local map.
         netObject.AddComponent<Skills.TradeOffs.OracleController>();

@@ -18,7 +18,8 @@ internal static class SkillCatalog
         CosmeticTracker = P + "CosmeticTracker", BetterMap = P + "BetterMap", MapLandmarks = P + "MapLandmarks";
     public const string Ping = P + "Ping", TargetInfo = P + "TargetInfo", EnemyHp = P + "EnemyHp", LootCondition = P + "LootCondition",
         Weight = P + "Weight", Threat = P + "Threat", PingRange = P + "PingRange", PingPath = P + "PingPath", PingCompass = P + "PingCompass";
-    public const string FlashTuning = P + "FlashTuning", BeamWidth = P + "BeamWidth", Brightness = P + "Brightness", BeamColour = P + "BeamColour";
+    public const string FlashTuning = P + "FlashTuning", BeamWidth = P + "BeamWidth", Brightness = P + "Brightness", BeamColour = P + "BeamColour",
+        FlashStun = P + "FlashStun";
     // Combat
     public const string Brawler = P + "Brawler", GrenadeDamage = P + "GrenadeDamage", MeleeDamage = P + "MeleeDamage", TumbleDamage = P + "TumbleDamage",
         Vampirism = P + "Vampirism";
@@ -103,6 +104,7 @@ internal static class SkillCatalog
         Add(recon, "Flashlight", BeamWidth, "Beam Width", "Ширина луча", 1, 3, FlashTuning);
         Add(recon, "Flashlight", Brightness, "Brightness", "Яркость луча", 1, 3, FlashTuning);
         Add(recon, "Flashlight", BeamColour, "Beam Colour", "Цвет луча", 1, 1, FlashTuning);
+        Add(recon, "Flashlight", FlashStun, "Flash Stun", "Ослепляющая вспышка", 2, 3, Brightness).RequiresMaxed = true;
 
         var combat = SkillPage.Combat;
         Add(combat, "Damage", Brawler, "Brawler", "Драчун", 1, 1, root: true);
