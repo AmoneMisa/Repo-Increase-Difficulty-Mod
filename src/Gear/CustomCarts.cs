@@ -18,7 +18,7 @@ internal enum CartKind : byte { Soul = 1, Wide = 2, Double = 3 }
 ///    to $55K of them: anything else, or a soul that would go over the limit, is pushed back out (host).
 ///  - Wide C.A.R.T.: 1.5x the big C.A.R.T.'s floor space; 1.25x wider by default (ModConfig.WideCartWidth, so it
 ///    still fits through doorways) and longer by the rest (1.2x); 20% dearer.
-///  - Double-Decker C.A.R.T.: the big C.A.R.T. with walls twice as tall, in the cart's own textures. It weighs as
+///  - Double-Decker C.A.R.T.: the big C.A.R.T. 25% shorter with walls twice as tall, in the cart's own textures. It weighs as
 ///    much as two C.A.R.T.s; 25% dearer.
 /// Reshaping moves and scales the cart's own parts (walls, floor, the in-cart volume the haul screen reads), so
 /// the game's logic sees a bigger or taller cart.
@@ -30,7 +30,7 @@ internal static class CustomCarts
 
     private const float WideArea = 1.5f; // floor space of the Wide C.A.R.T. relative to the big C.A.R.T.
     private static float WideWidth => Mathf.Clamp(ModConfig.WideCartWidth.Value, 1f, 1.5f);
-    private const float DoubleHeight = 2f;
+    private const float DoubleLength = .75f, DoubleHeight = 2f;
     private const float StandardMass = 8f; // PhysGrabCart.Start sets every cart to this
 
     internal static void Build()
@@ -53,7 +53,7 @@ internal static class CustomCarts
             Make(big, big, WideAsset, "Wide C.A.R.T.", CartKind.Wide, 1.2f, new Color(.3f, .85f, .8f),
                 $"A bigger C.A.R.T.: 50% more room than the big C.A.R.T. ({Mathf.RoundToInt((WideWidth - 1f) * 100f)}% wider and {Mathf.RoundToInt((WideArea / WideWidth - 1f) * 100f)}% longer), still narrow enough for doorways.");
             Make(big, big, DoubleAsset, "Double-Decker C.A.R.T.", CartKind.Double, 1.25f, new Color(.55f, .9f, .35f),
-                "A C.A.R.T. with walls twice as tall: stack loot twice as high. Heavy: it weighs as much as two C.A.R.T.s.");
+                "A shorter C.A.R.T. with walls twice as tall: stack loot twice as high. Heavy: it weighs as much as two C.A.R.T.s.");
         }
         catch (Exception e)
         {
@@ -87,7 +87,7 @@ internal static class CustomCarts
         if (kind == CartKind.Wide) Reshape(go, new Vector3(WideWidth, 1f, WideArea / WideWidth));
         if (kind == CartKind.Double)
         {
-            Reshape(go, new Vector3(1f, DoubleHeight, 1f));
+            Reshape(go, new Vector3(1f, DoubleHeight, DoubleLength));
             RaiseWalls(go, DoubleHeight);
             mass = StandardMass * 2f;
             var rb = go.GetComponent<Rigidbody>();
