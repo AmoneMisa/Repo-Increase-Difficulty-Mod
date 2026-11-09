@@ -18,8 +18,8 @@ internal enum CartKind : byte { Soul = 1, Wide = 2, Double = 3 }
 ///    to $55K of them: anything else, or a soul that would go over the limit, is pushed back out (host).
 ///  - Wide C.A.R.T.: 1.5x the big C.A.R.T.'s floor space; 1.25x wider by default (ModConfig.WideCartWidth, so it
 ///    still fits through doorways) and longer by the rest (1.2x); 20% dearer.
-///  - Double-Decker C.A.R.T.: the big C.A.R.T. 25% shorter with a second deck. The upper deck covers the back of the
-///    cart; the front stays open down to the lower deck. It weighs as much as two C.A.R.T.s; 25% dearer.
+///  - Double-Decker C.A.R.T.: the big C.A.R.T. with walls twice as tall, in the cart's own textures. It weighs as
+///    much as two C.A.R.T.s; 25% dearer.
 /// Reshaping moves and scales the cart's own parts (walls, floor, the in-cart volume the haul screen reads), so
 /// the game's logic sees a bigger or taller cart.
 /// </summary>
@@ -30,7 +30,7 @@ internal static class CustomCarts
 
     private const float WideArea = 1.5f; // floor space of the Wide C.A.R.T. relative to the big C.A.R.T.
     private static float WideWidth => Mathf.Clamp(ModConfig.WideCartWidth.Value, 1f, 1.5f);
-    private const float DoubleLength = .75f, DoubleHeight = 2f, UpperDeckShare = .6f;
+    private const float DoubleHeight = 2f;
     private const float StandardMass = 8f; // PhysGrabCart.Start sets every cart to this
 
     internal static void Build()
@@ -53,8 +53,7 @@ internal static class CustomCarts
             Make(big, big, WideAsset, "Wide C.A.R.T.", CartKind.Wide, 1.2f, new Color(.3f, .85f, .8f),
                 $"A bigger C.A.R.T.: 50% more room than the big C.A.R.T. ({Mathf.RoundToInt((WideWidth - 1f) * 100f)}% wider and {Mathf.RoundToInt((WideArea / WideWidth - 1f) * 100f)}% longer), still narrow enough for doorways.");
             Make(big, big, DoubleAsset, "Double-Decker C.A.R.T.", CartKind.Double, 1.25f, new Color(.55f, .9f, .35f),
-                "A shorter C.A.R.T. with two decks. The upper deck covers the back; slide loot under it through the open front. " +
-                "Heavy: it weighs as much as two C.A.R.T.s.");
+                "A C.A.R.T. with walls twice as tall: stack loot twice as high. Heavy: it weighs as much as two C.A.R.T.s.");
         }
         catch (Exception e)
         {
@@ -88,8 +87,8 @@ internal static class CustomCarts
         if (kind == CartKind.Wide) Reshape(go, new Vector3(WideWidth, 1f, WideArea / WideWidth));
         if (kind == CartKind.Double)
         {
-            Reshape(go, new Vector3(1f, DoubleHeight, DoubleLength));
-            AddUpperDeck(go, color);
+            Reshape(go, new Vector3(1f, DoubleHeight, 1f));
+            RaiseWalls(go, DoubleHeight);
             mass = StandardMass * 2f;
             var rb = go.GetComponent<Rigidbody>();
             if (rb != null) rb.mass = mass;
@@ -152,57 +151,57 @@ internal static class CustomCarts
         return new Vector3(Along(Vector3.right), Along(Vector3.up), Along(Vector3.forward));
     }
 
+    // The top of the vanilla cart's walls (the rim), in cart space.
+    private const float WallTop = .255f;
+
     /// <summary>
-    /// Double-Decker: a second floor over the back of the cart (a copy of the cart's own floor, so loot rests on it the
-    /// way it does on the floor below), with a visible deck plate, two front posts and the raised side panels.
+    /// Double-Decker: the cart body's own walls made <paramref name="factor"/> times as tall, in the cart's own textures.
+    /// Every vertex of the body mesh in the upper half of the walls (rim, top edges, wall decals) is lifted by the extra
+    /// height, so the wall faces stretch and the floor, chassis and handle stay as they are. No added plates or floor.
+    /// If the game's mesh can't be read, the body is stretched upward from the wall bottom instead.
     /// </summary>
-    private static void AddUpperDeck(GameObject go, Color color)
+    private static void RaiseWalls(GameObject go, float factor)
     {
-        var inside = go.transform.Find("Inside");
-        var meshRenderer = go.transform.Find("Cart Mesh")?.GetComponent<MeshRenderer>();
-        if (inside == null) { Plugin.Log.LogWarning("[Carts] Double-Decker: cart floor not found; upper deck skipped."); return; }
-
-        // The floor is rotated 90 degrees about X: its local Y runs along the cart (Z) and its local Z is thickness.
-        float floorY = inside.localPosition.y;
-        float halfLength = inside.localScale.y / 2f;
-        float halfWidth = inside.localScale.x / 2f;
-        const float deckY = .24f; // just under the vanilla cart's rim, so the lower deck keeps its full height
-        float deckLength = halfLength * 2f * UpperDeckShare;
-        float deckZ = inside.localPosition.z - halfLength + deckLength / 2f; // from the handle end (-Z)
-
-        var deck = Object.Instantiate(inside.gameObject, go.transform, false);
-        deck.name = "Inside Upper Deck";
-        deck.transform.localPosition = new Vector3(inside.localPosition.x, deckY, deckZ);
-        deck.transform.localScale = new Vector3(inside.localScale.x, deckLength, inside.localScale.z * .5f);
-
-        if (meshRenderer == null) return;
-        var material = ItemArt.Paint(meshRenderer.sharedMaterial, null, Color.Lerp(new Color(.32f, .34f, .38f), color, .25f), "IHM Double Deck");
-        int layer = meshRenderer.gameObject.layer;
-        var visual = new GameObject("IHM Upper Deck Visual") { layer = layer }.transform;
-        visual.SetParent(go.transform, false);
-        float top = WallBottom + (.255f - WallBottom) * DoubleHeight; // raised wall top
-        float frontZ = deckZ + deckLength / 2f;
-        Plate(visual, "Deck", new Vector3(0f, deckY + .03f, deckZ), new Vector3(halfWidth * 2f, .035f, deckLength), material, layer);
-        Plate(visual, "Post L", new Vector3(-halfWidth + .03f, (floorY + deckY) / 2f, frontZ - .03f), new Vector3(.045f, deckY - floorY, .045f), material, layer);
-        Plate(visual, "Post R", new Vector3(halfWidth - .03f, (floorY + deckY) / 2f, frontZ - .03f), new Vector3(.045f, deckY - floorY, .045f), material, layer);
-        float upperMid = (deckY + top) / 2f, upperHeight = top - deckY;
-        float wallX = halfWidth + .02f, wallZ = halfLength + .02f;
-        Plate(visual, "Side L", new Vector3(-wallX, upperMid, 0f), new Vector3(.035f, upperHeight, wallZ * 2f), material, layer);
-        Plate(visual, "Side R", new Vector3(wallX, upperMid, 0f), new Vector3(.035f, upperHeight, wallZ * 2f), material, layer);
-        Plate(visual, "Front", new Vector3(0f, upperMid, wallZ), new Vector3(wallX * 2f, upperHeight, .035f), material, layer);
-        Plate(visual, "Back", new Vector3(0f, upperMid, -wallZ), new Vector3(wallX * 2f, upperHeight, .035f), material, layer);
-    }
-
-    private static void Plate(Transform parent, string name, Vector3 center, Vector3 size, Material material, int layer)
-    {
-        var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        Object.DestroyImmediate(cube.GetComponent<Collider>());
-        cube.name = name;
-        cube.layer = layer;
-        cube.transform.SetParent(parent, false);
-        cube.transform.localPosition = center;
-        cube.transform.localScale = size;
-        cube.GetComponent<MeshRenderer>().sharedMaterial = material;
+        var body = go.transform.Find("Cart Mesh");
+        if (body == null) { Plugin.Log.LogWarning("[Carts] Double-Decker: cart body not found; walls not raised."); return; }
+        float lift = (WallTop - WallBottom) * (factor - 1f);
+        float split = (WallBottom + WallTop) / 2f; // vertices above the middle of the wall move up with the rim
+        var cart = go.transform;
+        var filters = body.GetComponentsInChildren<MeshFilter>(true);
+        int raised = 0, stretched = 0;
+        // One path for the whole body, so a part is never both raised and stretched.
+        foreach (var filter in filters) if (filter.sharedMesh != null && !filter.sharedMesh.isReadable) stretched++;
+        if (stretched == 0)
+        foreach (var filter in filters)
+        {
+            var source = filter.sharedMesh;
+            if (source == null) continue;
+            var mesh = Object.Instantiate(source);
+            mesh.name = source.name + " (IHM tall walls)";
+            var vertices = mesh.vertices;
+            var t = filter.transform;
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                var p = cart.InverseTransformPoint(t.TransformPoint(vertices[i]));
+                if (p.y <= split) continue;
+                p.y += lift;
+                vertices[i] = t.InverseTransformPoint(cart.TransformPoint(p));
+            }
+            mesh.vertices = vertices;
+            mesh.RecalculateBounds();
+            filter.sharedMesh = mesh;
+            raised++;
+        }
+        if (stretched > 0)
+        {
+            // Fallback: stretch the whole body upward from the wall bottom (its parts below the floor barely move).
+            var p = body.localPosition;
+            p.y = WallBottom + (p.y - WallBottom) * factor;
+            body.localPosition = p;
+            body.localScale = Vector3.Scale(body.localScale, LocalFactors(body.localRotation, new Vector3(1f, factor, 1f)));
+        }
+        Plugin.Log.LogInfo($"[Carts] Double-Decker walls x{factor:0.#}: {raised} mesh(es) raised" +
+                           (stretched > 0 ? $", {stretched} unreadable: body stretched instead" : "") + ".");
     }
 
     private static void Tint(GameObject go, Color color)
