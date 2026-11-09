@@ -369,7 +369,7 @@ internal static class SkillStore
             foreach (string stat in SectionBonusRules.Stats(page))
             {
                 int granted = BonusGranted(page, stat, steamId);
-                int delta = SectionBonusRules.Delta(granted, spent);
+                int delta = SectionBonusRules.Delta(stat, granted, spent);
                 if (delta == 0) continue;
                 VanillaCommand(stat, steamId, delta);
                 Write(BonusId(page, stat), steamId, granted + delta);

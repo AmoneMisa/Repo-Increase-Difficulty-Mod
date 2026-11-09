@@ -279,16 +279,24 @@ Check(PerkRules.LuckyCrystalCharge(20f, 2, 5f) == 30f && PerkRules.LuckyCrystalC
 }
 
 // ---------------------------------------------------------------- page bonuses
-Check(SectionBonusRules.Levels(0) == 0 && SectionBonusRules.Levels(9) == 0 && SectionBonusRules.Levels(10) == 1 &&
-      SectionBonusRules.Levels(29) == 2 && SectionBonusRules.Levels(30) == 3 && SectionBonusRules.Levels(50) == 3, "Page bonus: +1 per 10 points, at most +3");
-Check(SectionBonusRules.ToNext(0) == 10 && SectionBonusRules.ToNext(14) == 6 && SectionBonusRules.ToNext(30) == 0, "Page bonus shows points to the next level, 0 when maxed");
-Check(SectionBonusRules.Delta(0, 25) == 2 && SectionBonusRules.Delta(3, 0) == -3 && SectionBonusRules.Delta(2, 29) == 0, "Bonus sync grants the difference and takes it all back on a refund");
+Check(SectionBonusRules.Levels("Strength", 0) == 0 && SectionBonusRules.Levels("Strength", 4) == 0 && SectionBonusRules.Levels("Strength", 5) == 1 &&
+      SectionBonusRules.Levels("Strength", 24) == 4 && SectionBonusRules.Levels("Strength", 25) == 5 && SectionBonusRules.Levels("Strength", 60) == 5,
+      "Page bonus: +1 per 5 points, Power up to +5");
+Check(SectionBonusRules.MaxLevel("Strength") == 5 && SectionBonusRules.MaxLevel("Health") == 5 && SectionBonusRules.MaxLevel("Stamina") == 5 &&
+      SectionBonusRules.MaxLevel("DeathHeadBattery") == 5 && SectionBonusRules.MaxLevel("Speed") == 3 && SectionBonusRules.MaxLevel("Range") == 3 &&
+      SectionBonusRules.MaxLevel("CrouchRest") == 3 && SectionBonusRules.MaxLevel("Launch") == 3, "Per-stat caps: Power, Health, Stamina, Battery +5; Speed, Range, Crouch Rest, Launch +3");
+Check(SectionBonusRules.Levels("Range", 25) == 3 && SectionBonusRules.Levels("DeathHeadBattery", 25) == 5, "Stats on one page cap independently");
+Check(SectionBonusRules.ToNext(SkillPage.Combat, 0) == 5 && SectionBonusRules.ToNext(SkillPage.Combat, 7) == 3 && SectionBonusRules.ToNext(SkillPage.Combat, 25) == 0 &&
+      SectionBonusRules.ToNext(SkillPage.Recon, 15) == 0 && SectionBonusRules.ToNext(SkillPage.Utility, 15) == 5,
+      "Page bonus shows points to the next level, 0 once every stat of the page is maxed");
+Check(SectionBonusRules.Delta("Strength", 0, 25) == 5 && SectionBonusRules.Delta("Speed", 0, 25) == 3 && SectionBonusRules.Delta("Strength", 3, 0) == -3 &&
+      SectionBonusRules.Delta("Speed", 3, 40) == 0, "Bonus sync grants the difference and takes it all back on a refund");
 Check(SectionBonusRules.Stats(SkillPage.Combat).SequenceEqual(new[] { "Strength" }) && SectionBonusRules.Stats(SkillPage.Survival).SequenceEqual(new[] { "Health" }) &&
-      SectionBonusRules.Stats(SkillPage.Recon).SequenceEqual(new[] { "Speed" }) && SectionBonusRules.Stats(SkillPage.Courier).SequenceEqual(new[] { "Stamina" }) &&
+      SectionBonusRules.Stats(SkillPage.Recon).SequenceEqual(new[] { "Speed" }) && SectionBonusRules.Stats(SkillPage.Courier).SequenceEqual(new[] { "Stamina", "CrouchRest" }) &&
       SectionBonusRules.Stats(SkillPage.Arsenal).SequenceEqual(new[] { "Launch" }) && SectionBonusRules.Stats(SkillPage.Utility).SequenceEqual(new[] { "Range", "DeathHeadBattery" }) &&
-      SectionBonusRules.Stats(SkillPage.Contracts).Length == 0, "Each page raises its themed game stat; Contracts none");
+      SectionBonusRules.Stats(SkillPage.Contracts).Length == 0, "Each page raises its themed game stats; Contracts none");
 foreach (SkillPage page in Enum.GetValues(typeof(SkillPage)))
     if (SectionBonusRules.Stats(page).Length > 0)
-        Check(C.NormalPageCost(page) >= SectionBonusRules.PointsPerLevel * SectionBonusRules.MaxLevels, $"{page}: its normal perks can reach the full +3 bonus");
+        Check(C.NormalPageCost(page) >= SectionBonusRules.PointsPerLevel * SectionBonusRules.PageMax(page), $"{page}: its normal perks can reach the full page bonus");
 
 Console.WriteLine($"All {checks} skill tree checks passed.");

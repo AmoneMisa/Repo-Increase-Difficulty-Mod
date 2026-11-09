@@ -19,16 +19,17 @@ internal sealed class SkillTreeScreen : MonoBehaviour
     private static bool _openRequested;
 
     private static readonly SkillPage[] Pages = { SkillPage.Recon, SkillPage.Combat, SkillPage.Survival, SkillPage.Utility, SkillPage.Arsenal, SkillPage.Contracts, SkillPage.Courier };
-    // " · BONUS +2 POWER (8 TO NEXT)": the page's main-stat bonus from points spent on it (SectionBonusRules).
+    // " · BONUS +2/5 POWER (3 TO NEXT)": the page's main-stat bonuses from points spent on it (SectionBonusRules).
     private static string PageBonusText(SkillLoadout loadout, SkillPage page)
     {
         var stats = SectionBonusRules.Stats(page);
         if (stats.Length == 0 || !ModConfig.SkillPageBonuses.Value) return "";
         int spent = SkillRules.PageSpent(loadout, page);
-        int levels = SectionBonusRules.Levels(spent), next = SectionBonusRules.ToNext(spent);
-        string names = string.Join(Ru ? " и " : " & ", System.Array.ConvertAll(stats, st => SectionBonusRules.StatName(st, Ru).ToUpperInvariant()));
+        int next = SectionBonusRules.ToNext(page, spent);
+        string parts = string.Join(Ru ? " и " : " & ", System.Array.ConvertAll(stats, st =>
+            $"+{SectionBonusRules.Levels(st, spent)}/{SectionBonusRules.MaxLevel(st)} {SectionBonusRules.StatName(st, Ru).ToUpperInvariant()}"));
         string tail = next > 0 ? L($" ({next} TO NEXT)", $" (ЕЩЁ {next})") : L(" (MAX)", " (МАКС.)");
-        return $" · {L("BONUS", "БОНУС")} +{levels}/{SectionBonusRules.MaxLevels} {names}{tail}";
+        return $" · {L("BONUS", "БОНУС")} {parts}{tail}";
     }
 
     private static readonly string[] PageNames = { "RECON", "COMBAT", "SURVIVAL", "UTILITY", "ARSENAL", "CONTRACTS", "COURIER" };

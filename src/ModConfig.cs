@@ -973,7 +973,7 @@ public static class ModConfig
         FlashStunSeconds = BindFloat(cfg, "Skill Tree", "FlashStunSeconds", 2f, .5f, 6f, "How long Flash Stun stuns monsters in the beam. Host setting.");
         FlashStunCooldown = BindFloat(cfg, "Skill Tree", "FlashStunCooldown", 45f, 5f, 300f, "Seconds between Flash Stun uses. Host setting.");
         SkillPageBonuses = cfg.Bind("Skill Tree", "PageBonuses", true,
-            "Every 10 points spent on a skill tree page's perks give +1 level (up to +3) of a main stat, like a shop upgrade: Combat Power, Survival Health, Recon Sprint Speed, Courier Stamina, Arsenal Tumble Launch, Utility Range and Death Head Battery. Host setting.");
+            "Every 5 points spent on a skill tree page's perks give +1 level of its main stats, like a shop upgrade, up to each stat's cap: Combat Power +5, Survival Health +5, Recon Sprint Speed +3, Courier Stamina +5 and Crouch Rest +3, Arsenal Tumble Launch +3, Utility Range +3 and Death Head Battery +5. Host setting.");
         ShopExtraItems = BindInt(cfg, "Shop", "ExtraItems", 4, 0, 20,
             "Extra different regular items (weapons, tools, drones...) stocked per shop visit on top of the game's 8. Never copies of the same item; they go on free shelf slots, using a bigger free slot when no slot of their own size is left.");
         ShopExtraUpgrades = BindInt(cfg, "Shop", "ExtraUpgrades", 3, 0, 20,

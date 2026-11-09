@@ -51,6 +51,11 @@ internal sealed class CourierSim
     private float _repathAt, _progressAt, _bestDistance = float.MaxValue, _itemAwayFor;
     private readonly Dictionary<HurtCollider, float> _hitCooldown = new();
     private float _nextHazardCheck;
+    // Follow: where the owner stood last frame, since when they have stood still, and the spot in front of them the
+    // pet keeps while they do (so it sits in view and can be petted, instead of trailing behind).
+    private Vector3 _ownerLast;
+    private float _ownerStillSince;
+    private Vector3? _frontSpot;
 
     private static readonly AccessTools.FieldRef<ChargingStation, float> ChargeLeft = AccessTools.FieldRefAccess<ChargingStation, float>("chargeFloat");
 
@@ -298,7 +303,7 @@ internal sealed class CourierSim
         {
             case Phase.Follow:
             {
-                var goal = ownerGone ? truck : ownerPos - Owner.transform.forward * 1.1f + Owner.transform.right * .7f;
+                var goal = ownerGone ? truck : FollowSpot(ownerPos, dt);
                 float d = Flat(goal - Pos).magnitude;
                 if (d > CourierRules.FollowDistance * .6f) MoveTo(goal, speed * (d > 6f ? 1.35f : 1f), .3f);
                 else FaceTowards(ownerGone ? truck : ownerPos, dt);
@@ -493,6 +498,36 @@ internal sealed class CourierSim
     }
 
     // ------------------------------------------------------------------ movement
+
+    /// <summary>
+    /// Where the pet heads while following. On the move it trails behind and to the right, out of the owner's way.
+    /// Once the owner has stood still for a moment it walks round to a spot in front of them, a little to the right,
+    /// and stays there (facing them) until it drifts out of their view or they walk off, so it can be petted. Turning
+    /// to look around within that view doesn't make it circle the owner.
+    /// </summary>
+    private Vector3 FollowSpot(Vector3 ownerPos, float dt)
+    {
+        var forward = Flat(Owner.transform.forward);
+        if (forward.sqrMagnitude < .001f) forward = Vector3.forward;
+        forward.Normalize();
+        var right = Vector3.Cross(Vector3.up, forward);
+
+        bool moving = Flat(ownerPos - _ownerLast).magnitude > Mathf.Max(.02f, dt * .6f); // faster than a slow shuffle
+        _ownerLast = ownerPos;
+        if (moving) { _ownerStillSince = Time.time; _frontSpot = null; }
+        if (moving || Time.time - _ownerStillSince < .8f)
+            return ownerPos - forward * 1.1f + right * .7f;
+
+        // Re-pick the spot when there is none yet, or the current one is out of the owner's view or too far.
+        if (_frontSpot is Vector3 spot)
+        {
+            var toSpot = Flat(spot - ownerPos);
+            bool inView = toSpot.sqrMagnitude > .01f && Vector3.Angle(forward, toSpot) < 50f;
+            if (inView && toSpot.magnitude < 2.5f) return spot;
+        }
+        _frontSpot = ownerPos + forward * 1.3f + right * .45f;
+        return _frontSpot.Value;
+    }
 
     private static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
 

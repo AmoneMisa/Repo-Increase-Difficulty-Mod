@@ -66,9 +66,10 @@ internal sealed class CourierManager : MonoBehaviour
         var level = (Object)LevelGenerator.Instance;
         if (level != _level)
         {
-            ClearAll(); _level = level; _sentLook = int.MinValue;
+            ClearAll(); _level = level; _sentLook = int.MinValue; _coinHinted = false;
             if (SemiFunc.IsMasterClientOrSingleplayer()) PlaceCoin();
         }
+        CoinReminder();
 
         // Tell the host what my courier looks like (once per level, and whenever I change it); -1 = no courier yet.
         int look = CourierGacha.LookToSend();
@@ -84,6 +85,24 @@ internal sealed class CourierManager : MonoBehaviour
         PetInput();
         CoinTick();
         _menu.Tick(this);
+    }
+
+    private bool _coinHinted;
+
+    /// <summary>
+    /// Once per level (lobby, shop and levels), when the HUD is up: if this player has gacha coins, say how many and
+    /// which key opens the courier menu to spend them. Coins used to be invisible until the menu was opened, and the
+    /// starter coin is given silently.
+    /// </summary>
+    private void CoinReminder()
+    {
+        if (_coinHinted || !ModConfig.CourierEnabled.Value || !Patches.Effects.LevelInfoHud.GameplayReady) return;
+        _coinHinted = true;
+        int coins = CourierGacha.Coins;
+        if (coins <= 0) return;
+        string key = ModConfig.CourierMenuKey.Value.ToString();
+        HudNotify.Toast(L($"{coins} GACHA COIN{(coins == 1 ? "" : "S")} TO SPEND: PRESS [{key}] TO PULL A COURIER",
+            $"МОНЕТ ГАЧИ: {coins}. НАЖМИТЕ [{key}], ЧТОБЫ ПОЛУЧИТЬ КУРЬЕРА"), HudStyle.Title, 6f, "courier_coin_hint");
     }
 
     private void ClearAll()
