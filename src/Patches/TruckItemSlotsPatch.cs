@@ -25,7 +25,6 @@ internal static class TruckItemSlotsPatch
         [SemiFunc.itemVolume.small] = new[] { SemiFunc.itemVolume.medium, SemiFunc.itemVolume.healthPack, SemiFunc.itemVolume.upgrade, SemiFunc.itemVolume.large, SemiFunc.itemVolume.large_wide, SemiFunc.itemVolume.large_high, SemiFunc.itemVolume.large_plus },
         [SemiFunc.itemVolume.healthPack] = new[] { SemiFunc.itemVolume.small, SemiFunc.itemVolume.medium, SemiFunc.itemVolume.large },
         [SemiFunc.itemVolume.upgrade] = new[] { SemiFunc.itemVolume.small, SemiFunc.itemVolume.medium, SemiFunc.itemVolume.large },
-        [SemiFunc.itemVolume.power_crystal] = new[] { SemiFunc.itemVolume.small, SemiFunc.itemVolume.medium },
         [SemiFunc.itemVolume.medium] = new[] { SemiFunc.itemVolume.large, SemiFunc.itemVolume.large_wide, SemiFunc.itemVolume.large_high, SemiFunc.itemVolume.large_plus },
         [SemiFunc.itemVolume.large] = new[] { SemiFunc.itemVolume.large_plus, SemiFunc.itemVolume.large_wide, SemiFunc.itemVolume.large_high },
     };
@@ -37,11 +36,13 @@ internal static class TruckItemSlotsPatch
     // Stacking height per layer and how many extra layers a slot may take; big items and vehicles never stack.
     private static float StackStep(SemiFunc.itemVolume v) => v switch
     {
-        SemiFunc.itemVolume.small or SemiFunc.itemVolume.healthPack or SemiFunc.itemVolume.upgrade or SemiFunc.itemVolume.power_crystal => .35f,
+        SemiFunc.itemVolume.small or SemiFunc.itemVolume.healthPack or SemiFunc.itemVolume.upgrade => .35f,
         SemiFunc.itemVolume.medium => .5f,
         _ => 0f,
     };
     private const int MaxLayers = 3;
+    // Energy crystals are never moved or stacked: they belong in the charging station's own crystal slots, and
+    // extras beyond those must stay unspawned (the station counts bought charge, not loose crystals on a shelf).
 
     [HarmonyPrefix]
     [HarmonyPriority(Priority.Last)]
