@@ -353,6 +353,15 @@ internal static class PingController
             if (physGrab != null && body != null && body.physGrabObject == physGrab) return ep;
             var at = ep.Enemy.CenterTransform != null ? ep.Enemy.CenterTransform.position : ep.Enemy.transform.position;
             float d = (at - pos).sqrMagnitude;
+            // Big monsters (the Heart Hugger flower) can be pinged metres from their centre: measure to their body too.
+            if (d >= best)
+                foreach (var r in ep.GetComponentsInChildren<Renderer>())
+                {
+                    if (r == null || !r.enabled || !(r is MeshRenderer || r is SkinnedMeshRenderer)) continue;
+                    var b = r.bounds;
+                    if (b.size.magnitude > 12f) continue; // stray helper volumes
+                    d = Mathf.Min(d, b.SqrDistance(pos));
+                }
             if (d < best) { best = d; nearest = ep; }
         }
         return nearest;

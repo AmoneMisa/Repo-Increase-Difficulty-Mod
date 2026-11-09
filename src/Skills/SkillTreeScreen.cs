@@ -39,6 +39,7 @@ internal sealed class SkillTreeScreen : MonoBehaviour
     private static readonly Color[] Accents =
     {
         new(.35f, .9f, 1f), new(1f, .42f, .32f), new(.3f, 1f, .78f), new(.82f, .5f, 1f), new(1f, .84f, .3f), new(1f, .62f, .85f),
+        new(.62f, 1f, .38f), // Courier: one accent per page, or page 7 threw IndexOutOfRange every frame
     };
     private static readonly Dictionary<string, string> GroupNames = new()
     {

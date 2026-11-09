@@ -187,7 +187,9 @@ internal sealed class PingOutline : MaskableGraphic
     private void PlaceCallout(Camera camera, Rect rectangle, float alpha)
     {
         if (_calloutIcon == null) return;
-        if (_pointMarker) { _calloutIcon.canvasRenderer.SetAlpha(0f); return; }
+        // A monster icon sits inside its reticle, which is drawn for point markers too: monsters without a frameable
+        // object (the stationary Heart Hugger flower) still get their icon. Only side-box callouts hide on a point.
+        if (_pointMarker && !(_calloutSquare && HasReticle)) { _calloutIcon.canvasRenderer.SetAlpha(0f); return; }
         float s = MarkerScale();
         if (_calloutSquare && HasReticle)
         {
