@@ -677,9 +677,9 @@ public static class QuestManager
         string reward = q.RewardType switch
         {
             RewardType.Item => string.IsNullOrEmpty(item) ? "улучшение" : item,
-            RewardType.Cosmetic => "коробка косметики",
-            RewardType.Costume => "часть костюма всем",
-            RewardType.Heal => $"лечение отряда на {q.RewardAmount} HP",
+            RewardType.Cosmetic => "коробка с косметикой",
+            RewardType.Costume => "деталь костюма для каждого",
+            RewardType.Heal => $"+{q.RewardAmount} здоровья каждому",
             RewardType.TempStat => $"+{q.RewardAmount} {QuestText.Stat(q.RewardStat)} (на этот уровень)",
             RewardType.ShopItem => string.IsNullOrEmpty(item) ? "предмет из магазина" : item,
             RewardType.ExactUpgrade => string.IsNullOrEmpty(item) ? $"{QuestText.Tier(q.RewardTier)} улучшение" : item,

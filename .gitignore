@@ -34,6 +34,9 @@ tests/UnityCloneRegression/UserSettings/
 tests/UnityCloneRegression/Obj/
 tests/UnityCloneRegression/*.csproj
 tests/UnityCloneRegression/*.sln
+tests/UnityCloneRegression/Assets/Runtime/CosmeticMotion.cs
+tests/UnityCloneRegression/Assets/Runtime/CosmeticMotion.cs.meta
+tests/UnityCloneRegression/cosmetic-motion-result.txt
 
 # Local vanilla upgrade references, used only for art review.
 art/upgrade-reference/
@@ -55,3 +58,6 @@ tools/IceShaderBundle/Build/
 tools/IceShaderBundle/obj/
 tools/IceShaderBundle/*.csproj
 tools/IceShaderBundle/*.sln
+
+tests/UnityCloneRegression/Assets/Runtime/SkeletonSway.cs
+tests/UnityCloneRegression/Assets/Runtime/SkeletonSway.cs.meta

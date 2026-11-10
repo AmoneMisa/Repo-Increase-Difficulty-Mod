@@ -33,10 +33,19 @@ Check(C.TotalCost() == 286, "Whole tree costs 286 points (256 normal + 30 trade-
           "Courier backpack: 1 slot, up to 3");
     Check(Math.Abs(IncreaseHardMod.Courier.CourierRules.Aggression(3) - .4f) < 1e-4 && IncreaseHardMod.Courier.CourierRules.Aggression(0) == 1f,
           "Low Profile: 20% less monster aggression per level");
-    var pulls = new int[5]; var rng = new Random(7);
+    var pulls = new int[IncreaseHardMod.Courier.CourierRules.Animals]; var rng = new Random(7);
     for (int k = 0; k < 20000; k++) pulls[IncreaseHardMod.Courier.CourierRules.Pull(rng.NextDouble())]++;
-    Check(pulls[3] > 1600 && pulls[3] < 2400 && pulls[0] > 4500 && pulls.All(n => n > 0) && IncreaseHardMod.Courier.CourierRules.Pull(.999999) == 4,
-          "Gacha: every animal can drop; the owl is rarest (10%), penguin and chicken commonest (25%)");
+    Check(pulls.All(n => n > 0) && pulls[0] > pulls[3] && pulls[3] > pulls[11] && IncreaseHardMod.Courier.CourierRules.Pull(.999999) == 11,
+          "Gacha: all twelve animals drop; owl rarer than penguin, dragon rarer than owl");
+    for (int animal = 0; animal < pulls.Length; animal++)
+        for (int colour = 0; colour < 12; colour++)
+        {
+            int packed = IncreaseHardMod.Courier.CourierRules.PackLook(animal, colour, 31, 11-colour);
+            IncreaseHardMod.Courier.CourierRules.UnpackLook(packed, out int a, out int b, out int c, out int d);
+            Check(a == animal && b == colour && c == 31 && d == 11-colour, "Courier wire/save round trip " + animal + "/" + colour);
+        }
+    Check(IncreaseHardMod.Courier.CourierRules.PackLook(4,31,31,31) == 524276,
+          "Existing beaver natural palette save remains compatible");
 }Check(C.Find(C.Vampirism) is { Page: SkillPage.Combat, Cost: 1, MaxLevel: 7 } && C.Find(C.Vampirism).Requires.SequenceEqual(new[] { C.MeleeDamage }),
       "Vampirism: Combat, 7 levels of 1 point, under Melee Damage");
 Check(Math.Abs(PerkRules.VampireShare(7, 7, .29f) - .29f) < 1e-5f && Math.Abs(PerkRules.VampireShare(1, 7, .29f) - .29f / 7f) < 1e-5f &&

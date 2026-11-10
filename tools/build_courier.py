@@ -15,6 +15,7 @@ Front is Blender +Y (Unity +Z).
 """
 import argparse, json, math, sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import bmesh
 import bpy
@@ -88,7 +89,7 @@ def preview_material(color):
     if key in PREVIEW_MATS: return PREVIEW_MATS[key]
     m = bpy.data.materials.new('pv %s' % (key,)); m.use_nodes = True
     b = m.node_tree.nodes['Principled BSDF']
-    b.inputs['Base Color'].default_value = (*color, 1); b.inputs['Roughness'].default_value = .62
+    b.inputs['Base Color'].default_value = (*color, 1); b.inputs['Roughness'].default_value = .87
     PREVIEW_MATS[key] = m
     return m
 
@@ -108,7 +109,7 @@ def add(o, group, channel, color, label):
     return o
 
 
-def ellipsoid(group, channel, color, label, loc, radii, rot=(0, 0, 0), segs=28, rings=14):
+def ellipsoid(group, channel, color, label, loc, radii, rot=(0, 0, 0), segs=20, rings=10):
     bpy.ops.mesh.primitive_uv_sphere_add(segments=segs, ring_count=rings, radius=1, location=loc, rotation=rot)
     o = bpy.context.object; o.scale = radii
     return add(o, group, channel, color, label)
@@ -203,16 +204,16 @@ def eyes(x, y, z, r=.05, iris=None):
     for s, side in ((1, 'l'), (-1, 'r')):
         ex = s * x
         # Open: a glossy dome in a goggle rim, a big iris, pupil and two shines
-        ring('eyes_open', 'fixed', (.97, .97, .95), 'rim_' + side, (ex, y - r * .08, z), r * 1.08, r * .17, rot=(math.pi / 2, 0, 0))
+        ring('eyes_open', 'fixed', (.19, .11, .07), 'eyelid_' + side, (ex, y - r * .08, z), r * 1.02, r * .06, rot=(math.pi / 2, 0, 0))
         ellipsoid('eyes_open', 'fixed', WHITE, 'sclera_' + side, (ex, y, z), (r * 1.06, r * .6, r * 1.14))
-        ellipsoid('eyes_open', 'fixed', iris or (.25, .16, .09), 'iris_' + side, (ex, y + r * .44, z - r * .06), (r * .8, r * .25, r * .86))
+        ellipsoid('eyes_open', 'fixed', iris or (.25, .16, .09), 'iris_' + side, (ex, y + r * .52, z - r * .06), (r * .56, r * .20, r * .62))
         ellipsoid('eyes_open', 'fixed', BLACK, 'pupil_' + side, (ex, y + r * .55, z - r * .06), (r * .46, r * .18, r * .52))
         ellipsoid('eyes_open', 'fixed', (1, 1, 1), 'shine_' + side, (ex + s * r * .2, y + r * .66, z + r * .26), (r * .22, r * .08, r * .22), segs=12, rings=8)
         ellipsoid('eyes_open', 'fixed', (1, 1, 1), 'shine2_' + side, (ex - s * r * .22, y + r * .64, z - r * .34), (r * .1, r * .06, r * .1), segs=10, rings=6)
         # Soft blush under the eye (every mood)
         ellipsoid('body', 'fixed', (.98, .62, .64), 'blush_' + side, (s * (x + r * .5), y - r * .1, z - r * 1.25), (r * .5, r * .12, r * .28))
         # Surprised: wider white, small pupils
-        ring('eyes_wide', 'fixed', (.97, .97, .95), 'rim_' + side, (ex, y - r * .08, z + r * .06), r * 1.2, r * .17, rot=(math.pi / 2, 0, 0))
+        ring('eyes_wide', 'fixed', (.19, .11, .07), 'eyelid_' + side, (ex, y - r * .08, z + r * .06), r * 1.18, r * .06, rot=(math.pi / 2, 0, 0))
         ellipsoid('eyes_wide', 'fixed', WHITE, 'sclera_' + side, (ex, y + .002, z + r * .06), (r * 1.18, r * .6, r * 1.28))
         ellipsoid('eyes_wide', 'fixed', BLACK, 'pupil_' + side, (ex, y + r * .52, z), (r * .26, r * .2, r * .3))
         ellipsoid('eyes_wide', 'fixed', (1, 1, 1), 'shine_' + side, (ex + s * r * .1, y + r * .6, z + r * .12), (r * .09, r * .06, r * .09), segs=10, rings=6)
@@ -252,10 +253,25 @@ def cap(top, front=.0):
     box('body', 'fixed', (1.0, .7, .15), 'cap_badge', (0, front + .088, top - .015), (.05, .02, .022), bevel=.004, rot=(-.6, 0, 0))
 
 
-def gear(head=(.185, .165, .16), body=(.165, .15, .165)):
+def gear(head=(.185, .165, .16), body=(.165, .15, .165), accent=(.85,.44,.10), with_cap=True):
     harness(body[0] + .005, body[1] + .005, BODY_Z + .02)
     backpack(-body[1] - .005, z=BODY_Z + .07)
-    cap(HEAD_Z + head[2] * HEAD_SCALE + .02)
+    if with_cap:
+        start=len(PARTS)
+        cap(HEAD_Z + head[2] * HEAD_SCALE + .02)
+        for o in PARTS[start:]:
+            if o.name.split('|')[1]=='accent':
+                o['ihm_color']=list(accent);o.data.materials.clear();o.data.materials.append(preview_material(accent))
+    # A triangular courier neckerchief, its badge and a side satchel.
+    mesh=bpy.data.meshes.new('scarf')
+    mesh.from_pydata([(-.13,.135,.29),(.13,.135,.29),(0,.175,.195),(-.13,.129,.29),(.13,.129,.29),(0,.169,.195)],
+                     [],[(0,1,2),(5,4,3),(0,3,4,1),(1,4,5,2),(2,5,3,0)])
+    mesh.update();o=bpy.data.objects.new('scarf',mesh);bpy.context.collection.objects.link(o)
+    add(o,'scarf','accent',accent,'neckerchief')
+    box('scarf','fixed',(.94,.84,.62),'parcel badge',(0,.164,.25),(.036,.012,.036),bevel=.002,rot=(0,math.pi/4,0))
+    box('body','fixed',(.21,.105,.045),'satchel',(-.15,.075,.115),(.09,.075,.09),bevel=.009)
+    box('body','fixed',(.44,.25,.105),'satchel flap',(-.15,.119,.139),(.10,.012,.05),bevel=.006)
+    box('body','fixed',(.76,.56,.25),'satchel buckle',(-.15,.128,.12),(.025,.006,.024),bevel=.002)
 
 
 # Eye placement on the front of the head
@@ -383,6 +399,66 @@ PIVOTS = {
     'beaver': {'arm_l': (.13, .08, .18), 'arm_r': (-.13, .08, .18), 'foot_l': (.08, .04, .05), 'foot_r': (-.08, .04, .05), 'tail': (0, -.15, .05)},
 }
 
+from courier_species import install
+install(globals())
+for _p in PIVOTS.values(): _p.setdefault('scarf',(0,.135,.29))
+
+
+def surface_detail(animal):
+    """Silhouette-level fur/feather layers; the atlas supplies the finer fibres."""
+    import random
+    rng=random.Random(71)
+    base=next(tuple(o['ihm_color']) for o in PARTS if o.name.split('|')[1]=='main')
+    if animal in ('cat','beaver','dog'):
+        # Small overlapping cheek and chest tufts, tapered instead of soft spheres.
+        for s in (-1,1):
+            for k in range(6):
+                z=.31+k*.025; x=s*(.154+.013*math.sin(k))
+                cone('body','main',base,'cheek fur',(x,.06,z),(x+s*.035,.055,z-.025),.018,verts=7,r2=.001)
+        for row in range(3):
+            for k in range(32):
+                a=math.tau*(k+row*.4)/32;z=.19-row*.022
+                cone('body','main',base,'chest fur',(math.sin(a)*.15,math.cos(a)*.135,z),
+                     (math.sin(a)*.155,math.cos(a)*.14,z-.015-rng.random()*.007),.009,verts=5,r2=.001)
+    # Break the perfect sphere highlight with small fibre clumps on fur-bearing surfaces.
+    if animal in ('cat','beaver','dog','sheep','cow'):
+        for o in PARTS:
+            group,channel,label=o.name.split('|',2)
+            if channel not in ('main','second') or group.startswith('eyes_'):continue
+            for v in o.data.vertices:
+                p=v.co
+                amount=.0007*(math.sin(p.x*613+p.z*211)*math.sin(p.y*389-p.z*71))
+                v.co += v.normal*amount
+            o.data.update()
+    if animal in ('owl','chicken','penguin'):
+        for s,side in ((1,'l'),(-1,'r')):
+            for k in range(5):
+                ellipsoid('arm_'+side,'main',base,'feather overlap',(s*(.176+k*.002),-.07+k*.027,.13),
+                          (.022,.026,.075),rot=(.23,s*.15,0),segs=12,rings=8)
+    # Existing cat and beaver have muzzles but no smile; give the mouth a dark interior and a tongue.
+    if animal in ('cat','beaver'):
+        z=.305 if animal=='cat' else .29
+        ellipsoid('body','fixed',(.14,.025,.022),'mouth',(0,.194,z),(.033,.014,.022),segs=16,rings=10)
+        ellipsoid('body','fixed',(.84,.25,.30),'tongue',(0,.206,z-.009),(.019,.005,.009),segs=12,rings=8)
+
+
+def merge_parts(parts):
+    """One renderer per expression/group/material, preserving the original palette and UVs."""
+    buckets={}
+    for o in parts:
+        group,channel,_=o.name.split('|',2)
+        key=(group,channel,tuple(round(v,5) for v in o['ihm_color']),o['ihm_texture'])
+        buckets.setdefault(key,[]).append(o)
+    out=[]
+    for (group,channel,color,tex),obs in buckets.items():
+        bpy.ops.object.select_all(action='DESELECT')
+        for o in obs:o.select_set(True)
+        bpy.context.view_layer.objects.active=obs[0]
+        if len(obs)>1:bpy.ops.object.join()
+        o=bpy.context.object;o.name=f'{group}|{channel}|surface_{len(out)}'
+        out.append(o)
+    return out
+
 
 # ------------------------------------------------------------------ bake: R.E.P.O.-style worn, living surfaces
 
@@ -427,13 +503,13 @@ def _pattern(nt, pos, animal, channel):
     if channel == 'fixed':
         return _range(nt, noise(30.0), 0, 1, .9, 1.0)
     # Fur and feathers: fine vertical strands everywhere
-    strands = _range(nt, noise(90.0, (1, 1, 5), 3.0, .7), .3, .7, .8, 1.04)
+    strands = _range(nt, noise(105.0, (2, 2, .45), 3.0, .7), .3, .7, .66, 1.04)
     detail = strands
     if animal == 'cat' and channel == 'main':  # tabby stripes round the body
         wave = _node(nt, 'ShaderNodeTexWave', Scale=7.0, Distortion=9.0, _wave_type='BANDS', _bands_direction='Z')
         nt.links.new(pos, wave.inputs['Vector'])
         detail = _mul(nt, detail, _range(nt, wave.outputs['Fac'], .55, .9, 1.0, .68))
-    if animal in ('owl', 'chicken') and channel in ('main', 'second'):  # feather scallops
+    if animal in ('owl', 'chicken', 'dragon') and channel in ('main', 'second'):  # feather/scales
         mp = _node(nt, 'ShaderNodeMapping'); mp.inputs['Scale'].default_value = (1, 1, 1.6); nt.links.new(pos, mp.inputs['Vector'])
         v = _node(nt, 'ShaderNodeTexVoronoi', Scale=34.0 if animal == 'owl' else 28.0, _feature='DISTANCE_TO_EDGE')
         nt.links.new(mp.outputs[0], v.inputs['Vector'])
@@ -445,7 +521,7 @@ def _pattern(nt, pos, animal, channel):
     return detail
 
 
-def bake_atlas(key, animal, parts, size=1024):
+def bake_atlas(key, animal, parts, size=768):
     """Packs the surface parts into one atlas and bakes greyscale detail x occlusion x grime into it.
     The game tints it per colour slot, so recolouring keeps all the wear."""
     targets = [o for o in parts if o.name.split('|')[0] not in CLEAN_GROUPS]
@@ -472,7 +548,7 @@ def bake_atlas(key, animal, parts, size=1024):
             out = _node(nt, 'ShaderNodeOutputMaterial'); emit = _node(nt, 'ShaderNodeEmission', Strength=1.0)
             geo = _node(nt, 'ShaderNodeNewGeometry'); pos = geo.outputs['Position']
             value = _pattern(nt, pos, animal, channel)
-            ao = _node(nt, 'ShaderNodeAmbientOcclusion', Distance=.07, _samples=24, _only_local=False)
+            ao = _node(nt, 'ShaderNodeAmbientOcclusion', Distance=.055, _samples=8, _only_local=False)
             value = _mul(nt, value, _range(nt, ao.outputs['AO'], 0, 1, .5, 1.0))
             sep = _node(nt, 'ShaderNodeSeparateXYZ'); nt.links.new(pos, sep.inputs[0])
             value = _mul(nt, value, _range(nt, sep.outputs['Z'], 0, .14, .74, 1.0))          # floor grime on the lower body
@@ -488,18 +564,30 @@ def bake_atlas(key, animal, parts, size=1024):
         keep[o.name] = list(o.data.materials)
         o.data.materials.clear(); o.data.materials.append(mats[channel])
     scene = bpy.context.scene
-    scene.render.engine = 'CYCLES'; scene.cycles.samples = 32
+    scene.render.engine = 'CYCLES'; scene.cycles.samples = 12
     scene.render.bake.margin = 4; scene.render.bake.use_clear = True
     bpy.ops.object.bake(type='EMIT')
     img.filepath_raw = str(OUT / f'{key}_atlas.png'); img.file_format = 'PNG'; img.save()
+    # Small surface-normal relief, separate from the colour map; keep UV island borders neutral.
+    pixels=np.array(img.pixels[:],dtype=np.float32).reshape(size,size,4)[...,:3].mean(axis=2)
+    dx=np.clip((np.roll(pixels,-1,1)-np.roll(pixels,1,1))*1.2,-.20,.20)
+    dy=np.clip((np.roll(pixels,-1,0)-np.roll(pixels,1,0))*1.2,-.20,.20)
+    normal=np.ones((size,size,4),dtype=np.float32)
+    normal[...,0]=.5-dx;normal[...,1]=.5-dy;normal[...,2]=np.sqrt(np.maximum(0,1-4*dx*dx-4*dy*dy))*.5+.5
+    ni=bpy.data.images.new(key+'_normal',size,size,alpha=False)
+    ni.colorspace_settings.name='Non-Color';ni.pixels.foreach_set(normal.ravel())
+    ni.filepath_raw=str(OUT/f'{key}_normal.png');ni.file_format='PNG';ni.save()
     # Preview what ships: the atlas times each part's colour, nearest filtering like in game.
     for o in targets:
         c = o['ihm_color']
         m = bpy.data.materials.new(f'{o.name} shown'); m.use_nodes = True; nt = m.node_tree
-        b = nt.nodes['Principled BSDF']; b.inputs['Roughness'].default_value = .7
-        tex = _node(nt, 'ShaderNodeTexImage'); tex.image = img; tex.interpolation = 'Closest'
+        b = nt.nodes['Principled BSDF']; b.inputs['Roughness'].default_value = .91 if o.name.split('|')[1]!='fixed' else .78
+        tex = _node(nt, 'ShaderNodeTexImage'); tex.image = img; tex.interpolation = 'Linear'
         mix = _node(nt, 'ShaderNodeMixRGB', _blend_type='MULTIPLY', Fac=1.0); mix.inputs['Color2'].default_value = (*c, 1)
         nt.links.new(tex.outputs['Color'], mix.inputs['Color1']); nt.links.new(mix.outputs[0], b.inputs['Base Color'])
+        normal_tex=_node(nt,'ShaderNodeTexImage');normal_tex.image=ni
+        normal_node=_node(nt,'ShaderNodeNormalMap',Strength=.55)
+        nt.links.new(normal_tex.outputs['Color'],normal_node.inputs['Color']);nt.links.new(normal_node.outputs['Normal'],b.inputs['Normal'])
         o.data.materials.clear(); o.data.materials.append(m)
     for m in mats.values(): bpy.data.materials.remove(m)
 
@@ -568,34 +656,37 @@ lineup = []
 for i, (key, build) in enumerate(ANIMALS.items()):
     PARTS.clear()
     build()
-    bake_atlas('courier_' + key, key, list(PARTS))
-    totals[key] = export('courier_' + key, list(PARTS), PIVOTS[key])
-    BY_ANIMAL[key] = set(PARTS)
-    offset = Vector(((i - 2) * .62, 0, 0))
-    for o in PARTS: o.location += offset
-    lineup.extend(PARTS)
+    surface_detail(key)
+    merged=merge_parts(list(PARTS))
+    bake_atlas('courier_' + key, key, merged)
+    totals[key] = export('courier_' + key, merged, PIVOTS[key])
+    BY_ANIMAL[key] = set(merged)
+    offset = Vector(((i%6 - 2.5) * .82, -(i//6)*1.0, 0))
+    for o in merged: o.location += offset
+    lineup.extend(merged)
+    print('COURIER_EXPORTED',key,totals[key],flush=True)
 
 if opts.preview:
     EXTRA = ('eyes_happy', 'eyes_wide', 'eyes_sleepy', 'brows_sad', 'brows_focus')
     for o in lineup:
         if o.name.split('|')[0] in EXTRA: o.hide_render = True
     scene = stage()
-    bpy.ops.object.camera_add(location=(1.15, 3.1, 1.0)); cam = bpy.context.object; scene.camera = cam
-    cam.rotation_euler = (Vector((0, 0, .27)) - cam.location).to_track_quat('-Z', 'Y').to_euler()
-    cam.data.type = 'ORTHO'; cam.data.ortho_scale = 3.35
-    scene.render.resolution_x, scene.render.resolution_y = 1600, 560
+    bpy.ops.object.camera_add(location=(.4, 5.5, 3.1)); cam = bpy.context.object; scene.camera = cam
+    cam.rotation_euler = (Vector((0, -.45, .24)) - cam.location).to_track_quat('-Z', 'Y').to_euler()
+    cam.data.type = 'ORTHO'; cam.data.ortho_scale = 5.35
+    scene.render.resolution_x, scene.render.resolution_y = 2000, 1050
     scene.render.filepath = str(ART / 'courier_lineup.png'); bpy.ops.render.render(write_still=True)
     # Back view: the backpacks.
-    cam.location = (-1.0, -3.1, 1.0)
-    cam.rotation_euler = (Vector((0, 0, .27)) - cam.location).to_track_quat('-Z', 'Y').to_euler()
+    cam.location = (-.4, -6.4, 3.1)
+    cam.rotation_euler = (Vector((0, -.45, .24)) - cam.location).to_track_quat('-Z', 'Y').to_euler()
     scene.render.filepath = str(ART / 'courier_lineup_back.png'); bpy.ops.render.render(write_still=True)
     # Petted: closed eyes instead of open ones.
     for o in lineup:
         g = o.name.split('|')[0]
         if g == 'eyes_open': o.hide_render = True
         if g == 'eyes_happy': o.hide_render = False
-    cam.location = (1.15, 3.1, 1.0)
-    cam.rotation_euler = (Vector((0, 0, .27)) - cam.location).to_track_quat('-Z', 'Y').to_euler()
+    cam.location = (.4, 5.5, 3.1)
+    cam.rotation_euler = (Vector((0, -.45, .24)) - cam.location).to_track_quat('-Z', 'Y').to_euler()
     scene.render.filepath = str(ART / 'courier_lineup_happy.png'); bpy.ops.render.render(write_still=True)
 
 if opts.preview:
@@ -606,7 +697,7 @@ if opts.preview:
         animal = next(i for i, k in enumerate(keys) if o in BY_ANIMAL[k])
         g = o.name.split('|')[0]
         if g.startswith('eyes_') or g.startswith('brows_'):
-            o.hide_render = g not in moods[animal]
+            o.hide_render = g not in moods[animal % len(moods)]
     scene.render.filepath = str(ART / 'courier_expressions.png'); bpy.ops.render.render(write_still=True)
 
 print('IHM_COURIER_OK', totals)

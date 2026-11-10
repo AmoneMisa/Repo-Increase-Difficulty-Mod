@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace IncreaseHardMod.Localization;
 
 /// <summary>
-/// The game's language, read by reflection from Unity Localization (the mod does not reference that assembly).
+/// The game's language, read from Unity Localization when running inside the game.
 /// </summary>
 internal static class GameLanguage
 {
@@ -46,29 +46,29 @@ internal static class ModifierText
 
     // Descriptions that carry the level's rolled number.
     internal static string ReducedHp(int percent) => GameLanguage.Russian
-        ? $"Уровень начинается с {percent}% текущего HP. Максимум HP не меняется."
+        ? $"В начале уровня останется {percent}% текущего здоровья. Максимум здоровья сохранится."
         : $"Start with {percent}% of current HP. Max HP is unchanged.";
     internal static string ExtraSouls(int count) => GameLanguage.Russian
-        ? $"Монстры роняют {count} душ."
+        ? $"С монстров может выпасть до {count} душ."
         : $"Monsters drop {count} souls.";
     internal static string MoneyLoss(int percent) => GameLanguage.Russian
-        ? $"Смерть забирает {percent}% собранных денег."
+        ? $"При смерти вы теряете {percent}% собранных денег."
         : $"Dying loses {percent}% of collected money.";
 
     internal static readonly Dictionary<string, string> Ru = new()
     {
         // ---- surprise modifiers: names
-        ["Fragile Loot"] = "Хрупкий лут",
-        ["Heavy Loot"] = "Тяжёлый лут",
-        ["Light Loot"] = "Лёгкий лут",
-        ["Protected Loot"] = "Защищённый лут",
-        ["Dangerous Loot"] = "Опасный лут",
-        ["Extra Small Cart"] = "Доп. малая тележка",
-        ["Extra Big Cart"] = "Доп. большая тележка",
+        ["Fragile Loot"] = "Хрупкая добыча",
+        ["Heavy Loot"] = "Тяжёлая добыча",
+        ["Light Loot"] = "Лёгкая добыча",
+        ["Protected Loot"] = "Прочная добыча",
+        ["Dangerous Loot"] = "Опасная добыча",
+        ["Extra Small Cart"] = "Ещё одна малая тележка",
+        ["Extra Big Cart"] = "Ещё одна большая тележка",
         ["Extra Souls"] = "Больше душ",
         ["Spread Upgrades"] = "Разбросанные улучшения",
         ["No Map"] = "Без карты",
-        ["Reduced HP"] = "Мало HP",
+        ["Reduced HP"] = "Раненые на старте",
         ["Auto-Revive"] = "Автовоскрешение",
         ["Money Loss on Death"] = "Потеря денег при смерти",
         ["Timed Level"] = "Уровень на время",
@@ -79,7 +79,7 @@ internal static class ModifierText
         ["Pit-Tanky Monsters"] = "Монстры не боятся ям",
         ["Light Monsters"] = "Лёгкие монстры",
         ["Heavy Monsters"] = "Тяжёлые монстры",
-        ["Mystery Boxes"] = "Мистические коробки",
+        ["Mystery Boxes"] = "Ящики-сюрпризы",
         ["Silent Night"] = "Тихая ночь",
         ["Loud Facility"] = "Гулкий комплекс",
         ["Greased Wheels"] = "Смазанные колёса",
@@ -87,45 +87,45 @@ internal static class ModifierText
         ["Thorny Monsters"] = "Колючие монстры",
 
         // ---- surprise modifiers: descriptions
-        ["Loot breaks and loses value more easily."] = "Лут легче ломается и теряет ценность.",
-        ["Loot weighs more, making it harder to haul."] = "Лут тяжелее, его труднее нести.",
-        ["Loot weighs less, making it easier to haul."] = "Лут легче, его проще нести.",
-        ["Loot takes less damage before breaking."] = "Лут выдерживает больше ударов, прежде чем сломаться.",
+        ["Loot breaks and loses value more easily."] = "Ценности легче разбить, и при ударах они быстрее дешевеют.",
+        ["Loot weighs more, making it harder to haul."] = "Ценности весят больше, поэтому их труднее переносить.",
+        ["Loot weighs less, making it easier to haul."] = "Ценности весят меньше, поэтому их легче переносить.",
+        ["Loot takes less damage before breaking."] = "Ценности выдерживают больше ударов.",
         ["Hazardous valuables deal more damage to players."] = "Опасные ценности наносят игрокам больше урона.",
         ["An extra small cart spawns on the level."] = "На уровне появляется ещё одна малая тележка.",
         ["An extra big cart spawns on the level."] = "На уровне появляется ещё одна большая тележка.",
-        ["Monsters drop more souls."] = "Монстры роняют больше душ.",
-        ["Upgrade pickups are scattered around; usable only back in the truck."] = "По уровню разбросаны улучшения; использовать их можно только в грузовике.",
-        ["No map until you find a map upgrade pickup."] = "Карты нет, пока не найдёте улучшение карты.",
+        ["Monsters drop more souls."] = "С монстров выпадает больше душ.",
+        ["Upgrade pickups are scattered around; usable only back in the truck."] = "Улучшения разбросаны по уровню. Активировать их можно только в грузовике.",
+        ["No map until you find a map upgrade pickup."] = "Карта заработает, когда вы найдёте улучшение для неё.",
         ["Everyone starts the level wounded — current HP is cut to a rolled percentage (max HP is untouched, so you can heal back up)."] =
-            "Все начинают уровень ранеными — текущее HP урезано до выпавшего процента (максимум HP не меняется, можно вылечиться).",
+            "Все начинают уровень ранеными. Сколько здоровья останется, решает случай. Лечиться можно до обычного максимума.",
         ["Each player gets one automatic revive this level."] = "Каждый игрок один раз автоматически воскресает на этом уровне.",
-        ["Dying loses a percentage of your collected money."] = "Смерть забирает часть собранных денег.",
+        ["Dying loses a percentage of your collected money."] = "При смерти вы теряете часть собранных денег.",
         ["Timed level: kills add time, deaths remove it, quota adds it; at 0 the layout rerolls."] =
-            "Уровень на время: убийства добавляют время, смерти отнимают, квота добавляет; на нуле карта перестраивается.",
+            "Убийства монстров и выполнение квоты добавляют время, гибель игроков его отнимает. Когда таймер дойдёт до нуля, уровень перестроится.",
         ["Player voices get swapped or randomized."] = "Голоса игроков меняются местами или становятся случайными.",
         ["More gacha/cube valuables spawn."] = "Появляется больше гача-кубов.",
         ["Exploding souls deal more damage to players."] = "Взрывающиеся души наносят игрокам больше урона.",
-        ["Each soul drop is worth more money (value per drop, not count)."] = "Каждая выпавшая душа стоит больше денег (дороже, а не больше).",
-        ["Monsters take less damage from death pits."] = "Монстры получают меньше урона от смертельных ям.",
+        ["Each soul drop is worth more money (value per drop, not count)."] = "Каждая выпавшая душа стоит дороже.",
+        ["Monsters take less damage from death pits."] = "При падении в пропасть монстры получают меньше урона.",
         ["Monsters weigh less and yield to a single player's grab without Strength upgrades. Native hold-time, mounted and freeze restrictions still apply."] =
-            "Монстры легче и поддаются захвату одного игрока без улучшений силы. Обычные ограничения по времени захвата, верховым и заморозке остаются.",
+            "Монстров можно схватить в одиночку без улучшения силы. Действуют обычные ограничения захвата, в том числе для замороженных монстров и тех, на ком кто-то сидит.",
         ["All monsters weigh more, so they're hard to shove around."] = "Все монстры тяжелее, их трудно толкать.",
         ["Everything players do makes 40% less noise: footsteps, voices and dropped loot alert fewer monsters."] =
-            "Всё, что делают игроки, на 40% тише: шаги, голоса и упавший лут привлекают меньше монстров.",
+            "Игроки шумят на 40% меньше. Шаги, голоса и падение добычи привлекают меньше монстров.",
         ["The acoustics are terrible: monsters hear every footstep, voice and bump 50% farther away."] =
             "Ужасная акустика: монстры слышат каждый шаг, голос и удар на 50% дальше.",
         ["Freshly oiled wheels: C.A.R.T.s are much easier to push, even full and uphill."] =
-            "Свежесмазанные колёса: тележки толкать гораздо легче, даже полные и в горку.",
+            "Тележки легче толкать даже в гору с полным кузовом.",
         ["Monsters forget quickly: once they lose sight of you, they give up the chase sooner."] =
-            "Монстры быстро забывают: потеряв вас из виду, они раньше бросают погоню.",
+            "Потеряв вас из виду, монстры быстрее прекращают погоню.",
         ["About half the monsters grew thorns: hitting them with a melee weapon reflects up to 10% of the damage back at you."] =
             "Примерно у половины монстров выросли шипы: удар оружием ближнего боя возвращает вам до 10% урона.",
         ["Mystery boxes appear around the map. Drop one monster soul into a box to roll a random upgrade, money, or a weapon/grenade for this level only. Each box takes one soul."] =
-            "По карте расставлены мистические коробки. Бросьте в коробку душу монстра — выпадет случайное улучшение, деньги или оружие/граната только на этот уровень. Каждая коробка берёт одну душу.",
+            "В каждом ящике можно обменять одну душу монстра на случайный приз. Выпадут деньги, улучшение либо оружие или граната на этот уровень.",
 
         // ---- stat modifiers
-        ["Gilded Loot"] = "Позолоченный лут",
+        ["Gilded Loot"] = "Позолоченная добыча",
         ["Valuables are worth 25% more."] = "Ценности стоят на 25% больше.",
         ["Rich Pickings"] = "Богатая добыча",
         ["Valuables are worth 50% more, the quota 25% higher."] = "Ценности стоят на 50% больше, квота на 25% выше.",
@@ -171,13 +171,13 @@ internal static class ModifierText
         ["All healing is 40% weaker."] = "Всё лечение на 40% слабее.",
         ["Fragile Everything"] = "Всё хрупкое",
         ["Players take 50% more damage and heal 30% less."] = "Игроки получают на 50% больше урона и лечатся на 30% меньше.",
-        ["Sprawling Facility"] = "Разросшийся комплекс",
+        ["Sprawling Facility"] = "Обширный комплекс",
         ["A 25% bigger level with 15% more valuable loot."] = "Уровень на 25% больше, а лут на 15% ценнее.",
         ["Compact Facility"] = "Компактный комплекс",
         ["A 20% smaller level with 15% fewer monsters."] = "Уровень на 20% меньше и на 15% меньше монстров.",
-        ["Extra Dock"] = "Лишний док",
+        ["Extra Dock"] = "Дополнительная точка сдачи",
         ["One more extraction point."] = "На одну точку сдачи больше.",
-        ["Cramped Dock"] = "Тесный док",
+        ["Cramped Dock"] = "Меньше точек сдачи",
         ["One fewer extraction point."] = "На одну точку сдачи меньше.",
         ["Gold Rush"] = "Золотая лихорадка",
         ["Valuables are worth 40% more, and 25% more monsters guard them."] = "Ценности стоят на 40% больше, и их охраняет на 25% больше монстров.",
@@ -199,40 +199,40 @@ internal static class ModifierText
         // ---- level economy events
         ["Loot is worth 35% more."] = "Лут стоит на 35% больше.",
         ["Windfall"] = "Нежданная удача",
-        ["Extractions pay 30% more."] = "Сдача платит на 30% больше.",
+        ["Extractions pay 30% more."] = "За сдачу платят на 30% больше.",
         ["Grand Contract"] = "Крупный контракт",
         ["More valuable loot, a lighter quota and better pay."] = "Лут ценнее, квота легче, оплата выше.",
         ["Rich Vein"] = "Богатая жила",
         ["Loot is worth 15% more."] = "Лут стоит на 15% больше.",
         ["Light Quota"] = "Лёгкая квота",
         ["The quota is 25% lower."] = "Квота на 25% ниже.",
-        ["Modest Quota"] = "Скромная квота",
+        ["Modest Quota"] = "Сниженная квота",
         ["The quota is 15% lower."] = "Квота на 15% ниже.",
         ["Generous Client"] = "Щедрый клиент",
-        ["Extractions pay 15% more."] = "Сдача платит на 15% больше.",
+        ["Extractions pay 15% more."] = "За сдачу платят на 15% больше.",
         ["Tax Break"] = "Налоговая льгота",
-        ["A small rebate: extractions pay 10% more."] = "Небольшой возврат: сдача платит на 10% больше.",
+        ["A small rebate: extractions pay 10% more."] = "За сдачу платят на 10% больше.",
         ["High Stakes"] = "Высокие ставки",
         ["Loot is worth 30% more, but the quota is 30% higher."] = "Лут стоит на 30% больше, но квота на 30% выше.",
         ["Fire Sale"] = "Срочная распродажа",
         ["Loot is worth 20% less, and so is the quota."] = "Лут стоит на 20% меньше, и квота тоже.",
         ["Hazard Pay"] = "Надбавка за риск",
-        ["Extractions pay 25% more, the quota is 15% higher."] = "Сдача платит на 25% больше, квота на 15% выше.",
+        ["Extractions pay 25% more, the quota is 15% higher."] = "За сдачу платят на 25% больше, а квота на 15% выше.",
         ["Budget Cuts"] = "Урезанный бюджет",
-        ["Extractions pay 20% less, the quota is 15% lower."] = "Сдача платит на 20% меньше, квота на 15% ниже.",
-        ["Inflated Loot"] = "Раздутый лут",
-        ["Loot is worth 20% more, extractions pay 20% less."] = "Лут стоит на 20% больше, сдача платит на 20% меньше.",
+        ["Extractions pay 20% less, the quota is 15% lower."] = "За сдачу платят на 20% меньше, а квота на 15% ниже.",
+        ["Inflated Loot"] = "Завышенные цены",
+        ["Loot is worth 20% more, extractions pay 20% less."] = "Ценности на 20% дороже, но за сдачу платят на 20% меньше.",
         ["Tax Season"] = "Налоговый сезон",
         ["Loot is worth 15% less."] = "Лут стоит на 15% меньше.",
         ["Heavy Quota"] = "Тяжёлая квота",
         ["Tight Budget"] = "Скромный бюджет",
-        ["Extractions pay 15% less."] = "Сдача платит на 15% меньше.",
+        ["Extractions pay 15% less."] = "За сдачу платят на 15% меньше.",
         ["Poor Facility"] = "Бедный комплекс",
-        ["Extractions pay 30% less."] = "Сдача платит на 30% меньше.",
+        ["Extractions pay 30% less."] = "За сдачу платят на 30% меньше.",
         ["Bankruptcy"] = "Банкротство",
         ["Loot is worth 35% less."] = "Лут стоит на 35% меньше.",
         ["Tax Audit"] = "Налоговая проверка",
-        ["Extractions pay 25% less and the quota is 10% higher."] = "Сдача платит на 25% меньше, и квота на 10% выше.",
+        ["Extractions pay 25% less and the quota is 10% higher."] = "За сдачу платят на 25% меньше, а квота на 10% выше.",
         ["Crushing Quota"] = "Неподъёмная квота",
         ["The quota is 40% higher."] = "Квота на 40% выше.",
 
@@ -240,18 +240,18 @@ internal static class ModifierText
         ["Black Friday"] = "Чёрная пятница",
         ["Everything is 45% off."] = "Всё со скидкой 45%.",
         ["Grand Opening"] = "Торжественное открытие",
-        ["Opening-week prices: 30-40% off."] = "Цены недели открытия: скидка 30-40%.",
-        ["Weekend Sale"] = "Распродажа выходных",
+        ["Opening-week prices: 30-40% off."] = "В честь открытия скидки от 30 до 40%.",
+        ["Weekend Sale"] = "Распродажа в выходные",
         ["Items are 20% off."] = "Предметы со скидкой 20%.",
         ["Upgrade Discount"] = "Скидка на улучшения",
         ["Upgrades are 40% off."] = "Улучшения со скидкой 40%.",
-        ["Medic Sale"] = "Распродажа медика",
+        ["Medic Sale"] = "Скидки на аптечки",
         ["Health packs are half price."] = "Аптечки за полцены.",
         ["Crystal Clearance"] = "Распродажа кристаллов",
-        ["Power crystals are 40% off."] = "Кристаллы энергии со скидкой 40%.",
+        ["Power crystals are 40% off."] = "Энергокристаллы со скидкой 40%.",
         ["Loyalty Program"] = "Программа лояльности",
         ["Everything is 15% off."] = "Всё со скидкой 15%.",
-        ["Boutique Day"] = "День бутика",
+        ["Boutique Day"] = "День премиум-товаров",
         ["Items cost 30% more, upgrades are 30% off."] = "Предметы на 30% дороже, улучшения со скидкой 30%.",
         ["Health packs are 40% off, crystals cost 40% more."] = "Аптечки со скидкой 40%, кристаллы на 40% дороже.",
         ["Arms Race"] = "Гонка вооружений",
@@ -269,7 +269,7 @@ internal static class ModifierText
         ["Medical Shortage"] = "Нехватка медикаментов",
         ["Health packs cost 50% more."] = "Аптечки на 50% дороже.",
         ["Crystal Shortage"] = "Нехватка кристаллов",
-        ["Power crystals cost 50% more."] = "Кристаллы энергии на 50% дороже.",
+        ["Power crystals cost 50% more."] = "Энергокристаллы на 50% дороже.",
         ["Market Manipulation"] = "Манипуляция рынком",
         ["Everything costs 60% more."] = "Всё на 60% дороже.",
         ["Hyper Inflation"] = "Гиперинфляция",

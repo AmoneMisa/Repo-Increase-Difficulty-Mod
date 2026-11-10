@@ -222,7 +222,7 @@ internal static class RetryCrystalEffect
     {
         if (PhotonNetwork.InRoom && PhotonNetwork.LocalPlayer.ActorNumber != c.Taker) return;
         // The game's own focus text: native font, size, glow and placement.
-        SemiFunc.UIFocusText($"{(Localization.GameLanguage.Russian ? "КРИСТАЛЛ БАТАРЕИ" : "BATTERY CRYSTAL")}: +{ChargeFor(SemiFunc.PlayerAvatarLocal()):0}% {c.Item}", new Color(0.55f, 1f, 0.45f), Color.white, 3f);
+        SemiFunc.UIFocusText($"{(Localization.GameLanguage.Russian ? "ЭНЕРГОКРИСТАЛЛ" : "BATTERY CRYSTAL")}: +{ChargeFor(SemiFunc.PlayerAvatarLocal()):0}% {c.Item}", new Color(0.55f, 1f, 0.45f), Color.white, 3f);
     }
 
     // ---------------------------------------------------------------- pings
@@ -282,8 +282,8 @@ internal static class RetryCrystalEffect
     {
         var local = SemiFunc.PlayerAvatarLocal();
         bool ru = Localization.GameLanguage.Russian;
-        return info && local != null ? (ru ? $"Кристалл батареи (+{ChargeFor(local):0}% заряда)" : $"Battery Crystal (+{ChargeFor(local):0}% charge)")
-            : ru ? "Кристалл батареи" : "Battery Crystal";
+        return info && local != null ? (ru ? $"Энергокристалл (+{ChargeFor(local):0}% заряда)" : $"Battery Crystal (+{ChargeFor(local):0}% charge)")
+            : ru ? "Энергокристалл" : "Battery Crystal";
     }
 
     // ---------------------------------------------------------------- networking

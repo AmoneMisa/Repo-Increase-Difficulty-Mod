@@ -151,12 +151,11 @@ internal sealed class PingOutline : MaskableGraphic
 
     /// <summary>Enemy pings: the monster's own silhouette icon in the centre of the reticle, in the ping colour. If
     /// its icon isn't captured yet (the monster was half hidden), the ping keeps trying while it lasts.</summary>
-    internal void UseMonsterIcon(EnemyParent monster, Color tint)
+    internal void UseMonsterIcon(EnemyParent monster, Color tint, string name)
     {
-        if (monster == null) return;
         _calloutSquare = true;
         _calloutTint = tint;
-        var icon = Visuals.MonsterIcons.Get(monster);
+        var icon = Visuals.MonsterIcons.GetPrepared(name) ?? Visuals.MonsterIcons.Get(monster);
         if (icon != null) AddCalloutIcon(icon);
         else _iconMonster = monster;
     }

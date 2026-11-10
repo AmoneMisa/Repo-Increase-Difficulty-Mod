@@ -67,7 +67,7 @@ def make_mats():
         'white': m('Jester white', WHITE, .65),
         'brass': m('Jester brass', BRASS, .3, metal=.85),
         'heart': m('Jester heart', (.75, .05, .07), .4),
-        'mask': m('Jester mask', (.96, .95, .93), .25),
+        'mask': m('Jester mask', (.96, .95, .93), .25, tint=True),
         'ink': m('Jester ink', (.01, .01, .012), .3),
     }
 
@@ -226,6 +226,8 @@ def build_leg(M, sd):
 def build_sleeve(M, sx):
     parts = []
     mat = M['red'] if sx > 0 else M['black']
+    if sx < 0:
+        mat = mat.copy(); mat.name = 'Jester left sleeve'; mat['tint'] = True
     radius = lambda t, a: .084 + .06 * max(0., 1 - t / .32) ** .7 * math.sin(math.pi * min(1, t / .32 + .2)) + .004 * math.sin(10 * a) * (t < .32)
     o, pt = P.sleeve('Sleeve', mat, M['black'], sx, .03, .42, radius)
     parts += o

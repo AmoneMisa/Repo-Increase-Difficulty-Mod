@@ -58,9 +58,9 @@ internal static class QuestText
         {
             case ObjectiveType.KillAny: return $"Убейте {n} {monsters}";
             case ObjectiveType.MeleeKill: return $"Убейте {n} {monsters} в ближнем бою";
-            case ObjectiveType.GunKill: return $"Убейте {n} {monsters} из оружия";
-            case ObjectiveType.HandKill: return $"Убейте {n} {monsters} голыми руками (хватайте, бросайте, толкайте — без оружия)";
-            case ObjectiveType.KillType: return $"Убейте {n}x {q.Param}";
+            case ObjectiveType.GunKill: return $"Застрелите {n} {monsters}";
+            case ObjectiveType.HandKill: return $"Убейте {n} {monsters} голыми руками";
+            case ObjectiveType.KillType: return $"Убейте {n} {monsters} вида «{Localization.EnemyText.Name(q.Param)}»";
             case ObjectiveType.KillTier:
             {
                 int tier = int.TryParse(q.Param, out int t) ? t : -1;
@@ -69,14 +69,16 @@ internal static class QuestText
             }
             case ObjectiveType.PitKill: return $"Столкните {n} {monsters} в пропасть";
             case ObjectiveType.StunEnemies: return $"Оглушите {n} {monsters}";
-            case ObjectiveType.NoGunKills: return "Пройдите уровень без убийств из оружия";
-            case ObjectiveType.NoDamage: return "Не получите урона за уровень";
-            case ObjectiveType.NoDeaths: return n <= 0 ? "Пройдите уровень без смертей" : $"Пройдите уровень, умерев не больше {n} раз{(n == 1 ? "а" : "")}";
-            case ObjectiveType.ReachHaul: return $"Сдайте добычи на {K(n)}";
+            case ObjectiveType.NoGunKills: return "Пройдите уровень, никого не застрелив";
+            case ObjectiveType.NoDamage: return "Пройдите уровень без урона";
+            case ObjectiveType.NoDeaths: return n <= 0 ? "Пройдите уровень без смертей" : $"Пройдите уровень. Допустимо смертей: {n}";
+            case ObjectiveType.ReachHaul: return $"Сдайте добычу на сумму {K(n)}";
             case ObjectiveType.IntactExtract: return $"Сдайте {n} {valuables} без повреждений";
             case ObjectiveType.ExtractCount: return $"Сдайте {n} {valuables}";
             case ObjectiveType.HighValueExtract:
-                return int.TryParse(q.Param, out int minimum) ? $"Сдайте {n} {valuables} дороже {K(minimum)} каждая" : $"Сдайте {n} дорогих {valuables}";
+                return int.TryParse(q.Param, out int minimum)
+                    ? $"Сдайте {n} {valuables} стоимостью от {K(minimum)} за штуку"
+                    : $"Сдайте {n} {Plural(n, "дорогую ценность", "дорогие ценности", "дорогих ценностей")}";
             case ObjectiveType.SoulExtract: return $"Сдайте {n} {Plural(n, "душу", "души", "душ")} монстров";
             case ObjectiveType.Revive: return n == 1 ? "Воскресите павшего напарника" : $"Воскресите {n} {Plural(n, "павшего напарника", "павших напарников", "павших напарников")}";
             case ObjectiveType.MoonRitual: return n == 1 ? "Луна судит: заслужите её одобрение у точки сдачи" : $"Луна судит: заслужите её одобрение у {n} точек сдачи";
@@ -91,15 +93,15 @@ internal static class QuestText
                 return q.Param == "100" ? $"Жемчужина: сдайте {jewel} без единой царапины" : $"Жемчужина: сдайте {jewel}, сохранив 75% стоимости";
             }
             case ObjectiveType.FastOpener: return $"Быстрый старт: закройте первую точку сдачи за {Clock(n)}";
-            case ObjectiveType.LightsOut: return $"Свет выключен: исследуйте уровень без фонарей {Clock(n)} в сумме";
-            case ObjectiveType.Oops: return $"Упс! Разбейте ценностей на {K(n)} (мы никому не скажем)";
-            case ObjectiveType.RagdollOlympics: return $"Олимпиада тряпичных кукол: кувыркнитесь {n} {Plural(n, "раз", "раза", "раз")}";
+            case ObjectiveType.LightsOut: return $"Без света: исследуйте уровень без фонарей в общей сложности {Clock(n)}";
+            case ObjectiveType.Oops: return $"Упс! Разбейте ценности на сумму {K(n)}";
+            case ObjectiveType.RagdollOlympics: return $"Олимпиада кувырков: кувыркнитесь {n} {Plural(n, "раз", "раза", "раз")}";
             case ObjectiveType.TalkItOut:
                 return (SemiFunc.PlayerGetList()?.Count ?? 1) <= 1
                     ? $"Выговоритесь: поговорите сами с собой {n} с (это совершенно нормально)"
-                    : $"Выговоритесь: болтайте в голосовом чате {n} с в сумме";
+                    : $"Выговоритесь: наберите {n} с разговора в голосовом чате";
             case ObjectiveType.Ballerina: return "Балерина: покружитесь 5 раз за 6 секунд";
-            case ObjectiveType.PayRespects: return "Почтите память: посидите на корточках 3 секунды там, где погиб монстр";
+            case ObjectiveType.PayRespects: return "Почтите память: присядьте на 3 с на месте гибели монстра";
             case ObjectiveType.MonsterHugger: return $"Обнимашки с монстром: постойте вплотную к живому монстру {n} с";
         }
         return "";

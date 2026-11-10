@@ -6,10 +6,15 @@ The Ghost Bride set: an original haunted-bride outfit in pale ivory lace with a 
   bride_corset   Body Top     strapless floral-lace bodice with a pointed front, boning, blue roses at the neckline,
                               and a satin sash tied in a bow at the back
   bride_skirt    Body Bottom  ball-gown skirt in three ruffled lace tiers, a bustle behind and a satin underskirt
-  bride_glove_r  Arm Right    long lace opera glove, softly torn at the top
-  bride_glove_l  Arm Left
+  bride_glove_r  Arm Right    slim blue arm and hand under a torn lace cap sleeve
+  bride_glove_l  Arm Left     the skeleton arm: humerus, radius and ulna, a bony wrist
+  bride_leg_r    Leg Right    the skeleton leg in a white ankle boot
+  bride_leg_l    Leg Left     blue leg in a white ankle boot
+  bride_face     Face Top     blue skin round the native eyes, thin sad brows, long lashes, a small nose
+  bride_lips     Face Bottom  small rose upper lip
+  bride_neck     Head Bottom  blue jaw and neck with the lower lip
 
-Tintable: the lace and tulle. Fixed: roses, leaves, satin. Built on tools/cosmetic_kit.py + costume_parts.py.
+Tintable: the lace, tulle and satin. Fixed: skin, bone, hair, roses, leaves, the face. Built on tools/cosmetic_kit.py + costume_parts.py.
 """
 import argparse
 import math
@@ -23,6 +28,8 @@ from mathutils import Vector
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import cosmetic_kit as K  # noqa: E402
 import costume_parts as P  # noqa: E402
+import face_parts as F  # noqa: E402
+from cosmetic_hair import hair
 from cosmetic_kit import TAU, lerp, surface, tube, ellipsoid, gem, ribbon  # noqa: E402
 
 parser = argparse.ArgumentParser()
@@ -78,7 +85,13 @@ def make_mats():
     return {
         'lace': m('Bride lace', LACE, .6, image='bride_lace.png', tint=True),
         'tulle': m('Bride tulle', TULLE, .5, image='bride_tulle.png', tint=True),
-        'satin': m('Bride satin', SATIN, .3, clean=True),
+        'hair': m('Bride midnight blue hair', (.008,.018,.13), .72, clean=True),
+        'satin': m('Bride satin', SATIN, .65, clean=True, tint=True),
+        'skin': m('Bride blue skin', (.17,.44,.62), .8, clean=True),
+        'brow': m('Bride navy brow and lash', (.012,.02,.09), .7, clean=True),
+        'lip': m('Bride rose lips', (.52,.13,.26), .5, clean=True),
+        'bone': m('Bride ivory bone', (.78,.72,.55), .85, clean=True),
+        'shadow': m('Bride rib opening', (.009,.025,.04), .92, clean=True),
         'rose': m('Bride rose', ROSE, .5),
         'rose_dark': m('Bride rose shadow', (.17, .25, .62), .55),
         'leaf': m('Bride leaf', LEAF, .6),
@@ -122,7 +135,7 @@ def crown_point(a, lat=46., off=0.):
 
 
 def build_veil(M):
-    parts = []
+    parts = hair(M['hair'], .58, wave=.036)
     for k in range(12):
         a = TAU * k / 12
         p = crown_point(a, 46 + 3 * math.sin(3 * a), .02)
@@ -162,7 +175,10 @@ def build_corset(M):
         a = TAU * s; h = lerp(bottom(a), neckline(a), t)
         p = P.on_body(max(h, -.02), a, lift)
         return p + Vector((0, min(0, h + .02), 0)) + Vector((math.sin(a), 0, math.cos(a))) * (.012 if h < -.02 else 0)
-    parts.append(surface('Bodice', 16, 96, bodice, M['lace'], wrap=True, uv=(9, 2.4), inside=K.B(0, .2, 0)))
+    parts.append(surface('Bodice', 16, 96, bodice, M['satin'], wrap=True, uv=(9, 2.4), inside=K.B(0, .2, 0)))
+    # bare blue shoulders and collar above the strapless neckline
+    parts += P.body_shell('Blue shoulders', M['skin'], .2, lambda a: .384, .007)
+    parts += F.shoulder_cap('Blue collar', M['skin'], lift=.007)
     for a in (0, .35, -.35, .8, -.8, 1.3, -1.3, 2.0, -2.0, 2.6, -2.6, math.pi):
         bone = [bodice(t, (a % TAU) / TAU, .016) for t in np.linspace(.08, .92, 10)]
         parts.append(tube('Boning', bone, .003, M['satin'], segs=5))
@@ -173,6 +189,11 @@ def build_corset(M):
     for a, size in ((0, .042), (-.3, .032), (.3, .032)):
         p = bodice(1, (a % TAU) / TAU, .02) + Vector((0, -.012, 0))
         parts += rose(M, p, Vector((math.sin(a), .3, math.cos(a))), size)
+    # The torn left side of the corset exposes curved ivory ribs.
+    parts.append(surface('Torn corset opening',8,32,lambda t,s:P.on_body(.14+.09*t*math.sin(TAU*s),-.55+.18*t*math.cos(TAU*s),.031),M['shadow'],wrap=True))
+    for j in range(4):
+        path=[P.on_body(.20-j*.035-.012*math.sin(t*math.pi),-.73+.34*t,.041) for t in np.linspace(0,1,15)]
+        parts.append(tube('Exposed ivory rib',path,.009,M['bone'],segs=6))
     # satin sash round the waist, tied in a bow at the back with two trailing tails
     def sash(t, s):
         a = TAU * s; h = lerp(.005, .055, t)
@@ -192,34 +213,108 @@ def build_corset(M):
 def build_skirt(M):
     parts = []
     inside = K.B(0, -.2, 0)
-    # satin underskirt to the floor
-    under_r = lambda t, a: .32 + (.6 + .08 * (1 - P.front(a)) - .32) * t ** 1.1
-    o, _ = P.robe('Underskirt', M['satin'], M['satin'], 0, TAU, .28, .32, lambda a: -.6 + .015 * math.sin(4 * a), under_r,
-                  folds=(.02, 10, .3), cols=64, inside=inside)
-    parts += o
-    # three ruffled lace tiers, each lower and wider, the back fuller (a bustle)
-    tiers = ((.29, -.12, .33, .48), (-.06, -.36, .45, .57), (-.3, -.6, .54, .66))
-    for k, (y0, y1, r0, r1) in enumerate(tiers):
-        def radius(t, a, r0=r0, r1=r1, k=k):
-            bustle = (.07 if k < 2 else .04) * (1 - P.front(a)) ** 2
-            return r0 + bustle * .6 + (r1 + bustle - r0 - bustle * .6) * t ** 1.3
-        hem = lambda a, y1=y1, k=k: y1 + .012 * math.sin((20 + 4 * k) * a + k)          # a fluted, gently waved hem
-        o, pt = P.robe('Tier', M['lace'], M['lace'], 0, TAU, y0, r0, hem, radius, folds=(.035, 20 + 4 * k, k), rows=6, cols=96, uv=(14, 2), inside=inside)
-        parts += o
+    # One flowing split gown, a fitted hip and a longer train behind; no stacked tiers.
+    a0,a1=.56,TAU+.02          # open over the right leg, where the bones show
+    def radius(t,a):return .33+.24*t**1.6+.07*(1-P.front(a))*t*t
+    hem=lambda a:-.57-.015*(1-P.front(a))+.009*math.sin(7*a)
+    o,pt=P.robe('Split bridal gown',M['satin'],M['lace'],a0,a1,.28,.33,hem,radius,
+        folds=(.018,9,.3),rows=20,cols=96,uv=(5,3),inside=inside)
+    parts+=o
+    # A satin slip over the hips, so the open front shows legs and not the robot's body.
+    def slip(t,s):
+        a=TAU*s;r=.303*min(1.,(1.6-t)/.6) if t>1 else .303
+        return Vector((r*math.sin(a),lerp(.286,-.03,min(t,1.)),r*math.cos(a)))
+    parts.append(surface('Satin slip',8,64,lambda t,s:slip(t*1.6,s),M['satin'],wrap=True,uv=(4,1),inside=K.B(0,.1,0)))
+    # Lace confined to the trailing hem, rather than covering the whole dress in a repeated motif.
+    parts.append(surface('Lace train border',5,96,lambda t,s:pt(.82+.18*t,s,.004),M['lace'],uv=(10,1),inside=inside))
     return parts, {}, None
 
 
-# ---------------------------------------------------------------- gloves
+# ---------------------------------------------------------------- arms
+def lace_cap(M, sx):
+    """What is left of a lace sleeve: a short torn cap over the shoulder."""
+    o, _ = P.sleeve('Torn lace cap sleeve', M['lace'], M['lace'], sx, -.02, .13, lambda t, a: .093 + .012 * t, uv=(3, 1), end_tatter=lambda a: P.tatter(a, 7, .06, .3))
+    return o
+
+
 def build_glove(M, sx):
-    parts = []
-    def glove(t, s, off=0.):
-        a = TAU * s
-        x0 = .1 + .04 * (P.tatter(a, 5, 1.) + .5)
-        x = lerp(x0, .5, t)
-        r = (.082 if x < .44 else .082 * (1 - (x - .44) / .1 * .75)) + .003 * P.wrinkle(a, t) + off
-        return Vector((sx * x, r * math.sin(a), r * math.cos(a)))
-    parts.append(surface('Glove', 14, 28, glove, M['lace'], wrap=True, uv=(5, 7), inside=K.B(sx * .3, 0, 0)))
-    parts.append(surface('Glove lining', 14, 28, lambda t, s: glove(t, s, -.006), M['satin'], wrap=True, inside=K.B(sx * .3, 0, 0), flip=True))
+    parts = lace_cap(M, sx)
+    if sx > 0:
+        o, _ = P.sleeve('Blue arm', M['skin'], None, sx, .0, .50, lambda t, a: .0765)
+        parts += o
+        parts.append(ellipsoid('Blue shoulder', (0, 0, 0), (.08, .08, .08), M['skin'], (14, 8)))
+        parts += F.hand('Blue hand', M['skin'], sx)
+        return parts, {}, None
+    # The skeleton arm. The native arm stays inside: a dark sleeve reads as the gap between the bones.
+    o, _ = P.sleeve('Hollow of the arm', M['shadow'], None, sx, .0, .52, lambda t, a: .0735)
+    parts += o
+    parts.append(ellipsoid('Shoulder joint', (0, 0, 0), (.088, .088, .088), M['bone'], (14, 8)))
+    # humerus: one stout bone with flared ends
+    o, _ = P.sleeve('Humerus', M['bone'], None, sx, .03, .235, lambda t, a: .0775 + .013 * (abs(2 * t - 1) ** 2.5), uv=(2, 1))
+    parts += o
+    for z in (-.035, .035):
+        parts.append(ellipsoid('Elbow condyle', (sx * .245, 0, z), (.04, .062, .05), M['bone'], (12, 7)))
+        # radius and ulna side by side, the dark hollow showing between them
+        path = [Vector((sx * x, 0, z * (1.1 + .12 * math.sin(math.pi * (x - .26) / .22)))) for x in np.linspace(.26, .48, 12)]
+        parts.append(tube('Forearm bone', path, lambda t: .054 + .008 * abs(2 * t - 1) ** 2, M['bone'], segs=12, up=(0, 1, 0)))
+    parts.append(ellipsoid('Bony wrist', (sx * .515, 0, 0), (.068, .078, .084), M['bone'], (14, 8)))   # no finger bones: robots have none
+    return parts, {}, None
+
+
+# ---------------------------------------------------------------- legs
+def boot(M, sx):
+    """A white ankle boot with a small heel at the foot of the leg."""
+    def shaft(t, s):
+        a = TAU * s; r = lerp(.074, .066, t)
+        return Vector((r * math.sin(a), lerp(-.37, -.5, t), r * math.cos(a) * 1.05))
+    parts = [surface('Boot shaft', 6, 24, shaft, M['satin'], wrap=True, inside=K.B(0, -.43, 0)),
+             tube('Boot cuff', [shaft(0, k / 24) for k in range(24)], .009, M['satin'], closed=True, segs=6),
+             ellipsoid('Boot foot', (sx * .008, -.515, .065), (.078, .05, .165), M['satin'], (16, 10)),
+             ellipsoid('Boot heel', (sx * .008, -.53, -.05), (.045, .04, .045), M['satin'], (10, 6))]
+    return parts
+
+
+def build_leg(M, sx):
+    parts = boot(M, sx)
+    if sx < 0:
+        parts.append(ellipsoid('Blue leg', (0, -.16, 0), (.113, .30, .112), M['skin'], (20, 12)))
+        return parts, {}, None
+    # The skeleton leg: thigh bone, knee, shin and calf bones down into the boot; the native leg hides in the dark.
+    def hollow(t, s):
+        a = TAU * s; y = lerp(.11, -.40, t); r = P.leg_r(y) + .003
+        return Vector((r * math.sin(a), y, r * math.cos(a)))
+    parts.append(surface('Hollow of the leg', 10, 24, hollow, M['shadow'], wrap=True, inside=K.B(0, -.1, 0)))
+    def femur(t, s):
+        a = TAU * s; y = lerp(.11, -.19, t); r = P.leg_r(y) + .008 + .014 * abs(2 * t - 1) ** 2.5
+        return Vector((r * math.sin(a), y, r * math.cos(a)))
+    parts.append(surface('Thigh bone', 12, 28, femur, M['bone'], wrap=True, uv=(2, 1), inside=K.B(0, -.05, 0)))
+    for x in (-.04, .04):
+        parts.append(ellipsoid('Knee condyle', (x, -.215, .0), (.05, .045, .075), M['bone'], (12, 7)))
+        path = [Vector((x * lerp(.95, .55, u), lerp(-.24, -.40, u), .01 * math.sin(math.pi * u))) for u in np.linspace(0, 1, 8)]
+        parts.append(tube('Shin bone', path, lambda t: .036 - .012 * math.sin(math.pi * t), M['bone'], segs=10))
+    parts.append(ellipsoid('Kneecap', (0, -.215, .078), (.036, .04, .022), M['bone'], (10, 6)))
+    return parts, {}, None
+
+
+# ---------------------------------------------------------------- face (Face Top), lips (Face Bottom), jaw (Head Bottom)
+def build_face(M):
+    parts = F.face_shell('Blue face', M['skin'])
+    parts += F.nose('Small nose', M['skin'], y=.045, size=(.016, .024, .018))
+    for side in (-1, 1):
+        parts += F.liner('Lash line', M['brow'], side, phi0=-20, phi1=200, radius=.006)
+        parts += F.lashes('Long lash', M['brow'], side, angles=(26, 42, 58), length=.04)
+        # thin brows, raised at the inner ends: her worried, hopeful look
+        parts += F.brow('Thin sad brow', M['brow'], side, inner=(.06, .30), outer=(.24, .268), arch=.016, radius=.0075)
+    return parts, {}, None
+
+
+def build_lips(M):
+    return F.upper_lip('Small upper lip', M['lip'], half=.062, radius=.0105, bow=.005), {}, None
+
+
+def build_neck(M):
+    parts = F.jaw_shell('Blue jaw and neck', M['skin'])
+    parts += F.lower_lip('Small lower lip', M['lip'], half=.05, radius=.0125)
     return parts, {}, None
 
 
@@ -229,8 +324,16 @@ STYLES = {
     'bride_skirt': ('Body Bottom', build_skirt),
     'bride_glove_r': ('Arm Right', lambda M: build_glove(M, 1)),
     'bride_glove_l': ('Arm Left', lambda M: build_glove(M, -1)),
+    'bride_leg_r': ('Leg Right', lambda M: build_leg(M, 1)),
+    'bride_leg_l': ('Leg Left', lambda M: build_leg(M, -1)),
+    'bride_face': ('Face Top', build_face),
+    'bride_lips': ('Face Bottom', build_lips),
+    'bride_neck': ('Head Bottom', build_neck),
 }
-VIEWS = {'bride_veil': (-.6, -1., .35), 'bride_corset': (.5, 1., .3), 'bride_skirt': (.5, 1., .2), 'bride_glove_r': (.3, 1., .5), 'bride_glove_l': (-.3, 1., .5)}
+VIEWS = {'bride_veil': (-.6, -1., .35), 'bride_corset': (.5, 1., .3), 'bride_skirt': (.5, 1., .2), 'bride_glove_r': (.3, 1., .5), 'bride_glove_l': (-.3, 1., .5),
+         'bride_leg_r': (.5, 1., .2), 'bride_leg_l': (-.5, 1., .2), 'bride_face': (.2, .3, 1.), 'bride_lips': (0, .2, 1.), 'bride_neck': (.2, .5, 1.)}
+_body = K.stand_in_body
+K.stand_in_body = lambda: (_body(), F.preview_eyes())     # review renders show the native eyes too
 K.run(STYLES, VIEWS, ARGS.root / 'art' / 'cosmetics' / 'bride', 'bride', ARGS.preview, setup=make_mats,
-      preview_views=(('front', (.9, 2.7, .7)), ('back', (-1.3, -2.6, .8)), ('side', (2.8, -.3, .5))))
+      preview_views=(('front', (.9, 2.7, .7)), ('back', (-1.3, -2.6, .8)), ('side', (2.8, -.3, .5)), ('left', (-2.6, 1.2, .5))))
 print('BRIDE_COMPLETE', flush=True)

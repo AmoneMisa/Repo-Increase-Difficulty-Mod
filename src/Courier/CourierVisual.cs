@@ -29,7 +29,7 @@ internal sealed class CourierVisual : MonoBehaviour
     private readonly Dictionary<string, Material> _channels = new();
     private readonly List<Mesh> _meshes = new();
     private readonly List<Material> _materials = new();
-    private readonly Color[] _natural = new Color[3];
+    private readonly List<(Material material, int slot, Color natural)> _tints = new();
 
     // Smoothed state
     private Vector3 _target, _last;
@@ -38,6 +38,8 @@ internal sealed class CourierVisual : MonoBehaviour
     private CourierMood _mood;
     private float _idleFor, _nextBlink, _blinkUntil, _hit;
     private bool _placed;
+    private Cosmetics.CosmeticMotion _secondary;
+    private float _tailAngle, _tailVelocity;
     private readonly List<(Transform t, float born)> _hearts = new();
 
     internal int Look => _look;
@@ -57,7 +59,7 @@ internal sealed class CourierVisual : MonoBehaviour
     {
         CourierRules.UnpackLook(look, out int animal, out int main, out int second, out int accent);
         int previousAnimal = _look < 0 ? -1 : (_look & 15);
-        _look = look;
+        _look = CourierRules.PackLook(animal, main, second, accent);
         if (animal != previousAnimal) Build(animal);
         Recolour(main, second, accent);
     }
@@ -66,10 +68,12 @@ internal sealed class CourierVisual : MonoBehaviour
 
     private void Build(int animal)
     {
-        if (_model != null) Destroy(_model.gameObject);
+        if (_model != null) { _model.gameObject.SetActive(false); Destroy(_model.gameObject); }
         foreach (var m in _meshes) Destroy(m);
         foreach (var m in _materials) Destroy(m);
-        _meshes.Clear(); _materials.Clear(); _channels.Clear();
+        _meshes.Clear(); _materials.Clear(); _channels.Clear(); _tints.Clear();
+        _shown = (CourierMood)255;
+        _tailAngle = _tailVelocity = 0f;
 
         _template ??= ItemArt.WeaponMaterialDonor(null);
         var key = "courier_" + CourierLook.Keys[animal];
@@ -85,7 +89,7 @@ internal sealed class CourierVisual : MonoBehaviour
             t.SetParent(parent, false);
             var world = pivots.TryGetValue(name, out var p) ? p : Vector3.zero;
             // Groups are placed in model space; parts keep model-space vertices, offset by the pivot.
-            t.localPosition = parent == _model ? world : world - (parent == _body ? Vector3.zero : Vector3.zero);
+            t.localPosition = world - (parent == _body && pivots.TryGetValue("body", out var bodyPivot) ? bodyPivot : Vector3.zero);
             return t;
         }
         _body = Group("body", _model);
@@ -104,8 +108,12 @@ internal sealed class CourierVisual : MonoBehaviour
             ["foot_l"] = _footL, ["foot_r"] = _footR, ["tail"] = _tail,
         };
 
-        _natural[0] = _natural[1] = _natural[2] = Color.white;
-        var seen = new bool[3];
+        var motion = _secondary = _model.gameObject.AddComponent<Cosmetics.CosmeticMotion>();
+        foreach (string name in new[] { "ear_l", "ear_r", "wing_l", "wing_r", "scarf" })
+            if (pivots.ContainsKey(name))
+            {
+                var node = Group(name, _body); groups[name] = node; motion.Add(node, name);
+            }
         foreach (var part in model.parts)
         {
             var bits = part.name.Split('|');
@@ -114,18 +122,28 @@ internal sealed class CourierVisual : MonoBehaviour
             var obj = new GameObject(part.name);
             obj.transform.SetParent(parent, false);
             obj.transform.localPosition = -PivotOf(parent, pivots);
-            var mesh = new Mesh { name = "IHM " + key + " " + part.name, vertices = part.vertices, normals = part.normals, uv = part.uv, triangles = part.triangles };
+            var mesh = new Mesh { name = "IHM " + key + " " + part.name,
+                indexFormat = part.vertices.Length > 65535 ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16,
+                vertices = part.vertices, normals = part.normals, uv = part.uv, triangles = part.triangles };
             mesh.RecalculateBounds();
+            mesh.RecalculateTangents(); // surface-normal maps need the exported UV tangent frame
             _meshes.Add(mesh);
             obj.AddComponent<MeshFilter>().sharedMesh = mesh;
             int slot = channel == "main" ? 0 : channel == "second" ? 1 : channel == "accent" ? 2 : -1;
-            if (slot >= 0 && !seen[slot]) { seen[slot] = true; _natural[slot] = part.color; }
-            string materialKey = slot >= 0 ? channel : "fixed:" + ColorUtility.ToHtmlStringRGB(part.color) + part.texture;
+            bool eyes = group.StartsWith("eyes_", System.StringComparison.Ordinal);
+            string materialKey = channel + ":" + ColorUtility.ToHtmlStringRGB(part.color) + ":" + part.texture + (eyes ? ":eye" : "");
             if (!_channels.TryGetValue(materialKey, out var material))
             {
                 material = ItemArt.Paint(_template, string.IsNullOrEmpty(part.texture) ? null : part.texture, part.color, "IHM Courier " + materialKey);
+                if (!string.IsNullOrEmpty(part.texture))
+                {
+                    var texture = Upgrades.UpgradeIcons.LoadTexture(part.texture);
+                    if (texture != null) { texture.filterMode = FilterMode.Bilinear; texture.wrapMode = TextureWrapMode.Clamp; }
+                }
+                CourierSurface.Apply(material, key, eyes, !string.IsNullOrEmpty(part.texture));
                 _materials.Add(material);
                 _channels[materialKey] = material;
+                if (slot >= 0) _tints.Add((material, slot, part.color));
             }
             var renderer = obj.AddComponent<MeshRenderer>();
             renderer.sharedMaterial = material;
@@ -158,13 +176,13 @@ internal sealed class CourierVisual : MonoBehaviour
     private void Recolour(int main, int second, int accent)
     {
         int[] slots = { main, second, accent };
-        string[] names = { "main", "second", "accent" };
-        for (int i = 0; i < 3; i++)
-            if (_channels.TryGetValue(names[i], out var m))
+        foreach (var tint in _tints)
             {
-                var c = CourierLook.Resolve(slots[i], _natural[i]);
+                var m = tint.material;
+                var c = CourierLook.Resolve(slots[tint.slot], tint.natural);
                 if (m.HasProperty("_Color")) m.SetColor("_Color", c);
                 if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", c);
+                if (m.HasProperty("_AlbedoColor")) m.SetColor("_AlbedoColor", c);
             }
     }
 
@@ -201,7 +219,7 @@ internal sealed class CourierVisual : MonoBehaviour
     private void Cue(string what, float volume)
     {
         if (_look < 0) return;
-        try { ItemAudio.Cue("courier_" + CourierLook.Keys[_look & 15] + "_" + what, volume).Play(transform.position); } catch { }
+        try { ItemAudio.Cue("courier_" + CourierLook.Voice(_look & 15) + "_" + what, volume).Play(transform.position); } catch { }
     }
 
     internal void Call() => Cue("call", .4f);
@@ -245,7 +263,9 @@ internal sealed class CourierVisual : MonoBehaviour
         _model.localPosition = new Vector3(0f, hover, 0f);
         _body.localPosition = new Vector3(0f, bounce + _happy * .02f, 0f);
         _body.localScale = new Vector3(1f + squash * .5f, 1f + breathe - squash, 1f + squash * .5f);
-        float roll = Mathf.Sin(_phase) * 9f * run + _happy * Mathf.Sin(t * 9f) * 6f;
+        int animal = _look & 15;
+        bool bird = animal is 0 or 1 or 3;
+        float roll = Mathf.Sin(_phase) * (bird ? 7f : 3.5f) * run + _happy * Mathf.Sin(t * 9f) * 4f;
         float lean = run * 10f + _fly * 14f - _carry * 4f;
         // Knocked back by a monster: a quick tumble.
         _hit = (_flags & CourierFlags.Hit) != 0 ? Mathf.Min(1f, _hit + dt * 6f) : Mathf.Max(0f, _hit - dt * 3f);
@@ -263,11 +283,14 @@ internal sealed class CourierVisual : MonoBehaviour
         float stepL = Mathf.Max(0f, Mathf.Sin(_phase)) * .05f * run, stepR = Mathf.Max(0f, -Mathf.Sin(_phase)) * .05f * run;
         _footL.localPosition = _footLRest + new Vector3(0f, stepL + _fly * .05f, Mathf.Cos(_phase) * .045f * run);
         _footR.localPosition = _footRRest + new Vector3(0f, stepR + _fly * .05f, -Mathf.Cos(_phase) * .045f * run);
-        _footL.localRotation = Quaternion.Euler(-_fly * 40f, 0f, 0f);
-        _footR.localRotation = Quaternion.Euler(-_fly * 40f, 0f, 0f);
+        _footL.localRotation = Quaternion.Euler(-_fly * 40f + Mathf.Sin(_phase) * 14f * run, 0f, 0f);
+        _footR.localRotation = Quaternion.Euler(-_fly * 40f - Mathf.Sin(_phase) * 14f * run, 0f, 0f);
 
         // Tail: lazy sway, quick wag when happy.
-        _tail.localRotation = Quaternion.Euler(0f, Mathf.Sin(t * (2f + _happy * 12f)) * (10f + _happy * 25f), 0f);
+        float tailTarget = Mathf.Sin(t * (2f + _happy * (animal == 7 ? 9f : 5f))) * (bird ? 4f : 9f + _happy * 18f);
+        _tailAngle = Mathf.SmoothDampAngle(_tailAngle, tailTarget, ref _tailVelocity, .10f, 180f, dt);
+        _tail.localRotation = Quaternion.Euler(run * 4f, _tailAngle, 0f);
+        if (_secondary != null) { _secondary.Activity = run; _secondary.Flutter = _fly; }
 
         // Face: petting wins, then the host's mood; idle pets blink and, after a while, doze off.
         _idleFor = _speed < .15f && _mood == CourierMood.Neutral && !carrying ? _idleFor + dt : 0f;

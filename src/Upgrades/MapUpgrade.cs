@@ -761,7 +761,7 @@ internal sealed class RespawnList : MonoBehaviour
         foreach (var e in director.enemiesSpawned)
         {
             if (e == null || e.Spawned) continue;
-            string name = string.IsNullOrEmpty(e.enemyName) ? (Localization.GameLanguage.Russian ? "Монстр" : "Monster") : e.enemyName;
+            string name = string.IsNullOrEmpty(e.enemyName) ? "Monster" : e.enemyName;
             _entries.Add((name, Mathf.Max(0f, e.DespawnedTimer)));
             if (_entries.Count >= MaxEntries) break;
         }
@@ -798,7 +798,7 @@ internal sealed class RespawnList : MonoBehaviour
         {
             if (shown >= maxLines) { sb.Append("\n  +").Append(_entries.Count - shown).Append(ru ? " ещё" : " more"); break; }
             int left = Mathf.CeilToInt(Mathf.Max(0f, seconds - elapsed));
-            sb.Append("\n  ").Append(name).Append(' ').Append(left / 60).Append(':').Append((left % 60).ToString("00"));
+            sb.Append("\n  ").Append(Localization.EnemyText.Name(name)).Append(' ').Append(left / 60).Append(':').Append((left % 60).ToString("00"));
             shown++;
         }
         return sb.ToString();

@@ -199,9 +199,9 @@ internal static class SkillBoxEffect
         string points = ru ? "+" + b.Points + " " + Quests.QuestText.Plural(b.Points, "ОЧКО", "ОЧКА", "ОЧКОВ") + " НАВЫКОВ"
             : b.Points == 1 ? "+1 SKILL POINT" : "+" + b.Points + " SKILL POINTS";
         if (Mine(b))
-            SemiFunc.UIFocusText(b.Points > 0 ? (ru ? "КОРОБКА НАВЫКОВ: " : "SKILL BOX: ") + points : ru ? "КОРОБКА НАВЫКОВ: ПУСТО" : "SKILL BOX: EMPTY", teal, Color.white, 3f);
+            SemiFunc.UIFocusText(b.Points > 0 ? (ru ? "ЯЩИК НАВЫКОВ: " : "SKILL BOX: ") + points : ru ? "ЯЩИК НАВЫКОВ ПУСТ" : "SKILL BOX: EMPTY", teal, Color.white, 3f);
         else if (b.Points > 0)
-            SemiFunc.UIFocusText(b.OpenerName.ToUpperInvariant() + (ru ? " НАХОДИТ " : " FOUND ") + points, teal, Color.white, 3f);
+            SemiFunc.UIFocusText(b.OpenerName.ToUpperInvariant() + (ru ? " ПОЛУЧАЕТ " : " FOUND ") + points, teal, Color.white, 3f);
     }
 
     // ---------------------------------------------------------------- pings
@@ -238,7 +238,7 @@ internal static class SkillBoxEffect
     }
 
     internal static string PingLabel(bool info) => Localization.GameLanguage.Russian
-        ? (info ? "Коробка навыков (0-3 очка)" : "Коробка навыков")
+        ? (info ? "Ящик навыков (0–3 очка)" : "Ящик навыков")
         : (info ? "Skill Box (0-3 skill points)" : "Skill Box");
 
     // ---------------------------------------------------------------- networking

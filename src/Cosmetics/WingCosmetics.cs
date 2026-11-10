@@ -16,7 +16,8 @@ namespace IncreaseHardMod.Cosmetics;
 /// with or without glowing petal wings, wrap skirt, two sleeves, two striped stockings with boots) and the Gilded Shadow
 /// set (hood, corset and coat, veiled skirt, two puff sleeves, two stockings with boots), plus the Horned Seer, Card
 /// Jester, Ghost Bride and Mossy Stone Angel sets, each part in its
-/// own slot so it mixes with anything else. Plush, galaxy fabric, lace and gems are tintable: they take the colour
+/// own slot so it mixes with anything else. Character sets (Ghost Bride, Chel) also have a face, lips and a jaw in the
+/// game's Face Top, Face Bottom and Head Bottom slots: skin round the native eyes, brows, lashes and lips. Plush, galaxy fabric, lace and gems are tintable: they take the colour
 /// the player picks for that slot in the cosmetics menu (the galaxy's glowing stars too).
 /// Each prefab is a small template: a Cosmetic root with one "Visuals" mesh parent. The meshes are built when the
 /// game instantiates it (WingCosmeticVisual), using a copy of a vanilla cosmetic material so they keep the game's
@@ -38,9 +39,9 @@ internal static class WingCosmetics
 
     internal static readonly Definition[] Definitions =
     {
-        new("wings_astral", "Astral Night Wings"),
-        new("wings_solar", "Solar Seraph Wings"),
-        new("wings_prism", "Prism Chime Wings"),
+        new("wings_astral", "Astral Night Wings", tintable: true),
+        new("wings_solar", "Solar Seraph Wings", tintable: true),
+        new("wings_prism", "Prism Chime Wings", tintable: true),
         new("shark_hood", "Plush Shark Hood", SemiFunc.CosmeticType.Hat, "Hat", SemiFunc.Rarity.Rare, true, "shark"),
         new("shark_phones", "Plush Shark Headphones", SemiFunc.CosmeticType.Ears, "Ears", SemiFunc.Rarity.Uncommon, true, "shark"),
         new("shark_suit", "Plush Shark Suit", SemiFunc.CosmeticType.BodyTop, "Body Top", SemiFunc.Rarity.Rare, true, "shark"),
@@ -60,6 +61,7 @@ internal static class WingCosmetics
         new("legate_bracer_r", "Legate Bracer Right", SemiFunc.CosmeticType.ArmRight, "Arm Right", SemiFunc.Rarity.Uncommon, true, "legate"),
         new("legate_bracer_l", "Legate Bracer Left", SemiFunc.CosmeticType.ArmLeft, "Arm Left", SemiFunc.Rarity.Uncommon, true, "legate"),
         new("fairy_top", "Petal Fairy Top", SemiFunc.CosmeticType.BodyTop, "Body Top", SemiFunc.Rarity.Uncommon, true, "fairy"),
+        new("fairy_hair", "Petal Fairy Hair", SemiFunc.CosmeticType.Hat, "Hat", SemiFunc.Rarity.Uncommon, true, "fairy"),
         new("fairy_top_wings", "Petal Fairy Top and Wings", SemiFunc.CosmeticType.BodyTop, "Body Top", SemiFunc.Rarity.UltraRare, true, "fairy"),
         new("fairy_skirt", "Petal Fairy Skirt", SemiFunc.CosmeticType.BodyBottom, "Body Bottom", SemiFunc.Rarity.Rare, true, "fairy"),
         new("fairy_sleeve_r", "Petal Fairy Sleeve Right", SemiFunc.CosmeticType.ArmRight, "Arm Right", SemiFunc.Rarity.Uncommon, true, "fairy"),
@@ -91,6 +93,12 @@ internal static class WingCosmetics
         new("bride_skirt", "Ghost Bride Skirt", SemiFunc.CosmeticType.BodyBottom, "Body Bottom", SemiFunc.Rarity.UltraRare, true, "bride"),
         new("bride_glove_r", "Ghost Bride Glove Right", SemiFunc.CosmeticType.ArmRight, "Arm Right", SemiFunc.Rarity.Uncommon, true, "bride"),
         new("bride_glove_l", "Ghost Bride Glove Left", SemiFunc.CosmeticType.ArmLeft, "Arm Left", SemiFunc.Rarity.Uncommon, true, "bride"),
+        new("bride_leg_r", "Ghost Bride Bone Leg Right", SemiFunc.CosmeticType.LegRight, "Leg Right", SemiFunc.Rarity.Uncommon, true, "bride"),
+        new("bride_leg_l", "Ghost Bride Leg Left", SemiFunc.CosmeticType.LegLeft, "Leg Left", SemiFunc.Rarity.Uncommon, true, "bride"),
+        // Faces keep their own colours (skin, brows, lips), so they are not tintable.
+        new("bride_face", "Ghost Bride Face", SemiFunc.CosmeticType.FaceTop, "Face Top", SemiFunc.Rarity.Rare, false, "bride"),
+        new("bride_lips", "Ghost Bride Lips", SemiFunc.CosmeticType.FaceBottom, "Face Bottom", SemiFunc.Rarity.Uncommon, false, "bride"),
+        new("bride_neck", "Ghost Bride Jaw", SemiFunc.CosmeticType.HeadBottom, "Head Bottom", SemiFunc.Rarity.Uncommon, false, "bride"),
         new("angel_veil", "Stone Angel Veil", SemiFunc.CosmeticType.Hat, "Hat", SemiFunc.Rarity.Rare, true, "angel"),
         new("angel_robe", "Stone Angel Robe", SemiFunc.CosmeticType.BodyTop, "Body Top", SemiFunc.Rarity.Uncommon, true, "angel"),
         new("angel_robe_wings", "Stone Angel Robe and Wings", SemiFunc.CosmeticType.BodyTop, "Body Top", SemiFunc.Rarity.UltraRare, true, "angel"),
@@ -121,7 +129,7 @@ internal static class WingCosmetics
     internal static void Register()
     {
         if (_registered || !ModConfig.WingCosmeticsEnabled.Value && !ModConfig.SharkCosmeticsEnabled.Value && !ModConfig.StarlightCosmeticsEnabled.Value && !ModConfig.LegateCosmeticsEnabled.Value && !ModConfig.FairyCosmeticsEnabled.Value && !ModConfig.GildedCosmeticsEnabled.Value && !ModConfig.SeerCosmeticsEnabled.Value && !ModConfig.JesterCosmeticsEnabled.Value
-            && !ModConfig.BrideCosmeticsEnabled.Value && !ModConfig.AngelCosmeticsEnabled.Value) return;
+            && !ModConfig.BrideCosmeticsEnabled.Value && !ModConfig.AngelCosmeticsEnabled.Value && !ModConfig.MascotCosmeticsEnabled.Value) return;
         _registered = true;
         // Templates live under an inactive holder: Unity never runs their Awake, while instances made by
         // PlayerCosmetics (parented to the player) are active and build their meshes.
@@ -129,7 +137,7 @@ internal static class WingCosmetics
         _templates.SetActive(false);
         Object.DontDestroyOnLoad(_templates);
         _templates.hideFlags = HideFlags.HideAndDontSave;
-        foreach (var definition in Definitions)
+        foreach (var definition in AllDefinitions())
         {
             var enabled = definition.Set switch
             {
@@ -142,12 +150,19 @@ internal static class WingCosmetics
                 "jester" => ModConfig.JesterCosmeticsEnabled.Value,
                 "bride" => ModConfig.BrideCosmeticsEnabled.Value,
                 "angel" => ModConfig.AngelCosmeticsEnabled.Value,
+                "mascots" => ModConfig.MascotCosmeticsEnabled.Value,
                 _ => ModConfig.WingCosmeticsEnabled.Value,
             };
             if (!enabled) continue;
             try { RegisterOne(definition); }
             catch (Exception error) { Plugin.Log?.LogError("[Cosmetics] Could not register " + definition.Title + ": " + error); }
         }
+    }
+
+    internal static IEnumerable<Definition> AllDefinitions()
+    {
+        foreach (var definition in Definitions) yield return definition;
+        foreach (var definition in MascotCosmetics.Definitions) yield return definition;
     }
 
     private static void RegisterOne(Definition definition)
@@ -225,6 +240,13 @@ internal sealed class WingCosmeticVisual : MonoBehaviour
         catch (Exception error) { Plugin.Log?.LogError("[Cosmetics] Wing visuals failed for " + modelKey + ": " + error.Message); }
     }
 
+    // Some menu avatars are instantiated inactive: their Awake can run after Cosmetic.Setup.
+    [HarmonyLib.HarmonyPatch(typeof(Cosmetic), nameof(Cosmetic.Setup))]
+    private static class BuildBeforeSetup
+    {
+        private static void Prefix(Cosmetic __instance) => __instance.GetComponent<WingCosmeticVisual>()?.Build();
+    }
+
     private void Build()
     {
         var visuals = transform.Find("Visuals");
@@ -239,6 +261,7 @@ internal sealed class WingCosmeticVisual : MonoBehaviour
                 var mesh = new Mesh { name = modelKey + " " + data.name, hideFlags = HideFlags.DontUnloadUnusedAsset };
                 mesh.vertices = data.vertices; mesh.normals = data.normals; mesh.uv = data.uv; mesh.triangles = data.triangles;
                 mesh.RecalculateBounds();
+                mesh.RecalculateTangents();
                 meshes[i] = mesh;
             }
             var materials = new Material[model.materials.Length];
@@ -255,6 +278,7 @@ internal sealed class WingCosmeticVisual : MonoBehaviour
                 node.SetParent(visuals, false); node.localPosition = pivot.position;
                 pivots[pivot.group] = node;
             }
+        CosmeticCloth cloth = null;
         for (int i = 0; i < model.parts.Length; i++)
         {
             var data = model.parts[i];
@@ -262,7 +286,15 @@ internal sealed class WingCosmeticVisual : MonoBehaviour
             part.transform.SetParent(visuals, false);
             part.transform.localPosition = data.rest.position;
             if (data.group != null && pivots.TryGetValue(data.group, out var parent)) part.transform.SetParent(parent, true);
-            part.AddComponent<MeshFilter>().sharedMesh = cached.meshes[i];
+            var filter = part.AddComponent<MeshFilter>();
+            filter.sharedMesh = cached.meshes[i];
+            bool cape = data.group == "cape";
+            float seam = .345f;
+            if (cape || (data.group == null || data.group == "static") && CosmeticCloth.Seam(modelKey, model.materials[data.material].name, out seam))
+            {
+                cloth ??= gameObject.AddComponent<CosmeticCloth>();
+                cloth.Add(filter, data.rest.position, seam, modelKey == "bride_veil" ? .045f : .016f);
+            }
             part.AddComponent<MeshRenderer>().sharedMaterial = cached.materials[data.material];
             var playerMaterial = part.AddComponent<PlayerMaterial>();   // hurt flash and colour hooks
             playerMaterial.cosmeticType = cosmeticType;
@@ -270,13 +302,12 @@ internal sealed class WingCosmeticVisual : MonoBehaviour
             var art = model.materials[data.material];
             playerMaterial.tintType = art.tintEmission ? PlayerMaterial.TintType.Both : PlayerMaterial.TintType.Albedo;   // glowing stars and gems take the tint too
         }
-        if (pivots.ContainsKey("wing_r") || pivots.ContainsKey("wing_l"))
+        if (pivots.Count > 0)
         {
-            var flutter = gameObject.AddComponent<WingFlutter>();
-            pivots.TryGetValue("wing_r", out flutter.right);
-            pivots.TryGetValue("wing_l", out flutter.left);
+            var motion = gameObject.AddComponent<CosmeticMotion>();
+            foreach (var pivot in pivots)
+                if (pivot.Key != "cape") motion.Add(pivot.Value, pivot.Key); // cape cloth keeps the shoulder seam fixed
         }
-        if (pivots.TryGetValue("tail", out var tail)) gameObject.AddComponent<TailSway>().tail = tail;
     }
 
     /// <summary>A vanilla cosmetic material (Hurtable shader) to copy, found once.</summary>
@@ -308,7 +339,7 @@ internal sealed class WingCosmeticVisual : MonoBehaviour
         return null;
     }
 
-    private static readonly string[] TiledPrefixes = { "starlight_", "legate_", "fairy_", "gilded_", "seer_", "jester_", "bride_", "angel_", "cosmetic_wear" };
+    private static readonly string[] TiledPrefixes = { "starlight_", "legate_", "fairy_", "gilded_", "seer_", "jester_", "bride_", "angel_", "mascot_", "adventure_", "cosmetic_wear" };
 
     private static Material MakeMaterial(ValuableArtMaterial data)
     {
@@ -324,11 +355,12 @@ internal sealed class WingCosmeticVisual : MonoBehaviour
         Material material;
         if (template != null)
         {
-            material = new Material(template) { name = "IHM cosmetic " + data.name };
+            // Keep the game's shader, not a donor cosmetic's masks, effect keywords or UV transforms.
+            material = new Material(template.shader) { name = "IHM cosmetic " + data.name };
             material.SetTexture(AlbedoTex, texture);
             material.SetColor(Albedo, colour);
-            if (material.HasProperty(NormalTex)) material.SetTexture(NormalTex, null);
-            if (material.HasProperty(SmoothTex)) material.SetTexture(SmoothTex, null);
+            // Preserve the shader's neutral normal default. A null/black normal tilts every surface.
+            if (material.HasProperty(SmoothTex)) material.SetTexture(SmoothTex, Texture2D.blackTexture);
             if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", Mathf.Clamp01(1f - data.roughness));
             if (material.HasProperty("_Metallic")) material.SetFloat("_Metallic", data.metallic);
             if (material.HasProperty(EmissionTex)) material.SetTexture(EmissionTex, glow != null ? glow : texture);
@@ -343,41 +375,5 @@ internal sealed class WingCosmeticVisual : MonoBehaviour
         }
         material.hideFlags = HideFlags.DontUnloadUnusedAsset;
         return material;
-    }
-}
-
-/// <summary>Slow idle flutter: each wing sweeps a few degrees about its root, slightly out of phase.</summary>
-internal sealed class WingFlutter : MonoBehaviour
-{
-    public Transform right, left;
-    private float _phase;
-
-    private void Start() => _phase = UnityEngine.Random.value * 10f;
-
-    private void LateUpdate()
-    {
-        float t = Time.time + _phase;
-        float sweep = 5f * Mathf.Sin(t * Mathf.PI * 2f * .42f);
-        float lift = 2.5f * Mathf.Sin(t * Mathf.PI * 2f * .42f + .8f);
-        if (right != null) right.localRotation = Quaternion.AngleAxis(-sweep, Vector3.up) * Quaternion.AngleAxis(lift, Vector3.forward);
-        if (left != null) left.localRotation = Quaternion.AngleAxis(sweep, Vector3.up) * Quaternion.AngleAxis(-lift, Vector3.forward);
-    }
-}
-
-/// <summary>The shark tail's lazy swish: side to side about its root, with a small lift, like a plush being carried.</summary>
-internal sealed class TailSway : MonoBehaviour
-{
-    public Transform tail;
-    private float _phase;
-
-    private void Start() => _phase = UnityEngine.Random.value * 10f;
-
-    private void LateUpdate()
-    {
-        if (tail == null) return;
-        float t = Time.time + _phase;
-        float swish = 11f * Mathf.Sin(t * Mathf.PI * 2f * .55f);
-        float lift = 3f * Mathf.Sin(t * Mathf.PI * 2f * 1.1f + .6f);
-        tail.localRotation = Quaternion.AngleAxis(swish, Vector3.up) * Quaternion.AngleAxis(lift, Vector3.right);
     }
 }

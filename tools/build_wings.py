@@ -2,8 +2,7 @@
 
 Three original feathered back-wing cosmetics (Rare / purple tier, Body Top slot). Inspired by the user's
 reference sheets, not copies of them:
-  * wings_astral  - Astral Night: navy-black feathers, blue coverts, silver arch, glowing violet
-                    bat membrane under the feathers, floating cyan crystals.
+  * wings_astral  - Astral Night: navy-black feathers, blue coverts, silver arch, layered feather roots and attached cyan crystals.
   * wings_solar   - Solar Seraph: white-to-gold feathers, gold filigree arch, floating star shards.
   * wings_prism   - Prism Chime: pink -> lilac -> cyan feathers, pearl arch, hanging chains with
                     glowing star charms.
@@ -22,6 +21,8 @@ import json
 import math
 import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import cosmetic_kit as K
 
 import bmesh
 import bpy
@@ -213,22 +214,6 @@ def star(f, name, u, v, size, mat, group, layer=.012, points=4, inner=.38, thick
     return obj(name, verts, faces, mat, group, smooth=False)
 
 
-def membrane(f, name, mat, group):
-    """Scalloped bat membrane under the inner feathers (Astral Night)."""
-    top = [(0.0, -.04), (.07, -.03), (.14, -.04), (.21, -.07)]
-    bottom = [(.21, -.07), (.195, -.15), (.155, -.13), (.12, -.23), (.08, -.17), (.035, -.27), (.0, -.17)]
-    outline = top + bottom[1:]
-    verts = [f.p(u, v, -.004) for u, v in outline]; c = len(verts)
-    cu = sum(u for u, _ in outline) / len(outline); cv = sum(v for _, v in outline) / len(outline)
-    verts.append(f.p(cu, cv, -.004))
-    faces = []
-    for k in range(len(outline)):
-        tri = (c, k, (k + 1) % len(outline))
-        faces.append(tri[::-1] if f.side > 0 else tri)
-        faces.append(tri if f.side > 0 else tri[::-1])
-    return obj(name, verts, faces, mat, group, smooth=False)
-
-
 def chain(f, name, u, v, length, mat, group, layer=.012):
     """Hanging chain: small alternating rings."""
     verts, faces = [], []
@@ -252,7 +237,7 @@ def chain(f, name, u, v, length, mat, group, layer=.012):
 STYLES = {
     'wings_astral': dict(
         title='Astral Night Wings',
-        grad=[(0, (.02, .025, .06)), (.6, (.05, .06, .2)), (1, (.16, .3, .85))],
+        grad=[(0, (.10, .12, .20)), (.6, (.15, .19, .32)), (1, (.22, .39, .72))],
         covert=[(0, (.05, .07, .22)), (.55, (.12, .3, .85)), (1, (.4, .7, 1.))], covert_emit=.18, quill=(.75, .85, 1.),
         arch=(.78, .8, .88), arch_metal=.8, accent=(.42, .14, .95), extra='astral'),
     'wings_solar': dict(
@@ -271,13 +256,13 @@ STYLES = {
 def build(key):
     st = STYLES[key]
     grad = feather_texture('v11_' + key + '_feather.png', st['grad'], quill=st['quill'])
-    cov = feather_texture('v11_' + key + '_covert.png', st['covert'], quill=st['quill'], quill_mix=.35, barbs=.05, edge=.45)
+    cov = feather_texture('v11_' + key + '_covert.png', [(0, (.72,) * 3), (1, (1.,) * 3)], quill_mix=.35, barbs=.05, edge=.45)
     feather_mat = material(st['title'] + ' feathers', (1, 1, 1), .55, image=grad, emit=.1)
-    covert_mat = material(st['title'] + ' coverts', (1, 1, 1), .5, image=cov, emit=st['covert_emit'])
+    covert_mat = material(st['title'] + ' coverts', st['covert'][-1][1], .5, image=cov, emit=st['covert_emit'])
+    covert_mat['tint'] = True
     arch_mat = material(st['title'] + ' arch', st['arch'], .3, metal=st['arch_metal'])
     accent_mat = material(st['title'] + ' glow', st['accent'], .2, emit=.9)
     moon_mat = material(st['title'] + ' moons', (.85, .92, 1.), .2, emit=1.2)
-    membrane_mat = material(st['title'] + ' membrane', (.3, .09, .72), .35, emit=.45)
     parts, pivots = [], {}
     for side in (1, -1):
         f = Frame(side); g = 'wing_r' if side > 0 else 'wing_l'
@@ -285,15 +270,15 @@ def build(key):
         # Primaries: the long flight feathers fanning down and out from the wrist to the tip.
         for k in range(8):
             s = .58 + .42 * k / 7; bu, bv = arm_curve(s)
-            parts.append(feather(f, 'Primary', (bu - .012, bv - .02), -106 + 40 * k / 7, .24 + .1 * k / 7, .075, feather_mat, g, layer=-.0035 * k, bend=.08))
+            parts.append(feather(f, 'Primary', (bu - .012, bv - .02), -106 + 40 * k / 7, .24 + .1 * k / 7, .095, feather_mat, g, layer=-.0035 * k, bend=.08))
         # Secondaries along the inner arm, pointing down, overlapping.
         for k in range(7):
             s = .06 + .5 * k / 6; bu, bv = arm_curve(s)
-            parts.append(feather(f, 'Secondary', (bu, bv - .03), -100 - 6 * k / 6, .18 + .06 * k / 6, .076, feather_mat, g, layer=.004 + .001 * k, bend=.06))
+            parts.append(feather(f, 'Secondary', (bu, bv - .03), -100 - 6 * k / 6, .18 + .06 * k / 6, .095, feather_mat, g, layer=.004 + .001 * k, bend=.06))
         # Two rows of coverts on top in the accent colour: greater coverts, then small scapulars at the arch.
         for k in range(9):
             s = .04 + .9 * k / 8; bu, bv = arm_curve(s)
-            parts.append(feather(f, 'Covert', (bu, bv - .012), -98 + 28 * k / 8, .12 + .03 * math.sin(math.pi * k / 8), .05, covert_mat, g, layer=.012, rows=6))
+            parts.append(feather(f, 'Covert', (bu, bv - .012), -98 + 28 * k / 8, .12 + .03 * math.sin(math.pi * k / 8), .065, covert_mat, g, layer=.012, rows=6))
         for k in range(8):
             s = .08 + .84 * k / 7; bu, bv = arm_curve(s)
             parts.append(feather(f, 'Scapular', (bu, bv - .002), -95 + 26 * k / 7, .065, .038, covert_mat, g, layer=.018, rows=5, bend=.04))
@@ -302,26 +287,26 @@ def build(key):
         parts.append(tube(f, 'Arch', arch, .021, .003, arch_mat, g))
         parts.append(gem(f, 'Root jewel', .015, .035, .02, accent_mat, g, layer=.026, stretch=1.3))
         if st['extra'] == 'astral':
-            parts.append(membrane(f, 'Membrane', membrane_mat, g))
-            for path in (((.02, -.035), (.03, -.15), (.035, -.268)), ((.07, -.032), (.1, -.13), (.12, -.228)), ((.14, -.04), (.17, -.1), (.195, -.148))):
-                parts.append(tube(f, 'Membrane rib', path, .0045, .002, arch_mat, g, layer=-.001, segs=6))
             for k in (2, 4, 6):                                    # crescent moons near the flight feather tips
                 sk = .58 + .42 * k / 7; bu, bv = arm_curve(sk)
                 tip = feather_point((bu - .012, bv - .02), -106 + 40 * k / 7, .24 + .1 * k / 7, .08, .72)
                 parts.append(crescent(f, 'Moon', tip.x, tip.y, .011, moon_mat, g, layer=-.0035 * k + .0045, turn=math.radians(90)))
-            parts.append(gem(f, 'Crystal', .4, .16, .018, accent_mat, g))
-            parts.append(gem(f, 'Crystal', .42, .02, .012, accent_mat, g))
+            for u, v in ((.30, .16), (.28, .02)):
+                parts.append(tube(f, 'Crystal setting', [(.22, .24), (u, v)], .003, .003, arch_mat, g))
+                parts.append(gem(f, 'Crystal', u, v, .014, accent_mat, g))
         elif st['extra'] == 'solar':
             for u, v, s in ((.165, .265, .018), (.225, .295, .014)):   # filigree studs on the arch
                 parts.append(gem(f, 'Stud', u, v, s, accent_mat, g, layer=.02, stretch=1.0))
-            parts.append(star(f, 'Star shard', .41, .18, .028, accent_mat, g))
-            parts.append(star(f, 'Star shard', .43, .04, .018, accent_mat, g))
+            for u, v in ((.30, .18), (.29, .04)):
+                parts.append(tube(f, 'Star setting', [(.225, .295), (u, v)], .003, .003, arch_mat, g))
+                parts.append(star(f, 'Star shard', u, v, .018, accent_mat, g))
         else:
             for u, v, ln in ((.1, .2, .17), (.2, .28, .22)):
                 parts.append(chain(f, 'Chain', u, v, ln, arch_mat, g))
                 parts.append(star(f, 'Charm', u, v - ln - .02, .02, accent_mat, g, layer=.012))
-            parts.append(star(f, 'Charm', .4, .2, .016, accent_mat, g))
-    return parts, pivots, st['title']
+            parts.append(tube(f, 'Charm setting', [(.27, .30), (.30, .2)], .003, .003, arch_mat, g))
+            parts.append(star(f, 'Charm', .30, .2, .016, accent_mat, g))
+    return K.merge(parts), pivots, st['title']
 
 
 def vec(v): return {'x': round(float(v.x), 6), 'y': round(float(v.y), 6), 'z': round(float(v.z), 6)}
@@ -343,7 +328,8 @@ def export(key, parts, pivots):
             index[m.name] = len(mats)
             mats.append({'name': m.name, 'texture': m.get('texture', ''), 'color': {'r': base[0], 'g': base[1], 'b': base[2], 'a': 1},
                          'transmission': 0, 'emission': p.inputs['Emission Strength'].default_value,
-                         'roughness': p.inputs['Roughness'].default_value, 'metallic': p.inputs['Metallic'].default_value})
+                         'roughness': p.inputs['Roughness'].default_value, 'metallic': p.inputs['Metallic'].default_value,
+                         'tint': bool(m.get('tint', False)), 'multiply': bool(m.get('tint', False))})
         uv_layer = me.uv_layers.active
         verts = []; normals = []; uv = []; tri = []
         for poly in me.polygons:

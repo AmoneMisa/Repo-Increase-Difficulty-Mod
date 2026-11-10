@@ -256,7 +256,7 @@ internal sealed class CourierMenu
                 Step = s => Set(animal, CourierRules.NextSwatch(main, s), second, accent) },
             new() { Text = L.L("SECOND COLOUR", "ДОП. ЦВЕТ"), Note = Lock(CourierLook.SwatchName(second).ToUpperInvariant()), Enabled = here,
                 Step = s => Set(animal, main, CourierRules.NextSwatch(second, s), accent) },
-            new() { Text = L.L("CAP AND BACKPACK", "КЕПКА И РЮКЗАК"), Note = Lock(CourierLook.SwatchName(accent).ToUpperInvariant()), Enabled = here,
+            new() { Text = L.L("ACCESSORIES", "АКСЕССУАРЫ"), Note = Lock(CourierLook.SwatchName(accent).ToUpperInvariant()), Enabled = here,
                 Step = s => Set(animal, main, second, CourierRules.NextSwatch(accent, s)) },
         };
     }
@@ -307,7 +307,7 @@ internal sealed class CourierMenu
         {
             var at = PlayerAvatar.instance.transform.position;
             Visuals.ItemAudio.Cue("courier_find", .5f).Play(at);
-            Visuals.ItemAudio.Cue($"courier_{CourierLook.Keys[animal]}_happy1", .55f).Play(at);
+            Visuals.ItemAudio.Cue($"courier_{CourierLook.Voice(animal)}_happy1", .55f).Play(at);
         }
         catch { }
     }

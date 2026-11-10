@@ -192,7 +192,7 @@ internal sealed class BlackMarketHud : MonoBehaviour
 {
     private static readonly BlackMarket.Kind[] Tabs = { BlackMarket.Kind.Modifier, BlackMarket.Kind.Economy, BlackMarket.Kind.ShopEconomy };
     private static readonly string[] TabNamesEn = { "Surprise modifiers", "Economic surprises", "Shop economies" };
-    private static readonly string[] TabNamesRu = { "Модификаторы-сюрпризы", "Экономические сюрпризы", "Экономика магазина" };
+    private static readonly string[] TabNamesRu = { "Сюрпризы уровня", "Экономика уровня", "Цены в магазине" };
     private static bool Ru => Localization.GameLanguage.Russian;
     private static string[] TabNames => Ru ? TabNamesRu : TabNamesEn;
 
@@ -258,7 +258,7 @@ internal sealed class BlackMarketHud : MonoBehaviour
             return;
         }
         if (SemiFunc.IsMasterClientOrSingleplayer())
-            _message = BlackMarket.TryBuy(kind, id) ? (Ru ? "Заблокировано." : "Blocked.") : (Ru ? "Это купить нельзя." : "Can't buy that.");
+            _message = BlackMarket.TryBuy(kind, id) ? (Ru ? "Заблокировано." : "Blocked.") : (Ru ? "Этот эффект нельзя заблокировать." : "Can't buy that.");
         else
         {
             ModNetwork.Instance?.RequestBan((byte)kind, id);

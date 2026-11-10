@@ -130,10 +130,10 @@ internal sealed class RoundResultsHud : MonoBehaviour
         {
             if (ru)
             {
-                sb.Append($"ДОБЫЧА НА УРОВНЕ В НАЧАЛЕ: ${summary.InitialValue:N0}  ({summary.InitialCount} шт.)\n");
+                sb.Append($"ЦЕННОСТИ В НАЧАЛЕ УРОВНЯ: ${summary.InitialValue:N0}  ({summary.InitialCount} шт.)\n");
                 sb.Append($"НЕ СОБРАНО: {summary.RemainingCount} шт. / ${summary.RemainingValue:N0}\n");
-                sb.Append($"  НЕ НАЙДЕНО (входит в число выше): {summary.UnfoundCount} шт. / ${summary.UnfoundValue:N0}\n");
-                sb.Append($"ДОХОД С ДУШ: ${summary.SoulIncome:N0}  |  Сдано душ на: ${summary.SoulHaul:N0}\n\n");
+                sb.Append($"  ИЗ НИХ НЕ НАЙДЕНО: {summary.UnfoundCount} шт. / ${summary.UnfoundValue:N0}\n");
+                sb.Append($"ДОХОД ОТ ДУШ: ${summary.SoulIncome:N0}  |  СДАНО НА ${summary.SoulHaul:N0}\n\n");
             }
             else
             {

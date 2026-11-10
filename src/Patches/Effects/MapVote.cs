@@ -404,9 +404,9 @@ internal sealed class MapVoteController : MonoBehaviour
             _backgrounds[i].gameObject.SetActive(false);
         }
         _hint.text = closed
-            ? (lockedWinner >= 0 ? (ru ? "Победитель выбран / загрузится при отъезде грузовика" : "Winner locked / loads on truck departure")
-                : (ru ? "Голосов нет / случайная карта" : "No votes / random map"))
-            : ru ? $"NUMPAD 1-{count} или щелчок / клавиши инвентаря заняты" : $"NUMPAD 1-{count} or click / inventory keys are reserved";
+            ? (lockedWinner >= 0 ? (ru ? "Карта выбрана. Она загрузится после отъезда грузовика." : "Winner locked / loads on truck departure")
+                : (ru ? "Никто не проголосовал. Карта будет выбрана случайно." : "No votes / random map"))
+            : ru ? $"Нажмите NUMPAD 1–{count} или щёлкните по варианту" : $"NUMPAD 1-{count} or click / inventory keys are reserved";
         _hint.text += $"\n{ModConfig.MapVoteHudKey.Value}  {(ru ? "СКРЫТЬ / ПОКАЗАТЬ" : "HIDE / SHOW")}";
         Place(_hint.rectTransform, 8f, 48f + count * 34f, 504f, 52f);
         _surface.Panel.sizeDelta = new Vector2(520f, 106f + count * 34f);

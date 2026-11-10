@@ -16,8 +16,8 @@ internal enum CartKind : byte { Soul = 1, Wide = 2, Double = 3 }
 /// and extraction all stay the game's own):
 ///  - Soul C.A.R.T.: the little Pocket C.A.R.T., 33% dearer than the big C.A.R.T. It carries monster souls only, up
 ///    to $55K of them: anything else, or a soul that would go over the limit, is pushed back out (host).
-///  - Wide C.A.R.T.: 1.5x the big C.A.R.T.'s floor space; 1.25x wider by default (ModConfig.WideCartWidth, so it
-///    still fits through doorways) and longer by the rest (1.2x); 20% dearer.
+///  - Wide C.A.R.T.: 1.25x the big C.A.R.T.'s width by default (ModConfig.WideCartWidth) and at least 1.4x its
+///    length to fit the Museum Tray; 20% dearer.
 ///  - Double-Decker C.A.R.T.: the big C.A.R.T. 25% shorter with walls twice as tall, in the cart's own textures. It weighs as
 ///    much as two C.A.R.T.s; 25% dearer.
 /// Reshaping moves and scales the cart's own parts (walls, floor, the in-cart volume the haul screen reads), so
@@ -28,8 +28,10 @@ internal static class CustomCarts
     internal const string SoulAsset = "Item Cart Soul", WideAsset = "Item Cart Wide", DoubleAsset = "Item Cart Double";
     internal static bool IsModCart(string assetName) => assetName == SoulAsset || assetName == WideAsset || assetName == DoubleAsset;
 
-    private const float WideArea = 1.5f; // floor space of the Wide C.A.R.T. relative to the big C.A.R.T.
+    private const float MinWideArea = 1.5f; // retain the original floor space for narrower configurations
+    internal const float MinWideLength = 1.4f; // about 2.27 m between the end walls for the 2.18 m Museum Tray
     private static float WideWidth => Mathf.Clamp(ModConfig.WideCartWidth.Value, 1f, 1.5f);
+    private static float WideLength => Mathf.Max(MinWideLength, MinWideArea / WideWidth);
     private const float DoubleLength = .75f, DoubleHeight = 2f;
     private const float StandardMass = 8f; // PhysGrabCart.Start sets every cart to this
 
@@ -50,8 +52,12 @@ internal static class CustomCarts
             Make(small ?? big, big, SoulAsset, "Soul C.A.R.T.", CartKind.Soul, 1.33f, new Color(.65f, .4f, 1f),
                 $"A little C.A.R.T. built for monster souls: it carries souls only, up to ${ModConfig.SoulCartValueCap.Value / 1000f:0.#}K of them. " +
                 "Anything else, or a soul over the limit, is pushed back out.");
+            int widthPercent = Mathf.RoundToInt((WideWidth - 1f) * 100f);
+            int lengthPercent = Mathf.RoundToInt((WideLength - 1f) * 100f);
             Make(big, big, WideAsset, "Wide C.A.R.T.", CartKind.Wide, 1.2f, new Color(.3f, .85f, .8f),
-                $"A bigger C.A.R.T.: 50% more room than the big C.A.R.T. ({Mathf.RoundToInt((WideWidth - 1f) * 100f)}% wider and {Mathf.RoundToInt((WideArea / WideWidth - 1f) * 100f)}% longer), still narrow enough for doorways.");
+                Localization.GameLanguage.Russian
+                    ? $"На {widthPercent}% шире и на {lengthPercent}% длиннее большой тележки. При стандартной ширине сервиз помещается вдоль кузова."
+                    : $"{widthPercent}% wider and {lengthPercent}% longer than the big C.A.R.T. The Museum Tray fits lengthwise at the default width.");
             Make(big, big, DoubleAsset, "Double-Decker C.A.R.T.", CartKind.Double, 1.25f, new Color(.55f, .9f, .35f),
                 "A shorter C.A.R.T. with walls twice as tall: stack loot twice as high. Heavy: it weighs as much as two C.A.R.T.s.");
         }
@@ -83,8 +89,7 @@ internal static class CustomCarts
         float mass = 0f;
         // 1.5x (the first version) no longer fit through doorways; the width is now a setting, 1.25x by default.
         // Built on every PC from its own config: the host's value drives the physics, so players should keep it equal.
-        // Longer by as much as it is narrower than the first 1.5x version, so the floor keeps 1.5x the space.
-        if (kind == CartKind.Wide) Reshape(go, new Vector3(WideWidth, 1f, WideArea / WideWidth));
+        if (kind == CartKind.Wide) Reshape(go, new Vector3(WideWidth, 1f, WideLength));
         if (kind == CartKind.Double)
         {
             Reshape(go, new Vector3(1f, DoubleHeight, DoubleLength));

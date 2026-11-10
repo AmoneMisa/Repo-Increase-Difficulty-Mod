@@ -270,7 +270,13 @@ def build_leg(M):
     return parts, {}, None
 
 
+def build_hair(M):
+    from cosmetic_hair import hair
+    mat=K.material('Fairy hair',(.55,.27,.10),.85,clean=True,tint=True)
+    return hair(mat,.28),{},K.B(0,.44,.254)
+
 STYLES = {
+    'fairy_hair': ('Hat', build_hair),
     'fairy_top': ('Body Top', lambda M: build_top(M)),
     'fairy_top_wings': ('Body Top', lambda M: build_top(M, wings=True)),
     'fairy_skirt': ('Body Bottom', build_skirt),

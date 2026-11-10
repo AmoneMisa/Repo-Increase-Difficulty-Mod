@@ -41,7 +41,7 @@ public static class CourierRules
     public static int Slots(int backpackLevel) => Math.Min(MaxSlots, BaseSlots + Math.Max(0, backpackLevel));
 
     // Gacha: penguin and chicken common, cat and beaver uncommon, owl rare.
-    public static readonly int[] GachaWeights = { 25, 25, 20, 10, 20 };
+    public static readonly int[] GachaWeights = { 25, 25, 20, 10, 20, 20, 20, 20, 10, 10, 10, 5 };
 
     /// <summary>Which animal a pull gives for a roll in [0, 1).</summary>
     public static int Pull(double roll)
@@ -58,9 +58,9 @@ public static class CourierRules
 
     // ------------------------------------------------------------------ looks
 
-    public const int Animals = 5, Swatches = 12, DefaultSwatch = 31;
+    public const int Animals = 12, Swatches = 12, DefaultSwatch = 31;
 
-    /// <summary>Animal (0-4) and three colour slots (swatch index, or DefaultSwatch for the animal's own colour) in one int.</summary>
+    /// <summary>Animal (0-11) and three colour slots (swatch index, or DefaultSwatch for the animal's own colour) in one int.</summary>
     public static int PackLook(int animal, int main, int second, int accent) =>
         (Clamp(animal, 0, Animals - 1)) | (Slot(main) << 4) | (Slot(second) << 9) | (Slot(accent) << 14);
 

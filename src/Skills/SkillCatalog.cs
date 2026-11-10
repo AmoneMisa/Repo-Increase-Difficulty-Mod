@@ -83,22 +83,22 @@ internal static class SkillCatalog
         Add(recon, "Map", MonsterDots, "Monster Dots", "Монстры на карте", 2, 1, RespawnTimers);
         Add(recon, "Map", QuotaHeading, "Quota Heading", "Курс на квоту", 1, 1, MapUplink);
         Add(recon, "Map", ValuableTracker, "Valuable Tracker", "Учёт ценностей", 1, 1, QuotaHeading);
-        Add(recon, "Map", MapPings, "Pings on Map", "Пинги на карте", 1, 1, MapUplink);
+        Add(recon, "Map", MapPings, "Pings on Map", "Метки на карте", 1, 1, MapUplink);
         Add(recon, "Map", ZoomOne, "Map Zoom I", "Обзор карты I", 1, 1, MapUplink);
         Add(recon, "Map", ZoomTwo, "Map Zoom II", "Обзор карты II", 1, 1, ZoomOne);
-        Add(recon, "Map", CosmeticTracker, "Cosmetic Tracker", "Коробки косметики", 2, 1, MapUplink);
+        Add(recon, "Map", CosmeticTracker, "Cosmetic Tracker", "Косметика на карте", 2, 1, MapUplink);
         Add(recon, "Map", BetterMap, "Better Map", "Большая карта", 2, 1, ZoomOne);
         Add(recon, "Map", MapLandmarks, "Shrines & Crystals", "Святилища и кристаллы", 1, 1, MapUplink);
 
-        Add(recon, "Ping", Ping, "Ping Anywhere", "Пинг повсюду", 2, 1, root: true);
+        Add(recon, "Ping", Ping, "Ping Anywhere", "Командные метки", 2, 1, root: true);
         Add(recon, "Ping", TargetInfo, "Target Info", "Сведения о цели", 1, 1, Ping);
-        Add(recon, "Ping", EnemyHp, "Enemy HP", "Здоровье врага", 1, 1, Ping);
+        Add(recon, "Ping", EnemyHp, "Enemy HP", "Здоровье монстра", 1, 1, Ping);
         Add(recon, "Ping", LootCondition, "Loot Condition", "Состояние добычи", 1, 1, Ping);
         Add(recon, "Ping", Weight, "Target Weight", "Вес цели", 1, 1, Ping);
-        Add(recon, "Ping", Threat, "Monster Threat", "Угроза монстра", 1, 1, Ping);
+        Add(recon, "Ping", Threat, "Monster Threat", "Уровень угрозы", 1, 1, Ping);
         Add(recon, "Ping", PingRange, "Range Finder", "Дальномер", 1, 1, Ping);
-        Add(recon, "Ping", PingPath, "Pathfinder", "Путь к пингу", 2, 1, PingRange);
-        Add(recon, "Ping", PingCompass, "Ping Compass", "Компас пингов", 1, 1, Ping);
+        Add(recon, "Ping", PingPath, "Pathfinder", "Путь к метке", 2, 1, PingRange);
+        Add(recon, "Ping", PingCompass, "Ping Compass", "Указатель меток", 1, 1, Ping);
 
         Add(recon, "Flashlight", FlashTuning, "Flashlight Tuning", "Настройка фонаря", 1, 1, root: true);
         Add(recon, "Flashlight", BeamWidth, "Beam Width", "Ширина луча", 1, 3, FlashTuning);
@@ -265,12 +265,12 @@ internal static class SkillCatalog
             "+50% радиуса автоскана", "Монстры слышат вас на 15% лучше",
             (Fx.AutoscanReach, 1.5f), (Fx.Noise, 1.15f));
         AddTradeOff(recon, 2, EchoPing, "Echo Ping", "Эхо-пинг", "Your pings show monsters within 8 m on your map while the ping lasts", "Monsters near the spot you ping come to look",
-            "Ваши пинги показывают на карте монстров в радиусе 8 м, пока пинг виден", "Монстры рядом с отмеченным местом приходят посмотреть").Special = true;
+            "Пока действует метка, на карте видны монстры в радиусе 8 м от неё", "Монстры поблизости идут проверить отмеченное место").Special = true;
         AddTradeOff(recon, 3, Oracle, "Oracle", "Оракул", "Your map shows every valuable on the level, found or not", "+20% damage taken",
             "Ваша карта показывает все ценности уровня, найденные или нет", "+20% получаемого урона",
             (Fx.DamageTaken, 1.2f)).Special = true;
         AddTradeOff(recon, 3, HuntersEye, "Hunter's Eye", "Глаз охотника", "Monster dots on your map and monster HP on your pings, as if you had both perks", "Crouching and crawling no longer hide you from monsters' eyes",
-            "Монстры точками на карте и их HP на пингах, как с обоими навыками", "Присед и ползание больше не скрывают вас от глаз монстров").Special = true;
+            "Карта показывает монстров, а метки показывают их здоровье", "Монстры видят вас, даже когда вы крадётесь или ползёте").Special = true;
 
         var utility = SkillPage.Utility;
         AddTradeOff(utility, 1, Tinkerer, "Tinkerer", "Самоделкин", "Battery items drain 20% slower", "Drone batteries last 20% shorter",
@@ -283,7 +283,7 @@ internal static class SkillCatalog
             "Полевой медик даёт союзникам на 50% больше", "Аптечки лечат вас на 25% меньше",
             (Fx.MedicShare, 1.5f), (Fx.SelfHeal, .75f));
         AddTradeOff(utility, 2, FortuneSeeker, "Fortune Seeker", "Искатель удачи", "Skill boxes roll as if you had one more Lucky Finder level", "Battery crystals give you half the charge",
-            "Коробки навыков выпадают как с ещё одним уровнем Везунчика", "Кристаллы заряда дают вам вдвое меньше", (Fx.LuckyLevels, 1f), (Fx.CrystalCharge, .5f));
+            "Ящики навыков дают очки так, словно у «Везунчика» на один уровень больше", "Энергокристаллы дают вам вдвое меньше заряда", (Fx.LuckyLevels, 1f), (Fx.CrystalCharge, .5f));
         AddTradeOff(utility, 3, Overclock, "Overclock", "Разгон", "Battery items and guns drain 30% slower", "-20% grab strength",
             "Предметы с батареей и оружие разряжаются на 30% медленнее", "-20% силы захвата",
             (Fx.BatteryItems, .7f), (Fx.BatteryGuns, .7f), (Fx.GrabStrength, .8f));

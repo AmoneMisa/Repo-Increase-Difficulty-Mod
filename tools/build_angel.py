@@ -65,16 +65,18 @@ def moss_clump(M, at, size, rng, strands=0, strand_len=.12):
 
 
 # ---------------------------------------------------------------- veil (head frame)
-HC = Vector((0, 0, .24)); HR = Vector((.3, .42, .3))
+HC = Vector((0, 0, .254)); HR = Vector((.325, .45, .325))
 
 
 def veil_edge(a):
-    return -50 + 78 * P.front(a) ** 1.4
+    return -38 + 100 * P.front(a) ** 1.4
 
 
 def build_veil(M):
+    from cosmetic_hair import hair
     rng = random.Random(1)
     parts, point, pt = P.hood('Veil', M['stone'], M['shade'], HC, HR, veil_edge, peak=.0, brim=.035)
+    parts += hair(K.material('Angel hair',(.25,.22,.18),.9,clean=True), .18)
     # soft vertical drapery folds pressed into the cloth: thin raised ridges down the sides and back
     for k in range(10):
         a = math.radians(70 + 22 * k)
@@ -120,40 +122,24 @@ def feather(M, root, down, across, back, length, width, rachis=True, round_tip=F
 
 
 def build_wings(M, rng):
-    """Two tall folded wings: rows of overlapping feathers hanging from a frame behind the shoulders, rising above the
-    head and falling to the knees."""
-    obs = []
-    for sd in (1, -1):
-        # a solid stone backing in the wing's outline, so the feathers read as one wing
-        def panel(t, s, sd=sd):
-            w = (math.sin(math.pi * min(1., .06 + t * 1.25)) * .9 + .06) * (1 - .75 * t ** 3)
-            u = s * w
-            return Vector((sd * (.1 + .3 * u), lerp(.9, -.5, t), -.335 - .12 * u - .05 * t))
-        obs.append(surface('Wing panel', 12, 6, panel, M['shade'], inside=K.B(0, .2, 0)))
-        obs.append(surface('Wing panel back', 12, 6, lambda t, s, panel=panel: panel(t, s) + Vector((0, 0, .004)), M['shade'], inside=K.B(0, .2, -1.), ))
-        # Real wing structure, top to bottom: short rounded coverts in rows, then medium secondaries, then the long
-        # narrow primaries falling to the knees. Each row overlaps the one below and sits a little further out.
-        tiers = ((.88, 3, 4, .12, .042, True), (.8, 4, 4, .13, .044, True), (.72, 5, 5, .15, .046, True),
-                 (.6, 5, 5, .3, .05, False), (.42, 6, 6, .36, .05, False),
-                 (.22, 6, 7, .52, .046, False), (.02, 5, 6, .6, .044, False))
-        for r, (y, cols_lo, cols_hi, length, width, coverts) in enumerate(tiers):
-            v = r / (len(tiers) - 1)
-            width_frac = math.sin(math.pi * min(1., .12 + v * 1.0)) * .88 + .12
-            cols = cols_hi                                      # the same on both wings
-            for c in range(cols):
-                u = (c + .5) / cols * width_frac
-                x = sd * (.1 + .3 * u)
-                z = -.34 - .12 * u - .05 * v - .012 * r
-                root = Vector((x, y, z))
-                out = Vector((sd * .25, 0, -1)).normalized()
-                fan = (u - .5) * (.25 if not coverts else .1)              # the flight feathers fan out a little
-                down = Vector((sd * (.05 * u + fan), -1, -.08)).normalized()
-                across = down.cross(out).normalized() * sd
-                obs += feather(M, root, down, across, out, length * rng.uniform(.92, 1.08), width, rachis=not coverts, round_tip=coverts)
-        # the wing's bony leading edge, and moss caught on its top
-        edge = [Vector((sd * (.1 + .3 * math.sin(math.pi * min(1., .25 + v * 1.1)) * .9), lerp(.9, -.05, v), -.33 - .05 * v)) for v in np.linspace(0, .5, 8)]
-        obs.append(tube('Wing bone', edge, lambda s: .03 * (1 - s * .5), M['stone'], segs=8))
-        obs += moss_clump(M, edge[1] + Vector((0, .02, -.02)), .03, rng, strands=2, strand_len=.2)
+    """Two folded wings side by side on the back: their inner edges almost meet at the spine, the flight feathers
+    fan slightly outwards towards the tips, and the shoulders sit under round coverts close to the robe."""
+    obs=[]
+    for sd in (-1,1):
+        for j in range(3):
+            root=Vector((sd*(.055+.034*j),.31+.035*j,-.335-.022*j))
+            obs+=feather(M,root,Vector((sd*.3,-1,-.15)).normalized(),Vector((sd,0,0)),Vector((0,0,-1)),.36,.07,rachis=False,round_tip=True)
+        out=Vector((0,0,-1));across=Vector((sd,0,0))
+        for j in range(8):
+            root=Vector((sd*(.085+.027*j),.48-.045*j,-.405-.008*j))
+            down=Vector((sd*(.02+.11*j/7),-1,-.05)).normalized()
+            obs+=feather(M,root,down,across,out,.62+.16*j/7,.068,rachis=True)
+        for row in range(2):
+            for j in range(7):
+                root=Vector((sd*(.07+.033*j),.48-.13*row-.027*j,-.435-.025*row-.008*j))
+                down=Vector((sd*.10,-1,-.03)).normalized()
+                obs+=feather(M,root,down,across,out,.23+.06*row,.06,rachis=False,round_tip=True)
+        obs+=moss_clump(M,Vector((sd*.14,.47,-.44)),.022,rng,strands=0)
     return obs
 
 

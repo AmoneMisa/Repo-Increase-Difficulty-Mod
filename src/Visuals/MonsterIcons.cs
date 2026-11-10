@@ -7,8 +7,8 @@ namespace IncreaseHardMod.Visuals;
 /// <summary>
 /// A unique icon for every kind of monster, made from the monster itself: the first time one is seen, its own meshes
 /// are drawn from a three-quarter view into a small mask and turned into a white silhouette with a dark outline.
-/// The white takes the colour of whatever shows it (red ping callout, purple map dot). Nothing ships as art, and
-/// monsters from other mods get an icon too. One icon per monster name (EnemyParent.enemyName); purely local.
+/// The white takes the colour of whatever shows it (red ping callout, purple map dot). Prepared silhouettes are
+/// available immediately, with runtime capture for other monsters. One icon per name (EnemyParent.enemyName).
 /// </summary>
 internal static class MonsterIcons
 {
@@ -44,6 +44,13 @@ internal static class MonsterIcons
 
     private const string ResourcePrefix = "IHM.MonsterIcon.";
     private static bool _prepared;
+
+    internal static Texture2D GetPrepared(string key)
+    {
+        if (string.IsNullOrEmpty(key)) return null;
+        LoadPrepared();
+        return Cache.TryGetValue(key, out var entry) ? entry.Texture : null;
+    }
 
     /// <summary>
     /// Ready-made icons, so a monster has its icon from the very first ping even while it is hidden or out of view:
