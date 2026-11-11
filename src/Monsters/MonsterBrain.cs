@@ -17,6 +17,7 @@ internal enum MonsterAnim : byte
 {
     None, FirePrep, FireCast, ZapPrep, Zap, Rattle, BitePrep, Lunge, Coil, Acquire, Roar, Charge, Stare, Daze,
     Combo1, Combo2, BleedCut, StoneGaze, Exposed, Eat, Land,
+    FairyLift, FairyCarry, FairyGiggle, TwinsLure, TwinsRush, TwinsReach, TwinsSwing, TwinsThrow,
 }
 
 /// <summary>
@@ -57,6 +58,8 @@ internal abstract class MonsterBrain : MonoBehaviour
     internal Vector3 BodyPosition => E != null && E.HasRigidbody ? E.Rigidbody.rb.position : transform.position;
     internal abstract MonsterPose Pose { get; }
     internal virtual MonsterAnim Anim => MonsterAnim.None;
+    /// <summary>A point the monster is magically tied to right now (the thing the fairy carries), on every client.</summary>
+    internal virtual bool Tether(out Vector3 point) { point = default; return false; }
     /// <summary>This monster's body on this client (set by the visual itself).</summary>
     internal MonsterVisual Visual;
 

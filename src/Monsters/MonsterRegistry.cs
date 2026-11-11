@@ -12,7 +12,7 @@ using Object = UnityEngine.Object;
 namespace IncreaseHardMod.Monsters;
 
 /// <summary>
-/// Builds the five monsters as real REPO enemies and hands them to REPOLib.
+/// Builds the mod's monsters as real REPO enemies and hands them to REPOLib.
 ///
 /// Each one is a clone of a native ground enemy (preferably "Enemy - Animal"): its generic enemy framework
 /// (Enemy, EnemyParent, EnemyHealth, EnemyRigidbody, EnemyNavMeshAgent, EnemyVision, spawn/despawn/stun
@@ -50,6 +50,10 @@ internal static class MonsterRegistry
             Health = 600, Mass = 450f, Height = 1.5f, Speed = 2.6f, Hover = 0f, GrabForce = 7f, Art = "monster_gorgon" },
         new() { Kind = MonsterKind.Naga, Name = "Naga Queen", NameRu = "Королева Наг", Difficulty = EnemyParent.Difficulty.Difficulty3,
             Health = 480, Mass = 210f, Height = 2.1f, Speed = 4.2f, Hover = 0f, GrabForce = 5f, Art = "monster_naga" },
+        new() { Kind = MonsterKind.Fairy, Name = "Mischief Fairy", NameRu = "Шкодная фея", Difficulty = EnemyParent.Difficulty.Difficulty1,
+            Health = MonsterRules.FairyHealth, Mass = 6f, Height = .55f, Speed = 3f, Hover = MonsterRules.FairyHover, GrabForce = .6f, Art = "monster_fairy" },
+        new() { Kind = MonsterKind.Twins, Name = "Hansel and Gretel", NameRu = "Гензель и Гретель", Difficulty = EnemyParent.Difficulty.Difficulty2,
+            Health = MonsterRules.TwinsHealth, Mass = 55f, Height = 1.2f, Speed = 3.2f, Hover = 0f, GrabForce = 3f, Art = "monster_twins" },
     };
 
     internal static Spec Of(MonsterKind kind) => Specs[(int)kind];
@@ -91,13 +95,65 @@ internal static class MonsterRegistry
                 MonsterKind.Basilisk => ModConfig.BasiliskEnabled.Value,
                 MonsterKind.Gorgon => ModConfig.GorgonEnabled.Value,
                 MonsterKind.Naga => ModConfig.NagaEnabled.Value,
+                MonsterKind.Fairy => ModConfig.FairyEnabled.Value,
+                MonsterKind.Twins => ModConfig.TwinsEnabled.Value,
                 _ => false,
             };
         }
         return true;
     }
 
+    /// <summary>
+    /// Host: who may fill this enemy slot. With the configured chance the slot goes to the mod's monsters of the
+    /// slot's tier, otherwise to the native ones. Mixed in one list, the game's own draw (the highest random score
+    /// wins) gave the few new monsters almost no slots among some ten native candidates per tier.
+    /// </summary>
+    internal static List<EnemySetup> RollRoster(List<EnemySetup> eligible)
+    {
+        var ours = eligible.FindAll(setup => Setups.ContainsValue(setup));
+        if (ours.Count == 0) return eligible;
+        var native = eligible.FindAll(setup => !Setups.ContainsValue(setup));
+        return MonsterRules.SlotForNewMonster(UnityEngine.Random.value, ModConfig.NewMonsterChance.Value, ours.Count, native.Count) ? ours : native;
+    }
+
     internal static EnemySetup SetupOf(MonsterKind kind) => Setups.TryGetValue(kind, out var s) ? s : null;
+
+    [HarmonyPatch(typeof(EnemyDirector), "AmountSetup")]
+    private static class RosterDiagnostics
+    {
+        [HarmonyPostfix, HarmonyPriority(Priority.Last)]
+        private static void Postfix(EnemyDirector __instance)
+        {
+            if (!SemiFunc.IsMasterClientOrSingleplayer() || !SemiFunc.RunIsLevel()) return;
+            int depth = Difficulty.LevelsCompleted;
+            int runs = DataDirector.instance.SettingValueFetch(DataDirector.Setting.RunsPlayed);
+            var candidates = new List<string>();
+            foreach (var spec in Specs)
+            {
+                if (spec.Kind == MonsterKind.Pig) continue;
+                var setup = SetupOf(spec.Kind);
+                string reason;
+                if (setup == null) reason = "not registered";
+                else if (!AllowedInRoster(setup)) reason = "disabled";
+                else if (!__instance.enemiesDifficulty1.Contains(setup) && !__instance.enemiesDifficulty2.Contains(setup) &&
+                         !__instance.enemiesDifficulty3.Contains(setup)) reason = "absent from director";
+                else if (runs < setup.runsPlayed || (setup.levelsCompletedCondition &&
+                         (depth < setup.levelsCompletedMin || (setup.levelsCompletedMax != 0 && depth > setup.levelsCompletedMax))))
+                    reason = "progress locked";
+                else reason = "eligible";
+                candidates.Add(spec.Name + ": " + reason);
+            }
+            var selected = new List<string>();
+            foreach (var setup in __instance.enemyListCurrent)
+            {
+                if (setup == null) { selected.Add("<missing setup>"); continue; }
+                var match = Array.Find(Specs, spec => SetupOf(spec.Kind) == setup);
+                selected.Add(match != null ? match.Name : setup.name);
+            }
+            Plugin.Log.LogInfo($"[Monsters] Slot chance {ModConfig.NewMonsterChance.Value:P0}. Roster candidates: " + string.Join("; ", candidates) +
+                               ". Selected for level: " + string.Join(", ", selected) + ". Pig rolls separately.");
+        }
+    }
 
     private static void Build(EnemyDirector director)
     {
@@ -185,6 +241,8 @@ internal static class MonsterRegistry
             MonsterKind.Witch => enemy.gameObject.AddComponent<WitchBrain>(),
             MonsterKind.Basilisk => enemy.gameObject.AddComponent<BasiliskBrain>(),
             MonsterKind.Gorgon => enemy.gameObject.AddComponent<GorgonBrain>(),
+            MonsterKind.Fairy => enemy.gameObject.AddComponent<FairyBrain>(),
+            MonsterKind.Twins => enemy.gameObject.AddComponent<TwinsBrain>(),
             _ => enemy.gameObject.AddComponent<NagaBrain>(),
         };
         brain.Kind = spec.Kind;

@@ -42,6 +42,10 @@ internal sealed class MonsterVisual : MonoBehaviour
     private Joint[] _tail = new Joint[0];
     private readonly Joint[] _nagaArms = new Joint[4]; // upper left, lower left, upper right, lower right
     private Joint _head, _jaw, _armL, _armR;
+    // Twins: Hansel (left) then Gretel - head, inner arm, outer arm, left foot, right foot.
+    private readonly Joint[] _twins = new Joint[10];
+    private bool _tethered;
+    private Vector3 _tetherAt;
     private Transform _handL, _handR, _orbL, _orbR, _lightAt;
     private readonly List<Transform> _eyeOrbs = new();
     private Material _eyeMaterial, _orbMaterial;
@@ -206,6 +210,10 @@ internal sealed class MonsterVisual : MonoBehaviour
         for (int i = 0; i < tails; i++) _tail[i] = J("tail" + i);
         _head = J("head"); _jaw = J("jaw"); _armL = J("arm_l"); _armR = J("arm_r");
         _nagaArms[0] = J("arm-10"); _nagaArms[1] = J("arm-11"); _nagaArms[2] = J("arm10"); _nagaArms[3] = J("arm11");
+        string[] twinParts = { "head_", "arm_{0}_in", "arm_{0}_out", "foot_{0}_l", "foot_{0}_r" };
+        for (int child = 0; child < 2; child++)
+            for (int part = 0; part < twinParts.Length; part++)
+                _twins[child * 5 + part] = J(part == 0 ? twinParts[0] + (child == 0 ? "h" : "g") : string.Format(twinParts[part], child == 0 ? "h" : "g"));
 
         Transform Anchor(string pivot, string group)
         {
@@ -235,7 +243,8 @@ internal sealed class MonsterVisual : MonoBehaviour
                 if (anchor != null) _eyeOrbs.Add(Orb(anchor, _eyeMaterial, "Eye glow"));
             }
         }
-        if (_kind != MonsterKind.Witch) return;
+        if (_kind is not (MonsterKind.Witch or MonsterKind.Fairy)) return;
+        // Spell hands: the witch's flame and sparks, the fairy's wand glow and the thread to the thing she carries.
         _handL = Anchor("hand_l", "arm_l"); _handR = Anchor("hand_r", "arm_r");
         if (_handL == null || _handR == null) return;
         _orbMaterial = new Material(MonsterFx.Additive()) { name = "IHM " + _art + " spell" };
@@ -245,7 +254,8 @@ internal sealed class MonsterVisual : MonoBehaviour
         _spark.transform.SetParent(transform, false);
         _spark.useWorldSpace = true; _spark.positionCount = SparkPoints; _spark.sharedMaterial = MonsterFx.Additive();
         _spark.startWidth = .035f; _spark.endWidth = .035f;
-        _spark.startColor = new Color(.74f, .62f, 1f); _spark.endColor = new Color(.5f, .85f, 1f);
+        bool fairy = _kind == MonsterKind.Fairy;
+        _spark.startColor = fairy ? new Color(1f, .9f, .45f) : new Color(.74f, .62f, 1f); _spark.endColor = fairy ? new Color(1f, .7f, .9f) : new Color(.5f, .85f, 1f);
         _spark.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         _spark.receiveShadows = false;
         _spark.enabled = false;
@@ -274,7 +284,7 @@ internal sealed class MonsterVisual : MonoBehaviour
     {
         get
         {
-            if (_built && _handL != null && _handR != null)
+            if (_built && _kind == MonsterKind.Witch && _handL != null && _handR != null)
             {
                 if (_volt > .01f) return (_handL.position + _handR.position) * .5f;
                 if (_fire > .01f) return _handR.position;
@@ -327,7 +337,7 @@ internal sealed class MonsterVisual : MonoBehaviour
         var anim = stunned || _brain.Dead ? MonsterAnim.None : _brain.Anim;
         float move = Mathf.Clamp01(speed / 3f);
         foreach (var j in _all) { j.Target = Quaternion.identity; j.K = 16f; }
-        _tilt = Quaternion.identity; _shift = Vector3.zero; _eye = 0f; _fire = 0f; _volt = 0f; _lightPower = 0f;
+        _tilt = Quaternion.identity; _shift = Vector3.zero; _eye = 0f; _fire = 0f; _volt = 0f; _lightPower = 0f; _tethered = false;
         switch (_kind)
         {
             case MonsterKind.Pig: AnimatePig(anim, pose, t, st, move); break;
@@ -335,6 +345,8 @@ internal sealed class MonsterVisual : MonoBehaviour
             case MonsterKind.Basilisk: AnimateBasilisk(anim, pose, t, st, stunned); break;
             case MonsterKind.Gorgon: AnimateGorgon(anim, t, st, move, stunned); break;
             case MonsterKind.Naga: AnimateNaga(anim, t, st, move, stunned); break;
+            case MonsterKind.Fairy: AnimateFairy(anim, pose, t, st, move, stunned); break;
+            case MonsterKind.Twins: AnimateTwins(anim, t, st, move, stunned); break;
         }
         if (stunned) _tilt = Quaternion.Euler(Mathf.Sin(t * 9f) * 6f, 0f, Mathf.Sin(t * 7f) * 10f) * _tilt;
         foreach (var j in _all)
@@ -619,6 +631,103 @@ internal sealed class MonsterVisual : MonoBehaviour
             Rot(_tail[i], 0f, (i < 4 ? tail * .35f : tail) * Mathf.Sin(_phase * .9f - i * .55f), 0f, 10f);
     }
 
+    // Mischief Fairy: wings a blur, bobbing as she flits. Stealing - both arms up and the wand flaring over the
+    // thing (0.8 s), then she tows it below her on a golden thread. Afterwards she covers her mouth and shakes
+    // with giggles; startled, she darts off arms flailing.
+    private void AnimateFairy(MonsterAnim anim, MonsterPose pose, float t, float st, float move, bool stunned)
+    {
+        float flutter = stunned ? 0f : Mathf.Sin(t * (pose == MonsterPose.Flee ? 52f : 40f)) * 30f - 6f; // positive = wing down
+        foreach (var (wing, left) in _wings) Rot(wing, 0f, 0f, (left ? 1f : -1f) * (stunned ? 55f : flutter), 80f);
+        float sway = Mathf.Sin(t * 3f);
+        float leftX = 10f + sway * 8f, rightX = -25f + Mathf.Sin(t * 5f) * 14f, leftZ = 0f, rightZ = 0f, head = sway * 4f, roll = -8f, k = 18f;
+        _tilt = Quaternion.Euler(10f * move, 0f, sway * 5f);
+        _shift = Vector3.up * (Mathf.Sin(t * 4.2f) * .05f);
+        float wand = .25f + .1f * Mathf.Sin(t * 9f);
+        switch (anim)
+        {
+            case MonsterAnim.FairyLift:
+            {
+                float u = Mathf.Clamp01(st / MonsterRules.FairyLiftSeconds);
+                leftX = rightX = Mathf.Lerp(-40f, -160f, Smooth(u)) + Mathf.Sin(t * 30f) * 3f; rightZ = 12f; leftZ = -12f;
+                head = 14f; roll = 0f;
+                wand = Mathf.Lerp(.4f, 1f, u);
+                _tilt = Quaternion.Euler(12f, 0f, 0f);
+                break;
+            }
+            case MonsterAnim.FairyCarry:
+                leftX = rightX = 38f + Mathf.Sin(t * 12f) * 4f; rightZ = -14f; leftZ = 14f; // straining at the thread below her
+                head = 12f; roll = 0f; wand = .8f + .2f * Mathf.Sin(t * 21f);
+                _tilt = Quaternion.Euler(14f * move + 4f, 0f, Mathf.Sin(t * 7f) * 6f);
+                break;
+            case MonsterAnim.FairyGiggle:
+                leftX = rightX = -125f; rightZ = -30f; leftZ = 30f; head = -10f + Mathf.Sin(t * 26f) * 6f; roll = Mathf.Sin(t * 13f) * 10f;
+                _tilt = Quaternion.Euler(-8f, 0f, Mathf.Sin(t * 26f) * 7f);
+                _shift = Vector3.up * (Mathf.Abs(Mathf.Sin(t * 13f)) * .08f);
+                break;
+            default:
+                if (pose == MonsterPose.Flee) { leftX = -70f + Mathf.Sin(t * 24f) * 40f; rightX = -70f - Mathf.Sin(t * 24f) * 40f; leftZ = -30f; rightZ = 30f; head = -8f; k = 30f; }
+                break;
+        }
+        if (stunned) { leftX = rightX = 20f; rightZ = 50f; leftZ = -50f; head = 25f; wand = 0f; _shift = Vector3.zero; }
+        Rot(_armL, leftX, 0f, leftZ, k);
+        Rot(_armR, rightX, 0f, rightZ, k);
+        Rot(_head, head, 0f, roll, 14f);
+        _fire = wand; // the wand's glow (gold for the fairy)
+        _tethered = _brain.Tether(out _tetherAt);
+        if (_tethered) Glow(null, new Color(1f, .85f, .35f), 1.8f, 3f);
+        else if (wand > .5f) Glow(_handR, new Color(1f, .85f, .35f), 1.6f * wand, 3f);
+    }
+
+    // Hansel and Gretel: skipping hand in hand, heads tipped together. The lure - they stop dead and their heads
+    // roll slowly apart. The rush - heads down, free arms out. The reach - both free arms straight at the player.
+    // The hold - they rock from side to side, swinging the victim, then fling both arms up for the throw.
+    private void AnimateTwins(MonsterAnim anim, float t, float st, float move, bool stunned)
+    {
+        float skip = Mathf.Sin(_phase * 2f), step = 32f * move, headIn = 16f, headPitch = Mathf.Sin(t * 1.3f) * 3f;
+        float outer = skip * 22f * move, k = 16f;
+        _tilt = Quaternion.Euler(0f, 0f, skip * 3f * move);
+        _shift = Vector3.up * (Mathf.Abs(skip) * .05f * move);
+        switch (anim)
+        {
+            case MonsterAnim.TwinsLure:
+                headIn = 16f - 46f * Smooth(st / MonsterRules.TwinsLureSeconds); // heads roll apart, far past upright
+                headPitch = -6f; outer = -20f + Mathf.Sin(t * 3f) * 10f; step = 0f;
+                _tilt = Quaternion.identity; _shift = Vector3.zero;
+                break;
+            case MonsterAnim.TwinsRush:
+                headIn = 4f; headPitch = 16f; outer = -70f; step = 46f; k = 24f;
+                _tilt = Quaternion.Euler(12f, 0f, skip * 4f);
+                break;
+            case MonsterAnim.TwinsReach:
+                headIn = -10f; headPitch = -4f; outer = Mathf.Lerp(-60f, -98f, Smooth(st / MonsterRules.TwinsReachSeconds)) + Mathf.Sin(t * 34f) * 2f; step = 0f; k = 22f;
+                _tilt = Quaternion.Euler(9f, 0f, 0f); _shift = Vector3.zero;
+                break;
+            case MonsterAnim.TwinsSwing:
+            {
+                float rock = Mathf.Sin(st * 15.7f); // three swings in the 1.2 s hold: one, two, three
+                headIn = 16f; headPitch = -8f; outer = -88f; step = 0f; k = 26f;
+                _tilt = Quaternion.Euler(4f, 0f, rock * 13f);
+                _shift = Vector3.right * (rock * .06f);
+                break;
+            }
+            case MonsterAnim.TwinsThrow:
+                headIn = -6f; headPitch = -18f; outer = -165f; step = 0f; k = 40f;
+                _tilt = Quaternion.Euler(-9f, 0f, 0f); _shift = Vector3.zero;
+                break;
+        }
+        if (stunned) { headIn = 30f; headPitch = 28f; outer = 12f; step = 0f; }
+        for (int child = 0; child < 2; child++)
+        {
+            float side = child == 0 ? 1f : -1f; // Hansel stands on the left: tipping towards his sister rolls his head the other way
+            int o = child * 5;
+            Rot(_twins[o], headPitch, 0f, -side * headIn, 9f);
+            Rot(_twins[o + 2], outer * (anim == MonsterAnim.None ? side : 1f), 0f, anim == MonsterAnim.None ? 0f : side * 6f, k);
+            float stride = Mathf.Sin(_phase * 2f + child * Mathf.PI) * step;
+            Rot(_twins[o + 3], stride, 0f, 0f, 24f);
+            Rot(_twins[o + 4], -stride, 0f, 0f, 24f);
+        }
+    }
+
     // ------------------------------------------------------------------ glow effects
 
     // Ask for the effect light this frame (anchor = null: in front of the chest).
@@ -637,8 +746,31 @@ internal sealed class MonsterVisual : MonoBehaviour
             if (orb.gameObject.activeSelf != eyes) orb.gameObject.SetActive(eyes);
             if (eyes) orb.localScale = Vector3.one * (_eyeSize * (.75f + .7f * _eye));
         }
+        if (_kind == MonsterKind.Fairy && _orbR != null)
+        {
+            // Wand glow, and a jittering golden thread down to the thing she carries.
+            bool on = _fire > .01f;
+            if (_orbR.gameObject.activeSelf != on) _orbR.gameObject.SetActive(on);
+            if (_spark.enabled != _tethered) _spark.enabled = _tethered;
+            if (on)
+            {
+                _orbMaterial.color = new Color(1f, .88f, .4f, .95f);
+                _orbR.localScale = Vector3.one * ((.05f + .09f * _fire) * (1f + .15f * Mathf.Sin(t * 41f)));
+            }
+            if (_tethered)
+            {
+                Vector3 a = _handR.position, b = _tetherAt;
+                float jitter = Mathf.Min(.12f, Vector3.Distance(a, b) * .12f);
+                for (int i = 0; i < SparkPoints; i++)
+                {
+                    var p = Vector3.Lerp(a, b, i / (SparkPoints - 1f));
+                    if (i > 0 && i < SparkPoints - 1) p += Random.insideUnitSphere * jitter;
+                    _spark.SetPosition(i, p);
+                }
+            }
+        }
         // Witch: flame in the right palm, sparks on both hands with an arc between them.
-        if (_orbR != null)
+        else if (_orbR != null)
         {
             bool on = Mathf.Max(_fire, _volt) > .01f, both = _volt > .01f;
             if (_orbR.gameObject.activeSelf != on) _orbR.gameObject.SetActive(on);
@@ -673,7 +805,7 @@ internal sealed class MonsterVisual : MonoBehaviour
                 _light.shadows = LightShadows.None;
             }
             _light.enabled = true;
-            _light.transform.position = _lightAt != null ? _lightAt.position : transform.position + Vector3.up * (_height * .55f) + transform.forward * .45f;
+            _light.transform.position = _tethered ? _tetherAt : _lightAt != null ? _lightAt.position : transform.position + Vector3.up * (_height * .55f) + transform.forward * .45f;
             _light.color = _lightColor;
             _light.range = _lightRange;
             _light.intensity = _lightPower * (.9f + .1f * Mathf.Sin(t * 27f));

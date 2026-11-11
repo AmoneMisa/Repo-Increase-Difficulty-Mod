@@ -31,7 +31,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     // 158 = MapRitual.EventCode (host's map ritual state).
     // 159 = LateJoinProgress.RequestCode (request saved health and upgrades from the host).
     // 160 = Skills.FlashStun.EventCode (a guest's Flash Stun beam; host only).
-    // 161 = LateJoinCatchUp.RequestCode (a late joiner asks the host for level state; host only).
+    // 161 = LateJoinCatchUp: guest requests level/battery state; typed battery responses are host-only.
     // 180 is retired (old cart-upgrade state). 170-171 = HostRunControls (failed-level vote). 169 = loot safety net notice.
     // 168 = Challenges.ChallengeManager.EventCode (challenge shrine state). 167 = Skills.BuffPerks.EventCode (instinct buff start).
     // 163 = Courier.CourierManager.StateCode (courier state/notices, host), 162 = Courier.CourierManager.RequestCode (courier command to host).
@@ -176,6 +176,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         LateJoinController.Tick();
         LateJoinProgress.Tick();
         LateJoinProgress.ReconcileHealth();
+        LateJoinBattery.Tick();
         // Client-side: keep every enemy's per-player dictionaries in sync with mid-run joins
         // (and mid-run enemy spawns) so late joiners don't crash the enemy AI coroutines.
         LateJoinController.EnsureEnemyRegistrations();

@@ -153,7 +153,7 @@ internal static class SkillText
             case C.Evasion: return "Break free from a constriction 15 / 30 / 45% faster (by level).";
             case C.DodgeRoll: return $"Press {Monsters.DodgeRoll.KeyName} with A or D for a short sideways dash. Cooldown 22 / 18 / 14 s (by level). Not while held or petrified.";
             case C.GoldenNose: return "A Golden Pig on the level glows for you within 8 / 15 / 25 m (by level).";
-            case C.SoulHunter: return "Souls of the new monsters (Golden Pig, Witch, Basilisk, Gorgon, Naga Queen) are worth 5 / 8 / 10% more (by level). The team's best level counts once; it never adds up between players.";
+            case C.SoulHunter: return "Souls of the new monsters (Golden Pig, Mischief Fairy, Witch, Basilisk, Hansel and Gretel, Gorgon, Naga Queen) are worth 5 / 8 / 10% more (by level). The team's best level counts once; it never adds up between players.";
             case C.SoulKeeper: return $"A monster soul you are holding loses {Pct(SoulPerks.KeeperPerLevel)} less value when it is hit, per level (-{Pct(SoulPerks.KeeperPerLevel * C.Find(id).MaxLevel)} at max).";
 
             case C.InventorySlot: return "+1 inventory slot per level (keys 4-7).";
@@ -325,7 +325,7 @@ internal static class SkillText
             case C.Evasion: return "Освобождение от обвивания быстрее на 15 / 30 / 45% (по уровням).";
             case C.DodgeRoll: return $"{Monsters.DodgeRoll.KeyName} вместе с A или D — короткий рывок вбок. Перезарядка 22 / 18 / 14 с (по уровням). Не работает в захвате и окаменении.";
             case C.GoldenNose: return "Золотая свинка на уровне подсвечивается для вас в радиусе 8 / 15 / 25 м (по уровням).";
-            case C.SoulHunter: return "Души новых монстров (Золотая свинка, Ведьма, Василиск, Горгона, Королева Наг) дороже на 5 / 8 / 10% (по уровням). Считается лучший уровень в команде, один раз; между игроками не суммируется.";
+            case C.SoulHunter: return "Души новых монстров (Золотая свинка, Шкодная фея, Ведьма, Василиск, Гензель и Гретель, Горгона, Королева Наг) дороже на 5 / 8 / 10% (по уровням). Считается лучший уровень в команде, один раз; между игроками не суммируется.";
             case C.SoulKeeper: return $"Душа монстра в ваших руках теряет при ударах на {Pct(SoulPerks.KeeperPerLevel)} меньше ценности за уровень (-{Pct(SoulPerks.KeeperPerLevel * C.Find(id).MaxLevel)} на максимуме).";
 
             case C.InventorySlot: return "+1 ячейка инвентаря за уровень (клавиши 4-7).";

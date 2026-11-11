@@ -247,8 +247,8 @@ public static class ModConfig
     public static ConfigEntry<int> IceGunDamagePercent, IceMeleeBonusPercent;
     // New monsters (0.10.0). Prefabs are always registered on every client so a host may spawn them; the switches
     // below only decide (on the host) whether the director picks them.
-    public static ConfigEntry<bool> MonstersEnabled, PigEnabled, WitchEnabled, BasiliskEnabled, GorgonEnabled, NagaEnabled;
-    public static ConfigEntry<float> PigSpawnChance;
+    public static ConfigEntry<bool> MonstersEnabled, PigEnabled, WitchEnabled, BasiliskEnabled, GorgonEnabled, NagaEnabled, FairyEnabled, TwinsEnabled;
+    public static ConfigEntry<float> PigSpawnChance, NewMonsterChance;
     public static ConfigEntry<int> MonsterRarity;
     public static ConfigEntry<UnityEngine.KeyCode> DodgeKey;
     public static ConfigEntry<bool> GhostEnabled;
@@ -920,15 +920,18 @@ public static class ModConfig
         IceGunDamagePercent = BindInt(cfg, Gear, "IceGunDamagePercent", 60, 10, 100,
             "Firearm damage frozen enemies take, in percent of normal.");
         const string Monsters = "Monsters";
-        MonstersEnabled = cfg.Bind(Monsters, "Enabled", true, "Let the director spawn the mod's new monsters (Golden Pig, Witch, Basilisk, Gorgon, Naga Queen). Host setting.");
+        MonstersEnabled = cfg.Bind(Monsters, "Enabled", true, "Let the director spawn the mod's new monsters (Golden Pig, Mischief Fairy, Witch, Basilisk, Hansel and Gretel, Gorgon, Naga Queen). Host setting.");
         PigEnabled = cfg.Bind(Monsters, "GoldenPig", true, "Golden flying pig (Tier I, neutral). At most one per level, rolled separately. Host setting.");
         WitchEnabled = cfg.Bind(Monsters, "Witch", true, "Witch (Tier II): fireball and electric levitation. Host setting.");
         BasiliskEnabled = cfg.Bind(Monsters, "Basilisk", true, "Basilisk (Tier II): ambush constriction and venom bite. Host setting.");
         GorgonEnabled = cfg.Bind(Monsters, "Gorgon", true, "Gorgon bull (Tier III): charge and death stare. Host setting.");
         NagaEnabled = cfg.Bind(Monsters, "NagaQueen", true, "Naga Queen (Tier III): sword combos, petrification and bleeding. Host setting.");
+        FairyEnabled = cfg.Bind(Monsters, "MischiefFairy", true, "Mischief Fairy (Tier I, harmless): lifts light valuables out of carts and extraction points and carries them off. Host setting.");
+        TwinsEnabled = cfg.Bind(Monsters, "HanselAndGretel", true, "Hansel and Gretel (Tier II): twins who seize a player between them and throw them. Host setting.");
         PigSpawnChance = BindFloat(cfg, Monsters, "GoldenPigChance", .11f, 0f, 1f, "Chance per level that one Golden Pig appears (design: 10-12%).");
         DodgeKey = cfg.Bind(Monsters, "DodgeRollKey", UnityEngine.KeyCode.LeftAlt, "Key for the Dodge Roll perk (hold A or D for the direction). C, G and I are already used by the mod.");
-        MonsterRarity = BindInt(cfg, Monsters, "Rarity", 60, 1, 100, "How often the director picks each new monster compared with a vanilla one (vanilla presets are about 100).");
+        NewMonsterChance = BindFloat(cfg, Monsters, "SlotChance", IncreaseHardMod.Monsters.MonsterRules.NewMonsterChance, 0f, 1f, "Chance that each enemy slot of a level is filled by one of the mod's monsters of that tier (Fairy; Witch, Basilisk, Hansel and Gretel; Gorgon, Naga Queen) instead of a native one. 0.2 = about one slot in five; 0 = never. The Golden Pig rolls separately. Host setting.");
+        MonsterRarity = BindInt(cfg, Monsters, "Rarity", 100, 1, 100, "Maximum random selection score for each new monster, not a percentage or linear weight. Recommended: 100, matching common native presets. Lower scores can make a monster much rarer when many native candidates compete.");
         IceMeleeBonusPercent = BindInt(cfg, Gear, "IceMeleeBonusPercent", 35, 0, 300,
             "Extra melee damage frozen enemies take, in percent.");
         DecoySeconds = BindFloat(cfg, Gear, "DecoySeconds", 5f, 1f, 30f, "How long the Decoy Grenade attracts monsters once armed.");

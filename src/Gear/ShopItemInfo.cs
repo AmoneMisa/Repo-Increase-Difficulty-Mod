@@ -1,14 +1,18 @@
 using System.Collections.Generic;
+using HarmonyLib;
 using IncreaseHardMod.Hud;
 using UnityEngine;
 
 namespace IncreaseHardMod.Gear;
 
+/// <summary>
+/// Shop item information: the item under the crosshair shows "[I]" next to its name in the game's own item line
+/// (the same place and style as the native "[E]" use prompt), and I opens a panel with its base stats.
+/// </summary>
 internal sealed class ShopItemInfo : MonoBehaviour
 {
     private HudListPanel _panel;
     private ItemAttributes _selected;
-    private float _scan;
     private bool _open;
     private readonly List<HudListRow> _rows = new();
 
@@ -16,12 +20,6 @@ internal sealed class ShopItemInfo : MonoBehaviour
     {
         if (!SemiFunc.RunIsShop() || Camera.main == null || !SemiFunc.NoTextInputsActive())
         { _open = false; _panel?.Hide(); return; }
-        if (Time.time >= _scan)
-        {
-            _scan = Time.time + .5f;
-            foreach (var item in Object.FindObjectsOfType<ItemAttributes>())
-                if (item.item != null && item.GetComponent<HudWorldHint>() == null) item.gameObject.AddComponent<HudWorldHint>();
-        }
         var camera = Camera.main.transform;
         var focused = Focused(camera);
         if (Input.GetKeyDown(KeyCode.I))
@@ -61,7 +59,7 @@ internal sealed class ShopItemInfo : MonoBehaviour
         _panel.Footer = ru ? "I — ЗАКРЫТЬ" : "I — CLOSE";
         _rows.Clear();
         void Add(string en, string russian, string value) => _rows.Add(new HudListRow(ru ? russian : en, value, HudStyle.Info));
-        Add("PRICE", "ЦЕНА", "$" + _selected.value.ToString("N0"));
+        Add("PRICE", "ЦЕНА", "$" + _selected.value.ToString("N0") + "K"); // shop values are in thousands
         var prefab = _selected.item.prefab?.Prefab;
         if (prefab == null) { _panel.SetRows(_rows); return; }
         var body = prefab.GetComponent<Rigidbody>();
@@ -160,4 +158,23 @@ internal sealed class ShopItemInfo : MonoBehaviour
     }
 
     private void OnDestroy() => _panel?.Destroy();
+}
+
+/// <summary>
+/// Adds the info key to the native item name line in the shop, formatted like the game's own "[E]" tag
+/// (white, underlined bold key in brackets). ItemInfoUI only shows the line of the item the player is looking at
+/// or holding, so the hint appears for that one item, never over every shelf.
+/// </summary>
+[HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.UIItemInfoText))]
+internal static class ShopItemInfoTag
+{
+    internal const string Tag = " <color=#FFFFFF>[<u><b>I</b></u>]</color>";
+
+    [HarmonyPrefix]
+    private static void Prefix(ItemAttributes itemAttributes, ref string message)
+    {
+        if (!SemiFunc.RunIsShop() || itemAttributes == null || itemAttributes.item == null || string.IsNullOrEmpty(message) ||
+            message.EndsWith(Tag, System.StringComparison.Ordinal)) return;
+        message += Tag;
+    }
 }

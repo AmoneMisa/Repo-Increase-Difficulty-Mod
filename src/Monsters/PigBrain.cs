@@ -6,8 +6,10 @@ namespace IncreaseHardMod.Monsters;
 /// <summary>
 /// Golden Pig (Tier I, neutral): Fly -> SeekFood -> Eat (grow) -> Land -> Flee, never attacks.
 ///
-/// Players feed it by putting a small valuable down near it (not held, at most $3,500 and 4.5 kg, not a soul,
-/// not in an extraction zone or the truck). The host checks the item again when the pig bites, then destroys it
+/// Players feed it by putting a small valuable down near it (at most $3,500 and 4.5 kg, not a soul). Only a
+/// valuable a player let go of within its reach counts, and it stays on offer for 30 s; loot still lying where the
+/// level put it, and anything in a cart, an extraction zone or the truck, is never eaten. The host checks the item
+/// again when the pig bites, then destroys it
 /// with the native call, so one item can never be eaten twice. Each meal grows the pig (HP 60-180, mass 18-75 kg,
 /// size, its soul value). From the third meal the fattening can be finished by grabbing the pig (or it ends by
 /// itself after 25 s without food, or at ten meals): it drops its wings, lands and runs away.
@@ -22,6 +24,9 @@ internal sealed class PigBrain : MonsterBrain
     private float _consumed, _lastMeal, _scan;
     private bool _landed;
     private PhysGrabObject _food;
+    // Valuables a player put down near the pig, and until when each stays on offer.
+    private readonly System.Collections.Generic.Dictionary<PhysGrabObject, float> _offered = new();
+    private const float OfferRange = 6f;
     private Vector3 _bodyScale = Vector3.zero;
     private static bool _diedThisLevel, _rewarded;
 
@@ -54,6 +59,7 @@ internal sealed class PigBrain : MonsterBrain
             return;
         }
         _lastMeal = Time.time;
+        _offered.Clear();
     }
 
     protected override int SoulValue() => MonsterRules.PigSoul(_feeds, _consumed, MonsterRegistry.TeamSoulHunter());
@@ -152,25 +158,45 @@ internal sealed class PigBrain : MonsterBrain
 
     private PhysGrabObject FindFood(float range)
     {
+        NoteOffers();
         PhysGrabObject best = null; float bestD = range;
-        foreach (var hit in Physics.OverlapSphere(BodyPosition, range, ~0, QueryTriggerInteraction.Ignore))
+        foreach (var pair in _offered)
         {
-            var pgo = hit.GetComponentInParent<PhysGrabObject>();
-            if (pgo == null || !IsFood(pgo)) continue;
+            var pgo = pair.Key;
+            if (!IsFood(pgo)) continue;
             float d = Vector3.Distance(pgo.transform.position, BodyPosition);
             if (d < bestD) { best = pgo; bestD = d; }
         }
         return best;
     }
 
-    private static bool IsFood(PhysGrabObject pgo)
+    // A valuable becomes an offer when a player lets go of it within reach of the pig (the game remembers the last
+    // holder for 3 s after the release; this runs twice a second).
+    private void NoteOffers()
     {
-        if (pgo == null || pgo.dead || pgo.rb == null || pgo.grabbed || pgo.playerGrabbing.Count > 0) return false;
+        float now = Time.time;
+        _stale.Clear();
+        foreach (var pair in _offered) if (pair.Key == null || pair.Key.dead || pair.Value <= now) _stale.Add(pair.Key);
+        foreach (var gone in _stale) _offered.Remove(gone);
+        foreach (var hit in Physics.OverlapSphere(BodyPosition, OfferRange, ~0, QueryTriggerInteraction.Ignore))
+        {
+            var pgo = hit.GetComponentInParent<PhysGrabObject>();
+            if (pgo == null || pgo.dead || pgo.lastPlayerGrabbing == null || pgo.GetComponent<ValuableObject>() == null) continue;
+            _offered[pgo] = now + MonsterRules.PigOfferSeconds;
+        }
+    }
+
+    private readonly System.Collections.Generic.List<PhysGrabObject> _stale = new();
+
+    private bool IsFood(PhysGrabObject pgo)
+    {
+        if (pgo == null || pgo.dead || pgo.rb == null) return false;
         var valuable = pgo.GetComponent<ValuableObject>();
-        if (valuable == null || valuable.dollarValueCurrent <= 0f || valuable.dollarValueCurrent > MonsterRules.PigFoodMaxValue ||
-            pgo.rb.mass > MonsterRules.PigFoodMaxMass || Patches.Effects.BiggerSoulDropsEffect.IsEnemyValuable(valuable)) return false;
+        if (valuable == null || Patches.Effects.BiggerSoulDropsEffect.IsEnemyValuable(valuable)) return false;
         var room = pgo.roomVolumeCheck;
-        return room == null || (!room.inExtractionPoint && !room.inTruck);
+        return MonsterRules.PigAccepts(valuable.dollarValueCurrent, pgo.rb.mass, pgo.grabbed || pgo.playerGrabbing.Count > 0,
+            _offered.TryGetValue(pgo, out float until) && until > Time.time, pgo.impactDetector != null && pgo.impactDetector.inCart,
+            room != null && room.inExtractionPoint, room != null && room.inTruck);
     }
 
     protected override void Update()

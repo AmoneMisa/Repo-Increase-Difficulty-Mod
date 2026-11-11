@@ -28,7 +28,9 @@ internal static class MoonAttackCooldowns
             var fields = new List<FieldInfo>();
             foreach (string timer in Timers)
             {
-                var field = AccessTools.Field(type, timer);
+                // Missing optional clocks are expected for other enemy types;
+                // AccessTools.Field logs a warning for each unsuccessful probe.
+                var field = type.GetField(timer, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 if (field?.FieldType == typeof(float)) fields.Add(field);
             }
             if (fields.Count == 0) continue;

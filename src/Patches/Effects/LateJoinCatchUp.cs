@@ -20,7 +20,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// </summary>
 internal static class LateJoinCatchUp
 {
-    internal const byte RequestCode = 161; // see the event-code list in ModNetwork: 161 is this request (guest -> host)
+    internal const byte RequestCode = 161; // request + typed, host-only battery response
     private const float LateAfterSeconds = 8f;
     private static float _hostGeneratedAt = -1f;
     private static bool _subscribed;
@@ -41,6 +41,7 @@ internal static class LateJoinCatchUp
             try
             {
                 Subscribe();
+                LateJoinBattery.Begin();
                 if (!ModConfig.LateJoinEnabled.Value || !SemiFunc.IsMultiplayer() || !PhotonNetwork.InRoom) return;
                 if (PhotonNetwork.IsMasterClient) { _hostGeneratedAt = Time.realtimeSinceStartup; return; }
                 if (!SemiFunc.RunIsLevel()) return;
@@ -53,9 +54,13 @@ internal static class LateJoinCatchUp
 
     private static void OnEvent(EventData ev)
     {
-        if (ev.Code != RequestCode || !PhotonNetwork.IsMasterClient || !ModConfig.LateJoinEnabled.Value) return;
+        if (ev.Code != RequestCode || !ModConfig.LateJoinEnabled.Value) return;
         try
         {
+            if (!PhotonNetwork.IsMasterClient) { LateJoinBattery.Receive(ev); return; }
+            if (ev.CustomData is object[] request && request.Length == 1 && request[0] is byte op && op == 2)
+            { LateJoinBattery.OnRequest(ev.Sender); return; }
+            if (ev.CustomData != null) return;
             if (!SemiFunc.RunIsLevel() || LevelGenerator.Instance == null || !LevelGenerator.Instance.Generated) return;
             // At the normal level start every guest asks too, before anything has happened: nothing to catch up on.
             if (_hostGeneratedAt < 0f || Time.realtimeSinceStartup - _hostGeneratedAt < LateAfterSeconds) return;
@@ -68,6 +73,7 @@ internal static class LateJoinCatchUp
 
     private static void Send(Player target)
     {
+        LateJoinBattery.SendAll(target);
         int values = 0, doors = 0, deaths = 0, points = 0;
 
         foreach (var valuable in Object.FindObjectsByType<ValuableObject>(FindObjectsSortMode.None))

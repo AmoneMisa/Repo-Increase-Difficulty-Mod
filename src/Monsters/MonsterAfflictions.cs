@@ -111,7 +111,7 @@ internal static class MonsterAfflictions
         Scratch.Clear();
         foreach (var kv in Host) if (kv.Value.Source == source) Scratch.Add(kv.Key);
         foreach (var p in Scratch)
-            foreach (var a in new[] { Affliction.Electrified, Affliction.Constricted, Affliction.Petrified, Affliction.Dragged })
+            foreach (var a in new[] { Affliction.Electrified, Affliction.Constricted, Affliction.Petrified, Affliction.Dragged, Affliction.Seized })
                 End(p, a);
     }
 
@@ -166,7 +166,7 @@ internal static class MonsterAfflictions
             if (now >= s.NextSync)
             {
                 s.NextSync = now + 1f;
-                for (int i = 0; i < 8; i++)
+                for (int i = 0; i < MonsterRules.AfflictionCount; i++)
                 {
                     var a = (Affliction)i;
                     if (s.Timers.Active(a, now)) Send(p, a, s.Timers.Until(a) - now, s.Source, cacheOnly: true);
@@ -180,7 +180,7 @@ internal static class MonsterAfflictions
     {
         if (player == null) return;
         int sourceId = source != null && source.PhotonView != null ? source.PhotonView.ViewID : 0;
-        if (!cacheOnly) Receive(player, kind, seconds, sourceId);
+        if (!cacheOnly) Receive(player, kind, seconds, sourceId, source);
         if (!SemiFunc.IsMultiplayer() || player.photonView == null || !PhotonNetwork.InRoom) return;
         PhotonNetwork.RaiseEvent(EventCode, new object[] { player.photonView.ViewID, (byte)kind, seconds, PhotonNetwork.Time, LevelKey(), sourceId, false },
             new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
@@ -229,8 +229,9 @@ internal static class MonsterAfflictions
 
     private sealed class LocalState
     {
-        public readonly float[] Until = new float[8];
+        public readonly float[] Until = new float[MonsterRules.AfflictionCount];
         public int SourceId;
+        public Enemy Source; // host and singleplayer: known directly (no view id offline)
     }
 
     private static readonly Dictionary<PlayerAvatar, LocalState> Shown = new();
@@ -238,12 +239,13 @@ internal static class MonsterAfflictions
     private static Vector3 _lastMove;
     private static bool _struggleSent;
 
-    private static void Receive(PlayerAvatar player, Affliction kind, float seconds, int sourceId)
+    private static void Receive(PlayerAvatar player, Affliction kind, float seconds, int sourceId, Enemy sourceEnemy = null)
     {
         if (player == null) return;
         if (!Shown.TryGetValue(player, out var s)) Shown[player] = s = new LocalState();
         s.Until[(int)kind] = seconds > 0f ? Time.time + seconds : 0f;
         if (sourceId != 0) s.SourceId = sourceId;
+        if (sourceEnemy != null) s.Source = sourceEnemy;
         var visual = player.GetComponent<AfflictionVisual>() ?? player.gameObject.AddComponent<AfflictionVisual>();
         visual.Set(kind, seconds, sourceId);
         if (!IsLocal(player)) return;
@@ -264,6 +266,7 @@ internal static class MonsterAfflictions
         Affliction.Venom => PlayerCondition.Venom,
         Affliction.Slowed => PlayerCondition.Slowed,
         Affliction.Dragged => PlayerCondition.Dragged,
+        Affliction.Seized => PlayerCondition.Seized,
         _ => null,
     };
 
@@ -310,9 +313,9 @@ internal static class MonsterAfflictions
         float now = Time.time;
         bool electric = s.Until[(int)Affliction.Electrified] > now, coil = s.Until[(int)Affliction.Constricted] > now,
             stone = s.Until[(int)Affliction.Petrified] > now, drag = s.Until[(int)Affliction.Dragged] > now,
-            slow = s.Until[(int)Affliction.Slowed] > now;
+            slow = s.Until[(int)Affliction.Slowed] > now, seized = s.Until[(int)Affliction.Seized] > now;
         if (me.isDisabled || me.deadSet) { System.Array.Clear(s.Until, 0, s.Until.Length); return; }
-        if (electric || coil || stone || drag)
+        if (electric || coil || stone || drag || seized)
         {
             controller.OverrideSpeed(0f, .12f);
             controller.OverrideJumpCooldown(.2f);
@@ -326,7 +329,7 @@ internal static class MonsterAfflictions
             if (PhysGrabber.instance.grabbed) PhysGrabber.instance.ReleaseObject(-1, .3f);
         }
         var rb = controller.rb;
-        var source = s.SourceId != 0 ? PhotonView.Find(s.SourceId) : null;
+        var source = s.Source != null ? s.Source.transform : s.SourceId != 0 ? PhotonView.Find(s.SourceId)?.transform : null;
         if (rb != null && !rb.isKinematic)
         {
             if (electric)
@@ -340,12 +343,19 @@ internal static class MonsterAfflictions
             else if (drag && source != null)
             {
                 // Pinned on the gorgon's horns: kept just in front of it.
-                var bull = source.transform;
+                var bull = source;
                 var target = bull.position + bull.forward * 1.6f;
                 var delta = target - rb.position; delta.y = 0f;
                 rb.velocity = new Vector3(Mathf.Clamp(delta.x * 10f, -9f, 9f), rb.velocity.y, Mathf.Clamp(delta.z * 10f, -9f, 9f));
             }
-            else if (coil || stone)
+            else if (seized && source != null)
+            {
+                // Held between the twins and swung from side to side before the throw.
+                var target = source.position + source.forward * .9f + Vector3.up * .45f + source.right * (Mathf.Sin(now * 15.7f) * .4f);
+                var delta = target - rb.position;
+                rb.velocity = new Vector3(Mathf.Clamp(delta.x * 10f, -8f, 8f), Mathf.Clamp(delta.y * 8f, -4f, 4f), Mathf.Clamp(delta.z * 10f, -8f, 8f));
+            }
+            else if (coil || stone || seized)
                 rb.velocity = new Vector3(0f, Mathf.Min(rb.velocity.y, 0f), 0f);
         }
         if (coil && !_struggleSent)

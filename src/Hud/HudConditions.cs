@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace IncreaseHardMod.Hud;
 
 /// <summary>A status the local player can be under; each has its own screen frame and card.</summary>
-internal enum PlayerCondition { Frozen, Poisoned, Sedated, Netted, Shocked, Burning, Electrified, Constricted, Petrified, Bleeding, Venom, Slowed, Dragged }
+internal enum PlayerCondition { Frozen, Poisoned, Sedated, Netted, Shocked, Burning, Electrified, Constricted, Petrified, Bleeding, Venom, Slowed, Dragged, Seized }
 
 /// <summary>
 /// The local player's conditions on screen: a themed frame around the screen edges (frost, toxic haze, rope
@@ -57,6 +57,8 @@ internal static class HudConditions
             Lines = new[] { "HEAVILY SLOWED" }, LinesRu = new[] { "СИЛЬНОЕ ЗАМЕДЛЕНИЕ" } },
         [PlayerCondition.Dragged] = new Look { Title = "ON THE HORNS", TitleRu = "НА РОГАХ", Color = new Color(1f, .45f, .3f),
             Lines = new[] { "DRAGGED BY THE GORGON", "A WALL HURTS: 55" }, LinesRu = new[] { "ГОРГОНА ТАЩИТ ВАС", "УДАР О СТЕНУ: 55" } },
+        [PlayerCondition.Seized] = new Look { Title = "SEIZED", TitleRu = "СХВАЧЕН", Color = new Color(1f, .62f, .7f),
+            Lines = new[] { "THE TWINS HOLD YOU", "THROW: 18 DAMAGE", "A TEAMMATE'S HIT FREES YOU" }, LinesRu = new[] { "БЛИЗНЕЦЫ ДЕРЖАТ ВАС", "БРОСОК: 18 УРОНА", "УДАР ТОВАРИЩА ОСВОБОДИТ" } },
     };
 
     private sealed class View
@@ -144,12 +146,27 @@ internal static class HudConditions
             PlayerCondition.Sedated => .85f + .15f * Mathf.Sin(now * 1.6f),
             // Electric flicker: mostly lit, with quick irregular dips.
             PlayerCondition.Shocked or PlayerCondition.Electrified => .72f + .28f * Mathf.Abs(Mathf.Sin(now * 23f) * Mathf.Sin(now * 7.3f + 1f)),
-            PlayerCondition.Burning => .8f + .2f * Mathf.PerlinNoise(now * 6f, 0f),
-            PlayerCondition.Bleeding or PlayerCondition.Venom => .9f + .1f * Mathf.Sin(now * 5f),
+            PlayerCondition.Burning => .78f + .22f * Mathf.PerlinNoise(now * 6f, 0f),
+            // A heartbeat for blood, a slower throb for venom, the snake's squeeze, a heavy stare.
+            PlayerCondition.Bleeding => .8f + .2f * Mathf.Pow(Mathf.Abs(Mathf.Sin(now * 3.4f)), 6f),
+            PlayerCondition.Venom => .86f + .14f * Mathf.Sin(now * 3f),
+            PlayerCondition.Constricted => .88f + .12f * Mathf.Sin(now * 6f),
+            PlayerCondition.Slowed => .85f + .15f * Mathf.Sin(now * 1.8f),
+            PlayerCondition.Seized => .85f + .15f * Mathf.Sin(now * 15.7f),
             _ => 1f,
         };
         view.Frame.gameObject.SetActive(true);
         view.FrameImage.color = new Color(1f, 1f, 1f, alpha * pulse);
+        // The frame itself moves for three of them: flames flicker upwards, the coils tighten, the drag rattles.
+        var frameRect = view.FrameImage.rectTransform;
+        switch (condition)
+        {
+            case PlayerCondition.Burning: frameRect.localScale = new Vector3(1f, 1f + .05f * Mathf.PerlinNoise(now * 5f, 3f), 1f); break;
+            case PlayerCondition.Constricted: frameRect.localScale = Vector3.one * (1.05f - .04f * (.5f + .5f * Mathf.Sin(now * 6f))); break;
+            case PlayerCondition.Dragged: frameRect.anchoredPosition = new Vector2(Mathf.Sin(now * 41f) * 5f, Mathf.Sin(now * 29f) * 2f); break;
+            // Swung from side to side in the twins' grip.
+            case PlayerCondition.Seized: frameRect.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(now * 15.7f) * 1.2f); frameRect.localScale = Vector3.one * 1.04f; break;
+        }
         foreach (var (label, home, phase) in view.Zs)
         {
             float t = Mathf.Repeat(now * .35f + phase, 1f);

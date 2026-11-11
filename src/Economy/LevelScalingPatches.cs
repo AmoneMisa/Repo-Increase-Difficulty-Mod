@@ -114,6 +114,7 @@ internal static class LevelScalingPatches
                 setup != null && runs >= setup.runsPlayed && (!setup.levelsCompletedCondition ||
                     (depth >= setup.levelsCompletedMin && (setup.levelsCompletedMax == 0 || depth <= setup.levelsCompletedMax))) &&
                 Monsters.MonsterRegistry.AllowedInRoster(setup));
+            _enemiesList = Monsters.MonsterRegistry.RollRoster(_enemiesList);
             return _enemiesList.Count > 0;
         }
     }

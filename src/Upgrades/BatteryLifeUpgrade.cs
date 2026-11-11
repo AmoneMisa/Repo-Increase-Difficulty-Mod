@@ -46,9 +46,18 @@ internal static class BatteryLifeUpgrade
         public int BaseBars = -1;       // the gun's native bar count, captured before we add any
         public int Level;               // last known upgrade level of the gun's user
         public float BarsCheckTimer;
+        public int RemoteBars = -1;
     }
 
     private static readonly ConditionalWeakTable<ItemBattery, State> _states = new();
+
+    internal static void AuthoritativeBars(ItemBattery battery, int bars)
+    {
+        var state = _states.GetOrCreateValue(battery);
+        BaseBars(battery, state); // capture the native capacity before installing the host's upgraded one
+        state.RemoteBars = bars;
+        battery.batteryBars = bars;
+    }
 
     public static void Register()
     {
@@ -236,6 +245,10 @@ internal static class BatteryLifeUpgrade
         int target = !ModConfig.PlayerUpgradesEnabled.Value ? baseBars
             : gun != null ? TargetGunBars(gun, baseBars, state.Level)
             : TargetDroneBars(baseBars, state.Level);
+        // A late joiner's perk/last-user data may still be arriving. Never replace
+        // the host's capacity with a speculative local zero-perk calculation.
+        if (Photon.Pun.PhotonNetwork.InRoom && !Photon.Pun.PhotonNetwork.IsMasterClient && state.RemoteBars > 0)
+            target = state.RemoteBars;
         if (target == battery.batteryBars) return;
 
         battery.batteryBars = target;
@@ -245,6 +258,7 @@ internal static class BatteryLifeUpgrade
         if (visual != null) visual.BatteryBarsSet();
         var ui = BatteryUI.instance != null ? BatteryUI.instance.batteryVisualLogic : null;
         if (ui != null && ui.itemBattery == battery) ui.BatteryBarsSet();
+        Patches.Effects.LateJoinBattery.CapacityChanged(battery);
     }
 
     // Who is using this item. PhysGrabObject.lastPlayerGrabbing only tracks physical grabs and clears ~3 s after

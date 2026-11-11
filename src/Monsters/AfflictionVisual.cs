@@ -12,7 +12,7 @@ namespace IncreaseHardMod.Monsters;
 /// </summary>
 internal sealed class AfflictionVisual : MonoBehaviour
 {
-    private readonly float[] _until = new float[8];
+    private readonly float[] _until = new float[MonsterRules.AfflictionCount];
     private int _source;
     private PlayerAvatar _player;
     private Light _ember;
@@ -134,7 +134,7 @@ internal sealed class AfflictionVisual : MonoBehaviour
             drop.position = center + new Vector3(Mathf.Cos(a) * .22f, .15f - u * u * 1f, Mathf.Sin(a) * .22f);
             drop.localScale = new Vector3(.05f, .09f, .05f) * (1f - u * .4f);
         }
-        any |= drip || On(Affliction.Slowed) || On(Affliction.Dragged);
+        any |= drip || On(Affliction.Slowed) || On(Affliction.Dragged) || On(Affliction.Seized);
         if (!any) { Clear(); enabled = false; }
     }
 

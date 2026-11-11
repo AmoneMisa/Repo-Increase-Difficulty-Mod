@@ -11,7 +11,11 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.10.0`
+- **Version:** `0.10.1`
+
+Mid-level joining also catches up live battery charge, upgraded capacity and native battery indicator colours. New-monster selection now recommends a score of 100.
+
+Version 0.10.1 adds two monsters — the Mischief Fairy (Tier I, carries light valuables out of carts and extraction points) and Hansel and Gretel (Tier II, seize and throw a player) — and the Witch's recorded laugh after a successful spell, with a 12-second repeat limit per Witch ([details](release-notes/v0.10.1.md)). The new monsters are not yet validated in a live game.
 
 Version 0.10.0 adds five monsters (Golden Pig, Witch, Basilisk, Gorgon, Naga Queen), eight perks against them and their HUD statuses, plus Spread Upgrades, Ice/Sticky Pistol, shop info and Link Drone fixes ([details](release-notes/v0.10.0.md)). The monsters are not yet validated in a live game; their models are first-pass.
 
@@ -429,7 +433,11 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.10.0`
+- **Версия:** `0.10.1`
+
+При входе посреди уровня также досылаются фактический заряд, увеличенная ёмкость и восстанавливаются штатные цвета индикатора батареи. Рекомендуемый балл выбора новых монстров — 100.
+
+Версия 0.10.1 добавляет ведьме записанный смех после успешного заклинания, не чаще раза в 12 секунд у одной ведьмы ([подробности](release-notes/v0.10.1.md)).
 
 Версия 0.10.0 добавляет пять монстров (Золотая свинка, Ведьма, Василиск, Горгона, Королева Наг), восемь перков против них и HUD-статусы, а также исправления Spread Upgrades, ледяного и притягивающего пистолетов, подсказок магазина и Linked Drone ([подробности](release-notes/v0.10.0.md)). Монстры ещё не проверены в живой игре, модели черновые.
 

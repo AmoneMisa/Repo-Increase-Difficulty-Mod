@@ -127,4 +127,28 @@ Check(IncreaseHardMod.Patches.Effects.LateJoinRules.ReconciledHealth(120, 120, 1
 Check(IncreaseHardMod.Patches.Effects.LateJoinRules.ReconciledHealth(70, 120, 180, 180) == 70, "A wounded joiner is not healed by the correction");
 Check(IncreaseHardMod.Patches.Effects.LateJoinRules.ReconciledHealth(120, 120, 120, 180) == 120, "Saved health is never invented above what the host saved");
 Check(IncreaseHardMod.Patches.Effects.LateJoinRules.ReconciledHealth(120, 120, 500, 180) == 180, "Never above the new maximum");
+object[] BatteryPacket() => new object[] { (byte)1, "level12", 100d, new[]{12,13}, new[]{8,6}, new[]{3,0}, new[]{43.25f,0f}, new[]{true,false} };
+Check(LateJoinBatteryRules.Read(BatteryPacket(), 101d, "level12", out var batteries) && batteries.Length == 2 &&
+      batteries[0].Bars == 8 && batteries[0].Segments == 3 && batteries[0].Charge == 43.25f && batteries[0].Charging &&
+      batteries[1].Charge == 0f && batteries[1].Segments == 0, "Late join preserves upgraded capacity, fractional charge, charging state and a genuinely empty battery");
+Check(!LateJoinBatteryRules.Read(BatteryPacket(), 101d, "another-level", out _), "Battery data from another level is ignored");
+Check(!LateJoinBatteryRules.Read(BatteryPacket(), 111d, "level12", out _) &&
+      !LateJoinBatteryRules.Read(BatteryPacket(), 99d, "level12", out _), "Stale and future battery snapshots are rejected");
+var packet = BatteryPacket(); packet[2] = double.NaN;
+Check(!LateJoinBatteryRules.Read(packet, 101d, "level12", out _), "NaN battery timestamps are rejected");
+packet = BatteryPacket(); packet[6] = new[]{float.NaN,0f};
+Check(!LateJoinBatteryRules.Read(packet, 101d, "level12", out _), "NaN charge is rejected before any battery is changed");
+packet = BatteryPacket(); packet[3] = new[]{12,12};
+Check(!LateJoinBatteryRules.Read(packet, 101d, "level12", out _), "A batch cannot target the same battery twice");
+packet = BatteryPacket(); packet[4] = new[]{8};
+Check(!LateJoinBatteryRules.Read(packet, 101d, "level12", out _), "Battery arrays must have matching lengths");
+packet = BatteryPacket(); packet[4] = new[]{8,0};
+Check(!LateJoinBatteryRules.Read(packet, 101d, "level12", out var rejected) && rejected == null, "A bad later row rejects the complete batch, without partial application");
+packet = BatteryPacket(); packet[5] = new[]{9,0};
+Check(!LateJoinBatteryRules.Read(packet, 101d, "level12", out _), "Lit segments cannot exceed capacity");
+packet = BatteryPacket(); packet[6] = new[]{101f,0f};
+Check(!LateJoinBatteryRules.Read(packet, 101d, "level12", out _), "Charge cannot exceed 100 percent");
+packet = BatteryPacket(); packet[5] = new[]{3,1};
+Check(!LateJoinBatteryRules.Read(packet, 101d, "level12", out _), "A zero-charge battery cannot claim a lit segment");
+Check(!LateJoinBatteryRules.Read(new object[]{(byte)2}, 101d, "level12", out _), "A battery request cannot be mistaken for a host snapshot");
 Console.WriteLine($"LATE_JOIN_PASS: {checks}");

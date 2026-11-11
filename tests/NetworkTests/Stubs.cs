@@ -43,6 +43,7 @@ public static class RetryCrystalEffect {public const byte EventCode=176;public s
  public class RoundLootSummary {public int[] Serialize()=>Array.Empty<int>();public static RoundLootSummary Deserialize(int[] d)=>new();}
  public static class LateJoinCache {public static void Tick(){}}
   public static class LateJoinProgress {public const byte RequestCode=159;public static void Tick(){}public static void ReconcileHealth(){}public static void OnRequest(int actor){}}
+  public static class LateJoinBattery {public static void Tick(){}}
  public static class LateJoinController {public static void Tick(){}public static void EnsureEnemyRegistrations(){}public static void EnsureLocalHealthInitialized(){}}
  public static class PingController {public static int Applied;public static void AddNetworkPing(byte k,UnityEngine.Vector3 v,string l,string s,int id){Applied++;}}
  public static class MapVoteState {public static int Candidates,Ballots,LastActor;public static void ReceiveCandidates(int session,string[] names,float t,bool closed,int winner){Candidates++;}public static void ReceiveBallot(int session,int actor,int index,string name){Ballots++;LastActor=actor;}}

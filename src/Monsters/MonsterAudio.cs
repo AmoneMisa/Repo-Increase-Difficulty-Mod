@@ -5,12 +5,12 @@ using UnityEngine;
 namespace IncreaseHardMod.Monsters;
 
 /// <summary>
-/// Procedural warning sounds for the new monsters, played through the game's own <see cref="Sound"/> path (game
-/// mixer, distance, occlusion). Generated once from code, so nothing proprietary ships in the package.
+/// Monster cues through the native Sound path (mixer, distance, occlusion).
+/// Warnings are procedural; the witch laugh uses a user-supplied embedded recording.
 /// </summary>
 internal static class MonsterAudio
 {
-    internal enum Cue { Oink, Chomp, Charge, Fireball, Zap, Hiss, Rustle, Bite, Roar, Thud, Stare, Swing, SwingWide, Petrify, Slash, Hurt, Death }
+    internal enum Cue { Oink, Chomp, Charge, Fireball, Zap, Hiss, Rustle, Bite, Roar, Thud, Stare, Swing, SwingWide, Petrify, Slash, Hurt, Death, WitchLaugh, Giggle, Chime }
 
     private static readonly Dictionary<Cue, Sound> Sounds = new();
 
@@ -19,12 +19,14 @@ internal static class MonsterAudio
         try
         {
             if (!Sounds.TryGetValue(cue, out var sound))
-                Sounds[cue] = sound = new Sound
+                Sounds[cue] = sound = cue == Cue.WitchLaugh
+                    ? Visuals.ItemAudio.Cue("monster_witch_laugh", .32f)
+                    : new Sound
                 {
                     Sounds = new[] { Make(cue) }, Volume = .5f, VolumeRandom = .05f, Pitch = 1f, PitchRandom = .06f,
                     SpatialBlend = 1f, Doppler = 0f, Type = AudioManager.AudioType.Default,
                 };
-            sound.Volume = .5f * volume;
+            sound.Volume = (cue == Cue.WitchLaugh ? .32f : .5f) * volume;
             sound.Play(position);
         }
         catch (Exception e) { Plugin.Log.LogWarning($"[Monsters] Sound {cue} failed: {e.Message}"); }
@@ -37,7 +39,7 @@ internal static class MonsterAudio
         {
             Cue.Oink => .35f, Cue.Chomp => .25f, Cue.Charge => 1.2f, Cue.Fireball => .7f, Cue.Zap => 1f, Cue.Hiss => .9f,
             Cue.Rustle => .6f, Cue.Bite => .25f, Cue.Roar => 1.1f, Cue.Thud => .5f, Cue.Stare => 2f, Cue.Swing => .3f,
-            Cue.SwingWide => .45f, Cue.Petrify => 1.5f, Cue.Slash => .4f, Cue.Hurt => .3f, _ => .9f,
+            Cue.SwingWide => .45f, Cue.Petrify => 1.5f, Cue.Slash => .4f, Cue.Hurt => .3f, Cue.Giggle => 1.1f, Cue.Chime => .9f, _ => .9f,
         };
         int n = (int)(rate * length);
         var data = new float[n];
@@ -78,6 +80,17 @@ internal static class MonsterAudio
                 case Cue.Petrify:
                     phase += 2 * Mathf.PI * 660f / rate;
                     s = Mathf.Sin(phase) * .2f * (1f - u) + Mathf.Sin(phase * .5f) * .15f + low * .2f * u; break;
+                case Cue.Giggle:
+                {
+                    // Two children's voices: quick rising "hee" bursts, the second a third above the first.
+                    float burst = Mathf.Repeat(u * 7f, 1f), gate = Mathf.Sin(burst * Mathf.PI);
+                    phase += 2 * Mathf.PI * (520f + 160f * burst + 60f * Mathf.Sin(u * 5f)) / rate;
+                    s = (Mathf.Sin(phase) * .3f + Mathf.Sin(phase * 1.26f) * .22f + Mathf.Sin(phase * 2f) * .08f) * gate * gate; break;
+                }
+                case Cue.Chime:
+                    // A small bell: three decaying partials with a shimmer.
+                    phase += 2 * Mathf.PI * 1320f / rate;
+                    s = (Mathf.Sin(phase) * .3f + Mathf.Sin(phase * 1.5f) * .2f + Mathf.Sin(phase * 2.76f) * .12f) * Mathf.Exp(-u * 4f) * (.8f + .2f * Mathf.Sin(u * 60f)); break;
                 case Cue.Hurt:
                     phase += 2 * Mathf.PI * (320f - 150f * u) / rate;
                     s = Mathf.Sin(phase) * .4f + noise * .15f; break;

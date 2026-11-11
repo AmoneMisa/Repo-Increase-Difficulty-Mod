@@ -12,6 +12,8 @@ Contract with MonsterVisual (group = part.name before '|'; every group turns aro
                          head. Naga: rooted at the torso, tail0 first.
   head, jaw              jaw hangs on head
   arm_l / arm_r          witch (and fairy) arms; naga arm-10, arm-11 (left upper/lower), arm10, arm11
+  twins                  head_h / head_g, arm_h_in / arm_h_out / arm_g_in / arm_g_out, foot_h_l / foot_h_r / foot_g_l / foot_g_r
+                         (h = Hansel on the left, g = Gretel)
   pivots without parts   eye_l, eye_r, hand_l, hand_r: anchors for glow / spell effects
 The export is the REST pose (chains straight where the code bends them); the render applies a pose on top.
 Axes: Blender x right, y forward, z up -> Unity x, z, y.
@@ -488,7 +490,7 @@ def witch():
 
 
 def fairy():
-    """Mischief Fairy (Tier I concept): a tiny imp of a fairy who lifts things out of carts and extractors."""
+    """Mischief Fairy (Tier I): a tiny imp of a fairy who lifts things out of carts and extractors."""
     skin = (.86, .62, .52); leaf = (.12, .42, .1); hair = (.03, .46, .48); cap = (.62, .08, .38); wing = (.6, .92, .95)
     loft('torso', [((0, 0, .4), .07, .06), ((0, 0, .46), .085, .075), ((0, .005, .56), .075, .065), ((0, 0, .64), .085, .06), ((0, 0, .67), .035, .035)], leaf, segs=12)
     for k in range(8):   # petal skirt
@@ -560,7 +562,7 @@ def fairy():
 
 
 def twins():
-    """Hansel and Gretel (Tier II concept): pale, hollow-eyed twin children who never let go of each other's hand."""
+    """Hansel and Gretel (Tier II): pale, hollow-eyed twin children who never let go of each other's hand."""
     porcelain = (.84, .8, .76); stitch = (.12, .02, .03)
 
     def child(x, girl):
@@ -568,9 +570,10 @@ def twins():
         tag = 'g' if girl else 'h'; P = lambda a, b, c: Vector((x + a, b, c))
         cloth = (.36, .09, .1) if girl else (.1, .2, .12); shirt = (.78, .74, .66)
         for sx in (-1, 1):
-            tube('leg', [P(sx * .065, 0, .5), P(sx * .07, .01, .1)], .045, .036, (.8, .78, .72), segs=8)
-            tube('sock', [P(sx * .068, .005, .3), P(sx * .07, .01, .1)], .041, .04, (.5, .48, .46) if not girl else (.75, .72, .7), segs=8)
-            ball('shoe', P(sx * .07, .04, .05), (.055, .095, .05), dark)
+            fg = 'foot_' + tag + ('_l' if sx < 0 else '_r'); pivots[fg] = tuple(P(sx * .065, 0, .52))
+            tube('leg', [P(sx * .065, 0, .5), P(sx * .07, .01, .1)], .045, .036, (.8, .78, .72), fg, segs=8)
+            tube('sock', [P(sx * .068, .005, .3), P(sx * .07, .01, .1)], .041, .04, (.5, .48, .46) if not girl else (.75, .72, .7), fg, segs=8)
+            ball('shoe', P(sx * .07, .04, .05), (.055, .095, .05), dark, fg)
         if girl:
             loft('dress', [(P(0, 0, .86), .1, .08), (P(0, 0, .7), .12, .1), (P(0, 0, .52), .2, .18), (P(0, 0, .34), .26, .23), (P(0, 0, .32), .2, .18)], cloth, segs=16,
                  shape=lambda i, a: 1 + .012 * i * math.sin(a * 8))
@@ -581,7 +584,7 @@ def twins():
             loft('shirt', [(P(0, 0, .6), .12, .095), (P(0, 0, .72), .125, .1), (P(0, 0, .86), .11, .085)], shirt, segs=14)
             loft('lederhosen', [(P(0, 0, .42), .12, .1), (P(0, 0, .5), .135, .11), (P(0, 0, .62), .128, .1), (P(0, 0, .64), .11, .085)], cloth, segs=14)
             for sx in (-1, 1):
-                tube('short leg', [P(sx * .065, 0, .5), P(sx * .07, 0, .36)], .07, .062, cloth, segs=10)
+                tube('short leg', [P(sx * .065, 0, .5), P(sx * .07, 0, .36)], .07, .062, cloth, 'foot_h' + ('_l' if sx < 0 else '_r'), segs=10)
                 tube('suspender', [P(sx * .07, .095, .62), P(sx * .06, .085, .86)], .013, .013, (.25, .12, .05), segs=5)
             tube('chest strap', [P(-.07, .1, .75), P(.07, .1, .75)], .014, .014, (.25, .12, .05), segs=5)
             ball('strap heart', P(0, .108, .75), (.025, .012, .025), stitch)

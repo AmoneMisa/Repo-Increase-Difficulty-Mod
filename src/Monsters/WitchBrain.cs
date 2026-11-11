@@ -24,6 +24,7 @@ internal sealed class WitchBrain : MonsterBrain
     private PlayerAvatar _zapTarget;
     private float _grabCheck;
     private bool _nearFloor;
+    private float _laughReady;
 
     internal const float GrabHeight = 1f;
 
@@ -77,7 +78,7 @@ internal sealed class WitchBrain : MonsterBrain
         return _hover > 0f ? _hover : Hover;
     }
 
-    protected override void OnSpawned() { _balls.Clear(); _zapTarget = null; }
+    protected override void OnSpawned() { _balls.Clear(); _zapTarget = null; _laughReady = 0f; }
 
     protected override void OnSeePlayer(PlayerAvatar player)
     {
@@ -117,6 +118,11 @@ internal sealed class WitchBrain : MonsterBrain
     {
         if (state == FirePrep) MonsterAudio.Play(MonsterAudio.Cue.Charge, BodyPosition);
         else if (state == ZapPrep) MonsterAudio.Play(MonsterAudio.Cue.Zap, BodyPosition);
+        else if ((state == FireCast || state == Zap) && Time.time >= _laughReady)
+        {
+            _laughReady = Time.time + 12f;
+            MonsterAudio.Play(MonsterAudio.Cue.WitchLaugh, BodyPosition);
+        }
     }
 
     protected override void HostTick(float dt)
@@ -154,7 +160,7 @@ internal sealed class WitchBrain : MonsterBrain
                 Face(Target.transform.position);
                 if (StateTime < .8f) break;
                 if (Sees(Target, 13f) && MayAttack(Target) && MonsterAfflictions.Apply(Target, Affliction.Electrified, MonsterRules.LevitateSeconds, E))
-                { _zapTarget = Target; SetState(Zap); }
+                { _zapTarget = Target; Announce(Zap); }
                 else { _zapReady = Time.time + Economy.ExtendedMoons.Cooldown(3f); SetState(Hunt); }
                 break;
             case Zap:

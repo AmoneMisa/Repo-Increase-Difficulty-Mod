@@ -2,11 +2,11 @@ using System;
 
 namespace IncreaseHardMod.Monsters;
 
-/// <summary>The mod's five monsters. Values are stable network/save bytes: append only.</summary>
-internal enum MonsterKind : byte { Pig = 0, Witch = 1, Basilisk = 2, Gorgon = 3, Naga = 4 }
+/// <summary>The mod's monsters. Values are stable network/save bytes: append only.</summary>
+internal enum MonsterKind : byte { Pig = 0, Witch = 1, Basilisk = 2, Gorgon = 3, Naga = 4, Fairy = 5, Twins = 6 }
 
 /// <summary>Player afflictions the mod's monsters cause. Values are network bytes: append only.</summary>
-internal enum Affliction : byte { Burning = 0, Electrified = 1, Constricted = 2, Petrified = 3, Bleeding = 4, Venom = 5, Slowed = 6, Dragged = 7 }
+internal enum Affliction : byte { Burning = 0, Electrified = 1, Constricted = 2, Petrified = 3, Bleeding = 4, Venom = 5, Slowed = 6, Dragged = 7, Seized = 8 }
 
 /// <summary>
 /// Engine-free balance and state rules of the new monsters (checked by tests/MonsterTests). Every number the
@@ -16,12 +16,17 @@ internal static class MonsterRules
 {
     // ---------------------------------------------------------------- shared
 
+    /// <summary>Number of <see cref="Affliction"/> values (array sizes, packet range).</summary>
+    internal const int AfflictionCount = 9;
+    /// <summary>Number of <see cref="MonsterKind"/> values (packet range).</summary>
+    internal const int MonsterCount = 7;
+
     /// <summary>After any hard control ends the player cannot be immobilised again for this long.</summary>
     internal const float ControlImmunitySeconds = 3f;
 
-    /// <summary>Hard control = it stops the player acting (levitation, constriction, petrification, drag).</summary>
+    /// <summary>Hard control = it stops the player acting (levitation, constriction, petrification, drag, the twins' grip).</summary>
     internal static bool IsHardControl(Affliction a) =>
-        a is Affliction.Electrified or Affliction.Constricted or Affliction.Petrified or Affliction.Dragged;
+        a is Affliction.Electrified or Affliction.Constricted or Affliction.Petrified or Affliction.Dragged or Affliction.Seized;
 
     /// <summary>A hard control may start only when none is active and the immunity window has passed.</summary>
     internal static bool CanStartHardControl(float now, float activeUntil, float immuneUntil) => now >= activeUntil && now >= immuneUntil;
@@ -50,6 +55,18 @@ internal static class MonsterRules
 
     /// <summary>Total points of a DoT (rounded, never negative).</summary>
     internal static int DotTotal(float perSecond, float seconds) => Math.Max(0, (int)Math.Round(perSecond * Math.Max(0f, seconds)));
+
+    // ---------------------------------------------------------------- roster
+
+    /// <summary>Default chance that an enemy slot of a level is filled by one of the mod's monsters.</summary>
+    internal const float NewMonsterChance = .2f;
+
+    /// <summary>
+    /// Whether an enemy slot goes to the mod's monsters: with <paramref name="chance"/> when both kinds are
+    /// eligible for the slot's tier; always when only they are; never when none of them is.
+    /// </summary>
+    internal static bool SlotForNewMonster(float roll, float chance, int newEligible, int nativeEligible) =>
+        newEligible > 0 && (nativeEligible <= 0 || roll < chance);
 
     // ---------------------------------------------------------------- witch
 
@@ -101,6 +118,34 @@ internal static class MonsterRules
         return angle <= arcDegrees * .5f;
     }
 
+    // ---------------------------------------------------------------- mischief fairy
+
+    internal const int FairyHealth = 45;
+    internal const float FairyHover = 1.5f, FairyLiftMaxMass = 6f, FairySearchRange = 14f, FairyLiftSeconds = .8f;
+    /// <summary>She carries a thing for at most this long, or until it is this far from where she took it.</summary>
+    internal const float FairyCarrySeconds = 7f, FairyCarryDistance = 10f;
+    /// <summary>Pause between thefts; a player this close while she carries makes her drop it and bolt.</summary>
+    internal const float FairyCooldown = 14f, FairyStartleRange = 2.2f, FairyFleeSeconds = 3f;
+
+    /// <summary>The fairy only lifts loose, light things lying in a cart or an extraction point.</summary>
+    internal static bool FairyMayLift(float mass, bool held, bool inCart, bool inExtraction, bool inTruck) =>
+        !held && !inTruck && mass > 0f && mass <= FairyLiftMaxMass && (inCart || inExtraction);
+
+    /// <summary>She lets go when a player takes the thing or startles her, or once it was carried long or far enough.</summary>
+    internal static bool FairyDrops(float carriedSeconds, float distance, bool held, bool startled) =>
+        held || startled || carriedSeconds >= FairyCarrySeconds || (carriedSeconds >= 1.5f && distance >= FairyCarryDistance);
+
+    // ---------------------------------------------------------------- hansel and gretel
+
+    internal const int TwinsHealth = 230, TwinsThrowDamage = 18;
+    /// <summary>They stare (lure), rush, reach out, hold the player between them and throw.</summary>
+    internal const float TwinsLureSeconds = 1f, TwinsRushSpeed = 5.2f, TwinsRushMax = 2.5f, TwinsReachSeconds = .7f, TwinsReach = 1.8f;
+    internal const float TwinsHoldSeconds = 1.2f, TwinsThrowForce = 16f, TwinsCooldown = 7f, TwinsMissCooldown = 3f;
+
+    /// <summary>The grab lands only on a visible player still within reach when the windup ends.</summary>
+    internal static bool TwinsGrabLands(float distance, bool sees, bool mayAttack, bool canControl) =>
+        distance <= TwinsReach && sees && mayAttack && canControl;
+
     // ---------------------------------------------------------------- perks
 
     /// <summary>Grounding: electric hold time -20/35/50%.</summary>
@@ -132,6 +177,8 @@ internal static class MonsterRules
             case MonsterKind.Witch: min = 3700; max = 4500; break;
             case MonsterKind.Basilisk: min = 4000; max = 4500; break;
             case MonsterKind.Gorgon: min = 6000; max = 7500; break;
+            case MonsterKind.Fairy: min = 1500; max = 2200; break;
+            case MonsterKind.Twins: min = 3800; max = 4600; break;
             default: min = 6500; max = 7500; break;
         }
     }
@@ -152,6 +199,16 @@ internal static class MonsterRules
     internal const float PigFoodMaxValue = 3500f, PigFoodMaxMass = 4.5f, PigEatRange = 1.6f;
     /// <summary>After the third meal, no food for this long ends the fattening by itself.</summary>
     internal const float PigSatedAfter = 25f;
+
+    /// <summary>How long a valuable a player put down near the pig stays on offer.</summary>
+    internal const float PigOfferSeconds = 30f;
+
+    /// <summary>
+    /// The pig eats only what a player offered it: a small loose valuable a player let go of near it. Loot still
+    /// lying where the level put it, and anything in a cart, an extraction point or the truck, is never food.
+    /// </summary>
+    internal static bool PigAccepts(float value, float mass, bool held, bool offered, bool inCart, bool inExtraction, bool inTruck) =>
+        offered && !held && !inCart && !inExtraction && !inTruck && value > 0f && value <= PigFoodMaxValue && mass <= PigFoodMaxMass;
 
     internal static int PigHealth(int feeds) => 60 + 12 * Clamp(feeds, 0, PigMaxFeeds);
     internal static float PigMass(int feeds) => 18f + (75f - 18f) * Clamp(feeds, 0, PigMaxFeeds) / PigMaxFeeds;
@@ -185,7 +242,7 @@ internal static class MonsterRules
 /// </summary>
 internal sealed class AfflictionTimers
 {
-    private readonly float[] _until = new float[8];
+    private readonly float[] _until = new float[MonsterRules.AfflictionCount];
     private float _immuneUntil;
 
     internal float Until(Affliction a) => _until[(int)a];
@@ -257,7 +314,7 @@ internal static class MonsterPackets
         if (k == 255) { if (v <= 0f || v > 200f) return false; }
         else
         {
-            if (k > 7 || v < 0f || v > 15f) return false;
+            if (k >= MonsterRules.AfflictionCount || v < 0f || v > 15f) return false;
             if (v > 0f) { v -= (float)System.Math.Max(0d, now - sent); if (v <= 0f) return false; }
         }
         viewId = id; kind = k; value = v; extra = x; flag = f;
@@ -267,7 +324,7 @@ internal static class MonsterPackets
     internal static bool ReadState(object data, string level, out int viewId, out byte kind, out byte state, out int target, out float extra)
     {
         viewId = 0; kind = 0; state = 0; target = 0; extra = 0f;
-        if (data is not object[] p || p.Length != 6 || p[0] is not int id || id <= 0 || p[1] is not byte k || k > 4 ||
+        if (data is not object[] p || p.Length != 6 || p[0] is not int id || id <= 0 || p[1] is not byte k || k >= MonsterRules.MonsterCount ||
             p[2] is not byte s || p[3] is not int t || p[4] is not float e || float.IsNaN(e) || float.IsInfinity(e) ||
             p[5] is not string l || l != level) return false;
         viewId = id; kind = k; state = s; target = t; extra = e;

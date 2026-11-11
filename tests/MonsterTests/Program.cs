@@ -92,6 +92,45 @@ Check(!MonsterPackets.ReadAffliction(new object[] { 5, (byte)255, 999f, 10d, lev
 Check(!MonsterPackets.ReadAffliction(new object[] { 5, (byte)1, float.NaN, 10d, level, 0, false }, 10d, level, out _, out _, out _, out _, out _), "NaN durations are refused");
 Check(MonsterPackets.ReadState(new object[] { 7, (byte)3, (byte)4, 0, 0f, level }, level, out _, out byte kind, out byte state, out _, out _) && kind == 3 && state == 4, "State snapshot parses");
 Check(!MonsterPackets.ReadState(new object[] { 7, (byte)8, (byte)4, 0, 0f, level }, level, out _, out _, out _, out _, out _), "Unknown monster kinds are refused");
+Check(MonsterPackets.ReadState(new object[] { 7, (byte)MonsterKind.Twins, (byte)5, 0, 0f, level }, level, out _, out byte twinsKind, out _, out _, out _) && twinsKind == 6 &&
+      !MonsterPackets.ReadState(new object[] { 7, (byte)MonsterRules.MonsterCount, (byte)0, 0, 0f, level }, level, out _, out _, out _, out _, out _),
+    "Fairy and Twins snapshots parse; the first unused kind is refused");
+Check(MonsterPackets.ReadAffliction(new object[] { 5, (byte)Affliction.Seized, 1.2f, 10d, level, 0, false }, 10d, level, out _, out byte seizedKind, out _, out _, out _) && seizedKind == 8,
+    "The twins' grip is a valid affliction packet");
+
+// ---- roster slots and pig offers
+Check(MonsterRules.SlotForNewMonster(.19f, .2f, 2, 10) && !MonsterRules.SlotForNewMonster(.2f, .2f, 2, 10), "A slot goes to the new monsters with the configured chance");
+Check(!MonsterRules.SlotForNewMonster(0f, 1f, 0, 10) && MonsterRules.SlotForNewMonster(.99f, 0f, 2, 0), "No new candidates: native slot; no native candidates: new slot");
+Check(!MonsterRules.SlotForNewMonster(0f, 0f, 2, 10) && MonsterRules.SlotForNewMonster(.999f, 1f, 2, 10), "Chance 0 never and chance 1 always picks a new monster");
+Check(MonsterRules.PigAccepts(600f, 2f, false, true, false, false, false), "Pig eats a small valuable a player put down near it");
+Check(!MonsterRules.PigAccepts(600f, 2f, false, false, false, false, false), "Pig never eats loot nobody offered it");
+Check(!MonsterRules.PigAccepts(600f, 2f, true, true, false, false, false) && !MonsterRules.PigAccepts(600f, 2f, false, true, true, false, false) &&
+      !MonsterRules.PigAccepts(600f, 2f, false, true, false, true, false) && !MonsterRules.PigAccepts(600f, 2f, false, true, false, false, true),
+    "Pig never eats held loot or anything in a cart, an extraction point or the truck");
+Check(!MonsterRules.PigAccepts(3501f, 2f, false, true, false, false, false) && !MonsterRules.PigAccepts(600f, 4.6f, false, true, false, false, false), "Pig food stays small: at most $3,500 and 4.5 kg");
+
+// ---- mischief fairy
+Check(MonsterRules.FairyMayLift(3f, false, true, false, false) && MonsterRules.FairyMayLift(6f, false, false, true, false), "Fairy lifts light things from a cart or an extraction point");
+Check(!MonsterRules.FairyMayLift(3f, false, false, false, false), "Fairy leaves things lying on the floor alone");
+Check(!MonsterRules.FairyMayLift(6.1f, false, true, false, false) && !MonsterRules.FairyMayLift(3f, true, true, false, false) && !MonsterRules.FairyMayLift(3f, false, true, false, true),
+    "Fairy never lifts heavy or held things, or anything in the truck");
+Check(!MonsterRules.FairyDrops(3f, 4f, false, false) && MonsterRules.FairyDrops(3f, 4f, true, false) && MonsterRules.FairyDrops(3f, 4f, false, true), "A player taking the thing or startling the fairy makes her drop it");
+Check(MonsterRules.FairyDrops(MonsterRules.FairyCarrySeconds, 0f, false, false) && MonsterRules.FairyDrops(2f, MonsterRules.FairyCarryDistance, false, false) &&
+      !MonsterRules.FairyDrops(1f, 50f, false, false), "Fairy carries for at most 7 s or 10 m, never dropping in the first moment");
+for (int i = 0; i <= 10; i++)
+    Check(MonsterRules.SoulValue(MonsterKind.Fairy, i / 10f, 0) is >= 1500 and <= 2200 && MonsterRules.SoulValue(MonsterKind.Twins, i / 10f, 0) is >= 3800 and <= 4600,
+        $"Fairy soul in $1,500-2,200 and Twins soul in $3,800-4,600 (roll {i / 10f})");
+
+// ---- hansel and gretel
+Check(MonsterRules.IsHardControl(Affliction.Seized), "The twins' grip is hard control");
+var grip = new AfflictionTimers();
+Check(grip.TryApply(Affliction.Seized, 0f, MonsterRules.TwinsHoldSeconds) && !grip.TryApply(Affliction.Constricted, .5f, 5f), "A seized player cannot be immobilised by another monster");
+grip.End(Affliction.Seized, 1f);
+Check(!grip.TryApply(Affliction.Seized, 3.9f, 1.2f) && grip.TryApply(Affliction.Seized, 4f, 1.2f), "After the throw the 3 s immunity stops a second grab");
+Check(MonsterRules.TwinsGrabLands(1.8f, true, true, true) && !MonsterRules.TwinsGrabLands(1.81f, true, true, true) && !MonsterRules.TwinsGrabLands(1f, false, true, true) &&
+      !MonsterRules.TwinsGrabLands(1f, true, false, true) && !MonsterRules.TwinsGrabLands(1f, true, true, false),
+    "The grab needs reach, sight, the room attack limit and no control immunity");
+Check(MonsterRules.TwinsThrowDamage == 18 && MonsterRules.TwinsHoldSeconds == 1.2f && MonsterRules.TwinsCooldown == 7f, "Twins: 18 damage on the throw, 1.2 s hold, 7 s cooldown");
 
 Check(MoonRules.Damage(100, 4, false) == 100 && MoonRules.Damage(100, 5, false) == 95 && MoonRules.Damage(100, 6, false) == 95 && MoonRules.Damage(100, 7, false) == 90,
     "New moon defence replaces the old step instead of adding 5 and 10 percent");
