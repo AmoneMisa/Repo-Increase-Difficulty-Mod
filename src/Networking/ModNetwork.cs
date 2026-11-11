@@ -25,6 +25,11 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 {
     // Our private event codes. Must not collide with REPO's (123/124/199) or PUN's
     // reserved range (200+). In use: 172-173 (skill tree), 174 (quest level end), 175 (SkillBoxEffect.EventCode), 176 (RetryCrystalEffect.EventCode), 177-179, 181-198 (197 = LevelInfoHud.StateEventCode, declared there);
+    // 153-156 = Monsters: 153 MonsterBrain.FxCode (one-off effects), 154 MonsterBrain.StateCode (AI state snapshots),
+    // 155 MonsterAfflictions.EventCode (player afflictions and monster damage, host only), 156 MonsterAfflictions.StruggleCode
+    // (a constricted player broke free; victim -> host). 157 = Gear.StickyRoot.EventCode.
+    // 158 = MapRitual.EventCode (host's map ritual state).
+    // 159 = LateJoinProgress.RequestCode (request saved health and upgrades from the host).
     // 160 = Skills.FlashStun.EventCode (a guest's Flash Stun beam; host only).
     // 161 = LateJoinCatchUp.RequestCode (a late joiner asks the host for level state; host only).
     // 180 is retired (old cart-upgrade state). 170-171 = HostRunControls (failed-level vote). 169 = loot safety net notice.
@@ -169,6 +174,8 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         RoundStats.Tick(Time.deltaTime);
         LateJoinCache.Tick();
         LateJoinController.Tick();
+        LateJoinProgress.Tick();
+        LateJoinProgress.ReconcileHealth();
         // Client-side: keep every enemy's per-player dictionaries in sync with mid-run joins
         // (and mid-run enemy spawns) so late joiners don't crash the enemy AI coroutines.
         LateJoinController.EnsureEnemyRegistrations();
@@ -176,6 +183,8 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         // (health/maxHealth stuck at 100 defaults -> immune to all damage AND healing).
         LateJoinController.EnsureLocalHealthInitialized();
         LateJoinNetworkDiagnostics.Tick();
+        Monsters.MonsterAfflictions.TickHost(Time.deltaTime);
+        Monsters.DodgeRoll.Tick();
         Quests.QuestRankProgress.PublishSave();
     }
 
@@ -183,6 +192,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     {
         Drones.LinkManager.Tick(Time.fixedDeltaTime);
         Gear.GearEffects.Tick(Time.fixedDeltaTime);
+        Monsters.MonsterAfflictions.TickLocal();
     }
 
     /// <summary>Host broadcasts the authoritative timer state to other clients.</summary>
@@ -387,7 +397,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
     }
 
-    private static string FreezeLevelKey() => RunManager.instance != null && RunManager.instance.levelCurrent != null
+    internal static string FreezeLevelKey() => RunManager.instance != null && RunManager.instance.levelCurrent != null
         ? RunManager.instance.levelsCompleted + ":" + RunManager.instance.levelCurrent.name : "";
 
     internal static void BroadcastPlayerFreeze(PlayerAvatar avatar, float seconds)
@@ -514,6 +524,26 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             return;
         }
         if (photonEvent == null || !PhotonNetwork.InRoom) return;
+        if (photonEvent.Code == Monsters.MonsterBrain.StateCode) { Monsters.MonsterBrain.OnStateEvent(photonEvent); return; }
+        if (photonEvent.Code == Monsters.MonsterBrain.FxCode) { Monsters.MonsterBrain.OnFxEvent(photonEvent); return; }
+        if (photonEvent.Code == Monsters.MonsterAfflictions.EventCode) { Monsters.MonsterAfflictions.OnEvent(photonEvent); return; }
+        if (photonEvent.Code == Monsters.MonsterAfflictions.StruggleCode) { Monsters.MonsterAfflictions.OnStruggle(photonEvent); return; }
+        if (photonEvent.Code == Challenges.MapRitual.EventCode)
+        {
+            if (!PhotonNetwork.IsMasterClient && HostSender(photonEvent)) Challenges.MapRitual.Receive(photonEvent);
+            return;
+        }
+        if (photonEvent.Code == LateJoinProgress.RequestCode)
+        {
+            LateJoinProgress.OnRequest(photonEvent.Sender);
+            return;
+        }
+        if (photonEvent.Code == Gear.StickyRoot.EventCode)
+        {
+            if (PhotonNetwork.InRoom && PhotonNetwork.MasterClient != null && photonEvent.Sender == PhotonNetwork.MasterClient.ActorNumber)
+                Gear.StickyRoot.Receive(photonEvent);
+            return;
+        }
         if (photonEvent.Code == StickyTetherEventCode)
         {
             if (!PhotonNetwork.InRoom || PhotonNetwork.MasterClient == null || photonEvent.Sender != PhotonNetwork.MasterClient.ActorNumber ||

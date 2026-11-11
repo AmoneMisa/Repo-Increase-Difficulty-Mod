@@ -302,7 +302,7 @@ internal sealed class CourierVisual : MonoBehaviour
         ShowFace(face);
         if (face == CourierMood.Sleepy && _idleFor > 14f) _body.localRotation *= Quaternion.Euler(6f + Mathf.Sin(t * 1.2f) * 3f, 0f, 0f); // nodding off
 
-        if (run > .3f && _fly < .5f && Time.time >= _nextStep)
+        if (!SemiFunc.RunIsLevel() && run > .3f && _fly < .5f && Time.time >= _nextStep)
         {
             _nextStep = Time.time + Mathf.PI / cadence;
             try { ItemAudio.Cue("courier_step", .12f).Play(transform.position); } catch { }

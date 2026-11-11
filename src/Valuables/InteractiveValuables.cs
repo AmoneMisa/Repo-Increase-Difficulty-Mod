@@ -27,12 +27,14 @@ internal static class InteractiveValuables
             {
             if (Plugin.Instance == null) return;
             var cfg = Plugin.Instance.Config;
-            if (!cfg.Bind("Valuable Collection", "InteractiveValuables", true, "Add the custom valuable collection as collectible loot.").Value) return;
+            bool ambient = cfg.Bind("Valuable Collection", "InteractiveValuables", true, "Add the custom valuable collection as collectible loot.").Value;
             FlowSeconds ??= cfg.Bind("Valuable Collection", "WaterWatchFlowSeconds", 32f, new ConfigDescription("Seconds for a full liquid transfer.", new AcceptableValueRange<float>(12f, 120f)));
             var donor = FindDonor(__instance);
             if (donor == null) { Plugin.Log.LogWarning("[Valuables] No safe inert donor was found; interactive valuables were not registered.");return; }
-            CollectionSpawnPools.Prepare(__instance);
-            foreach(var entry in CollectionCatalog.Entries)Make(donor,entry);
+            if (ambient) CollectionSpawnPools.Prepare(__instance);
+            foreach (var entry in CollectionCatalog.Entries)
+                if (ambient || RitualLoot.RequiredFromCollection(entry.Key)) Make(donor, entry, ambient);
+            foreach (var entry in RitualLoot.RitualOnly) Make(donor, entry);
             }
             catch (Exception e) { Plugin.Log.LogError("[Valuables] Interactive valuable initialization stopped: " + e); }
         }
@@ -57,7 +59,7 @@ internal static class InteractiveValuables
         return candidates.OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => p.Value).FirstOrDefault();
     }
 
-    private static void Make(ValuableObject donor, CollectionEntry entry)
+    private static void Make(ValuableObject donor, CollectionEntry entry, bool ambient = false)
     {
         string key=entry.Key;float mass=entry.Mass;
         if(key=="skeleton")mass=CollectionCatalog.TotalMass(entry); // one rigid prop now: the stand carries the bones' mass too
@@ -66,10 +68,10 @@ internal static class InteractiveValuables
         GameObject go = null;
         try
         {
-            var pools=CollectionSpawnPools.For(entry);
+            var pools = ambient ? CollectionSpawnPools.For(entry) : null;
             ValuableVisuals.Load(key); // Missing resources must not register an invisible valuable.
             go = Object.Instantiate(donor.gameObject, DroneItems.EnsureHolder().transform);
-            go.name = "Valuable IHM " + (key == "water_timer" ? "Water Watch" : key.Replace('_', ' '));
+            go.name = PrefabName(key);
             go.transform.localPosition = Vector3.zero;go.transform.localRotation = Quaternion.identity;go.transform.localScale = Vector3.one*ValuableLayout.Scale(key);
             Material template = null;
             var donorRenderers=go.GetComponentsInChildren<Renderer>(true);
@@ -144,9 +146,14 @@ internal static class InteractiveValuables
                     }
                 }
                 bool manekiCollision=key=="maneki_neko"&&ManekiPhysics.Attach(go,art);
+                if (RitualLoot.IsProcedural(key))
+                {
+                    var bounds = ValuableLayout.MeshBounds(go.transform, art.visualRoot);
+                    BoxCollider(go, "Ritual loot collider", bounds.center, bounds.size);
+                }
                 foreach(var binding in art.bindings)
                 {
-                    if(manekiCollision)continue;
+                    if(manekiCollision || RitualLoot.IsProcedural(key))continue;
                     if(key=="centrifuge"&&binding.group.StartsWith("tube_",StringComparison.Ordinal))continue;
                     if(key=="centrifuge")
                     {
@@ -190,8 +197,10 @@ internal static class InteractiveValuables
             var actual=ValuableLayout.Apply(go,art);
             value.volumeType=VolumeFor(value,actual.size*ValuableLayout.Scale(key));
             go.GetComponent<PhotonView>().RefreshRpcMonoBehaviourCache();
-            if (REPOLib.Modules.Valuables.RegisterValuable(value,pools) == null) throw new InvalidOperationException("REPOLib rejected the valuable.");
-            Registered.Add(key);Plugin.Log.LogInfo($"[Valuables] Registered {key}: ${entry.Min:0}-${entry.Max:0}, total {CollectionCatalog.TotalMass(entry):0.##} kg (root {mass:0.##}), {entry.Fragility}; pools: {string.Join(", ",pools)}");
+            var prefab = pools == null ? NetworkPrefabs.RegisterNetworkPrefab("Valuables/" + go.name, go)
+                : REPOLib.Modules.Valuables.RegisterValuable(value,pools);
+            if (prefab == null) throw new InvalidOperationException("REPOLib rejected the valuable.");
+            Registered.Add(key);Plugin.Log.LogInfo($"[Valuables] Registered {key}: ${entry.Min:0}-${entry.Max:0}, total {CollectionCatalog.TotalMass(entry):0.##} kg (root {mass:0.##}), {entry.Fragility}; pools: {(pools == null ? "ritual only" : string.Join(", ", pools))}");
         }
         catch (Exception e)
         {
@@ -199,6 +208,9 @@ internal static class InteractiveValuables
             Plugin.Log.LogError("[Valuables] Failed to register " + key + ": " + e);
         }
     }
+
+    internal static string PrefabName(string key) => "Valuable IHM " + (key == "water_timer" ? "Water Watch" : key.Replace('_', ' '));
+    internal static PrefabRef RitualPrefab(string key) => NetworkPrefabs.GetNetworkPrefabRef("Valuables/" + PrefabName(key));
 
     private static ValuableVolume.Type VolumeFor(ValuableObject value,Vector3 size)
     {

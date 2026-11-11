@@ -16,10 +16,11 @@ internal static class LateJoinSceneState
         if(!ModConfig.LateJoinEnabled.Value||!PhotonNetwork.InRoom||!PhotonNetwork.IsMasterClient||RunManager.instance==null)return;
         var run=RunManager.instance;if(run.levelCurrent==null)return;
         var room=PhotonNetwork.CurrentRoom;
-        if(room.CustomProperties[LevelProperty] is string current&&current==run.levelCurrent.name&&
+        if(room.CustomProperties[LateJoinProgress.Property] is bool sync&&sync&&
+            room.CustomProperties[LevelProperty] is string current&&current==run.levelCurrent.name&&
             room.CustomProperties[CountProperty] is int count&&count==run.levelsCompleted)return;
         room.SetCustomProperties(new ExitGames.Client.Photon.Hashtable{
-            [LevelProperty]=run.levelCurrent.name,[CountProperty]=run.levelsCompleted});
+            [LevelProperty]=run.levelCurrent.name,[CountProperty]=run.levelsCompleted,[LateJoinProgress.Property]=true});
     }
     internal static void Apply()
     {
@@ -41,7 +42,12 @@ internal static class LateJoinSceneState
 [HarmonyPatch(typeof(NetworkConnect),"OnJoinedRoom")]
 internal static class LateJoinRoomScenePatch
 {
-    [HarmonyPostfix] private static void Postfix(){LateJoinSceneState.Apply();}
+    [HarmonyPostfix]
+    private static void Postfix()
+    {
+        LateJoinSceneState.Apply();
+        LateJoinProgress.JoinedRoom();
+    }
 }
 [HarmonyPatch(typeof(LevelGenerator),"Start")]
 internal static class LateJoinGenerationScenePatch

@@ -58,6 +58,8 @@ internal sealed class HudListPanel
         if (rows != null) _rows.AddRange(rows);
     }
 
+    internal void ShowPageContainingRow(int row) => _page = Mathf.Max(0, row) / Mathf.Max(1, RowsPerPage);
+
     internal bool Visible => _surface != null && _surface.gameObject.activeSelf;
 
     /// <summary>Lay out and show this frame. False while the native HUD is not ready.</summary>

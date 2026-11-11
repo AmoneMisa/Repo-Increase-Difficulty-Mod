@@ -185,7 +185,7 @@ internal static class LateJoinController
                 return;
             }
 
-            if (_localHealthFixed)
+            if (_localHealthFixed || LateJoinProgress.Waiting)
                 return;
 
             var avatar = SemiFunc.PlayerAvatarLocal();
@@ -208,6 +208,7 @@ internal static class LateJoinController
 
             // Run exactly what PlayerHealth.Fetch() would have done, on our owning client.
             string steamID = SemiFunc.PlayerGetSteamID(avatar);
+            if (string.IsNullOrEmpty(steamID)) return;
             int num = StatsManager.instance.GetPlayerHealth(steamID);
             if (num <= 0)
                 num = 1;

@@ -505,15 +505,27 @@ def _pattern(nt, pos, animal, channel):
     # Fur and feathers: fine vertical strands everywhere
     strands = _range(nt, noise(105.0, (2, 2, .45), 3.0, .7), .3, .7, .66, 1.04)
     detail = strands
-    if animal == 'cat' and channel == 'main':  # tabby stripes round the body
+    if animal in ('cat', 'dragon') and channel == 'main':  # tabby stripes or mottled scales
         wave = _node(nt, 'ShaderNodeTexWave', Scale=7.0, Distortion=9.0, _wave_type='BANDS', _bands_direction='Z')
         nt.links.new(pos, wave.inputs['Vector'])
         detail = _mul(nt, detail, _range(nt, wave.outputs['Fac'], .55, .9, 1.0, .68))
-    if animal in ('owl', 'chicken', 'dragon') and channel in ('main', 'second'):  # feather/scales
+    if animal in ('owl', 'chicken', 'dragon', 'angel') and channel in ('main', 'second'):
         mp = _node(nt, 'ShaderNodeMapping'); mp.inputs['Scale'].default_value = (1, 1, 1.6); nt.links.new(pos, mp.inputs['Vector'])
-        v = _node(nt, 'ShaderNodeTexVoronoi', Scale=34.0 if animal == 'owl' else 28.0, _feature='DISTANCE_TO_EDGE')
+        scale = {'owl': 33.0, 'chicken': 49.0, 'dragon': 24.0, 'angel': 40.0}[animal]
+        v = _node(nt, 'ShaderNodeTexVoronoi', Scale=scale, _feature='DISTANCE_TO_EDGE')
         nt.links.new(mp.outputs[0], v.inputs['Vector'])
-        detail = _mul(nt, detail, _range(nt, v.outputs['Distance'], 0, .12, .84, 1.0))
+        detail = _mul(nt, detail, _range(nt, v.outputs['Distance'], 0, .16, .72 if animal in ('dragon', 'owl') else .89, 1.0))
+    if animal == 'sheep' and channel == 'main':  # tightly curled fleece
+        curls = _node(nt, 'ShaderNodeTexVoronoi', Scale=48.0, _feature='DISTANCE_TO_EDGE')
+        nt.links.new(pos, curls.inputs['Vector'])
+        detail = _mul(nt, _range(nt, curls.outputs['Distance'], .035, .17, .71, 1.04),
+                      _range(nt, noise(160.0), .25, .75, .86, 1.0))
+    if animal in ('cow', 'dog') and channel == 'main':  # irregular patches and short coat
+        spots = noise(11.0 if animal == 'cow' else 18.0, (1, 1.6, 1), 2.0)
+        detail = _mul(nt, detail, _range(nt, spots, .48, .58, .61 if animal == 'cow' else .78, 1.03))
+    if animal in ('fairy', 'devil'):
+        flecks = noise(42.0 if animal == 'fairy' else 22.0, (1.4, 1, .65), 3.0)
+        detail = _range(nt, flecks, .38, .7, .82 if animal == 'fairy' else .67, 1.03)
     if animal == 'beaver':  # coarse, clumpy fur
         detail = _mul(nt, detail, _range(nt, noise(40.0, (1, 1, 3), 2.0), .3, .7, .82, 1.04))
     if animal == 'penguin' and channel == 'main':  # sleek, with a faint sheen streak

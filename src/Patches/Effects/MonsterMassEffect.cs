@@ -64,6 +64,10 @@ internal static class MonsterMassEffect
         else if (heavy)
             mass = Mathf.Max(mass, EnemyBalance.HeavyMass);
 
+        // New moon VI makes bodies heavier after native presets and surprise clamps.
+        // Recompute from the stored baseline; never multiply the previous tick's mass.
+        if (Economy.ExtendedMoons.Current >= Economy.MoonRules.RandomSouls) mass *= 1.5f;
+
         if (!Mathf.Approximately(state.Applied, mass))
             pgo.rb.mass *= mass / Mathf.Max(0.01f, state.Applied);
         pgo.massOriginal = mass;
@@ -98,6 +102,7 @@ internal static class LightMonsterGrabEffect
         MonsterMassEffect.RefreshMass(pgo);
         if (!SemiFunc.IsMasterClientOrSingleplayer() || pgo == null || !pgo.spawned ||
             !EnemyBalance.Surprises ||
+            Economy.ExtendedMoons.Current >= Economy.MoonRules.RandomSouls ||
             !ModifierManager.Current.Has(ModifierType.LightMonsters) || pgo.rb == null || pgo.rb.isKinematic ||
             pgo.playerGrabbing.Count == 0 || __instance.mountedGrabOverrideTimer > 0f ||
             __instance.enemy == null || __instance.enemy.FreezeTimer > 0f || Gear.GearEffects.IsFrozen(__instance.enemy))

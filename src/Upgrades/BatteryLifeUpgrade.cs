@@ -252,6 +252,8 @@ internal static class BatteryLifeUpgrade
     // the player who switched them on.
     private static PlayerAvatar UserOf(ItemBattery battery)
     {
+        var flame = battery.GetComponent<FlameCart>();
+        if (flame != null && flame.Operator() != null) return flame.Operator();
         var equippable = battery.GetComponent<ItemEquippable>();
         if (equippable != null && equippable.isEquipped)
             return equippable.GetOwnerPlayerAvatar();
@@ -360,6 +362,27 @@ internal static class BatteryLifeUpgrade
         {
             if (_bars > 0 && __instance.batteryBars > 0)
                 SetDrainResult(__instance, __state, _bars * (100f / __instance.batteryBars));
+        }
+    }
+
+    // Continuous consumers must receive the cheaper cost before they see an empty
+    // battery and switch off: orbs, C.A.R.T. weapons and the flamethrower included.
+    [HarmonyPatch(typeof(ItemBattery), "DrainContinuous")]
+    private static class ContinuousDrain
+    {
+        [HarmonyPrefix]
+        private static void Prefix(ItemBattery __instance, ref float _rate, out float __state)
+        {
+            __state = __instance.batteryLife;
+            _rate *= DrainMultiplier(__instance);
+        }
+        [HarmonyPostfix]
+        private static void Postfix(ItemBattery __instance, float __state)
+        {
+            var state = _states.GetOrCreateValue(__instance);
+            // Keep unrelated drains outstanding for the watchdog, but do not
+            // refund this already discounted drain a second time.
+            state.PrevLife = UtilityGearRules.SettledBaseline(state.PrevLife, __state, __instance.batteryLife);
         }
     }
 

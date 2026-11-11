@@ -52,10 +52,16 @@ internal sealed class NetDrape : MonoBehaviour
         }
     }
 
+    private static bool Finite(Vector3 v) => !float.IsNaN(v.x) && !float.IsNaN(v.y) && !float.IsNaN(v.z) &&
+                                              !float.IsInfinity(v.x) && !float.IsInfinity(v.y) && !float.IsInfinity(v.z);
+
     private void Build(Transform host, Bounds body)
     {
         _rope ??= Lit("IHM Net Rope", new Color(.86f, .79f, .62f), .12f, .0f);
         _iron ??= Lit("IHM Net Weight", new Color(.28f, .29f, .31f), .55f, .6f);
+        // A host without renderers/colliders yields empty or non-finite bounds: use a small default net.
+        if (!Finite(body.center) || !Finite(body.extents) || body.extents.sqrMagnitude < 1e-6f)
+            body = new Bounds(host.position + Vector3.up * .5f, Vector3.one);
 
         // Floor under the monster (ignoring the monster itself), else the bottom of its body.
         float floor = body.min.y;
@@ -84,7 +90,8 @@ internal sealed class NetDrape : MonoBehaviour
             float du = u * Mathf.Sqrt(1f - v * v * .5f), dv = v * Mathf.Sqrt(1f - u * u * .5f);
             float r = Mathf.Clamp01(Mathf.Sqrt(du * du + dv * dv));
             // Soft dome that clings to the body and spreads out to the floor at the rim.
-            float y = top * Mathf.Pow(Mathf.Cos(r * Mathf.PI * .5f), .75f);
+            // cos(π/2) can round below zero; a fractional power would poison the rim vertices.
+            float y = top * Mathf.Pow(Mathf.Max(0f, Mathf.Cos(r * Mathf.PI * .5f)), .75f);
             float sag = Mathf.Sin(u * 3.1f + v * 2.3f) * .02f * scale;
             return new Vector3(du * rx, Mathf.Max(.02f, y + sag), dv * rz);
         }
@@ -122,7 +129,10 @@ internal sealed class NetDrape : MonoBehaviour
         var knots = new Vector3[Grid, Grid];
         for (int i = 0; i < Grid; i++)
         for (int j = 0; j < Grid; j++)
-            knots[i, j] = Conform(Knot(i, j));
+        {
+            var knot = Conform(Knot(i, j));
+            knots[i, j] = Finite(knot) ? knot : Knot(i, j); // never let a degenerate ray result poison the mesh
+        }
 
         // Ropes and knots, grouped by which chunk of the net they belong to.
         var meshes = new ProcMesh[Chunks * Chunks];

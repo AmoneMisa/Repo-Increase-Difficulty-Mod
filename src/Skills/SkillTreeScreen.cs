@@ -45,14 +45,14 @@ internal sealed class SkillTreeScreen : MonoBehaviour
     private static readonly Dictionary<string, string> GroupNames = new()
     {
         ["Map"] = "MAP", ["Ping"] = "PING", ["Flashlight"] = "FLASHLIGHT", ["Damage"] = "DAMAGE", ["Guns"] = "GUN CHARGES",
-        ["Tech"] = "TECH", ["Survival"] = "SURVIVAL", ["Gear"] = "GEAR", ["Support"] = "SUPPORT", ["Weapons"] = "WEAPON DAMAGE", ["Status"] = "STATUS EFFECTS",
+        ["Tech"] = "TECH", ["Survival"] = "SURVIVAL", ["Gear"] = "GEAR", ["Support"] = "SUPPORT", ["Weapons"] = "WEAPONS", ["Status"] = "STATUS EFFECTS", ["Grenades"] = "GRENADES",
         ["Contracts"] = "EARNED FROM SPECIAL CONTRACTS", ["Instincts"] = "INSTINCTS · SHORT BUFFS FROM CONTRACTS",
         ["TradeOffs1"] = "TRADE-OFFS I · PICK ONE", ["TradeOffs2"] = "TRADE-OFFS II · PICK ONE", ["TradeOffs3"] = "TRADE-OFFS III · PICK ONE",
     };
     private static readonly Dictionary<string, string> GroupNamesRu = new()
     {
         ["Map"] = "КАРТА", ["Ping"] = "ПИНГ", ["Flashlight"] = "ФОНАРЬ", ["Damage"] = "УРОН", ["Guns"] = "ЗАРЯДЫ ОРУЖИЯ",
-        ["Tech"] = "ТЕХНИКА", ["Survival"] = "ВЫЖИВАНИЕ", ["Gear"] = "СНАРЯЖЕНИЕ", ["Support"] = "ПОДДЕРЖКА", ["Weapons"] = "УРОН ОРУЖИЯ", ["Status"] = "ЭФФЕКТЫ",
+        ["Tech"] = "ТЕХНИКА", ["Survival"] = "ВЫЖИВАНИЕ", ["Gear"] = "СНАРЯЖЕНИЕ", ["Support"] = "ПОДДЕРЖКА", ["Weapons"] = "ОРУЖИЕ", ["Status"] = "ЭФФЕКТЫ", ["Grenades"] = "ГРАНАТЫ",
         ["Contracts"] = "НАГРАДЫ ЗА ОСОБЫЕ КОНТРАКТЫ", ["Instincts"] = "ИНСТИНКТЫ · КОРОТКИЕ БАФФЫ ЗА КОНТРАКТЫ",
         ["TradeOffs1"] = "КОМПРОМИССЫ I · ОДИН НА ВЫБОР", ["TradeOffs2"] = "КОМПРОМИССЫ II · ОДИН НА ВЫБОР", ["TradeOffs3"] = "КОМПРОМИССЫ III · ОДИН НА ВЫБОР",
     };

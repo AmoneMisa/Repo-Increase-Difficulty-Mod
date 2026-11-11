@@ -20,20 +20,46 @@ internal static class EnemyBalance
 
     internal static bool Surprises => Remote ? _surprises : ModConfig.SurprisesEnabled.Value;
     internal static float Stat(StatAxis axis) => Surprises ? StatModifiers.Mult(axis) : 1f;
-    internal static float Damage => Factor(2) * Stat(StatAxis.EnemyDamage);
+    internal static float Damage => WithSurprise(Factor(2), Stat(StatAxis.EnemyDamage));
     internal static float Speed => Factor(3) * Stat(StatAxis.EnemySpeed);
     internal static float Respawn => Factor(4) * Stat(StatAxis.EnemyRespawn);
     internal static float LightMass => Factor(5);
     internal static float HeavyMass => Factor(6);
     internal static float PitDamage => Factor(7);
 
-    internal static float Health(string name)
+    internal static float Health(string name) => WithSurprise(BaseHealth(name), Stat(StatAxis.EnemyHealth));
+
+    private static float BaseHealth(string name)
     {
         float cap = Remote
             ? (name != null && _caps.TryGetValue(name, out var value) ? value : _remote[1])
             : ModConfig.HealthMaxForEnemy(name);
-        return Math.Max(1f, Math.Min(Factor(0), cap)) * Stat(StatAxis.EnemyHealth);
+        return Math.Max(1f, Math.Min(Factor(0), cap));
     }
+
+    internal static bool Allows(StatModifier modifier)
+    {
+        foreach (var (axis, factor) in modifier.Effects)
+        {
+            if (factor <= 1f) continue;
+            if (axis == StatAxis.EnemyDamage && ExceedsLimit(Factor(2), factor)) return false;
+            if (axis == StatAxis.EnemyHealth && ExceedsLimit(HighestHealthRamp(), factor)) return false;
+        }
+        return true;
+    }
+
+    private static float HighestHealthRamp()
+    {
+        float highest = BaseHealth(null);
+        foreach (float cap in ModConfig.PerEnemyHealthCaps)
+            highest = Math.Max(highest, Math.Min(Factor(0), cap));
+        return highest;
+    }
+
+    private const float SurpriseCeiling = 3f;
+    private static bool ExceedsLimit(float ramp, float factor) => ramp * factor > SurpriseCeiling;
+    private static float WithSurprise(float ramp, float factor) =>
+        Math.Min(ramp * factor, Math.Max(ramp, SurpriseCeiling));
 
     private static float Factor(int index) => Remote ? _remote[index] : index switch
     {

@@ -5,6 +5,33 @@ namespace IncreaseHardMod.Skills;
 /// <summary>Pure numbers for the newer tree perks (no Unity), shared by the game and the tests.</summary>
 public static class PerkRules
 {
+    internal const float FlameDamageCap = .30f, LaserDamageCap = .35f;
+    internal static float CappedWeaponBonus(float configured, float cap) => Math.Min(Math.Max(0f, configured), cap);
+    internal static float FireRate(int rank) => 1f + .25f * Math.Clamp(rank, 0, 3) / 3f;
+    internal static float DurationResistance(int rank) => rank <= 0 ? 0f : rank == 1 ? .2f : rank == 2 ? .35f : .5f;
+    internal static float SapperFactor(int rank) => rank <= 0 ? 1f : rank == 1 ? .85f : rank == 2 ? .75f : .65f;
+    internal static float LinkSpeed(int rank) => 1f + .1f * Math.Clamp(rank, 0, 3);
+    internal static float BasketLift(int rank) => 1f + .1f * Math.Clamp(rank, 0, 5);
+    internal static float MedicRate(float configured) => Math.Clamp(configured, 0f, .12f);
+    internal static int FinalMobDamage(int original, int reduced, bool monster, int dot)
+        => original <= 0 ? reduced : dot > 0 ? dot : monster ? Math.Max(1, reduced) : reduced;
+    internal static int ActualHitDamage(int before, int after) => Math.Max(0, Math.Max(0, before) - Math.Max(0, after));
+    internal static float FreezeSeconds(float baseSeconds, int rank, bool root, float rootSeconds)
+    {
+        float cap = Math.Max(baseSeconds, 6f);
+        return Math.Min(cap, baseSeconds + (cap - baseSeconds) * Math.Clamp(rank, 0, 3) / 3f +
+            (root ? Math.Min(.25f, Math.Max(0, rootSeconds)) : 0f));
+    }
+    internal const float GunAccuracyPerRank = .12f, MeleeAlignmentPerRank = .25f, WhipRadiusPerRank = .1f;
+    internal const float GrenadeRadiusPerRank = .1f, GrenadeDamagePerRank = .1f, GrenadeStunPerRank = .5f;
+    internal const int GrenadeUtilityDamagePerRank = 5;
+
+    internal static float GunInaccuracy(int rank) => 1f - GunAccuracyPerRank * rank;
+    internal static float GrenadeRadius(int rank) => 1f + GrenadeRadiusPerRank * rank;
+    internal static int GrenadeDamage(int damage, int rank) => damage > 0
+        ? (int)Math.Round(damage * (1f + GrenadeDamagePerRank * rank), MidpointRounding.AwayFromZero)
+        : GrenadeUtilityDamagePerRank * rank;
+
     /// <summary>
     /// Desperation: the share of a hit (0..1) taken off while the player's health before the hit is below
     /// <paramref name="threshold"/> of max. Never more than 90%.

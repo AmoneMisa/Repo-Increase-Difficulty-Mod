@@ -45,6 +45,7 @@ art/upgrade_wrappers.blend1
 # Local backups, generated review archives and tool caches.
 work/
 .codex-remote-attachments/
+.codex-attachments/
 __pycache__/
 *.pyc
 *.blend1

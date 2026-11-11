@@ -340,8 +340,14 @@ public static class QuestManager
     /// </summary>
     public static void OnValuableExtracted(ValuableObject valuable)
     {
-        if (!ModConfig.QuestsEnabled.Value || !SemiFunc.IsMasterClientOrSingleplayer() || valuable == null)
-            return;
+        if (valuable == null) return;
+        OnValuableExtracted(valuable.GetInstanceID(), valuable.dollarValueCurrent, valuable.dollarValueOriginal,
+            valuable.GetComponent<EnemyValuable>() != null);
+    }
+
+    internal static void OnValuableExtracted(int id, float value, float originalValue, bool soul)
+    {
+        if (!ModConfig.QuestsEnabled.Value || !SemiFunc.IsMasterClientOrSingleplayer()) return;
 
         // Nothing to do if no extraction-count quest is live.
         bool anyLive = false;
@@ -356,10 +362,10 @@ public static class QuestManager
         if (!anyLive)
             return;
 
-        if (!_extractedThisLevel.Add(valuable.GetInstanceID()))
+        if (!_extractedThisLevel.Add(id))
             return;   // already counted this valuable
 
-        bool intact = valuable.dollarValueCurrent >= valuable.dollarValueOriginal - IntactValueEpsilon;
+        bool intact = value >= originalValue - IntactValueEpsilon;
         foreach (var q in _teamQuests)
         {
             switch (q.Objective)
@@ -371,18 +377,18 @@ public static class QuestManager
                     Advance(q, 1);
                     break;
                 case ObjectiveType.SoulExtract:
-                    if (valuable.GetComponent<EnemyValuable>() != null)
+                    if (soul)
                         Advance(q, 1);
                     break;
                 case ObjectiveType.HighValueExtract:
-                    if (int.TryParse(q.Param, out int minimum) && valuable.dollarValueOriginal >= minimum)
+                    if (int.TryParse(q.Param, out int minimum) && originalValue >= minimum)
                         Advance(q, 1);
                     break;
                 case ObjectiveType.CrownJewel:
-                    if (q.Completed || q.Failed || valuable.GetInstanceID() != _crownJewelId) break;
+                    if (q.Completed || q.Failed || id != _crownJewelId) break;
                     // Param is the share of its value it must keep (75, or 100 for the contract).
                     float keep = int.TryParse(q.Param, out int percent) ? percent / 100f : .75f;
-                    if (valuable.dollarValueCurrent >= valuable.dollarValueOriginal * keep - IntactValueEpsilon) CompleteTeamQuest(q);
+                    if (value >= originalValue * keep - IntactValueEpsilon) CompleteTeamQuest(q);
                     else { q.Failed = true; _dirty = true; }
                     break;
             }

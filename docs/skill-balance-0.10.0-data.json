@@ -1,0 +1,3910 @@
+{
+  "catalog": [
+    {
+      "Id": "IHM_ST_MapUplink",
+      "NameRu": "\u041E\u0442\u0440\u044F\u0434 \u043D\u0430 \u043A\u0430\u0440\u0442\u0435",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 1
+    },
+    {
+      "Id": "IHM_ST_ActiveMonsters",
+      "NameRu": "\u0410\u043A\u0442\u0438\u0432\u043D\u044B\u0435 \u043C\u043E\u043D\u0441\u0442\u0440\u044B",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_MapUplink"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 2
+    },
+    {
+      "Id": "IHM_ST_RespawnTimers",
+      "NameRu": "\u0412\u043E\u0437\u0440\u043E\u0436\u0434\u0435\u043D\u0438\u0435 \u043C\u043E\u043D\u0441\u0442\u0440\u043E\u0432",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_ActiveMonsters"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_MonsterDots",
+      "NameRu": "\u041C\u043E\u043D\u0441\u0442\u0440\u044B \u043D\u0430 \u043A\u0430\u0440\u0442\u0435",
+      "page": "Recon",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_RespawnTimers"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 5
+    },
+    {
+      "Id": "IHM_ST_QuotaHeading",
+      "NameRu": "\u041A\u0443\u0440\u0441 \u043D\u0430 \u043A\u0432\u043E\u0442\u0443",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_MapUplink"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 2
+    },
+    {
+      "Id": "IHM_ST_ValuableTracker",
+      "NameRu": "\u0423\u0447\u0451\u0442 \u0446\u0435\u043D\u043D\u043E\u0441\u0442\u0435\u0439",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_QuotaHeading"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_MapPings",
+      "NameRu": "\u041C\u0435\u0442\u043A\u0438 \u043D\u0430 \u043A\u0430\u0440\u0442\u0435",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_MapUplink"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 2
+    },
+    {
+      "Id": "IHM_ST_ZoomOne",
+      "NameRu": "\u041E\u0431\u0437\u043E\u0440 \u043A\u0430\u0440\u0442\u044B I",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_MapUplink"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 2
+    },
+    {
+      "Id": "IHM_ST_ZoomTwo",
+      "NameRu": "\u041E\u0431\u0437\u043E\u0440 \u043A\u0430\u0440\u0442\u044B II",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_ZoomOne"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_CosmeticTracker",
+      "NameRu": "\u041A\u043E\u0441\u043C\u0435\u0442\u0438\u043A\u0430 \u043D\u0430 \u043A\u0430\u0440\u0442\u0435",
+      "page": "Recon",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_MapUplink"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_BetterMap",
+      "NameRu": "\u0411\u043E\u043B\u044C\u0448\u0430\u044F \u043A\u0430\u0440\u0442\u0430",
+      "page": "Recon",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_ZoomOne"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_MapLandmarks",
+      "NameRu": "\u0421\u0432\u044F\u0442\u0438\u043B\u0438\u0449\u0430 \u0438 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B\u044B",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_MapUplink"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 2
+    },
+    {
+      "Id": "IHM_ST_Ping",
+      "NameRu": "\u041A\u043E\u043C\u0430\u043D\u0434\u043D\u044B\u0435 \u043C\u0435\u0442\u043A\u0438",
+      "page": "Recon",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 2
+    },
+    {
+      "Id": "IHM_ST_TargetInfo",
+      "NameRu": "\u0421\u0432\u0435\u0434\u0435\u043D\u0438\u044F \u043E \u0446\u0435\u043B\u0438",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Ping"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_EnemyHp",
+      "NameRu": "\u0417\u0434\u043E\u0440\u043E\u0432\u044C\u0435 \u043C\u043E\u043D\u0441\u0442\u0440\u0430",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Ping"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_LootCondition",
+      "NameRu": "\u0421\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0435 \u0434\u043E\u0431\u044B\u0447\u0438",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Ping"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_Weight",
+      "NameRu": "\u0412\u0435\u0441 \u0446\u0435\u043B\u0438",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Ping"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_Threat",
+      "NameRu": "\u0423\u0440\u043E\u0432\u0435\u043D\u044C \u0443\u0433\u0440\u043E\u0437\u044B",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Ping"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_PingRange",
+      "NameRu": "\u0414\u0430\u043B\u044C\u043D\u043E\u043C\u0435\u0440",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Ping"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_PingPath",
+      "NameRu": "\u041F\u0443\u0442\u044C \u043A \u043C\u0435\u0442\u043A\u0435",
+      "page": "Recon",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_PingRange"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 5
+    },
+    {
+      "Id": "IHM_ST_PingCompass",
+      "NameRu": "\u0423\u043A\u0430\u0437\u0430\u0442\u0435\u043B\u044C \u043C\u0435\u0442\u043E\u043A",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Ping"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_FlashTuning",
+      "NameRu": "\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430 \u0444\u043E\u043D\u0430\u0440\u044F",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 1
+    },
+    {
+      "Id": "IHM_ST_BeamWidth",
+      "NameRu": "\u0428\u0438\u0440\u0438\u043D\u0430 \u043B\u0443\u0447\u0430",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_FlashTuning"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_Brightness",
+      "NameRu": "\u042F\u0440\u043A\u043E\u0441\u0442\u044C \u043B\u0443\u0447\u0430",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_FlashTuning"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_BeamColour",
+      "NameRu": "\u0426\u0432\u0435\u0442 \u043B\u0443\u0447\u0430",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_FlashTuning"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 2
+    },
+    {
+      "Id": "IHM_ST_FlashStun",
+      "NameRu": "\u041E\u0441\u043B\u0435\u043F\u043B\u044F\u044E\u0449\u0430\u044F \u0432\u0441\u043F\u044B\u0448\u043A\u0430",
+      "page": "Recon",
+      "Cost": 2,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Brightness"
+      ],
+      "RequiresMaxed": true,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 10
+    },
+    {
+      "Id": "IHM_ST_Brawler",
+      "NameRu": "\u0414\u0440\u0430\u0447\u0443\u043D",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 1
+    },
+    {
+      "Id": "IHM_ST_MeleeDamage",
+      "NameRu": "\u0423\u0440\u043E\u043D \u0432 \u0431\u043B\u0438\u0436\u043D\u0435\u043C \u0431\u043E\u044E",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 5,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Brawler"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 6
+    },
+    {
+      "Id": "IHM_ST_MeleeAccuracy",
+      "NameRu": "\u0422\u043E\u0447\u043D\u043E\u0441\u0442\u044C \u0432 \u0431\u043B\u0438\u0436\u043D\u0435\u043C \u0431\u043E\u044E",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Brawler"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_TumbleDamage",
+      "NameRu": "\u0423\u0440\u043E\u043D \u043A\u0443\u0432\u044B\u0440\u043A\u043E\u043C",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 5,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Brawler"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 6
+    },
+    {
+      "Id": "IHM_ST_Vampirism",
+      "NameRu": "\u0412\u0430\u043C\u043F\u0438\u0440\u0438\u0437\u043C",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 7,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_MeleeDamage"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 9
+    },
+    {
+      "Id": "IHM_ST_GrenadeDamage",
+      "NameRu": "\u0423\u0440\u043E\u043D \u0433\u0440\u0430\u043D\u0430\u0442",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 5,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Brawler"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 6
+    },
+    {
+      "Id": "IHM_ST_ExplosiveGrenade",
+      "NameRu": "\u041E\u0441\u043A\u043E\u043B\u043E\u0447\u043D\u0430\u044F \u0433\u0440\u0430\u043D\u0430\u0442\u0430",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_GrenadeDamage"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 5
+    },
+    {
+      "Id": "IHM_ST_ClusterGrenade",
+      "NameRu": "\u0421\u0432\u044F\u0437\u043A\u0430 \u0433\u0440\u0430\u043D\u0430\u0442",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_GrenadeDamage"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 5
+    },
+    {
+      "Id": "IHM_ST_StunGrenade",
+      "NameRu": "\u041E\u0433\u043B\u0443\u0448\u0430\u044E\u0449\u0430\u044F \u0433\u0440\u0430\u043D\u0430\u0442\u0430",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_GrenadeDamage"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 5
+    },
+    {
+      "Id": "IHM_ST_ShockwaveGrenade",
+      "NameRu": "\u0423\u0434\u0430\u0440\u043D\u0430\u044F \u0433\u0440\u0430\u043D\u0430\u0442\u0430",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_GrenadeDamage"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 5
+    },
+    {
+      "Id": "IHM_ST_DecoyGrenade",
+      "NameRu": "\u0413\u0440\u0430\u043D\u0430\u0442\u0430-\u043F\u0440\u0438\u043C\u0430\u043D\u043A\u0430",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_GrenadeDamage"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 5
+    },
+    {
+      "Id": "IHM_ST_Gunsmith",
+      "NameRu": "\u041E\u0440\u0443\u0436\u0435\u0439\u043D\u0438\u043A",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 1
+    },
+    {
+      "Id": "IHM_ST_BulletShots",
+      "NameRu": "\u0417\u0430\u043F\u0430\u0441 \u043F\u0430\u0442\u0440\u043E\u043D\u043E\u0432",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 5,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Gunsmith"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 6
+    },
+    {
+      "Id": "IHM_ST_LaserShots",
+      "NameRu": "\u0417\u0430\u0440\u044F\u0434\u044B \u043B\u0430\u0437\u0435\u0440\u0430",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 5,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Gunsmith"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 6
+    },
+    {
+      "Id": "IHM_ST_TranqShots",
+      "NameRu": "\u0417\u0430\u0440\u044F\u0434\u044B \u0442\u0440\u0430\u043D\u043A\u0432\u0438\u043B\u0438\u0437\u0430\u0442\u043E\u0440\u0430",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 5,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Gunsmith"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 6
+    },
+    {
+      "Id": "IHM_ST_Technician",
+      "NameRu": "\u0422\u0435\u0445\u043D\u0438\u043A",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 1
+    },
+    {
+      "Id": "IHM_ST_DroneBattery",
+      "NameRu": "\u0411\u0430\u0442\u0430\u0440\u0435\u044F \u0434\u0440\u043E\u043D\u043E\u0432",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 5,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Technician"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 6
+    },
+    {
+      "Id": "IHM_ST_Overcharge",
+      "NameRu": "\u041F\u0435\u0440\u0435\u0433\u0440\u0443\u0437\u043A\u0430",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 5,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Technician"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 6
+    },
+    {
+      "Id": "IHM_ST_Survivor",
+      "NameRu": "\u0412\u044B\u0436\u0438\u0432\u0448\u0438\u0439",
+      "page": "Survival",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 1
+    },
+    {
+      "Id": "IHM_ST_StaminaEfficiency",
+      "NameRu": "\u042D\u043A\u043E\u043D\u043E\u043C\u0438\u044F \u0432\u044B\u043D\u043E\u0441\u043B\u0438\u0432\u043E\u0441\u0442\u0438",
+      "page": "Survival",
+      "Cost": 1,
+      "MaxLevel": 5,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Survivor"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 6
+    },
+    {
+      "Id": "IHM_ST_SecondWind",
+      "NameRu": "\u0412\u0442\u043E\u0440\u043E\u0435 \u0434\u044B\u0445\u0430\u043D\u0438\u0435",
+      "page": "Survival",
+      "Cost": 1,
+      "MaxLevel": 2,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_StaminaEfficiency"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_Armor",
+      "NameRu": "\u0411\u0440\u043E\u043D\u044F",
+      "page": "Survival",
+      "Cost": 2,
+      "MaxLevel": 5,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Survivor"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 11
+    },
+    {
+      "Id": "IHM_ST_HpRegen",
+      "NameRu": "\u0420\u0435\u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u044F",
+      "page": "Survival",
+      "Cost": 3,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Survivor"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 10
+    },
+    {
+      "Id": "IHM_ST_Desperation",
+      "NameRu": "\u041E\u0442\u0447\u0430\u044F\u043D\u0438\u0435",
+      "page": "Survival",
+      "Cost": 2,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Survivor"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 7
+    },
+    {
+      "Id": "IHM_ST_HuntedWarning",
+      "NameRu": "\u0427\u0443\u0432\u0441\u0442\u0432\u043E \u043F\u043E\u0433\u043E\u043D\u0438",
+      "page": "Survival",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Survivor"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 2
+    },
+    {
+      "Id": "IHM_ST_CrouchSpeed",
+      "NameRu": "\u0421\u043A\u043E\u0440\u043E\u0441\u0442\u044C \u0432 \u043F\u0440\u0438\u0441\u0435\u0434\u0435",
+      "page": "Survival",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Survivor"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_SoulWard",
+      "NameRu": "\u0417\u0430\u0449\u0438\u0442\u0430 \u043E\u0442 \u0434\u0443\u0448",
+      "page": "Survival",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Survivor"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_SoulKeeper",
+      "NameRu": "\u0425\u0440\u0430\u043D\u0438\u0442\u0435\u043B\u044C \u0434\u0443\u0448",
+      "page": "Survival",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Survivor"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_Grounding",
+      "NameRu": "\u0417\u0430\u0437\u0435\u043C\u043B\u0435\u043D\u0438\u0435",
+      "page": "Survival",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Survivor"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_ThermalProtection",
+      "NameRu": "\u0422\u0435\u0440\u043C\u043E\u0437\u0430\u0449\u0438\u0442\u0430",
+      "page": "Survival",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Survivor"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_Antidote",
+      "NameRu": "\u0410\u043D\u0442\u0438\u0434\u043E\u0442",
+      "page": "Survival",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Survivor"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_StoneResilience",
+      "NameRu": "\u041A\u0430\u043C\u0435\u043D\u043D\u0430\u044F \u0441\u0442\u043E\u0439\u043A\u043E\u0441\u0442\u044C",
+      "page": "Survival",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Survivor"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_Evasion",
+      "NameRu": "\u0418\u0437\u0432\u043E\u0440\u043E\u0442\u043B\u0438\u0432\u043E\u0441\u0442\u044C",
+      "page": "Survival",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Survivor"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_DodgeRoll",
+      "NameRu": "\u0420\u044B\u0432\u043E\u043A \u0443\u043A\u043B\u043E\u043D\u0435\u043D\u0438\u044F",
+      "page": "Survival",
+      "Cost": 2,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Evasion"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 8
+    },
+    {
+      "Id": "IHM_ST_InventorySlot",
+      "NameRu": "\u0421\u043B\u043E\u0442 \u0438\u043D\u0432\u0435\u043D\u0442\u0430\u0440\u044F",
+      "page": "Utility",
+      "Cost": 3,
+      "MaxLevel": 4,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 12
+    },
+    {
+      "Id": "IHM_ST_Autoscan",
+      "NameRu": "\u0410\u0432\u0442\u043E\u043F\u043E\u0438\u0441\u043A",
+      "page": "Utility",
+      "Cost": 1,
+      "MaxLevel": 5,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 5
+    },
+    {
+      "Id": "IHM_ST_HeadBattery",
+      "NameRu": "\u0411\u0430\u0442\u0430\u0440\u0435\u044F \u0433\u043E\u043B\u043E\u0432\u044B",
+      "page": "Utility",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_HeadRecharge",
+      "NameRu": "\u041F\u043E\u0434\u0437\u0430\u0440\u044F\u0434\u043A\u0430 \u0433\u043E\u043B\u043E\u0432\u044B",
+      "page": "Utility",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_HeadBattery"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_HeadLeap",
+      "NameRu": "\u041F\u0440\u044B\u0436\u043E\u043A \u0433\u043E\u043B\u043E\u0432\u044B",
+      "page": "Utility",
+      "Cost": 1,
+      "MaxLevel": 5,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_HeadBattery"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 6
+    },
+    {
+      "Id": "IHM_ST_TumbleWings",
+      "NameRu": "\u041A\u0440\u044B\u043B\u044C\u044F \u043A\u0443\u0432\u044B\u0440\u043A\u0430",
+      "page": "Utility",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_FieldMedic",
+      "NameRu": "\u041F\u043E\u043B\u0435\u0432\u043E\u0439 \u043C\u0435\u0434\u0438\u043A",
+      "page": "Utility",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_BatterySaver",
+      "NameRu": "\u042D\u043A\u043E\u043D\u043E\u043C\u0438\u044F \u0431\u0430\u0442\u0430\u0440\u0435\u0439",
+      "page": "Utility",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_LuckyFinder",
+      "NameRu": "\u0412\u0435\u0437\u0443\u043D\u0447\u0438\u043A",
+      "page": "Utility",
+      "Cost": 2,
+      "MaxLevel": 2,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_GoldenNose",
+      "NameRu": "\u0417\u043E\u043B\u043E\u0442\u043E\u0439 \u043D\u044E\u0445",
+      "page": "Utility",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_SoulHunter",
+      "NameRu": "\u041E\u0445\u043E\u0442\u043D\u0438\u043A \u0437\u0430 \u0434\u0443\u0448\u0430\u043C\u0438",
+      "page": "Utility",
+      "Cost": 2,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 6
+    },
+    {
+      "Id": "IHM_ST_Marksman",
+      "NameRu": "\u041C\u0435\u0442\u043A\u0438\u0439 \u0441\u0442\u0440\u0435\u043B\u043E\u043A",
+      "page": "Arsenal",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 1
+    },
+    {
+      "Id": "IHM_ST_GunAccuracy",
+      "NameRu": "\u0422\u043E\u0447\u043D\u043E\u0441\u0442\u044C \u0441\u0442\u0440\u0435\u043B\u044C\u0431\u044B",
+      "page": "Arsenal",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Marksman"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_HandgunDamage",
+      "NameRu": "\u0423\u0440\u043E\u043D \u043F\u0438\u0441\u0442\u043E\u043B\u0435\u0442\u0430",
+      "page": "Arsenal",
+      "Cost": 1,
+      "MaxLevel": 5,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Marksman"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 6
+    },
+    {
+      "Id": "IHM_ST_RevolverDamage",
+      "NameRu": "\u0423\u0440\u043E\u043D \u0440\u0435\u0432\u043E\u043B\u044C\u0432\u0435\u0440\u0430",
+      "page": "Arsenal",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Marksman"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_ShotgunDamage",
+      "NameRu": "\u0423\u0440\u043E\u043D \u0434\u0440\u043E\u0431\u043E\u0432\u0438\u043A\u0430",
+      "page": "Arsenal",
+      "Cost": 1,
+      "MaxLevel": 4,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Marksman"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 5
+    },
+    {
+      "Id": "IHM_ST_CartCannonDamage",
+      "NameRu": "\u0423\u0440\u043E\u043D \u043F\u0443\u0448\u043A\u0438 \u0442\u0435\u043B\u0435\u0436\u043A\u0438",
+      "page": "Arsenal",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Marksman"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_CartLaserDamage",
+      "NameRu": "\u0423\u0440\u043E\u043D \u043B\u0430\u0437\u0435\u0440\u0430 \u0442\u0435\u043B\u0435\u0436\u043A\u0438",
+      "page": "Arsenal",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Marksman"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_StaffDamage",
+      "NameRu": "\u0423\u0440\u043E\u043D \u043F\u043E\u0441\u043E\u0445\u0430",
+      "page": "Arsenal",
+      "Cost": 1,
+      "MaxLevel": 4,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Marksman"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 5
+    },
+    {
+      "Id": "IHM_ST_CrossbowDamage",
+      "NameRu": "\u0423\u0440\u043E\u043D \u0430\u0440\u0431\u0430\u043B\u0435\u0442\u0430",
+      "page": "Arsenal",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_Marksman"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_StatusLab",
+      "NameRu": "\u041C\u0430\u0441\u0442\u0435\u0440 \u044D\u0444\u0444\u0435\u043A\u0442\u043E\u0432",
+      "page": "Arsenal",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 1
+    },
+    {
+      "Id": "IHM_ST_TranqTime",
+      "NameRu": "\u0414\u043E\u043B\u0433\u0438\u0439 \u0442\u0440\u0430\u043D\u043A\u0432\u0438\u043B\u0438\u0437\u0430\u0442\u043E\u0440",
+      "page": "Arsenal",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_StatusLab"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_NetTime",
+      "NameRu": "\u0414\u043E\u043B\u0433\u0430\u044F \u0441\u0435\u0442\u044C",
+      "page": "Arsenal",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_StatusLab"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_FreezeTime",
+      "NameRu": "\u0414\u043E\u043B\u0433\u0430\u044F \u0437\u0430\u043C\u043E\u0440\u043E\u0437\u043A\u0430",
+      "page": "Arsenal",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_StatusLab"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_PoisonRush",
+      "NameRu": "\u0411\u044B\u0441\u0442\u0440\u044B\u0439 \u044F\u0434",
+      "page": "Arsenal",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_StatusLab"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_HeavyHitter",
+      "NameRu": "\u0422\u044F\u0436\u0451\u043B\u044B\u0439 \u0443\u0434\u0430\u0440",
+      "page": "Arsenal",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_StatusLab"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_TO_GunnersFocus",
+      "NameRu": "\u0424\u043E\u043A\u0443\u0441 \u0441\u0442\u0440\u0435\u043B\u043A\u0430",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 1,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_Bruiser",
+      "NameRu": "\u0413\u0440\u043E\u043C\u0438\u043B\u0430",
+      "page": "Combat",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 1,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_GlassCannon",
+      "NameRu": "\u0421\u0442\u0435\u043A\u043B\u044F\u043D\u043D\u0430\u044F \u043F\u0443\u0448\u043A\u0430",
+      "page": "Combat",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 2,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_Overdrive",
+      "NameRu": "\u0424\u043E\u0440\u0441\u0430\u0436",
+      "page": "Combat",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 2,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_Sharpshooter",
+      "NameRu": "\u0421\u043D\u0430\u0439\u043F\u0435\u0440",
+      "page": "Combat",
+      "Cost": 3,
+      "MaxLevel": 1,
+      "Tier": 3,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_Berserker",
+      "NameRu": "\u0411\u0435\u0440\u0441\u0435\u0440\u043A",
+      "page": "Combat",
+      "Cost": 3,
+      "MaxLevel": 1,
+      "Tier": 3,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_HandCannon",
+      "NameRu": "\u0420\u0443\u0447\u043D\u0430\u044F \u043F\u0443\u0448\u043A\u0430",
+      "page": "Arsenal",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 1,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_CartCommander",
+      "NameRu": "\u041A\u043E\u043C\u0430\u043D\u0434\u0438\u0440 \u0442\u0435\u043B\u0435\u0436\u043A\u0438",
+      "page": "Arsenal",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 1,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_LingeringToxins",
+      "NameRu": "\u0417\u0430\u0442\u044F\u0436\u043D\u044B\u0435 \u0442\u043E\u043A\u0441\u0438\u043D\u044B",
+      "page": "Arsenal",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 2,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_QuickShock",
+      "NameRu": "\u0411\u044B\u0441\u0442\u0440\u044B\u0439 \u0448\u043E\u043A",
+      "page": "Arsenal",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 2,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_Executioner",
+      "NameRu": "\u041F\u0430\u043B\u0430\u0447",
+      "page": "Arsenal",
+      "Cost": 3,
+      "MaxLevel": 1,
+      "Tier": 3,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_Overkill",
+      "NameRu": "\u041F\u0435\u0440\u0435\u0431\u043E\u0440",
+      "page": "Arsenal",
+      "Cost": 3,
+      "MaxLevel": 1,
+      "Tier": 3,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_ThickSkin",
+      "NameRu": "\u0422\u043E\u043B\u0441\u0442\u0430\u044F \u043A\u043E\u0436\u0430",
+      "page": "Survival",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 1,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_Sprinter",
+      "NameRu": "\u0421\u043F\u0440\u0438\u043D\u0442\u0435\u0440",
+      "page": "Survival",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 1,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_Juggernaut",
+      "NameRu": "\u0414\u0436\u0430\u0433\u0433\u0435\u0440\u043D\u0430\u0443\u0442",
+      "page": "Survival",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 2,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_Daredevil",
+      "NameRu": "\u0421\u043E\u0440\u0432\u0438\u0433\u043E\u043B\u043E\u0432\u0430",
+      "page": "Survival",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 2,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_SecondHeart",
+      "NameRu": "\u0412\u0442\u043E\u0440\u043E\u0435 \u0441\u0435\u0440\u0434\u0446\u0435",
+      "page": "Survival",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 2,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_LastStand",
+      "NameRu": "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0439 \u0440\u0443\u0431\u0435\u0436",
+      "page": "Survival",
+      "Cost": 3,
+      "MaxLevel": 1,
+      "Tier": 3,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_GhostRunner",
+      "NameRu": "\u041F\u0440\u0438\u0437\u0440\u0430\u043A",
+      "page": "Survival",
+      "Cost": 3,
+      "MaxLevel": 1,
+      "Tier": 3,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_Floodlight",
+      "NameRu": "\u0428\u0438\u0440\u043E\u043A\u0438\u0439 \u043B\u0443\u0447",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 1,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_Spotlight",
+      "NameRu": "\u0414\u0430\u043B\u044C\u043D\u0438\u0439 \u043B\u0443\u0447",
+      "page": "Recon",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 1,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_Scout",
+      "NameRu": "\u0420\u0430\u0437\u0432\u0435\u0434\u0447\u0438\u043A",
+      "page": "Recon",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 2,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_EchoPing",
+      "NameRu": "\u042D\u0445\u043E-\u043F\u0438\u043D\u0433",
+      "page": "Recon",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 2,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_Oracle",
+      "NameRu": "\u041E\u0440\u0430\u043A\u0443\u043B",
+      "page": "Recon",
+      "Cost": 3,
+      "MaxLevel": 1,
+      "Tier": 3,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_HuntersEye",
+      "NameRu": "\u0413\u043B\u0430\u0437 \u043E\u0445\u043E\u0442\u043D\u0438\u043A\u0430",
+      "page": "Recon",
+      "Cost": 3,
+      "MaxLevel": 1,
+      "Tier": 3,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_Tinkerer",
+      "NameRu": "\u0421\u0430\u043C\u043E\u0434\u0435\u043B\u043A\u0438\u043D",
+      "page": "Utility",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 1,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_DroneJockey",
+      "NameRu": "\u0414\u0440\u043E\u043D\u0449\u0438\u043A",
+      "page": "Utility",
+      "Cost": 1,
+      "MaxLevel": 1,
+      "Tier": 1,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_MedicsOath",
+      "NameRu": "\u041A\u043B\u044F\u0442\u0432\u0430 \u043C\u0435\u0434\u0438\u043A\u0430",
+      "page": "Utility",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 2,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_FortuneSeeker",
+      "NameRu": "\u0418\u0441\u043A\u0430\u0442\u0435\u043B\u044C \u0443\u0434\u0430\u0447\u0438",
+      "page": "Utility",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 2,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_Overclock",
+      "NameRu": "\u0420\u0430\u0437\u0433\u043E\u043D",
+      "page": "Utility",
+      "Cost": 3,
+      "MaxLevel": 1,
+      "Tier": 3,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_TO_Salvager",
+      "NameRu": "\u0421\u0431\u043E\u0440\u0449\u0438\u043A",
+      "page": "Utility",
+      "Cost": 3,
+      "MaxLevel": 1,
+      "Tier": 3,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_CourierAlly",
+      "NameRu": "\u0414\u043E\u0441\u0442\u0430\u0432\u043A\u0430 \u0441\u043E\u044E\u0437\u043D\u0438\u043A\u0443",
+      "page": "Courier",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 2
+    },
+    {
+      "Id": "IHM_ST_CourierCart",
+      "NameRu": "\u0414\u043E\u0441\u0442\u0430\u0432\u043A\u0430 \u0442\u0435\u043B\u0435\u0436\u043A\u0438",
+      "page": "Courier",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 2
+    },
+    {
+      "Id": "IHM_ST_CourierHeadTrail",
+      "NameRu": "\u041F\u043E\u0438\u0441\u043A \u0433\u043E\u043B\u043E\u0432\u044B",
+      "page": "Courier",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 2
+    },
+    {
+      "Id": "IHM_ST_CourierHeadFetch",
+      "NameRu": "\u0414\u043E\u0441\u0442\u0430\u0432\u043A\u0430 \u0433\u043E\u043B\u043E\u0432\u044B",
+      "page": "Courier",
+      "Cost": 5,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_CourierHeadTrail"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 7
+    },
+    {
+      "Id": "IHM_ST_CourierLoad",
+      "NameRu": "\u0413\u0440\u0443\u0437\u043E\u043F\u043E\u0434\u044A\u0451\u043C\u043D\u043E\u0441\u0442\u044C",
+      "page": "Courier",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_CourierPack",
+      "NameRu": "\u0411\u043E\u043B\u044C\u0448\u043E\u0439 \u0440\u044E\u043A\u0437\u0430\u043A",
+      "page": "Courier",
+      "Cost": 2,
+      "MaxLevel": 2,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_CourierSpeed",
+      "NameRu": "\u0421\u043A\u043E\u0440\u043E\u0441\u0442\u044C \u043A\u0443\u0440\u044C\u0435\u0440\u0430",
+      "page": "Courier",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_CourierDash",
+      "NameRu": "\u0420\u044B\u0432\u043E\u043A",
+      "page": "Courier",
+      "Cost": 2,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_CourierSpeed"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_CourierFlight",
+      "NameRu": "\u041F\u043E\u043B\u0451\u0442",
+      "page": "Courier",
+      "Cost": 3,
+      "MaxLevel": 1,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_CourierDash"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 6
+    },
+    {
+      "Id": "IHM_ST_CourierHealth",
+      "NameRu": "\u0417\u0434\u043E\u0440\u043E\u0432\u044C\u0435 \u043A\u0443\u0440\u044C\u0435\u0440\u0430",
+      "page": "Courier",
+      "Cost": 1,
+      "MaxLevel": 5,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 5
+    },
+    {
+      "Id": "IHM_ST_CourierArmor",
+      "NameRu": "\u041A\u0440\u0435\u043F\u043A\u0438\u0439 \u043A\u0443\u0440\u044C\u0435\u0440",
+      "page": "Courier",
+      "Cost": 1,
+      "MaxLevel": 4,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_CourierStealth",
+      "NameRu": "\u041D\u0435\u0437\u0430\u043C\u0435\u0442\u043D\u043E\u0441\u0442\u044C",
+      "page": "Courier",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 3
+    },
+    {
+      "Id": "IHM_ST_CourierRecovery",
+      "NameRu": "\u0411\u044B\u0441\u0442\u0440\u043E\u0435 \u0432\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435",
+      "page": "Courier",
+      "Cost": 1,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [
+        "IHM_ST_CourierArmor"
+      ],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 4
+    },
+    {
+      "Id": "IHM_ST_CourierLuck",
+      "NameRu": "\u0423\u0434\u0430\u0447\u043D\u044B\u0435 \u043D\u0430\u0445\u043E\u0434\u043A\u0438",
+      "page": "Courier",
+      "Cost": 2,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": false,
+      "maxedWithPrerequisites": 6
+    },
+    {
+      "Id": "IHM_ST_CartHandling",
+      "NameRu": "\u041B\u0451\u0433\u043A\u0430\u044F \u0442\u0435\u043B\u0435\u0436\u043A\u0430",
+      "page": "Contracts",
+      "Cost": 0,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": true,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_GentleHands",
+      "NameRu": "\u0411\u0435\u0440\u0435\u0436\u043D\u044B\u0435 \u0440\u0443\u043A\u0438",
+      "page": "Contracts",
+      "Cost": 0,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": true,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_CalmPresence",
+      "NameRu": "\u0421\u043F\u043E\u043A\u043E\u0439\u0441\u0442\u0432\u0438\u0435",
+      "page": "Contracts",
+      "Cost": 0,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": true,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_SoftSteps",
+      "NameRu": "\u0422\u0438\u0445\u0438\u0435 \u0448\u0430\u0433\u0438",
+      "page": "Contracts",
+      "Cost": 0,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": true,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_Adrenaline",
+      "NameRu": "\u0410\u0434\u0440\u0435\u043D\u0430\u043B\u0438\u043D",
+      "page": "Contracts",
+      "Cost": 0,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": true,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_IronSkin",
+      "NameRu": "\u0416\u0435\u043B\u0435\u0437\u043D\u0430\u044F \u043A\u043E\u0436\u0430",
+      "page": "Contracts",
+      "Cost": 0,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": true,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_HotBarrel",
+      "NameRu": "\u0420\u0430\u0441\u043A\u0430\u043B\u0451\u043D\u043D\u044B\u0439 \u0441\u0442\u0432\u043E\u043B",
+      "page": "Contracts",
+      "Cost": 0,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": true,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_Overheat",
+      "NameRu": "\u041F\u0435\u0440\u0435\u0433\u0440\u0435\u0432",
+      "page": "Contracts",
+      "Cost": 0,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": true,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_BattleTrance",
+      "NameRu": "\u0411\u043E\u0435\u0432\u043E\u0439 \u0442\u0440\u0430\u043D\u0441",
+      "page": "Contracts",
+      "Cost": 0,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": true,
+      "maxedWithPrerequisites": 0
+    },
+    {
+      "Id": "IHM_ST_MendingSurge",
+      "NameRu": "\u041F\u0440\u0438\u043B\u0438\u0432 \u0441\u0438\u043B",
+      "page": "Contracts",
+      "Cost": 0,
+      "MaxLevel": 3,
+      "Tier": 0,
+      "Requires": [],
+      "RequiresMaxed": false,
+      "QuestOnly": true,
+      "maxedWithPrerequisites": 0
+    }
+  ],
+  "pages": [
+    {
+      "page": "Recon",
+      "nodes": 32,
+      "normalCost": 40,
+      "maxCost": 46,
+      "bonusStats": [
+        "Speed"
+      ]
+    },
+    {
+      "page": "Combat",
+      "nodes": 24,
+      "normalCost": 68,
+      "maxCost": 74,
+      "bonusStats": [
+        "Strength"
+      ]
+    },
+    {
+      "page": "Survival",
+      "nodes": 23,
+      "normalCost": 64,
+      "maxCost": 70,
+      "bonusStats": [
+        "Health"
+      ]
+    },
+    {
+      "page": "Utility",
+      "nodes": 17,
+      "normalCost": 50,
+      "maxCost": 56,
+      "bonusStats": [
+        "Range",
+        "DeathHeadBattery"
+      ]
+    },
+    {
+      "page": "Arsenal",
+      "nodes": 21,
+      "normalCost": 45,
+      "maxCost": 51,
+      "bonusStats": [
+        "Launch"
+      ]
+    },
+    {
+      "page": "Contracts",
+      "nodes": 10,
+      "normalCost": 0,
+      "maxCost": 0,
+      "bonusStats": []
+    },
+    {
+      "page": "Courier",
+      "nodes": 14,
+      "normalCost": 47,
+      "maxCost": 47,
+      "bonusStats": [
+        "Stamina",
+        "CrouchRest"
+      ]
+    }
+  ],
+  "all64CombatArsenalTradeoffPairs": [
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 3.509378,
+      "melee": 1.646875,
+      "grenade": 2.1409373,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1.2,
+      "gunDrain": 1.3333334,
+      "status": 1.25
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 4.9131293,
+      "melee": 1.646875,
+      "grenade": 2.1409373,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1.2,
+      "gunDrain": 1.3333334,
+      "status": 0.625
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 5.1608496,
+      "melee": 1.646875,
+      "grenade": 2.1409373,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1.2,
+      "gunDrain": 1.3333334,
+      "status": 0.75
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 7.2251897,
+      "melee": 1.646875,
+      "grenade": 2.1409373,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1.2,
+      "gunDrain": 1.3333334,
+      "status": 0.375
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 2.593888,
+      "melee": 1.646875,
+      "grenade": 2.1409373,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1.2,
+      "gunDrain": 1.3333334,
+      "status": 1.25
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 3.6314435,
+      "melee": 1.646875,
+      "grenade": 2.1409373,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1.2,
+      "gunDrain": 1.3333334,
+      "status": 0.625
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 3.814541,
+      "melee": 1.646875,
+      "grenade": 2.1409373,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1.2,
+      "gunDrain": 1.3333334,
+      "status": 0.75
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 5.3403573,
+      "melee": 1.646875,
+      "grenade": 2.1409373,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1.2,
+      "gunDrain": 1.3333334,
+      "status": 0.375
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 1.8196772,
+      "melee": 2.305625,
+      "grenade": 1.4986563,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1.2,
+      "gunDrain": 1,
+      "status": 1.25
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 2.547548,
+      "melee": 2.305625,
+      "grenade": 1.4986563,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1.2,
+      "gunDrain": 1,
+      "status": 0.625
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 2.6759958,
+      "melee": 2.305625,
+      "grenade": 1.4986563,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1.2,
+      "gunDrain": 1,
+      "status": 0.75
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 3.746394,
+      "melee": 2.305625,
+      "grenade": 1.4986563,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1.2,
+      "gunDrain": 1,
+      "status": 0.375
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 1.3449789,
+      "melee": 2.305625,
+      "grenade": 1.4986563,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1.2,
+      "gunDrain": 1,
+      "status": 1.25
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 1.8829705,
+      "melee": 2.305625,
+      "grenade": 1.4986563,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1.2,
+      "gunDrain": 1,
+      "status": 0.625
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 1.97791,
+      "melee": 2.305625,
+      "grenade": 1.4986563,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1.2,
+      "gunDrain": 1,
+      "status": 0.75
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 2.7690742,
+      "melee": 2.305625,
+      "grenade": 1.4986563,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1.2,
+      "gunDrain": 1,
+      "status": 0.375
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 2.8075023,
+      "melee": 1.3175,
+      "grenade": 1.71275,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1,
+      "gunDrain": 1.6666667,
+      "status": 1.25
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 3.9305034,
+      "melee": 1.3175,
+      "grenade": 1.71275,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1,
+      "gunDrain": 1.6666667,
+      "status": 0.625
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 4.1286798,
+      "melee": 1.3175,
+      "grenade": 1.71275,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1,
+      "gunDrain": 1.6666667,
+      "status": 0.75
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 5.780152,
+      "melee": 1.3175,
+      "grenade": 1.71275,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1,
+      "gunDrain": 1.6666667,
+      "status": 0.375
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 2.0751104,
+      "melee": 1.3175,
+      "grenade": 1.71275,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1,
+      "gunDrain": 1.6666667,
+      "status": 1.25
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 2.9051547,
+      "melee": 1.3175,
+      "grenade": 1.71275,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1,
+      "gunDrain": 1.6666667,
+      "status": 0.625
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 3.051633,
+      "melee": 1.3175,
+      "grenade": 1.71275,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1,
+      "gunDrain": 1.6666667,
+      "status": 0.75
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 4.272286,
+      "melee": 1.3175,
+      "grenade": 1.71275,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1,
+      "gunDrain": 1.6666667,
+      "status": 0.375
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 1.4557418,
+      "melee": 1.8445001,
+      "grenade": 1.198925,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1,
+      "gunDrain": 1.25,
+      "status": 1.25
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 2.0380385,
+      "melee": 1.8445001,
+      "grenade": 1.198925,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1,
+      "gunDrain": 1.25,
+      "status": 0.625
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 2.1407967,
+      "melee": 1.8445001,
+      "grenade": 1.198925,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1,
+      "gunDrain": 1.25,
+      "status": 0.75
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 2.9971151,
+      "melee": 1.8445001,
+      "grenade": 1.198925,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1,
+      "gunDrain": 1.25,
+      "status": 0.375
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 1.0759832,
+      "melee": 1.8445001,
+      "grenade": 1.198925,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1,
+      "gunDrain": 1.25,
+      "status": 1.25
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 1.5063764,
+      "melee": 1.8445001,
+      "grenade": 1.198925,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1,
+      "gunDrain": 1.25,
+      "status": 0.625
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 1.5823281,
+      "melee": 1.8445001,
+      "grenade": 1.198925,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1,
+      "gunDrain": 1.25,
+      "status": 0.75
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_GunnersFocus",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 2.2152593,
+      "melee": 1.8445001,
+      "grenade": 1.198925,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1,
+      "gunDrain": 1.25,
+      "status": 0.375
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 2.593888,
+      "melee": 2.2281249,
+      "grenade": 2.5187497,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1.2,
+      "gunDrain": 1.3333334,
+      "status": 1.25
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 3.6314435,
+      "melee": 2.2281249,
+      "grenade": 2.5187497,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1.2,
+      "gunDrain": 1.3333334,
+      "status": 0.625
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 3.814541,
+      "melee": 2.2281249,
+      "grenade": 2.5187497,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1.2,
+      "gunDrain": 1.3333334,
+      "status": 0.75
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 5.3403573,
+      "melee": 2.2281249,
+      "grenade": 2.5187497,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1.2,
+      "gunDrain": 1.3333334,
+      "status": 0.375
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 1.9172217,
+      "melee": 2.2281249,
+      "grenade": 2.5187497,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1.2,
+      "gunDrain": 1.3333334,
+      "status": 1.25
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 2.6841104,
+      "melee": 2.2281249,
+      "grenade": 2.5187497,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1.2,
+      "gunDrain": 1.3333334,
+      "status": 0.625
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 2.8194437,
+      "melee": 2.2281249,
+      "grenade": 2.5187497,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1.2,
+      "gunDrain": 1.3333334,
+      "status": 0.75
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 3.947221,
+      "melee": 2.2281249,
+      "grenade": 2.5187497,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1.2,
+      "gunDrain": 1.3333334,
+      "status": 0.375
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 1.3449789,
+      "melee": 3.1193748,
+      "grenade": 1.763125,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1.2,
+      "gunDrain": 1,
+      "status": 1.25
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 1.8829705,
+      "melee": 3.1193748,
+      "grenade": 1.763125,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1.2,
+      "gunDrain": 1,
+      "status": 0.625
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 1.97791,
+      "melee": 3.1193748,
+      "grenade": 1.763125,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1.2,
+      "gunDrain": 1,
+      "status": 0.75
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 2.7690742,
+      "melee": 3.1193748,
+      "grenade": 1.763125,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1.2,
+      "gunDrain": 1,
+      "status": 0.375
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 0.994115,
+      "melee": 3.1193748,
+      "grenade": 1.763125,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1.2,
+      "gunDrain": 1,
+      "status": 1.25
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 1.3917611,
+      "melee": 3.1193748,
+      "grenade": 1.763125,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1.2,
+      "gunDrain": 1,
+      "status": 0.625
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 1.4619339,
+      "melee": 3.1193748,
+      "grenade": 1.763125,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1.2,
+      "gunDrain": 1,
+      "status": 0.75
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_GlassCannon",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 2.0467074,
+      "melee": 3.1193748,
+      "grenade": 1.763125,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1.2,
+      "gunDrain": 1,
+      "status": 0.375
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 2.0751104,
+      "melee": 1.7824999,
+      "grenade": 2.0149999,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1,
+      "gunDrain": 1.6666667,
+      "status": 1.25
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 2.9051547,
+      "melee": 1.7824999,
+      "grenade": 2.0149999,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1,
+      "gunDrain": 1.6666667,
+      "status": 0.625
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 3.051633,
+      "melee": 1.7824999,
+      "grenade": 2.0149999,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1,
+      "gunDrain": 1.6666667,
+      "status": 0.75
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 4.272286,
+      "melee": 1.7824999,
+      "grenade": 2.0149999,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1,
+      "gunDrain": 1.6666667,
+      "status": 0.375
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 1.5337774,
+      "melee": 1.7824999,
+      "grenade": 2.0149999,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1,
+      "gunDrain": 1.6666667,
+      "status": 1.25
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 2.1472883,
+      "melee": 1.7824999,
+      "grenade": 2.0149999,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1,
+      "gunDrain": 1.6666667,
+      "status": 0.625
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 2.255555,
+      "melee": 1.7824999,
+      "grenade": 2.0149999,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1,
+      "gunDrain": 1.6666667,
+      "status": 0.75
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Sharpshooter",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 3.1577768,
+      "melee": 1.7824999,
+      "grenade": 2.0149999,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1,
+      "gunDrain": 1.6666667,
+      "status": 0.375
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 1.0759832,
+      "melee": 2.4954998,
+      "grenade": 1.4104999,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1,
+      "gunDrain": 1.25,
+      "status": 1.25
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 1.5063764,
+      "melee": 2.4954998,
+      "grenade": 1.4104999,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1,
+      "gunDrain": 1.25,
+      "status": 0.625
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 1.5823281,
+      "melee": 2.4954998,
+      "grenade": 1.4104999,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1,
+      "gunDrain": 1.25,
+      "status": 0.75
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_HandCannon",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 2.2152593,
+      "melee": 2.4954998,
+      "grenade": 1.4104999,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1,
+      "gunDrain": 1.25,
+      "status": 0.375
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 0.795292,
+      "melee": 2.4954998,
+      "grenade": 1.4104999,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1,
+      "gunDrain": 1.25,
+      "status": 1.25
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_LingeringToxins",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 1.1134088,
+      "melee": 2.4954998,
+      "grenade": 1.4104999,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1,
+      "gunDrain": 1.25,
+      "status": 0.625
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Executioner"
+      ],
+      "handgun": 1.1695471,
+      "melee": 2.4954998,
+      "grenade": 1.4104999,
+      "disabled": 1.5,
+      "normal": 0.75,
+      "taken": 1,
+      "gunDrain": 1.25,
+      "status": 0.75
+    },
+    {
+      "ids": [
+        "IHM_ST_TO_Bruiser",
+        "IHM_ST_TO_Overdrive",
+        "IHM_ST_TO_Berserker",
+        "IHM_ST_TO_CartCommander",
+        "IHM_ST_TO_QuickShock",
+        "IHM_ST_TO_Overkill"
+      ],
+      "handgun": 1.6373659,
+      "melee": 2.4954998,
+      "grenade": 1.4104999,
+      "disabled": 1,
+      "normal": 1,
+      "taken": 1,
+      "gunDrain": 1.25,
+      "status": 0.375
+    }
+  ],
+  "weaponLadders": [
+    {
+      "key": "IHM_ST_HandgunDamage",
+      "rank": 0,
+      "cost": 1,
+      "multiplier": 1.05
+    },
+    {
+      "key": "IHM_ST_HandgunDamage",
+      "rank": 1,
+      "cost": 2,
+      "multiplier": 1.2099999
+    },
+    {
+      "key": "IHM_ST_HandgunDamage",
+      "rank": 2,
+      "cost": 3,
+      "multiplier": 1.3699999
+    },
+    {
+      "key": "IHM_ST_HandgunDamage",
+      "rank": 3,
+      "cost": 4,
+      "multiplier": 1.53
+    },
+    {
+      "key": "IHM_ST_HandgunDamage",
+      "rank": 4,
+      "cost": 5,
+      "multiplier": 1.6899999
+    },
+    {
+      "key": "IHM_ST_HandgunDamage",
+      "rank": 5,
+      "cost": 6,
+      "multiplier": 1.8499999
+    },
+    {
+      "key": "IHM_ST_RevolverDamage",
+      "rank": 0,
+      "cost": 1,
+      "multiplier": 1.05
+    },
+    {
+      "key": "IHM_ST_RevolverDamage",
+      "rank": 1,
+      "cost": 2,
+      "multiplier": 1.1833333
+    },
+    {
+      "key": "IHM_ST_RevolverDamage",
+      "rank": 2,
+      "cost": 3,
+      "multiplier": 1.3166666
+    },
+    {
+      "key": "IHM_ST_RevolverDamage",
+      "rank": 3,
+      "cost": 4,
+      "multiplier": 1.4499999
+    },
+    {
+      "key": "IHM_ST_ShotgunDamage",
+      "rank": 0,
+      "cost": 1,
+      "multiplier": 1.05
+    },
+    {
+      "key": "IHM_ST_ShotgunDamage",
+      "rank": 1,
+      "cost": 2,
+      "multiplier": 1.15
+    },
+    {
+      "key": "IHM_ST_ShotgunDamage",
+      "rank": 2,
+      "cost": 3,
+      "multiplier": 1.25
+    },
+    {
+      "key": "IHM_ST_ShotgunDamage",
+      "rank": 3,
+      "cost": 4,
+      "multiplier": 1.3499999
+    },
+    {
+      "key": "IHM_ST_ShotgunDamage",
+      "rank": 4,
+      "cost": 5,
+      "multiplier": 1.4499999
+    },
+    {
+      "key": "IHM_ST_StaffDamage",
+      "rank": 0,
+      "cost": 1,
+      "multiplier": 1.05
+    },
+    {
+      "key": "IHM_ST_StaffDamage",
+      "rank": 1,
+      "cost": 2,
+      "multiplier": 1.15
+    },
+    {
+      "key": "IHM_ST_StaffDamage",
+      "rank": 2,
+      "cost": 3,
+      "multiplier": 1.25
+    },
+    {
+      "key": "IHM_ST_StaffDamage",
+      "rank": 3,
+      "cost": 4,
+      "multiplier": 1.3499999
+    },
+    {
+      "key": "IHM_ST_StaffDamage",
+      "rank": 4,
+      "cost": 5,
+      "multiplier": 1.4499999
+    }
+  ],
+  "grenade": [
+    {
+      "rank": 0,
+      "multiplier": 1.55,
+      "frozen": 2.7899997,
+      "radius": 1,
+      "area": 1,
+      "utilityDamage": 0
+    },
+    {
+      "rank": 1,
+      "multiplier": 1.705,
+      "frozen": 3.069,
+      "radius": 1.1,
+      "area": 1.210000052452088,
+      "utilityDamage": 5
+    },
+    {
+      "rank": 2,
+      "multiplier": 1.86,
+      "frozen": 3.348,
+      "radius": 1.2,
+      "area": 1.4400001144409202,
+      "utilityDamage": 10
+    },
+    {
+      "rank": 3,
+      "multiplier": 2.0149999,
+      "frozen": 3.6269996,
+      "radius": 1.3,
+      "area": 1.6899998760223411,
+      "utilityDamage": 15
+    }
+  ],
+  "resistance": [
+    {
+      "rank": 0,
+      "electric": 3,
+      "stone": 2.5,
+      "burnDot": 12,
+      "venom": 24,
+      "escape": 2.4,
+      "dodge": 0,
+      "soulMultiplier": 1
+    },
+    {
+      "rank": 1,
+      "electric": 2.4,
+      "stone": 2,
+      "burnDot": 10,
+      "venom": 19,
+      "escape": 2.0400002,
+      "dodge": 22,
+      "soulMultiplier": 1.05
+    },
+    {
+      "rank": 2,
+      "electric": 1.9499999,
+      "stone": 1.625,
+      "burnDot": 8,
+      "venom": 14,
+      "escape": 1.6800001,
+      "dodge": 18,
+      "soulMultiplier": 1.08
+    },
+    {
+      "rank": 3,
+      "electric": 1.5,
+      "stone": 1.25,
+      "burnDot": 6,
+      "venom": 10,
+      "escape": 1.32,
+      "dodge": 14,
+      "soulMultiplier": 1.1
+    }
+  ],
+  "statuses": [
+    {
+      "rank": 0,
+      "freeze": 5,
+      "poison": 14.5,
+      "poisonDps": 8.620689
+    },
+    {
+      "rank": 1,
+      "freeze": 6.166667,
+      "poison": 12.166666,
+      "poisonDps": 10.273973
+    },
+    {
+      "rank": 2,
+      "freeze": 7.3333335,
+      "poison": 9.833333,
+      "poisonDps": 12.711864
+    },
+    {
+      "rank": 3,
+      "freeze": 8,
+      "poison": 8,
+      "poisonDps": 15.625
+    }
+  ],
+  "boxesOnlyAllCollectedNoQuests": [
+    {
+      "lucky": 0,
+      "runs": 100000,
+      "tenLevelMean": 16.52639,
+      "p10": 10,
+      "median": 16,
+      "p90": 24,
+      "weights": [
+        65,
+        20,
+        10,
+        5
+      ],
+      "expectedPerBox": 0.55
+    },
+    {
+      "lucky": 1,
+      "runs": 100000,
+      "tenLevelMean": 21.57195,
+      "p10": 14,
+      "median": 21,
+      "p90": 30,
+      "weights": [
+        55,
+        25,
+        13,
+        7
+      ],
+      "expectedPerBox": 0.72
+    },
+    {
+      "lucky": 2,
+      "runs": 100000,
+      "tenLevelMean": 26.69845,
+      "p10": 18,
+      "median": 26,
+      "p90": 35,
+      "weights": [
+        45,
+        30,
+        16,
+        9
+      ],
+      "expectedPerBox": 0.89
+    }
+  ],
+  "katanaAnalyticalNoArmorNoAIBase150Recovery0_8": [
+    {
+      "hp": 240,
+      "accuracy": 0.5,
+      "mult": 1,
+      "hits": 2,
+      "expectedSwings": 4,
+      "idealDamagePerSecond": 93.75,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 240,
+      "accuracy": 0.5,
+      "mult": 1.55,
+      "hits": 2,
+      "expectedSwings": 4,
+      "idealDamagePerSecond": 145.3125,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 240,
+      "accuracy": 0.5,
+      "mult": 2.0925000000000002,
+      "hits": 1,
+      "expectedSwings": 2,
+      "idealDamagePerSecond": 196.17187500000003,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 240,
+      "accuracy": 0.75,
+      "mult": 1,
+      "hits": 2,
+      "expectedSwings": 2.6666666666666665,
+      "idealDamagePerSecond": 140.625,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 240,
+      "accuracy": 0.75,
+      "mult": 1.55,
+      "hits": 2,
+      "expectedSwings": 2.6666666666666665,
+      "idealDamagePerSecond": 217.96875,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 240,
+      "accuracy": 0.75,
+      "mult": 2.0925000000000002,
+      "hits": 1,
+      "expectedSwings": 1.3333333333333333,
+      "idealDamagePerSecond": 294.25781250000006,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 240,
+      "accuracy": 1,
+      "mult": 1,
+      "hits": 2,
+      "expectedSwings": 2,
+      "idealDamagePerSecond": 187.5,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 240,
+      "accuracy": 1,
+      "mult": 1.55,
+      "hits": 2,
+      "expectedSwings": 2,
+      "idealDamagePerSecond": 290.625,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 240,
+      "accuracy": 1,
+      "mult": 2.0925000000000002,
+      "hits": 1,
+      "expectedSwings": 1,
+      "idealDamagePerSecond": 392.34375000000006,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 280,
+      "accuracy": 0.5,
+      "mult": 1,
+      "hits": 2,
+      "expectedSwings": 4,
+      "idealDamagePerSecond": 93.75,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 280,
+      "accuracy": 0.5,
+      "mult": 1.55,
+      "hits": 2,
+      "expectedSwings": 4,
+      "idealDamagePerSecond": 145.3125,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 280,
+      "accuracy": 0.5,
+      "mult": 2.0925000000000002,
+      "hits": 1,
+      "expectedSwings": 2,
+      "idealDamagePerSecond": 196.17187500000003,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 280,
+      "accuracy": 0.75,
+      "mult": 1,
+      "hits": 2,
+      "expectedSwings": 2.6666666666666665,
+      "idealDamagePerSecond": 140.625,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 280,
+      "accuracy": 0.75,
+      "mult": 1.55,
+      "hits": 2,
+      "expectedSwings": 2.6666666666666665,
+      "idealDamagePerSecond": 217.96875,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 280,
+      "accuracy": 0.75,
+      "mult": 2.0925000000000002,
+      "hits": 1,
+      "expectedSwings": 1.3333333333333333,
+      "idealDamagePerSecond": 294.25781250000006,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 280,
+      "accuracy": 1,
+      "mult": 1,
+      "hits": 2,
+      "expectedSwings": 2,
+      "idealDamagePerSecond": 187.5,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 280,
+      "accuracy": 1,
+      "mult": 1.55,
+      "hits": 2,
+      "expectedSwings": 2,
+      "idealDamagePerSecond": 290.625,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 280,
+      "accuracy": 1,
+      "mult": 2.0925000000000002,
+      "hits": 1,
+      "expectedSwings": 1,
+      "idealDamagePerSecond": 392.34375000000006,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 480,
+      "accuracy": 0.5,
+      "mult": 1,
+      "hits": 4,
+      "expectedSwings": 8,
+      "idealDamagePerSecond": 93.75,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 480,
+      "accuracy": 0.5,
+      "mult": 1.55,
+      "hits": 3,
+      "expectedSwings": 6,
+      "idealDamagePerSecond": 145.3125,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 480,
+      "accuracy": 0.5,
+      "mult": 2.0925000000000002,
+      "hits": 2,
+      "expectedSwings": 4,
+      "idealDamagePerSecond": 196.17187500000003,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 480,
+      "accuracy": 0.75,
+      "mult": 1,
+      "hits": 4,
+      "expectedSwings": 5.333333333333333,
+      "idealDamagePerSecond": 140.625,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 480,
+      "accuracy": 0.75,
+      "mult": 1.55,
+      "hits": 3,
+      "expectedSwings": 4,
+      "idealDamagePerSecond": 217.96875,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 480,
+      "accuracy": 0.75,
+      "mult": 2.0925000000000002,
+      "hits": 2,
+      "expectedSwings": 2.6666666666666665,
+      "idealDamagePerSecond": 294.25781250000006,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 480,
+      "accuracy": 1,
+      "mult": 1,
+      "hits": 4,
+      "expectedSwings": 4,
+      "idealDamagePerSecond": 187.5,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 480,
+      "accuracy": 1,
+      "mult": 1.55,
+      "hits": 3,
+      "expectedSwings": 3,
+      "idealDamagePerSecond": 290.625,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 480,
+      "accuracy": 1,
+      "mult": 2.0925000000000002,
+      "hits": 2,
+      "expectedSwings": 2,
+      "idealDamagePerSecond": 392.34375000000006,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 600,
+      "accuracy": 0.5,
+      "mult": 1,
+      "hits": 4,
+      "expectedSwings": 8,
+      "idealDamagePerSecond": 93.75,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 600,
+      "accuracy": 0.5,
+      "mult": 1.55,
+      "hits": 3,
+      "expectedSwings": 6,
+      "idealDamagePerSecond": 145.3125,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 600,
+      "accuracy": 0.5,
+      "mult": 2.0925000000000002,
+      "hits": 2,
+      "expectedSwings": 4,
+      "idealDamagePerSecond": 196.17187500000003,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 600,
+      "accuracy": 0.75,
+      "mult": 1,
+      "hits": 4,
+      "expectedSwings": 5.333333333333333,
+      "idealDamagePerSecond": 140.625,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 600,
+      "accuracy": 0.75,
+      "mult": 1.55,
+      "hits": 3,
+      "expectedSwings": 4,
+      "idealDamagePerSecond": 217.96875,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 600,
+      "accuracy": 0.75,
+      "mult": 2.0925000000000002,
+      "hits": 2,
+      "expectedSwings": 2.6666666666666665,
+      "idealDamagePerSecond": 294.25781250000006,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 600,
+      "accuracy": 1,
+      "mult": 1,
+      "hits": 4,
+      "expectedSwings": 4,
+      "idealDamagePerSecond": 187.5,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 600,
+      "accuracy": 1,
+      "mult": 1.55,
+      "hits": 3,
+      "expectedSwings": 3,
+      "idealDamagePerSecond": 290.625,
+      "nominalVampireHealPerHit": 67.425
+    },
+    {
+      "hp": 600,
+      "accuracy": 1,
+      "mult": 2.0925000000000002,
+      "hits": 2,
+      "expectedSwings": 2,
+      "idealDamagePerSecond": 392.34375000000006,
+      "nominalVampireHealPerHit": 67.425
+    }
+  ],
+  "dotArmorRoundingModelNoOtherDefense": [
+    {
+      "dt": 0.016666668,
+      "armorRank": 0,
+      "scaling": 1,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 12
+    },
+    {
+      "dt": 0.016666668,
+      "armorRank": 0,
+      "scaling": 2,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 24
+    },
+    {
+      "dt": 0.016666668,
+      "armorRank": 0,
+      "scaling": 3,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 36
+    },
+    {
+      "dt": 0.016666668,
+      "armorRank": 1,
+      "scaling": 1,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 0
+    },
+    {
+      "dt": 0.016666668,
+      "armorRank": 1,
+      "scaling": 2,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 12
+    },
+    {
+      "dt": 0.016666668,
+      "armorRank": 1,
+      "scaling": 3,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 24
+    },
+    {
+      "dt": 0.016666668,
+      "armorRank": 5,
+      "scaling": 1,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 0
+    },
+    {
+      "dt": 0.016666668,
+      "armorRank": 5,
+      "scaling": 2,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 12
+    },
+    {
+      "dt": 0.016666668,
+      "armorRank": 5,
+      "scaling": 3,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 24
+    },
+    {
+      "dt": 0.25,
+      "armorRank": 0,
+      "scaling": 1,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 12
+    },
+    {
+      "dt": 0.25,
+      "armorRank": 0,
+      "scaling": 2,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 24
+    },
+    {
+      "dt": 0.25,
+      "armorRank": 0,
+      "scaling": 3,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 36
+    },
+    {
+      "dt": 0.25,
+      "armorRank": 1,
+      "scaling": 1,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 0
+    },
+    {
+      "dt": 0.25,
+      "armorRank": 1,
+      "scaling": 2,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 12
+    },
+    {
+      "dt": 0.25,
+      "armorRank": 1,
+      "scaling": 3,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 24
+    },
+    {
+      "dt": 0.25,
+      "armorRank": 5,
+      "scaling": 1,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 0
+    },
+    {
+      "dt": 0.25,
+      "armorRank": 5,
+      "scaling": 2,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 12
+    },
+    {
+      "dt": 0.25,
+      "armorRank": 5,
+      "scaling": 3,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 24
+    },
+    {
+      "dt": 0.5,
+      "armorRank": 0,
+      "scaling": 1,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 12
+    },
+    {
+      "dt": 0.5,
+      "armorRank": 0,
+      "scaling": 2,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 24
+    },
+    {
+      "dt": 0.5,
+      "armorRank": 0,
+      "scaling": 3,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 36
+    },
+    {
+      "dt": 0.5,
+      "armorRank": 1,
+      "scaling": 1,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 6
+    },
+    {
+      "dt": 0.5,
+      "armorRank": 1,
+      "scaling": 2,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 18
+    },
+    {
+      "dt": 0.5,
+      "armorRank": 1,
+      "scaling": 3,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 30
+    },
+    {
+      "dt": 0.5,
+      "armorRank": 5,
+      "scaling": 1,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 6
+    },
+    {
+      "dt": 0.5,
+      "armorRank": 5,
+      "scaling": 2,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 18
+    },
+    {
+      "dt": 0.5,
+      "armorRank": 5,
+      "scaling": 3,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 24
+    },
+    {
+      "dt": 1,
+      "armorRank": 0,
+      "scaling": 1,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 12
+    },
+    {
+      "dt": 1,
+      "armorRank": 0,
+      "scaling": 2,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 24
+    },
+    {
+      "dt": 1,
+      "armorRank": 0,
+      "scaling": 3,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 36
+    },
+    {
+      "dt": 1,
+      "armorRank": 1,
+      "scaling": 1,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 9
+    },
+    {
+      "dt": 1,
+      "armorRank": 1,
+      "scaling": 2,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 21
+    },
+    {
+      "dt": 1,
+      "armorRank": 1,
+      "scaling": 3,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 33
+    },
+    {
+      "dt": 1,
+      "armorRank": 5,
+      "scaling": 1,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 9
+    },
+    {
+      "dt": 1,
+      "armorRank": 5,
+      "scaling": 2,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 18
+    },
+    {
+      "dt": 1,
+      "armorRank": 5,
+      "scaling": 3,
+      "nominalTotal": 12,
+      "damageAfterNativeArmorRounding": 27
+    }
+  ]
+}

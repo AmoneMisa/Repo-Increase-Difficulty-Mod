@@ -16,9 +16,11 @@ var expected=new Dictionary<string,(LootMap maps,float min,float max)>{
     ["gold_ingot"]=(LootMap.Sunstone|LootMap.McJannek,3500,4800),
     ["maneki_neko"]=(LootMap.Museum|LootMap.Manor,12000,16000),
     ["plush_corgi"]=(LootMap.Manor|LootMap.Museum|LootMap.Sunstone|LootMap.McJannek,3000,4000),
-    ["whiskey_bottle"]=(LootMap.Swiftbroom|LootMap.Manor|LootMap.McJannek|LootMap.Museum,5000,6500)
+    ["whiskey_bottle"]=(LootMap.Swiftbroom|LootMap.Manor|LootMap.McJannek|LootMap.Museum,5000,6500),
+    ["rgb_mouse"]=(LootMap.McJannek,500,700),
+    ["rgb_keyboard"]=(LootMap.McJannek,900,1300),
 };
-Assert(CollectionCatalog.Entries.Count==expected.Count,"All fifteen valuables, excluding the shop-only Spritz");
+Assert(CollectionCatalog.Entries.Count==expected.Count,"All ambient collection valuables, excluding ritual-only objects");
 Assert(CollectionCatalog.Entries.Select(e=>e.Key).Distinct().Count()==expected.Count,"No duplicate valuables");
 foreach(var entry in CollectionCatalog.Entries)
 {
@@ -97,6 +99,10 @@ Assert(qs.All(q=>q.Op==2?q.A is >=12 and <=98&&q.B is >=3 and <=9:q.A is >=100 a
 Assert(IncreaseHardMod.Challenges.ChallengeRules.MathAnswer(387,244,0)==631&&IncreaseHardMod.Challenges.ChallengeRules.MathAnswer(387,244,1)==143&&IncreaseHardMod.Challenges.ChallengeRules.MathAnswer(14,6,2)==84&&IncreaseHardMod.Challenges.ChallengeRules.MathText(387,244,0)=="387 + 244","Flag answers and question text");
 Assert(IncreaseHardMod.Challenges.ChallengeRules.ParseAnswer("631")==631&&IncreaseHardMod.Challenges.ChallengeRules.ParseAnswer(" it's 631!")==631&&IncreaseHardMod.Challenges.ChallengeRules.ParseAnswer("hello")==null&&IncreaseHardMod.Challenges.ChallengeRules.ParseAnswer("-5")==-5,"Chat answers: first whole number in the line");
 Assert(IncreaseHardMod.Challenges.ChallengeRules.MushroomLength(1)==3&&IncreaseHardMod.Challenges.ChallengeRules.MushroomLength(3)==5,"Mushroom Path rounds are 3, 4, 5 long");
+Assert(IncreaseHardMod.Challenges.ChallengeRules.MushroomPress(0, 2, 1, true)==-1,"Playback ignores landings");
+Assert(IncreaseHardMod.Challenges.ChallengeRules.MushroomPress(2, 2, 1, false)==-1,"Standing on a mushroom does not repeat its press");
+Assert(IncreaseHardMod.Challenges.ChallengeRules.MushroomPress(0, 5, 2, false)==2,"Correct pad wins simultaneous co-op landings");
+Assert(IncreaseHardMod.Challenges.ChallengeRules.MushroomPress(0, 4, 1, false)==2,"A lone incorrect landing is still a mistake");
 Assert(IncreaseHardMod.Challenges.ChallengeRules.Status(IncreaseHardMod.Challenges.ChallengeKind.Mushrooms,1,3,90f,false)=="MUSHROOM PATH  ROUND 2/3  1:30","Mushroom HUD line");
 Assert(IncreaseHardMod.Challenges.ChallengeRules.FlagStatus(0,"387 + 244",0,61f,false)=="CAPTURE THE FLAG  387 + 244 = ?  (answer in chat)  1:01"&&IncreaseHardMod.Challenges.ChallengeRules.FlagStatus(2,"",0,120f,true)=="ЗАХВАТ ФЛАГА  УДЕРЖИВАЙТЕ  2:00","Flag HUD lines");
 Assert(!IncreaseHardMod.Challenges.ChallengeRules.DeathFails(IncreaseHardMod.Challenges.ChallengeKind.Mushrooms)&&IncreaseHardMod.Challenges.ChallengeRules.Seconds(IncreaseHardMod.Challenges.ChallengeKind.Flag)==150f,"Mushrooms are not fatal; the flag has 150 s to answer and carry");

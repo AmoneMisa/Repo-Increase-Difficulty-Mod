@@ -42,6 +42,7 @@ public static class RetryCrystalEffect {public const byte EventCode=176;public s
  public class PlayerRoundStat {public string Name;public int BrokenValue,BrokenCount,Delivered,Deaths,Revives;}
  public class RoundLootSummary {public int[] Serialize()=>Array.Empty<int>();public static RoundLootSummary Deserialize(int[] d)=>new();}
  public static class LateJoinCache {public static void Tick(){}}
+  public static class LateJoinProgress {public const byte RequestCode=159;public static void Tick(){}public static void ReconcileHealth(){}public static void OnRequest(int actor){}}
  public static class LateJoinController {public static void Tick(){}public static void EnsureEnemyRegistrations(){}public static void EnsureLocalHealthInitialized(){}}
  public static class PingController {public static int Applied;public static void AddNetworkPing(byte k,UnityEngine.Vector3 v,string l,string s,int id){Applied++;}}
  public static class MapVoteState {public static int Candidates,Ballots,LastActor;public static void ReceiveCandidates(int session,string[] names,float t,bool closed,int winner){Candidates++;}public static void ReceiveBallot(int session,int actor,int index,string name){Ballots++;LastActor=actor;}}
@@ -53,6 +54,7 @@ namespace IncreaseHardMod.Economy {
 }
 namespace IncreaseHardMod.Drones {public static class LinkManager {public static void Tick(float dt){}}}
 namespace IncreaseHardMod.Gear {
+ public static class StickyRoot { public const byte EventCode=157; public static int Received; public static void Receive(ExitGames.Client.Photon.EventData e){Received++;} }
  public enum ShieldMode {DefenceDrone,ProtectionOrb,DefenceOrb}
  public class ShieldItem:UnityEngine.Component {public ShieldMode mode;public PlayerAvatar Target;public bool Covers(PlayerAvatar p)=>p==Target;}
  public static class GearEffects {public const float NetBroken = -1f, NetExpired = -2f;public static void Tick(float dt){}}
@@ -72,6 +74,7 @@ namespace IncreaseHardMod.Quests {
 }
 namespace IncreaseHardMod.Gear { public static class Shock { public const byte EnemyKind=3; public static float Last; public static void ShockLocal(float s){Last=s;} } }
 namespace IncreaseHardMod.Challenges { public static class ChallengeManager { public const byte EventCode=168, StartRequestCode=166; public static int Received, Requests; public static void HandleEvent(ExitGames.Client.Photon.EventData e){Received++;} public static void HandleStartRequest(ExitGames.Client.Photon.EventData e){Requests++;} } }
+namespace IncreaseHardMod.Challenges { public static class MapRitual { public const byte EventCode=158; public static int Received; public static void Receive(ExitGames.Client.Photon.EventData e){Received++;} } }
 namespace IncreaseHardMod.Skills { public static class BuffPerks { public const byte EventCode=167; public static int Received; public static void HandleEvent(ExitGames.Client.Photon.EventData e){Received++;} } }
 namespace IncreaseHardMod.Skills { public static class TradeOffs { public static int Echo; public static void HostPingedByActor(int actor, UnityEngine.Vector3 p){Echo++;} } }
 namespace IncreaseHardMod.Valuables { public static class LootSafetyNet { public static int Shown; public static (int Count,int Value,bool Marked) Last; public static void ShowNotice(int c,int v,bool m){Shown++;Last=(c,v,m);} } }
@@ -84,3 +87,9 @@ namespace IncreaseHardMod.Skills{public enum BuyBlock:byte{None=0,UnknownNode,Ma
 namespace IncreaseHardMod.Courier { public sealed class CourierManager { public const byte StateCode=163, RequestCode=162; public static int States, Requests; public static void HandleState(ExitGames.Client.Photon.EventData e){States++;} public static void HandleRequest(ExitGames.Client.Photon.EventData e){Requests++;} } }
 namespace IncreaseHardMod.Cosmetics { public static class CostumeRewards { public const byte EventCode=164; public static int Received; public static void HandleEvent(ExitGames.Client.Photon.EventData e){Received++;} } }
 namespace IncreaseHardMod.Upgrades { public static class RespawnList { public const byte EventCode=165; public static int Received; public static void HandleEvent(ExitGames.Client.Photon.EventData e){Received++;} } }
+
+namespace IncreaseHardMod.Monsters {
+  public static class MonsterBrain {public const byte StateCode=154,FxCode=153;public static void OnStateEvent(ExitGames.Client.Photon.EventData e){}public static void OnFxEvent(ExitGames.Client.Photon.EventData e){}}
+  public static class MonsterAfflictions {public const byte EventCode=155,StruggleCode=156;public static void OnEvent(ExitGames.Client.Photon.EventData e){}public static void OnStruggle(ExitGames.Client.Photon.EventData e){}public static void TickHost(float dt){}public static void TickLocal(){}}
+  public static class DodgeRoll {public static void Tick(){}}
+}

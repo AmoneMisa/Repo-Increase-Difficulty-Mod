@@ -90,6 +90,16 @@ public static class ChallengeRules
     /// <summary>Mushroom Path: sequence length in round <paramref name="round"/> (1-based): 3, 4, 5.</summary>
     public static int MushroomLength(int round) => 2 + Math.Max(1, round);
 
+    internal static int MushroomPress(int previous, int occupied, int expected, bool showing)
+    {
+        int landed = occupied & ~previous;
+        if (showing || landed == 0) return -1;
+        if ((landed & 1 << expected) != 0) return expected;
+        for (int i = 0; i < MushroomCount; i++)
+            if ((landed & 1 << i) != 0) return i;
+        return -1;
+    }
+
     /// <summary>Capture the Flag question from three rolls: a three-digit sum, a three-digit difference (never negative)
     /// or a two-digit by one-digit product. op 0 = +, 1 = -, 2 = x.</summary>
     public static (int A, int B, int Op) MathQuestion(double opRoll, double aRoll, double bRoll)

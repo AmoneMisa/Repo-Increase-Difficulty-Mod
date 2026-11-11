@@ -14,12 +14,10 @@ internal enum CartKind : byte { Soul = 1, Wide = 2, Double = 3 }
 /// <summary>
 /// Three extra C.A.R.T.s for the shop, each a copy of a vanilla cart (so pushing, the haul screen, cart physics
 /// and extraction all stay the game's own):
-///  - Soul C.A.R.T.: the little Pocket C.A.R.T., 33% dearer than the big C.A.R.T. It carries monster souls only, up
-///    to $55K of them: anything else, or a soul that would go over the limit, is pushed back out (host).
+///  - Soul C.A.R.T.: the little Pocket C.A.R.T. with a Hauler hatch for up to $65K in monster souls.
 ///  - Wide C.A.R.T.: 1.25x the big C.A.R.T.'s width by default (ModConfig.WideCartWidth) and at least 1.4x its
-///    length to fit the Museum Tray; 20% dearer.
-///  - Double-Decker C.A.R.T.: the big C.A.R.T. 25% shorter with walls twice as tall, in the cart's own textures. It weighs as
-///    much as two C.A.R.T.s; 25% dearer.
+///    length to fit the Museum Tray, with slightly higher walls; 20% dearer.
+///  - Double-Decker C.A.R.T.: the big C.A.R.T. 15% shorter, with walls twice as tall and 40% more mass; 25% dearer.
 /// Reshaping moves and scales the cart's own parts (walls, floor, the in-cart volume the haul screen reads), so
 /// the game's logic sees a bigger or taller cart.
 /// </summary>
@@ -30,9 +28,11 @@ internal static class CustomCarts
 
     private const float MinWideArea = 1.5f; // retain the original floor space for narrower configurations
     internal const float MinWideLength = 1.4f; // about 2.27 m between the end walls for the 2.18 m Museum Tray
+    private const float ManorWidthLimit = 1.05f; // ~1.30 m of collision width in the manor's 1.50 m doorway
     private static float WideWidth => Mathf.Clamp(ModConfig.WideCartWidth.Value, 1f, 1.5f);
     private static float WideLength => Mathf.Max(MinWideLength, MinWideArea / WideWidth);
-    private const float DoubleLength = .75f, DoubleHeight = 2f;
+    private const float WideHeight = 1.15f;
+    private const float DoubleLength = .85f, DoubleHeight = 2f, DoubleMassFactor = 1.4f;
     private const float StandardMass = 8f; // PhysGrabCart.Start sets every cart to this
 
     internal static void Build()
@@ -49,9 +49,6 @@ internal static class CustomCarts
             items.TryGetValue("Item Cart Small", out var small);
             if (small == null || small.prefab == null || small.prefab.Prefab == null) small = null;
 
-            Make(small ?? big, big, SoulAsset, "Soul C.A.R.T.", CartKind.Soul, 1.33f, new Color(.65f, .4f, 1f),
-                $"A little C.A.R.T. built for monster souls: it carries souls only, up to ${ModConfig.SoulCartValueCap.Value / 1000f:0.#}K of them. " +
-                "Anything else, or a soul over the limit, is pushed back out.");
             int widthPercent = Mathf.RoundToInt((WideWidth - 1f) * 100f);
             int lengthPercent = Mathf.RoundToInt((WideLength - 1f) * 100f);
             Make(big, big, WideAsset, "Wide C.A.R.T.", CartKind.Wide, 1.2f, new Color(.3f, .85f, .8f),
@@ -59,7 +56,19 @@ internal static class CustomCarts
                     ? $"На {widthPercent}% шире и на {lengthPercent}% длиннее большой тележки. При стандартной ширине сервиз помещается вдоль кузова."
                     : $"{widthPercent}% wider and {lengthPercent}% longer than the big C.A.R.T. The Museum Tray fits lengthwise at the default width.");
             Make(big, big, DoubleAsset, "Double-Decker C.A.R.T.", CartKind.Double, 1.25f, new Color(.55f, .9f, .35f),
-                "A shorter C.A.R.T. with walls twice as tall: stack loot twice as high. Heavy: it weighs as much as two C.A.R.T.s.");
+                Localization.GameLanguage.Russian
+                    ? "На 15% короче и на 40% тяжелее большой тележки. Стенки вдвое выше."
+                    : "15% shorter and 40% heavier than the big C.A.R.T., with walls twice as tall.");
+            var hauler = FlameCartItem.FindHaulerBox(items);
+            if (hauler != null)
+            {
+                string cap = $"${ModConfig.SoulCartValueCap.Value / 1000f:0.#}K";
+                Make(small ?? big, big, SoulAsset, "Soul C.A.R.T.", CartKind.Soul, 1.33f, new Color(.65f, .4f, 1f),
+                    Localization.GameLanguage.Russian
+                        ? $"Опустите душу в люк. Корзина безопасно хранит души на сумму до {cap}."
+                        : $"Drop souls into the hatch to store them safely. Holds up to {cap} in monster souls.", hauler);
+            }
+            else Plugin.Log.LogWarning("[Carts] Hauler storage box not found; Soul C.A.R.T. disabled.");
         }
         catch (Exception e)
         {
@@ -67,7 +76,8 @@ internal static class CustomCarts
         }
     }
 
-    private static void Make(Item donor, Item priceRef, string asset, string display, CartKind kind, float priceFactor, Color color, string description)
+    private static void Make(Item donor, Item priceRef, string asset, string display, CartKind kind, float priceFactor, Color color,
+        string description, ItemVehicle hauler = null)
     {
         var item = Object.Instantiate(donor);
         item.name = asset;
@@ -89,12 +99,16 @@ internal static class CustomCarts
         float mass = 0f;
         // 1.5x (the first version) no longer fit through doorways; the width is now a setting, 1.25x by default.
         // Built on every PC from its own config: the host's value drives the physics, so players should keep it equal.
-        if (kind == CartKind.Wide) Reshape(go, new Vector3(WideWidth, 1f, WideLength));
+        if (kind == CartKind.Wide)
+        {
+            Reshape(go, new Vector3(WideWidth, WideHeight, WideLength));
+            RaiseWalls(go, WideHeight);
+        }
         if (kind == CartKind.Double)
         {
             Reshape(go, new Vector3(1f, DoubleHeight, DoubleLength));
             RaiseWalls(go, DoubleHeight);
-            mass = StandardMass * 2f;
+            mass = StandardMass * DoubleMassFactor;
             var rb = go.GetComponent<Rigidbody>();
             if (rb != null) rb.mass = mass;
             var grab = go.GetComponent<PhysGrabObject>();
@@ -104,18 +118,27 @@ internal static class CustomCarts
         var cart = go.AddComponent<ModCart>();
         cart.kind = kind;
         cart.mass = mass;
+        if (kind == CartKind.Wide) cart.builtWidth = WideWidth;
+        if (kind == CartKind.Double) go.AddComponent<DoubleDeckerCargo>();
+        if (kind == CartKind.Soul) SoulCartHatch.Attach(go, hauler);
 
         InventoryItemVisuals.Prepare(go);
         if (Items.RegisterItem(attributes) == null)
             Plugin.Log.LogWarning($"[Carts] REPOLib refused to register {asset}.");
         else
-            Plugin.Log.LogInfo($"[Carts] Registered {asset} (base {donor.name}, price x{priceFactor:0.##}{(mass > 0f ? $", mass {mass:0}" : "")}).");
+            Plugin.Log.LogInfo($"[Carts] Registered {asset} (base {donor.name}, price x{priceFactor:0.##}{(mass > 0f ? $", mass {mass:0.#}" : "")}).");
     }
 
     // ------------------------------------------------------------------ shape
 
     // The bottom of the cart's walls: vertical stretching grows the walls upward from here.
     private const float WallBottom = -.255f;
+
+    internal static void FitManor(GameObject cart, float builtWidth)
+    {
+        if (builtWidth > ManorWidthLimit && RunManager.instance?.levelCurrent?.name == "Level - Manor")
+            Reshape(cart, new Vector3(ManorWidthLimit / builtWidth, 1f, 1f));
+    }
 
     /// <summary>
     /// Scales the cart by <paramref name="scale"/> (cart space) by moving and resizing its direct children. Parts that
@@ -141,7 +164,20 @@ internal static class CustomCarts
             t.localPosition = p;
             // The screen, shop volume and icon camera only move: stretching them would skew text and pads.
             if (n == "Screen" || n.Contains("Item Volume") || n.Contains("SemiIcon")) continue;
-            t.localScale = Vector3.Scale(t.localScale, LocalFactors(t.localRotation, axes));
+            var factors = LocalFactors(t.localRotation, axes);
+            if (n.Contains("Capsule") && t.TryGetComponent<CapsuleCollider>(out var skid))
+            {
+                // Non-uniform scale also changes a capsule's vertical radius. Extend the skid
+                // along its axis only, keeping the donor's ground clearance and rounded ends.
+                int axis = skid.direction;
+                var center = skid.center;
+                center[axis] *= factors[axis];
+                skid.center = center;
+                skid.height = Mathf.Max(2f * skid.radius,
+                    (skid.height - 2f * skid.radius) * factors[axis] + 2f * skid.radius);
+                continue;
+            }
+            t.localScale = Vector3.Scale(t.localScale, factors);
         }
     }
 
@@ -160,7 +196,7 @@ internal static class CustomCarts
     private const float WallTop = .255f;
 
     /// <summary>
-    /// Double-Decker: the cart body's own walls made <paramref name="factor"/> times as tall, in the cart's own textures.
+    /// The cart body's own walls made <paramref name="factor"/> times as tall, in the cart's own textures.
     /// Every vertex of the body mesh in the upper half of the walls (rim, top edges, wall decals) is lifted by the extra
     /// height, so the wall faces stretch and the floor, chassis and handle stay as they are. No added plates or floor.
     /// If the game's mesh can't be read, the body is stretched upward from the wall bottom instead.
@@ -168,7 +204,7 @@ internal static class CustomCarts
     private static void RaiseWalls(GameObject go, float factor)
     {
         var body = go.transform.Find("Cart Mesh");
-        if (body == null) { Plugin.Log.LogWarning("[Carts] Double-Decker: cart body not found; walls not raised."); return; }
+        if (body == null) { Plugin.Log.LogWarning($"[Carts] {go.name}: cart body not found; walls not raised."); return; }
         float lift = (WallTop - WallBottom) * (factor - 1f);
         float split = (WallBottom + WallTop) / 2f; // vertices above the middle of the wall move up with the rim
         var cart = go.transform;
@@ -205,7 +241,7 @@ internal static class CustomCarts
             body.localPosition = p;
             body.localScale = Vector3.Scale(body.localScale, LocalFactors(body.localRotation, new Vector3(1f, factor, 1f)));
         }
-        Plugin.Log.LogInfo($"[Carts] Double-Decker walls x{factor:0.#}: {raised} mesh(es) raised" +
+        Plugin.Log.LogInfo($"[Carts] {go.name} walls x{factor:0.##}: {raised} mesh(es) raised" +
                            (stretched > 0 ? $", {stretched} unreadable: body stretched instead" : "") + ".");
     }
 
@@ -237,77 +273,15 @@ internal static class CustomCarts
     }
 }
 
-/// <summary>Which extra cart this is; the Soul C.A.R.T. also enforces its souls-only, value-capped load (host).</summary>
+/// <summary>Prefab settings that the native cart applies when it spawns.</summary>
 internal sealed class ModCart : MonoBehaviour
 {
     public CartKind kind;
     public float mass;
-
-    private PhysGrabObject _self;
-    private Rigidbody _rb;
-    private Transform _inCart;
-    private float _nextCheck;
-    private int _grabLayer = -1;
-    private readonly Dictionary<PhysGrabObject, float> _firstSeen = new();
-    private readonly Dictionary<PhysGrabObject, float> _ejected = new();
-    private readonly List<PhysGrabObject> _found = new();
-    private readonly List<PhysGrabObject> _stale = new();
+    public float builtWidth = 1f;
 
     private void Awake()
     {
-        _self = GetComponent<PhysGrabObject>();
-        _rb = GetComponent<Rigidbody>();
-        _inCart = transform.Find("In Cart");
-    }
-
-    private void Update()
-    {
-        if (kind != CartKind.Soul || _inCart == null || !SemiFunc.IsMasterClientOrSingleplayer()) return;
-        if (Time.time < _nextCheck) return;
-        _nextCheck = Time.time + .2f;
-        if (_grabLayer < 0) _grabLayer = LayerMask.NameToLayer("PhysGrabObject");
-        FilterLoad();
-    }
-
-    private void FilterLoad()
-    {
-        _found.Clear();
-        foreach (var c in Physics.OverlapBox(_inCart.position, _inCart.localScale / 2f, _inCart.rotation))
-        {
-            if (c == null || c.gameObject.layer != _grabLayer) continue;
-            var p = c.GetComponentInParent<PhysGrabObject>();
-            if (p == null || p == _self || _found.Contains(p)) continue;
-            if (p.GetComponentInParent<Enemy>() != null) continue; // monsters climb in on their own
-            _found.Add(p);
-        }
-        _stale.Clear();
-        foreach (var p in _firstSeen.Keys) if (p == null || !_found.Contains(p)) _stale.Add(p);
-        foreach (var p in _stale) _firstSeen.Remove(p);
-        foreach (var p in _found) if (!_firstSeen.ContainsKey(p)) _firstSeen[p] = Time.time;
-
-        // Souls that were in first keep their place; a newer soul that would go over the limit is the one turned away.
-        _found.Sort((a, b) => _firstSeen[a].CompareTo(_firstSeen[b]));
-        float cap = Mathf.Max(0, ModConfig.SoulCartValueCap.Value), total = 0f;
-        foreach (var p in _found)
-        {
-            if (p.grabbed) continue; // still in someone's hands
-            var value = p.GetComponent<ValuableObject>();
-            bool soul = value != null && p.GetComponent<EnemyValuable>() != null;
-            if (soul && total + value.dollarValueCurrent <= cap) { total += value.dollarValueCurrent; continue; }
-            Eject(p);
-        }
-    }
-
-    private void Eject(PhysGrabObject p)
-    {
-        var rb = p.rb;
-        if (rb == null || rb.isKinematic) return;
-        if (_ejected.TryGetValue(p, out float at) && Time.time - at < .6f) return;
-        _ejected[p] = Time.time;
-        var away = p.transform.position - transform.position;
-        away.y = 0f;
-        if (away.sqrMagnitude < .0025f) away = transform.right;
-        var carried = _rb != null ? _rb.velocity : Vector3.zero;
-        rb.velocity = carried + away.normalized * 2.4f + Vector3.up * 3.4f;
+        if (kind == CartKind.Wide) CustomCarts.FitManor(gameObject, builtWidth);
     }
 }

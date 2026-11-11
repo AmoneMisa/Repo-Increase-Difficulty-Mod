@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace IncreaseHardMod.Hud;
 
 /// <summary>A status the local player can be under; each has its own screen frame and card.</summary>
-internal enum PlayerCondition { Frozen, Poisoned, Sedated, Netted, Shocked }
+internal enum PlayerCondition { Frozen, Poisoned, Sedated, Netted, Shocked, Burning, Electrified, Constricted, Petrified, Bleeding, Venom, Slowed, Dragged }
 
 /// <summary>
 /// The local player's conditions on screen: a themed frame around the screen edges (frost, toxic haze, rope
@@ -40,6 +40,23 @@ internal static class HudConditions
             Lines = new[] { "CAN'T WALK OR JUMP", "STRUGGLE TO BREAK FREE" }, LinesRu = new[] { "НЕЛЬЗЯ ХОДИТЬ И ПРЫГАТЬ", "ВЫРЫВАЙТЕСЬ НА СВОБОДУ" } },
         [PlayerCondition.Shocked] = new Look { Title = "SHOCKED", TitleRu = "ШОК", Color = new Color(.55f, .82f, 1f),
             Lines = new[] { "50% SLOWER", "STAMINA RECOVERS HALF AS FAST" }, LinesRu = new[] { "НА 50% МЕДЛЕННЕЕ", "ВЫНОСЛИВОСТЬ ВОССТАНАВЛИВАЕТСЯ ВДВОЕ МЕДЛЕННЕЕ" } },
+        // Monster afflictions (0.10.0). Warning colours: fire orange, electric violet, coils green, stone grey, blood red.
+        [PlayerCondition.Burning] = new Look { Title = "BURNING", TitleRu = "ГОРЕНИЕ", Color = new Color(1f, .55f, .15f),
+            Lines = new[] { "+50% DAMAGE TAKEN", "4 HP/S; RESISTANCE SHORTENS DURATION" }, LinesRu = new[] { "+50% ПОЛУЧАЕМОГО УРОНА", "4 HP/С; СОПРОТИВЛЕНИЕ СОКРАЩАЕТ ВРЕМЯ" } },
+        [PlayerCondition.Electrified] = new Look { Title = "ELECTRIC HOLD", TitleRu = "ЭЛЕКТРОЗАХВАТ", Color = new Color(.72f, .6f, 1f),
+            Lines = new[] { "LIFTED: CAN'T MOVE", "5 HP/S", "BREAK HER LINE OF SIGHT" }, LinesRu = new[] { "ВЫ В ВОЗДУХЕ: НЕЛЬЗЯ ДВИГАТЬСЯ", "5 HP/С", "РАЗОРВИТЕ ЛИНИЮ ЗРЕНИЯ ВЕДЬМЫ" } },
+        [PlayerCondition.Constricted] = new Look { Title = "CONSTRICTED", TitleRu = "УДУШЕНИЕ", Color = new Color(.5f, .85f, .3f),
+            Lines = new[] { "CAN'T MOVE - 5 HP/S", "STRUGGLE: WASD / SPACE", "A TEAMMATE CAN HIT THE SNAKE" }, LinesRu = new[] { "НЕЛЬЗЯ ДВИГАТЬСЯ - 5 HP/С", "ВЫРЫВАЙТЕСЬ: WASD / ПРОБЕЛ", "ТОВАРИЩ МОЖЕТ УДАРИТЬ ЗМЕЮ" } },
+        [PlayerCondition.Petrified] = new Look { Title = "PETRIFIED", TitleRu = "ОКАМЕНЕНИЕ", Color = new Color(.78f, .76f, .7f),
+            Lines = new[] { "CAN'T MOVE OR USE ITEMS" }, LinesRu = new[] { "НЕЛЬЗЯ ДВИГАТЬСЯ И ИСПОЛЬЗОВАТЬ ПРЕДМЕТЫ" } },
+        [PlayerCondition.Bleeding] = new Look { Title = "BLEEDING", TitleRu = "КРОВОТЕЧЕНИЕ", Color = new Color(1f, .25f, .25f),
+            Lines = new[] { "4 HP/S" }, LinesRu = new[] { "4 HP/С" } },
+        [PlayerCondition.Venom] = new Look { Title = "VENOM", TitleRu = "ЗМЕИНЫЙ ЯД", Color = new Color(.66f, 1f, .16f),
+            Lines = new[] { "BASILISK BITE", "4 HP/S" }, LinesRu = new[] { "УКУС ВАСИЛИСКА", "4 HP/С" } },
+        [PlayerCondition.Slowed] = new Look { Title = "DEATH STARE", TitleRu = "СМЕРТЕЛЬНЫЙ ВЗГЛЯД", Color = new Color(1f, .78f, .35f),
+            Lines = new[] { "HEAVILY SLOWED" }, LinesRu = new[] { "СИЛЬНОЕ ЗАМЕДЛЕНИЕ" } },
+        [PlayerCondition.Dragged] = new Look { Title = "ON THE HORNS", TitleRu = "НА РОГАХ", Color = new Color(1f, .45f, .3f),
+            Lines = new[] { "DRAGGED BY THE GORGON", "A WALL HURTS: 55" }, LinesRu = new[] { "ГОРГОНА ТАЩИТ ВАС", "УДАР О СТЕНУ: 55" } },
     };
 
     private sealed class View
@@ -126,7 +143,9 @@ internal static class HudConditions
             PlayerCondition.Poisoned => .9f + .1f * Mathf.Sin(now * 5f),
             PlayerCondition.Sedated => .85f + .15f * Mathf.Sin(now * 1.6f),
             // Electric flicker: mostly lit, with quick irregular dips.
-            PlayerCondition.Shocked => .72f + .28f * Mathf.Abs(Mathf.Sin(now * 23f) * Mathf.Sin(now * 7.3f + 1f)),
+            PlayerCondition.Shocked or PlayerCondition.Electrified => .72f + .28f * Mathf.Abs(Mathf.Sin(now * 23f) * Mathf.Sin(now * 7.3f + 1f)),
+            PlayerCondition.Burning => .8f + .2f * Mathf.PerlinNoise(now * 6f, 0f),
+            PlayerCondition.Bleeding or PlayerCondition.Venom => .9f + .1f * Mathf.Sin(now * 5f),
             _ => 1f,
         };
         view.Frame.gameObject.SetActive(true);

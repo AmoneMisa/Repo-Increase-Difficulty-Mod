@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
 
@@ -58,6 +59,7 @@ internal static class LevelScalingPatches
         {
             if (!SemiFunc.IsMasterClientOrSingleplayer())
                 return;
+            __instance.totalAmount = __instance.enemyListCurrent.Count;
             float mult = EnemyBalance.Stat(Modifiers.StatAxis.EnemyCount);
             if (ModConfig.ScaleEnemyCap.Value)
                 mult *= Mathf.Min(ModConfig.EnemyCapMax.Value,
@@ -82,15 +84,37 @@ internal static class LevelScalingPatches
             var list = SemiFunc.RunGetDifficultyMultiplier3() > 0f ? __instance.enemiesDifficulty3
                 : SemiFunc.RunGetDifficultyMultiplier2() > 0f ? __instance.enemiesDifficulty2
                 : __instance.enemiesDifficulty1;
-            int runs = DataDirector.instance.SettingValueFetch(DataDirector.Setting.RunsPlayed);
-            bool Eligible(EnemySetup enemy) => enemy != null && runs >= enemy.runsPlayed &&
-                (!enemy.levelsCompletedCondition || (Difficulty.LevelsCompleted >= enemy.levelsCompletedMin &&
-                    (enemy.levelsCompletedMax == 0 || Difficulty.LevelsCompleted <= enemy.levelsCompletedMax)));
-            var eligible = list.FindAll(Eligible);
-            if (eligible.Count == 0) eligible = __instance.enemiesDifficulty2.FindAll(Eligible);
-            if (eligible.Count == 0) eligible = __instance.enemiesDifficulty1.FindAll(Eligible);
-            for (int i = 0; i < extra && eligible.Count > 0; i++) __instance.PickEnemies(eligible);
+            for (int i = 0; i < extra; i++)
+            {
+                int before = __instance.enemyListCurrent.Count;
+                __instance.PickEnemies(list);
+                if (__instance.enemyListCurrent.Count == before && list != __instance.enemiesDifficulty2)
+                    __instance.PickEnemies(__instance.enemiesDifficulty2);
+                if (__instance.enemyListCurrent.Count == before && list != __instance.enemiesDifficulty1)
+                    __instance.PickEnemies(__instance.enemiesDifficulty1);
+                if (__instance.enemyListCurrent.Count == before) break;
+            }
             __instance.totalAmount = __instance.enemyListCurrent.Count;
+        }
+    }
+
+    [HarmonyPatch(typeof(EnemyDirector), "PickEnemies")]
+    private static class EnemyRoster
+    {
+        [HarmonyPrefix]
+        private static bool Prefix(EnemyDirector __instance, ref List<EnemySetup> _enemiesList)
+        {
+            if (!SemiFunc.IsMasterClientOrSingleplayer() || !SemiFunc.RunIsLevel()) return true;
+
+            // Only eligibility here. The per-type limits (Loom, Robe, Huntsman, Cleanup Crew) are per ROOM and
+            // apply to attacks (RoomAttackLimit), not to how many of them the whole map may hold.
+            int runs = DataDirector.instance.SettingValueFetch(DataDirector.Setting.RunsPlayed);
+            int depth = Difficulty.LevelsCompleted;
+            _enemiesList = _enemiesList.FindAll(setup =>
+                setup != null && runs >= setup.runsPlayed && (!setup.levelsCompletedCondition ||
+                    (depth >= setup.levelsCompletedMin && (setup.levelsCompletedMax == 0 || depth <= setup.levelsCompletedMax))) &&
+                Monsters.MonsterRegistry.AllowedInRoster(setup));
+            return _enemiesList.Count > 0;
         }
     }
 
@@ -185,6 +209,7 @@ internal static class LevelScalingPatches
         {
             if (ModConfig.ScaleMoon.Value)
                 __result = Mathf.Max(0, (_levelsCompleted + 1) / Mathf.Max(1, ModConfig.MoonLevelsPerPhase.Value));
+            __result = Mathf.Clamp(__result, 0, MoonRules.Resistant);
             if (!Photon.Pun.PhotonNetwork.InRoom) return;
             if (Photon.Pun.PhotonNetwork.IsMasterClient) MoonSync.Publish(__result);
             else if (MoonSync.HostMoon(out int host)) __result = host;

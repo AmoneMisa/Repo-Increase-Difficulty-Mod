@@ -23,7 +23,7 @@ public static class CourierRules
     // Rare find: chance per level, at most one find per level
     public const float BaseFindChance = .02f, LuckPerLevel = .02f;
     // Charging: give up after this long at the station
-    public const float ChargeTimeout = 45f;
+    public const float ChargeTimeout = 45f, ChargeTargetRange = 8f;
 
     public static float Speed(int speedLevel, bool dashing, bool flying) =>
         WalkSpeed * (1f + SpeedPerLevel * Math.Max(0, speedLevel)) * (dashing ? DashFactor : 1f) * (flying ? 1f + FlightBonus : 1f);

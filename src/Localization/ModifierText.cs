@@ -95,7 +95,7 @@ internal static class ModifierText
         ["An extra small cart spawns on the level."] = "На уровне появляется ещё одна малая тележка.",
         ["An extra big cart spawns on the level."] = "На уровне появляется ещё одна большая тележка.",
         ["Monsters drop more souls."] = "С монстров выпадает больше душ.",
-        ["Upgrade pickups are scattered around; usable only back in the truck."] = "Улучшения разбросаны по уровню. Активировать их можно только в грузовике.",
+        ["Up to 6 upgrades on the map. Submit them with a successful quota to receive them in the next truck."] = "До 6 улучшений на всю карту. Сдайте их вместе с успешной квотой — они появятся в следующем грузовике.",
         ["No map until you find a map upgrade pickup."] = "Карта заработает, когда вы найдёте улучшение для неё.",
         ["Everyone starts the level wounded — current HP is cut to a rolled percentage (max HP is untouched, so you can heal back up)."] =
             "Все начинают уровень ранеными. Сколько здоровья останется, решает случай. Лечиться можно до обычного максимума.",

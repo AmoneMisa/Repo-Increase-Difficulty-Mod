@@ -38,6 +38,30 @@ internal sealed class UtilityDrone : MonoBehaviour
         _equip = GetComponent<ItemEquippable>();
         if (kind == DroneKind.Repair)
             StartCoroutine(DisablePassiveDrain());
+        if (kind == DroneKind.Link)
+            StartCoroutine(SetLinkBattery());
+        if (kind is DroneKind.Ghost or DroneKind.Silencer)
+            StartCoroutine(SetUtilityBattery());
+    }
+
+    private System.Collections.IEnumerator SetUtilityBattery()
+    {
+        yield return null;
+        yield return null;
+        float rate = LinkRouteRules.DrainRate(Gear.UtilityGearRules.GhostSilencerSeconds);
+        if (Drone != null) Drone.batteryDrainRate = rate;
+        var battery = GetComponent<ItemBattery>();
+        if (battery != null) battery.batteryDrainRate = rate;
+    }
+
+    private System.Collections.IEnumerator SetLinkBattery()
+    {
+        yield return null;
+        yield return null;
+        // Native DrainContinuous subtracts rate * 2 each second from a 100-point battery.
+        if (Drone != null) Drone.batteryDrainRate = LinkRouteRules.DrainRate(LinkRouteRules.ActiveSeconds);
+        var battery = GetComponent<ItemBattery>();
+        if (battery != null) battery.batteryDrainRate = LinkRouteRules.DrainRate(LinkRouteRules.ActiveSeconds);
     }
 
     // ItemDrone.Start copies its preset's time-based drain into the battery. The Repair Drone pays only
@@ -155,7 +179,7 @@ internal sealed class UtilityDrone : MonoBehaviour
     {
         var pgo = TargetPgo;
         var valuable = pgo != null ? pgo.GetComponent<ValuableObject>() : null;
-        if (valuable == null)
+        if (pgo == null)
         {
             GhostRelease();
             RestoreFreedColliders();
@@ -166,7 +190,7 @@ internal sealed class UtilityDrone : MonoBehaviour
         {
             GhostRelease();
             _ghosted = valuable;
-            if (SemiFunc.IsMasterClientOrSingleplayer())
+            if (valuable != null && SemiFunc.IsMasterClientOrSingleplayer())
             {
                 // Take it out of the haul if it was already counted.
                 RoundDirector.instance.dollarHaulList.Remove(valuable.gameObject);
@@ -178,19 +202,14 @@ internal sealed class UtilityDrone : MonoBehaviour
             return;
         _ghostRefresh = 0.5f; // also picks up players that joined / respawned
 
-        var mine = valuable.GetComponentsInChildren<Collider>();
-        foreach (var other in PlayerColliders())
-        {
-            foreach (var c in mine)
-            {
-                if (c == null || c.isTrigger)
-                    continue;
-                if (Physics.GetIgnoreCollision(c, other))
-                    continue;
-                Physics.IgnoreCollision(c, other, true);
-                _ignored.Add((c, other));
-            }
-        }
+        PlayerCargoPassThrough.Keep(pgo);
+    }
+
+    internal static bool ProtectsGhost(PhysGrabObject cargo)
+    {
+        foreach (var drone in All)
+            if (drone != null && drone.kind == DroneKind.Ghost && drone.TargetPgo == cargo) return true;
+        return false;
     }
 
     private static IEnumerable<Collider> PlayerColliders()

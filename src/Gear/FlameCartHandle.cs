@@ -28,6 +28,7 @@ internal sealed class FlameCartHandle : MonoBehaviour
     private bool _dirty;
 
     internal bool Pushed => _grabbers.Count > 0;
+    internal bool IsPushing(PhysGrabber grabber) => _grabbers.Contains(grabber);
 
     private void Start()
     {

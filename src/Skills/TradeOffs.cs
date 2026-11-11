@@ -50,7 +50,7 @@ internal static class TradeOffs
         target == null || !Has(player, C.Executioner) ? 1f : Factor(player, Disabled(target) ? Fx.StunnedTargetDamage : Fx.OtherTargetDamage);
 
     internal static Damage KindOf(SkillEffects.Weapon weapon) =>
-        weapon is SkillEffects.Weapon.CartCannon or SkillEffects.Weapon.CartLaser ? Damage.Cart : Damage.Gun;
+        weapon is SkillEffects.Weapon.CartCannon or SkillEffects.Weapon.CartLaser or SkillEffects.Weapon.FlameCart ? Damage.Cart : Damage.Gun;
 
     /// <summary>Stunned (melee or tranquilizer), frozen or netted.</summary>
     internal static bool Disabled(Enemy enemy) =>

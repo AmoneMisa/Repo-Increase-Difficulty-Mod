@@ -6,6 +6,17 @@ namespace IncreaseHardMod.Drones;
 /// <summary>Game hooks used by the Ghost and Silencer drones.</summary>
 internal static class DronePatches
 {
+    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), "Break")]
+    private static class GhostCargoProtection
+    {
+        [HarmonyPrefix, HarmonyPriority(Priority.High)]
+        private static void Prefix(PhysGrabObjectImpactDetector __instance, ref float valueLost)
+        {
+            if (SemiFunc.IsMasterClientOrSingleplayer() && valueLost > 0f && __instance.isValuable &&
+                __instance.physGrabObject != null && UtilityDrone.ProtectsGhost(__instance.physGrabObject))
+                valueLost = Gear.UtilityGearRules.GhostLoss(valueLost);
+        }
+    }
     // ---------------------------------------------------------------- Ghost
 
     // A ghosted valuable never joins the extraction haul (so it is neither counted nor sucked in).

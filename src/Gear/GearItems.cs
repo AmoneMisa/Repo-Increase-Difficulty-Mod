@@ -52,10 +52,10 @@ internal static class GearItems
             {
                 if (ModConfig.DefenceOrbEnabled.Value)
                     MakeOrb(orb, "Item Orb Defence", "Defence Orb", ShieldMode.DefenceOrb, 19000f, 24000f, new Color(0.3f, 0.6f, 1f),
-                        $"Protects loot: value that valuables would lose from breaking inside its field is absorbed while it is charged. One shared pool for every item in the field: a full charge absorbs ${ModConfig.DefenceItemAbsorb.Value:N0} in total.");
+                        $"Protects loot: a full charge absorbs ${UtilityGearRules.LootCapacity(ModConfig.DefenceItemAbsorb.Value):N0} of value loss across its field. Wider radius and slower idle drain.");
                 if (ModConfig.ProtectionOrbEnabled.Value)
                     MakeOrb(orb, "Item Orb Protection", "Protection Orb", ShieldMode.ProtectionOrb, 11000f, 15000f, new Color(1f, 0.85f, 0.3f),
-                        "Players inside its field take 25% less damage. Drains its charge quickly.");
+                        $"Players inside its wider field take {UtilityGearRules.Protection(ModConfig.ProtectionReductionPercent.Value):P0} less direct damage. Damage-over-time is unchanged.");
             }
             else
                 Plugin.Log.LogWarning("[Gear] No vanilla orb found to clone; orbs disabled.");
@@ -66,7 +66,7 @@ internal static class GearItems
                 if (drone != null)
                     DroneItems.Make(drone, "Item Drone Defence", "Defence Drone", DroneKind.Defence, 0, 11000f, 15000f, shop: 1,
                         new Color(0.3f, 0.6f, 1f),
-                        "Attach to a player: absorbs damage that player takes while charged (about 350 damage in total). Players only.",
+                        $"Attach to a player: absorbs up to {UtilityGearRules.DefenceCapacity(ModConfig.DefenceAbsorb.Value)} direct damage per charge. At least 90 seconds of idle operation. Monster hits still deal at least 1 damage; damage-over-time bypasses the shield.",
                         targets: (false, false, true, false));
             }
 
@@ -77,13 +77,13 @@ internal static class GearItems
                         "Poison bolts: a little damage plus a 15 second poison that refreshes (never stacks) and keeps the monster hunting players. Fewer shots than a normal gun.");
                 if (ModConfig.IcePistolEnabled.Value)
                     MakeGun(pulseGun ?? gun, "Item Gun Ice Pulse", "Pulse Ice Pistol", GearKind.Ice, 11000f, 15000f, new Color(0.5f, 0.85f, 1f),
-                        "Freezes monsters and players with visible ice. Players take no shot damage; works in the shop too. Frozen monsters cannot be lifted, take less firearm damage and 35% more melee damage.");
+                        $"Freezes monsters and players. Deals 20 damage to monsters on the first freeze; further shots extend it without extra freeze damage. Frozen monsters take {ModConfig.IceGunDamagePercent.Value}% firearm damage, +{ModConfig.IceMeleeBonusPercent.Value}% melee damage and +80% grenade damage. They cannot be lifted.");
                 if (ModConfig.NetLauncherEnabled.Value)
                     MakeGun(gun, "Item Gun Net Launcher", "Net Launcher", GearKind.Net, 14000f, 18000f, new Color(1f, .78f, .2f),
                         $"Fires a weighted rope net that pins a monster to the floor for {ModConfig.NetSeconds.Value:0.#} seconds. It can still turn and attack anything in reach, and may tear free early. {ModConfig.NetShots.Value} nets per charge.");
                 if (ModConfig.StickyPistolEnabled.Value)
                     MakeGun(gun, "Item Gun Sticky", "Sticky Pistol", GearKind.Sticky, 9000f, 10000f, new Color(1f, 0.5f, 0.9f),
-                        "Pulls a monster or object toward you without dealing damage, if you could lift it with one strength level less.");
+                        "Glues players and monsters to the ground for 2 seconds. Pulls loot you could lift with one strength level less; pulled loot takes 80% less damage.");
             }
             else
                 Plugin.Log.LogWarning("[Gear] No vanilla gun found to clone; guns disabled.");
@@ -96,6 +96,19 @@ internal static class GearItems
 
             FlameCartItem.Build();
             CustomCarts.Build();
+            if (StatsManager.instance.itemDictionary.TryGetValue("Item Melee Sword", out var sword) && sword?.prefab?.Prefab != null)
+            {
+                const float premium = 1.35f / CustomItemPrices.Multiplier;
+                bool russian = Localization.GameLanguage.Russian;
+                var (_, go, attributes) = Clone(sword, Katana.Asset, russian ? "Катана" : "Katana", sword.value.valueMin * premium,
+                    sword.value.valueMax * premium, new Color(.62f, .45f, .24f), russian
+                        ? $"Точный удар на {Katana.Damage} урона по монстрам. Узкая зона удара, пауза между взмахами и быстрый износ."
+                        : $"A precise {Katana.Damage}-damage cut against monsters. Narrow strikes, recovery between swings and fast wear.",
+                    _ => false, tint: false);
+                Katana.Configure(go);
+                Register(attributes, Katana.Asset);
+            }
+            else Plugin.Log.LogWarning("[Gear] Vanilla sword not found; Katana disabled.");
         }
         catch (Exception e)
         {
@@ -234,6 +247,9 @@ internal static class GearItems
                 if (kind == GearKind.Ice)
                 {
                     NoKnockback(hurt);
+                    hurt.enemyDamage = 0;
+                    hurt.enemyKill = false;
+                    hurt.enemyStun = false;
                     hurt.playerLogic = false;
                     hurt.playerDamage = 0;
                     hurt.playerKill = false;
@@ -422,7 +438,9 @@ internal sealed class DecoyGrenade : MonoBehaviour
         }
         if (_armedFor < 0f)
             _armedFor = 0f;
-        if (_armedFor >= ModConfig.DecoySeconds.Value)
+        int rank = Skills.SkillEffects.Level(_grenade.activatorPlayerAvatar, Skills.SkillCatalog.DecoyGrenade);
+        float duration = ModConfig.DecoySeconds.Value + rank;
+        if (_armedFor >= duration)
             return; // fuse already released; the game's detonation is under way
 
         _armedFor += Time.deltaTime;
@@ -430,11 +448,11 @@ internal sealed class DecoyGrenade : MonoBehaviour
         if (_ping <= 0f)
         {
             _ping = 0.4f;
-            EnemyDirector.instance.SetInvestigate(transform.position, 40f);
+            EnemyDirector.instance.SetInvestigate(transform.position, 40f * Skills.PerkRules.GrenadeRadius(rank));
         }
 
         // Time is up: release the fuse so the vanilla grenade goes off this frame (consumed, or reset in the shop).
-        if (_armedFor >= ModConfig.DecoySeconds.Value)
+        if (_armedFor >= duration)
             _grenade.tickTime = 0f;
     }
 }

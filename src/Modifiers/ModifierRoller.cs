@@ -57,7 +57,7 @@ public static class ModifierRoller
         }
         foreach (var s in StatModifiers.All)
         {
-            if (ModConfig.StatModifierEnabled.TryGetValue(s.Id, out var on) && on.Value &&
+            if (ModConfig.StatModifierEnabled.TryGetValue(s.Id, out var on) && on.Value && EnemyBalance.Allows(s) &&
                 !Economy.BlackMarket.IsBanned(Economy.BlackMarket.Kind.Modifier, "stat:" + s.Id))
                 pool.Add(new Entry { Stat = s, Tier = s.Tier });
         }

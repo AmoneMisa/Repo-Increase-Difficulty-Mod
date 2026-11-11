@@ -85,12 +85,12 @@ internal static class DroneItems
             if (ModConfig.GhostEnabled.Value)
                 Make(baseItem, GhostName, "Ghost Drone", DroneKind.Ghost, 0, 11000f, 15000f, shop: 1,
                 new Color(0.75f, 0.85f, 1f),
-                "Attach to a valuable to let players walk through it and take it out of extraction counting while the drone is on.",
-                targets: (true, false, false, false));
+                "Three minutes of base charge. Players can pass through the attached valuable, item or cart. Valuables take 50% less impact damage and stay out of extraction counting while active.",
+                targets: (true, true, false, false));
             if (ModConfig.SilencerEnabled.Value)
                 Make(baseItem, SilencerName, "Silencer Drone", DroneKind.Silencer, 0, 7000f, 9000f, shop: 1,
                 new Color(0.55f, 0.55f, 0.6f),
-                "Attach to a valuable, item, cart, player or enemy to make its noise (and the noise enemies investigate) much quieter.",
+                "Three minutes of base charge. Attach to a valuable, item, cart, player or enemy to suppress its noise and the radius enemies investigate it from.",
                 targets: (true, true, true, true));
             if (ModConfig.RepairEnabled.Value)
                 Make(baseItem, RepairName, "Repair Drone", DroneKind.Repair, 0, 15000f, 18000f, shop: 1,
@@ -101,12 +101,12 @@ internal static class DroneItems
             {
                 Make(baseItem, LinkAName, "2 Drones: Link Set (A + B)", DroneKind.Link, 0, 19000f, 24000f, shop: 1,
                 new Color(1f, 0.6f, 0.2f),
-                "One purchase delivers TWO separate drones: A and B. The price is for the whole pair. Attach one to each of two objects to tie them together with a physical cable; grab one to reel the other in.",
-                targets: (true, true, false, true));
+                  "Two drones, five minutes of active battery each. Attach one to a player and one to cargo to follow a safe route. Linked valuables take 50% less damage while being towed. Oversized cargo waits where a passage is blocked.",
+                  targets: (true, true, true, true));
             Make(baseItem, LinkBName, "Link Drone B", DroneKind.Link, 1, 0f, 0f, shop: 0,
                 new Color(0.2f, 0.8f, 1f),
                 "Second half of the Link Drone Set.",
-                targets: (true, true, false, true));
+                  targets: (true, true, true, true));
             }
         }
         catch (System.Exception e)

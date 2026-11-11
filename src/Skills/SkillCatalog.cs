@@ -23,6 +23,9 @@ internal static class SkillCatalog
     // Combat
     public const string Brawler = P + "Brawler", GrenadeDamage = P + "GrenadeDamage", MeleeDamage = P + "MeleeDamage", TumbleDamage = P + "TumbleDamage",
         Vampirism = P + "Vampirism";
+    public const string MeleeAccuracy = P + "MeleeAccuracy", GunAccuracy = P + "GunAccuracy",
+        ExplosiveGrenade = P + "ExplosiveGrenade", ClusterGrenade = P + "ClusterGrenade",
+        StunGrenade = P + "StunGrenade", ShockwaveGrenade = P + "ShockwaveGrenade", DecoyGrenade = P + "DecoyGrenade";
     public const string Gunsmith = P + "Gunsmith", BulletShots = P + "BulletShots", LaserShots = P + "LaserShots", TranqShots = P + "TranqShots";
     public const string Technician = P + "Technician", DroneBattery = P + "DroneBattery", Overcharge = P + "Overcharge";
     // Survival
@@ -61,9 +64,19 @@ internal static class SkillCatalog
 
     // Courier: the pet courier's jobs and abilities (see Courier/CourierPerks). Ids are save keys: never rename.
     public const string CourierAlly = P + "CourierAlly", CourierCart = P + "CourierCart", CourierLoad = P + "CourierLoad",
+        CourierHeadTrail = P + "CourierHeadTrail", CourierHeadFetch = P + "CourierHeadFetch",
         CourierSpeed = P + "CourierSpeed", CourierDash = P + "CourierDash", CourierFlight = P + "CourierFlight",
         CourierArmor = P + "CourierArmor", CourierRecovery = P + "CourierRecovery", CourierLuck = P + "CourierLuck",
         CourierHealth = P + "CourierHealth", CourierStealth = P + "CourierStealth", CourierPack = P + "CourierPack";
+
+    // Monster resistances, mobility and loot perks for the 0.10.0 monsters. Ids are save keys: never rename.
+    public const string Grounding = P + "Grounding", ThermalProtection = P + "ThermalProtection", Antidote = P + "Antidote",
+        StoneResilience = P + "StoneResilience", Evasion = P + "Evasion", DodgeRoll = P + "DodgeRoll",
+        GoldenNose = P + "GoldenNose", SoulHunter = P + "SoulHunter";
+    public const string Hemostasis = P + "Hemostasis", Sapper = P + "Sapper",
+        LinkOperator = P + "LinkOperator", LightBasket = P + "LightBasket",
+        FlameCartDamage = P + "FlameCartDamage", GhostConvoy = P + "GhostConvoy", LaserGunDamage = P + "LaserGunDamage",
+        RapidFire = P + "RapidFire";
 
     /// <summary>No status from a tree perk lasts longer than this; poison is compressed down to it instead.</summary>
     internal const float StatusCapSeconds = 8f;
@@ -108,10 +121,17 @@ internal static class SkillCatalog
 
         var combat = SkillPage.Combat;
         Add(combat, "Damage", Brawler, "Brawler", "Драчун", 1, 1, root: true);
-        Add(combat, "Damage", GrenadeDamage, "Grenade Damage", "Урон гранат", 1, 5, Brawler);
         Add(combat, "Damage", MeleeDamage, "Melee Damage", "Урон в ближнем бою", 1, 5, Brawler);
+        Add(combat, "Damage", MeleeAccuracy, "Melee Accuracy", "Точность в ближнем бою", 1, 3, Brawler);
         Add(combat, "Damage", TumbleDamage, "Tumble Damage", "Урон кувырком", 1, 5, Brawler);
         Add(combat, "Damage", Vampirism, "Vampirism", "Вампиризм", 1, 7, MeleeDamage);
+
+        Add(combat, "Grenades", GrenadeDamage, "Grenade Damage", "Урон гранат", 1, 5, Brawler);
+        Add(combat, "Grenades", ExplosiveGrenade, "Explosive Grenade", "Осколочная граната", 1, 3, GrenadeDamage);
+        Add(combat, "Grenades", ClusterGrenade, "Duct-Taped Grenade", "Связка гранат", 1, 3, GrenadeDamage);
+        Add(combat, "Grenades", StunGrenade, "Stun Grenade", "Оглушающая граната", 1, 3, GrenadeDamage);
+        Add(combat, "Grenades", ShockwaveGrenade, "Shockwave Grenade", "Ударная граната", 1, 3, GrenadeDamage);
+        Add(combat, "Grenades", DecoyGrenade, "Decoy Grenade", "Граната-приманка", 1, 3, GrenadeDamage);
 
         Add(combat, "Guns", Gunsmith, "Gunsmith", "Оружейник", 1, 1, root: true);
         Add(combat, "Guns", BulletShots, "Bullet Gun Shots", "Запас патронов", 1, 5, Gunsmith);
@@ -133,6 +153,13 @@ internal static class SkillCatalog
         Add(survival, "Survival", CrouchSpeed, "Crouch Speed", "Скорость в приседе", 1, 3, Survivor);
         Add(survival, "Survival", SoulWard, "Soul Ward", "Защита от душ", 1, 3, Survivor);
         Add(survival, "Survival", SoulKeeper, "Soul Keeper", "Хранитель душ", 1, 3, Survivor);
+        // Protection against the new monsters' effects and mobility (appended; existing indices stay).
+        Add(survival, "Resistances", Grounding, "Grounding", "Заземление", 1, 3, Survivor);
+        Add(survival, "Resistances", ThermalProtection, "Thermal Protection", "Термозащита", 1, 3, Survivor);
+        Add(survival, "Resistances", Antidote, "Antidote", "Антидот", 1, 3, Survivor);
+        Add(survival, "Resistances", StoneResilience, "Stone Resilience", "Каменная стойкость", 1, 3, Survivor);
+        Add(survival, "Mobility", Evasion, "Evasion", "Изворотливость", 1, 3, Survivor);
+        Add(survival, "Mobility", DodgeRoll, "Dodge Roll", "Рывок уклонения", 2, 3, Evasion);
 
         var utility = SkillPage.Utility;
         Add(utility, "Gear", InventorySlot, "Inventory Slot", "Слот инвентаря", 3, 4, root: true);
@@ -145,10 +172,13 @@ internal static class SkillCatalog
         Add(utility, "Support", FieldMedic, "Field Medic", "Полевой медик", 1, 3, root: true);
         Add(utility, "Support", BatterySaver, "Battery Saver", "Экономия батарей", 1, 3, root: true);
         Add(utility, "Support", LuckyFinder, "Lucky Finder", "Везунчик", 2, 2, root: true);
+        Add(utility, "Loot", GoldenNose, "Golden Nose", "Золотой нюх", 1, 3, root: true);
+        Add(utility, "Loot", SoulHunter, "Soul Hunter", "Охотник за душами", 2, 3, root: true);
 
         // Cart weapons count for whoever is operating them.
         var arsenal = SkillPage.Arsenal;
         Add(arsenal, "Weapons", Marksman, "Marksman", "Меткий стрелок", 1, 1, root: true);
+        Add(arsenal, "Weapons", GunAccuracy, "Gun Accuracy", "Точность стрельбы", 1, 3, Marksman);
         Add(arsenal, "Weapons", HandgunDamage, "Handgun Damage", "Урон пистолета", 1, 5, Marksman);
         Add(arsenal, "Weapons", RevolverDamage, "Revolver Damage", "Урон револьвера", 1, 3, Marksman);
         Add(arsenal, "Weapons", ShotgunDamage, "Shotgun Damage", "Урон дробовика", 1, 4, Marksman);
@@ -170,6 +200,8 @@ internal static class SkillCatalog
         var courier = SkillPage.Courier;
         Add(courier, "Logistics", CourierAlly, "Ally Delivery", "Доставка союзнику", 2, 1, root: true);
         Add(courier, "Logistics", CourierCart, "Cart Delivery", "Доставка тележки", 2, 1, root: true);
+        Add(courier, "Logistics", CourierHeadTrail, "Head Search", "Поиск головы", 2, 1, root: true);
+        Add(courier, "Logistics", CourierHeadFetch, "Head Rescue", "Доставка головы", 5, 1, CourierHeadTrail);
         Add(courier, "Logistics", CourierLoad, "Carry Weight", "Грузоподъёмность", 1, 3, root: true);
         Add(courier, "Logistics", CourierPack, "Bigger Backpack", "Большой рюкзак", 2, 2, root: true);
         Add(courier, "Mobility", CourierSpeed, "Courier Speed", "Скорость курьера", 1, 3, root: true);
@@ -191,6 +223,15 @@ internal static class SkillCatalog
         Add(contracts, "Instincts", Overheat, "Overheat", "Перегрев", 0, 3, root: true).QuestOnly = true;
         Add(contracts, "Instincts", BattleTrance, "Battle Trance", "Боевой транс", 0, 3, root: true).QuestOnly = true;
         Add(contracts, "Instincts", MendingSurge, "Mending Surge", "Прилив сил", 0, 3, root: true).QuestOnly = true;
+        // Append to preserve existing catalogue indices and save keys.
+        Add(survival, "Resistances", Hemostasis, "Hemostasis", "Гемостаз", 1, 3, Survivor);
+        Add(survival, "Resistances", Sapper, "Sapper", "Сапёр", 1, 3, Survivor);
+        Add(combat, "Tech", LinkOperator, "Link Operator", "Оператор связки", 1, 3, Technician);
+        Add(utility, "Gear", LightBasket, "Light Basket", "Лёгкая корзина", 1, 5, root: true);
+        Add(arsenal, "Weapons", FlameCartDamage, "Flamethrower Damage", "Урон огнемёта", 1, 3, Marksman);
+        Add(combat, "Tech", GhostConvoy, "Ghost Convoy", "Призрачный обоз", 2, 1, LinkOperator);
+        Add(arsenal, "Weapons", LaserGunDamage, "Laser Gun Damage", "Урон лазерного оружия", 1, 3, Marksman);
+        Add(arsenal, "Weapons", RapidFire, "Rapid Fire", "Скорострельность", 1, 3, Marksman);
     }
 
     // Trade-off skills, page by page. The numbers live only here; the tree text is the Up and Down lines.

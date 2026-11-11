@@ -7,7 +7,7 @@ using C = IncreaseHardMod.Skills.SkillCatalog;
 
 namespace IncreaseHardMod.Courier;
 
-internal enum CourierJob : byte { None = 0, Charge = 1, Fetch = 2, Ally = 3, Cart = 4 }
+internal enum CourierJob : byte { None = 0, Charge = 1, Fetch = 2, Ally = 3, Cart = 4, Store = 5, Head = 6 }
 
 internal enum CourierNotice : byte
 {
@@ -18,6 +18,7 @@ internal enum CourierReason : byte
 {
     NotHolding = 1, BatteryFull = 2, NoStation = 3, TooHeavy = 4, NotInTruck = 5, Valuable = 6, NoTeammate = 7,
     NoCart = 8, NeedPerk = 9, Cooldown = 10, KnockedOut = 11, LevelsOnly = 12, Gone = 13, NoBattery = 14, BackpackFull = 15,
+    ItemBusy = 16, ChargeTimedOut = 17, NoHead = 18, HeadTooFar = 19,
 }
 
 /// <summary>
@@ -28,7 +29,7 @@ internal enum CourierReason : byte
 /// </summary>
 internal sealed class CourierSim
 {
-    private enum Phase : byte { Follow, ToItem, Carry, AtCharger, Towing }
+    private enum Phase : byte { Follow, ToItem, ToCharger, AtCharger, Towing, Deliver }
 
     internal readonly int Actor;
     internal PlayerAvatar Owner;
@@ -38,12 +39,14 @@ internal sealed class CourierSim
     internal bool Down, Flying;
     internal float DownUntil, DashUntil, DashReadyAt;
     internal CourierJob Job;
-    internal PhysGrabObject Item => _item;
 
     private Phase _phase;
     private PhysGrabObject _item;
     private PlayerAvatar _ally;
+    private PlayerDeathHead _head;
     private PhysGrabCart _cart;
+    private float _chargeStarted;
+    private CourierReason? _chargeFailure;
     private float _happyUntil, _surprisedUntil, _sadUntil, _jobStarted, _lastHit, _findAt = -1f;
     private readonly NavMeshPath _path = new();
     private readonly List<Vector3> _corners = new();
@@ -75,7 +78,7 @@ internal sealed class CourierSim
     // ------------------------------------------------------------------ backpack (stashed items wait off-map, the game's own deactivation)
 
     private readonly List<PhysGrabObject> _stash = new();
-    internal IReadOnlyList<PhysGrabObject> Stash => _stash;
+    internal bool HasItem(PhysGrabObject item) => _item == item || _stash.Contains(item);
 
     internal string StashLabels()
     {
@@ -123,7 +126,7 @@ internal sealed class CourierSim
         if (item.rb != null) item.rb.velocity = Vector3.up * .5f;
     }
 
-    internal bool Carrying => _item != null && (_phase == Phase.Carry || _phase == Phase.AtCharger);
+    internal bool Carrying => _item != null && _phase is Phase.ToCharger or Phase.AtCharger or Phase.Deliver;
 
     internal CourierMood Mood
     {
@@ -145,18 +148,58 @@ internal sealed class CourierSim
 
     // ------------------------------------------------------------------ jobs (host validated)
 
-    internal CourierReason? TryCharge(PhysGrabObject item)
+    internal static bool CanPickUp(PhysGrabObject item) =>
+        item != null && !item.dead && !item.grabbed && item.playerGrabbing.Count == 0 && item.grabDisableTimer <= 0f &&
+        item.rb != null && !item.rb.isKinematic && item.gameObject.activeInHierarchy &&
+        (item.GetComponent<ItemEquippable>() is not { } equipment ||
+            (!equipment.isEquipped && !equipment.isEquipping && !equipment.isUnequipping));
+
+    internal CourierReason? TryCharge(PhysGrabObject item, bool pickUp)
     {
-        if (!HeldByOwner(item)) return CourierReason.NotHolding;
+        if (item == null || item.dead) return CourierReason.Gone;
+        if (pickUp)
+        {
+            if (!CanPickUp(item)) return CourierReason.ItemBusy;
+            float reach = CourierRules.ChargeTargetRange + 2f; // camera height and network position updates
+            if ((item.midPoint - Owner.transform.position).sqrMagnitude > reach * reach) return CourierReason.Gone;
+        }
+        else if (HandoffProblem(item) is CourierReason problem) return problem;
         var battery = item.GetComponent<ItemBattery>();
         if (battery == null) return CourierReason.NoBattery;
-        if (battery.batteryLife >= 99f) return CourierReason.BatteryFull;
-        if (ChargeArea() == null) return CourierReason.NoStation;
+        if (battery.batteryLife >= 100f) return CourierReason.BatteryFull;
+        if (PoweredChargeArea() == null) return CourierReason.NoStation;
         if (TooHeavy(item)) return CourierReason.TooHeavy;
         Start(CourierJob.Charge, item);
-        _phase = Phase.Carry; // it is already in the owner's hands, right next to the courier
+        _phase = pickUp ? Phase.ToItem : Phase.ToCharger;
+        if (!pickUp) TakeFromHands(item);
+        return null;
+    }
+
+    internal CourierReason? TryStore(PhysGrabObject item)
+    {
+        if (item == null || item.dead) return CourierReason.NotHolding;
+        if (HandoffProblem(item) is CourierReason problem) return problem;
+        if (item.GetComponent<ValuableObject>() != null || item.isCart || item.GetComponent<Gear.FlameCartHandle>() != null ||
+            item.GetComponent<PlayerDeathHead>() != null) return CourierReason.Valuable;
+        if (TooHeavy(item)) return CourierReason.TooHeavy;
+        Start(CourierJob.Store, item);
+        _phase = Phase.Deliver;
         TakeFromHands(item);
         return null;
+    }
+
+    internal void FetchHead(PlayerDeathHead head)
+    {
+        Start(CourierJob.Head, head.physGrabObject);
+        _head = head;
+        _phase = Phase.ToItem;
+    }
+
+    private CourierReason? HandoffProblem(PhysGrabObject item)
+    {
+        var hands = Owner != null ? Owner.physGrabber : null;
+        if (hands == null || !item.playerGrabbing.Contains(hands)) return CourierReason.NotHolding;
+        return item.playerGrabbing.Exists(grabber => grabber != null && grabber != hands) ? CourierReason.ItemBusy : null;
     }
 
     internal CourierReason? TryFetch(PhysGrabObject item)
@@ -180,7 +223,7 @@ internal sealed class CourierSim
         if (TooHeavy(item)) return CourierReason.TooHeavy;
         Start(CourierJob.Ally, item);
         _ally = ally;
-        _phase = Phase.Carry;
+        _phase = Phase.Deliver;
         TakeFromHands(item);
         return null;
     }
@@ -223,8 +266,9 @@ internal sealed class CourierSim
 
     internal void Cancel()
     {
-        Drop(Owner != null ? Owner.transform.forward : Vector3.forward);
-        Job = CourierJob.None; _phase = Phase.Follow; _ally = null; _cart = null;
+        if (Carrying) Drop(Owner != null ? Owner.transform.forward : Vector3.forward);
+        _item = null; _chargeFailure = null; _itemAwayFor = 0f;
+        Job = CourierJob.None; _phase = Phase.Follow; _ally = null; _cart = null; _head = null;
     }
 
     private void Start(CourierJob job, PhysGrabObject item)
@@ -253,10 +297,11 @@ internal sealed class CourierSim
         }
     }
 
-    private static Transform ChargeArea()
+    private static Transform PoweredChargeArea()
     {
         var station = ChargingStation.instance;
-        return station != null ? station.transform.Find("Charge Area") : null;
+        return station != null && station.isActiveAndEnabled && ChargeLeft(station) > 0f
+            ? station.transform.Find("Charge Area") : null;
     }
 
     // ------------------------------------------------------------------ tick
@@ -292,11 +337,9 @@ internal sealed class CourierSim
         var ownerPos = Owner.transform.position;
         bool ownerGone = Owner.isDisabled;
 
-        if (_item == null && (_phase == Phase.ToItem || _phase == Phase.Carry || _phase == Phase.AtCharger) && Job != CourierJob.Cart)
-        {
-            Job = CourierJob.None; _phase = Phase.Follow; _sadUntil = Time.time + 2f;
-            return (CourierNotice.Refused, ((byte)CourierReason.Gone).ToString());
-        }
+        if (Job is CourierJob.Charge or CourierJob.Fetch or CourierJob.Ally or CourierJob.Store or CourierJob.Head && (_item == null || _item.dead))
+            return Refuse(CourierReason.Gone);
+        if (Job == CourierJob.Head && !CourierHeadRoute.Active(_head)) return Refuse(CourierReason.NoHead);
         if (Job != CourierJob.None && Time.time - _jobStarted > 120f) { Cancel(); _sadUntil = Time.time + 2f; return null; }
 
         switch (_phase)
@@ -318,47 +361,63 @@ internal sealed class CourierSim
                     if (MoveTo(_cart.transform.position - Flat(_cart.transform.forward) * 1.0f, speed, .8f)) _phase = Phase.Towing;
                     return null;
                 }
-                if (MoveTo(_item.transform.position, speed, .7f))
+                if (Job is CourierJob.Charge or CourierJob.Head && !CanPickUp(_item)) return Refuse(CourierReason.ItemBusy);
+                var target = Job is CourierJob.Charge or CourierJob.Head ? _item.midPoint : _item.transform.position;
+                if (MoveTo(target, speed, .7f))
                 {
-                    if (_item.grabbed) { Cancel(); _sadUntil = Time.time + 2f; return (CourierNotice.Refused, ((byte)CourierReason.Gone).ToString()); }
-                    _phase = Phase.Carry;
+                    if (_item.grabbed) return Refuse(CourierReason.ItemBusy);
+                    if (Job == CourierJob.Head && (ownerGone || !CourierHeadRoute.WithinRoomLimit(CourierHeadRoute.Path(ownerPos, target))))
+                        return Refuse(CourierReason.HeadTooFar);
+                    _phase = Job == CourierJob.Charge ? Phase.ToCharger : Phase.Deliver;
+                    Hold(_item, HoldPoint(), dt);
                 }
                 return null;
             }
-            case Phase.Carry:
+            case Phase.ToCharger:
+            {
+                var area = PoweredChargeArea();
+                bool full = Battery() >= 100f;
+                if (full || area == null)
+                {
+                    BeginChargeReturn(full ? null : CourierReason.NoStation);
+                    return null;
+                }
+                Hold(_item, HoldPoint(), dt);
+                if (MoveTo(area.position, speed * .85f, .9f))
+                {
+                    _phase = Phase.AtCharger;
+                    _chargeStarted = Time.time;
+                }
+                return null;
+            }
+            case Phase.Deliver:
             {
                 Hold(_item, HoldPoint(), dt);
-                Vector3 dest = Job switch
-                {
-                    CourierJob.Charge when Battery() < 99f => ChargeArea() != null ? ChargeArea().position : ownerPos,
-                    CourierJob.Ally => _ally != null ? _ally.transform.position : ownerPos,
-                    _ => ownerPos,
-                };
                 if (Job == CourierJob.Ally && (_ally == null || _ally.isDisabled)) { Cancel(); return (CourierNotice.Refused, ((byte)CourierReason.NoTeammate).ToString()); }
-                if (MoveTo(dest, speed * .85f, Job == CourierJob.Charge && Battery() < 99f ? .9f : 1.2f))
+                bool toTruck = Job == CourierJob.Store || (ownerGone && Job is CourierJob.Charge or CourierJob.Head);
+                var dest = toTruck ? truck : Job == CourierJob.Ally ? _ally.transform.position : ownerPos;
+                if (toTruck && TruckSafetySpawnPoint.instance != null) dest = TruckSafetySpawnPoint.instance.transform.position;
+                if (MoveTo(dest, speed * .85f, toTruck ? .5f : 1.2f))
                 {
-                    if (Job == CourierJob.Charge && Battery() < 99f && ChargeArea() != null) { _phase = Phase.AtCharger; _jobStarted = Time.time; return null; }
                     string label = ItemLabel(_item);
-                    var towards = Flat((Job == CourierJob.Ally && _ally != null ? _ally.transform.position : ownerPos) - Pos);
-                    Drop(towards);
+                    Drop(toTruck ? Vector3.zero : Flat(dest - Pos));
+                    if (_chargeFailure is CourierReason failure) return Refuse(failure);
                     var done = Job;
-                    Job = CourierJob.None; _phase = Phase.Follow; _happyUntil = Time.time + 1.5f;
+                    Cancel(); _happyUntil = Time.time + 1.5f;
                     return (CourierNotice.Done, ((byte)done) + "|" + label);
                 }
                 return null;
             }
             case Phase.AtCharger:
             {
-                var area = ChargeArea();
-                var station = ChargingStation.instance;
-                if (area == null || station == null) { _phase = Phase.Carry; return null; }
-                Hold(_item, area.position, dt);
-                FaceTowards(area.position, dt);
-                bool empty = ChargeLeft(station) <= 0f;
-                if (Battery() >= 99f || empty || Time.time - _jobStarted > CourierRules.ChargeTimeout)
+                var area = PoweredChargeArea();
+                if (Battery() >= 100f) BeginChargeReturn(null);
+                else if (area == null) BeginChargeReturn(CourierReason.NoStation);
+                else if (Time.time - _chargeStarted > CourierRules.ChargeTimeout) BeginChargeReturn(CourierReason.ChargeTimedOut);
+                else
                 {
-                    _phase = Phase.Carry; // bring it back (Battery() now reads full, so the destination is the owner)
-                    if (empty) { _sadUntil = Time.time + 3f; return (CourierNotice.Refused, ((byte)CourierReason.NoStation).ToString()); }
+                    Hold(_item, area.position, dt);
+                    FaceTowards(area.position, dt);
                 }
                 return null;
             }
@@ -378,6 +437,20 @@ internal sealed class CourierSim
             }
         }
         return null;
+    }
+
+    private void BeginChargeReturn(CourierReason? failure)
+    {
+        _chargeFailure = failure;
+        _phase = Phase.Deliver;
+        _jobStarted = Time.time;
+    }
+
+    private (CourierNotice, string) Refuse(CourierReason reason)
+    {
+        Cancel();
+        _sadUntil = Time.time + 2f;
+        return (CourierNotice.Refused, ((byte)reason).ToString());
     }
 
     private float Battery()

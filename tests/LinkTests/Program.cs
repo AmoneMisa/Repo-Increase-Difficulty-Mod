@@ -37,5 +37,20 @@ Reset();s=StatsManager.instance;s.item[Part(0,1).instanceName]=1;s.Shop=true;s.I
 Check(orphan>0&&LinkSets.SetOf(Part(0,2))==LinkSets.SetOf(Part(1,1))&&LinkSets.SetOf(Part(0,2))!=orphan,"A pre-existing orphan cannot consume the next kit's reserved B");
 Reset();s=StatsManager.instance;s.Shop=true;s.ItemPurchase(DroneItems.LinkAName);s.ItemPurchase(DroneItems.LinkAName);var pending=new Dictionary<string,int>(s.runStats);s.runStats=new(pending);s.Shop=false;s.ItemAdd(DroneItems.LinkAName);s.ItemAdd(DroneItems.LinkAName);s.ItemAdd(DroneItems.LinkBName);s.ItemAdd(DroneItems.LinkBName);
 Check(LinkSets.SetOf(Part(0,1))==LinkSets.SetOf(Part(1,1))&&LinkSets.SetOf(Part(0,2))==LinkSets.SetOf(Part(1,2))&&LinkSets.SetOf(Part(0,1))!=LinkSets.SetOf(Part(0,2)),"Multiple queued kits retain two distinct pairs after pending-state save/reload");
+// Linked cargo route rules.
+float rate=LinkRouteRules.DrainRate(LinkRouteRules.ActiveSeconds);
+Check(Math.Abs(100f/(rate*2f)-300f)<.01f,"A full base battery lasts exactly five minutes at the native rate*2 drain");
+Check(LinkRouteRules.TowedLoss(400f)==200f&&LinkRouteRules.TowedLoss(0f)==0f,"Towed valuables lose half of the normal value and never gain damage");
+Check(!LinkRouteRules.ShouldDetour(1f)&&LinkRouteRules.ShouldDetour(1.6f),"Stuck cargo waits briefly, then steps aside instead of hovering forever");
+LinkRouteRules.EdgeOffset(.1f,0f,.5f,out float ox,out float oz);
+Check(Math.Abs(ox-.4f)<.001f&&oz==0f,"A corner 0.1 m from a wall is pushed out to the load's half-width");
+LinkRouteRules.EdgeOffset(0f,.8f,.5f,out ox,out oz);
+Check(ox==0f&&oz==0f,"A corner already clear of the wall is not moved");
+LinkRouteRules.EdgeOffset(0f,.05f,3f,out ox,out oz);
+Check(Math.Abs(oz-.55f)<.001f,"A huge load is never shifted more than 0.6 m off the corridor");
+var graph = new[] { (2,3), (4,2), (3,4), (4,5), (8,9), (-3,-4) };
+Check(LinkRouteRules.ConnectedCargo(graph, new[]{2}).SetEquals(new[]{2,3,4,5}), "Convoy crosses branches and cycles, without touching a disconnected chain");
+Check(LinkRouteRules.ConnectedCargo(graph, Array.Empty<int>()).Count == 0, "Without a skilled player root, no cargo becomes pass-through");
+Check(LinkRouteRules.ConnectedCargo(graph, new[]{2,-3}).SetEquals(new[]{2,3,4,5,-3,-4}), "Several skilled players can cover independent chains, including negative Unity instance IDs");
 Console.WriteLine("LINK_SET_AUDIT_PASS: "+checks);
 int GuestMutationAttempts(){int before=PunManager.instance.Replications;LinkSets.Bind("a","b");LinkSets.EnsureLegacyPairs();return before;}

@@ -41,6 +41,10 @@ internal static class TruckItemSlotsPatch
         _ => 0f,
     };
     private const int MaxLayers = 3;
+    private const int UpgradeOverflowLayers = 8;
+
+    internal static bool IsUpgrade(Item item) => item != null &&
+        (item.itemType == SemiFunc.itemType.item_upgrade || item.itemType == SemiFunc.itemType.player_upgrade || item.itemVolume == SemiFunc.itemVolume.upgrade);
     // Energy crystals are never moved or stacked: they belong in the charging station's own crystal slots, and
     // extras beyond those must stay unspawned (the station counts bought charge, not loose crystals on a shelf).
 
@@ -107,6 +111,26 @@ internal static class TruckItemSlotsPatch
                 if (best == null) continue;
                 layers[best] = bestLayer + 1;
                 Spawn(__instance, item, best, step * (bestLayer + 1), _spawns);
+                items.RemoveAt(i--); stacked++;
+            }
+
+            // 4. upgrades never wait for a later truck: they are small, so they may stack higher than other items
+            //    (extracted Spread Upgrades and bought upgrades both land here when every slot is taken).
+            for (int i = 0; i < items.Count; i++)
+            {
+                var item = items[i];
+                if (!IsUpgrade(item)) continue;
+                ItemVolume best = null;
+                int bestLayer = int.MaxValue;
+                foreach (var slot in used)
+                {
+                    if (slot == null || StackStep(slot.itemVolume) <= 0f) continue;
+                    layers.TryGetValue(slot, out int layer);
+                    if (layer < UpgradeOverflowLayers && layer < bestLayer) { best = slot; bestLayer = layer; }
+                }
+                if (best == null) continue;
+                layers[best] = bestLayer + 1;
+                Spawn(__instance, item, best, StackStep(SemiFunc.itemVolume.upgrade) * (bestLayer + 1), _spawns);
                 items.RemoveAt(i--); stacked++;
             }
 

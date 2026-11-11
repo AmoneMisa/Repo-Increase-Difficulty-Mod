@@ -15,11 +15,13 @@ internal sealed class CollectionLights:MonoBehaviour
     private MaterialPropertyBlock _block;
     private Light _scanner;
     private Texture2D _cookie;
-    internal static bool Applies(string key)=>key=="ram_pair"||key=="graphics_card"||key=="robot_vacuum"||key=="monoblock_pc"||key=="centrifuge";
+    internal static bool Applies(string key)=>key=="ram_pair"||key=="graphics_card"||key=="robot_vacuum"||key=="monoblock_pc"||key=="centrifuge"||key=="rgb_keyboard"||key=="rgb_mouse";
+    private bool _peripheral;
     private void Start()
     {
         _block=new MaterialPropertyBlock();int phase=0,liquid=0;
         var art=GetComponent<ValuableArtInstance>();if(art==null||!art.EnsureBindings()){enabled=false;return;}
+        _peripheral = art.assetKey == "rgb_keyboard" || art.assetKey == "rgb_mouse";
         foreach(var b in art.bindings)
         {
             var renderer=b.node.GetComponent<MeshRenderer>();var material=renderer!=null?renderer.sharedMaterial:null;
@@ -28,7 +30,8 @@ internal sealed class CollectionLights:MonoBehaviour
             {
                 var emission=art.assetKey=="ram_pair"?Color.white*1.8f:new Color(.025f,.4f,.48f)*2.2f;
                 _surfaces.Add((renderer,emission,phase++));
-                if(_rgb.Count==0)_rgb.Add(Lamp(b.node,"IHM RGB room glow",Vector3.zero,new Color(.08f,.65f,.8f),ReferenceIntensity,ReferenceRange));
+                if(_rgb.Count==0)_rgb.Add(Lamp(b.node,"IHM RGB room glow",Vector3.zero,new Color(.08f,.65f,.8f),
+                    _peripheral ? .28f : ReferenceIntensity, _peripheral ? 1.25f : ReferenceRange));
             }
             else if(art.assetKey=="centrifuge"&&material.name.IndexOf("Sample liquid",StringComparison.OrdinalIgnoreCase)>=0)
             {
@@ -83,7 +86,10 @@ internal sealed class CollectionLights:MonoBehaviour
         {
             if(surface.renderer==null)continue;
             surface.renderer.GetPropertyBlock(_block);
-            _block.SetColor("_EmissionColor",surface.emission*(.94f+.06f*Mathf.Sin((float)(time*.7%(System.Math.PI*2))+surface.phase*.65f)));
+            var emission = _peripheral
+                ? Color.HSVToRGB(Mathf.Repeat((float)(time * .12 % 1) + surface.phase * .16f, 1f), .85f, 1f) * 1.65f
+                : surface.emission*(.94f+.06f*Mathf.Sin((float)(time*.7%(System.Math.PI*2))+surface.phase*.65f));
+            _block.SetColor("_EmissionColor", emission);
             surface.renderer.SetPropertyBlock(_block);
         }
         for(int i=0;i<_rgb.Count;i++)if(_rgb[i]!=null)_rgb[i].color=Color.HSVToRGB(Mathf.Repeat((float)(time*.035%1)+i*.24f,1),.7f,.8f);

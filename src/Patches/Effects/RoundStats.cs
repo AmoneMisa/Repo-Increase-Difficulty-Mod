@@ -200,7 +200,7 @@ internal static class RoundStats
         float scale = total > 0 ? Mathf.Clamp01(value / total) : 0f;
         foreach (var receipt in contents)
             yield return new Receipt { Id = receipt.Id, Value = Mathf.RoundToInt(receipt.Value * scale),
-                Object = receipt.Object, Soul = receipt.Soul, Who = receipt.Who };
+                OriginalValue = receipt.OriginalValue, Packed = true, Object = receipt.Object, Soul = receipt.Soul, Who = receipt.Who };
     }
 
     private sealed class Receipt
@@ -208,7 +208,8 @@ internal static class RoundStats
         internal GameObject Object;
         internal ValuableObject Valuable;
         internal int Id, Value;
-        internal bool Soul;
+        internal float OriginalValue;
+        internal bool Soul, Packed;
         internal PlayerRoundStat Who;
     }
 
@@ -219,7 +220,7 @@ internal static class RoundStats
         if (v == null || !v.dollarValueSet) return null;
         RegisterValuable(v);
         return new Receipt { Object = go, Valuable = v, Id = v.GetInstanceID(),
-            Value = Mathf.Max(0, (int)v.dollarValueCurrent), Soul = v.GetComponent<EnemyValuable>() != null,
+            Value = Mathf.Max(0, (int)v.dollarValueCurrent), OriginalValue = v.dollarValueOriginal, Soul = v.GetComponent<EnemyValuable>() != null,
             Who = CarrierStat(v) };
     }
 
@@ -317,6 +318,12 @@ internal static class RoundStats
         }
     }
 
+    [HarmonyPatch(typeof(ItemValuableBox), nameof(ItemValuableBox.OnExtracted))]
+    private static class ClearExtractedBox
+    {
+        private static void Postfix(ItemValuableBox __instance) => BoxContents.Remove(__instance);
+    }
+
     [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), "BreakRPC")]
     private static class OnBreak
     {
@@ -387,7 +394,12 @@ internal static class RoundStats
             if (delta <= 0) return;
             int souls = 0;
             foreach (var receipt in __state.receipts)
-                if (!RoundDirector.instance.dollarHaulList.Contains(receipt.Object)) souls += Commit(receipt);
+            {
+                if (RoundDirector.instance.dollarHaulList.Contains(receipt.Object)) continue;
+                souls += Commit(receipt);
+                if (receipt.Packed && receipt.Value > 0)
+                    Quests.QuestManager.OnValuableExtracted(receipt.Id, receipt.Value, receipt.OriginalValue, receipt.Soul);
+            }
             // The native total also includes valuable boxes; they belong in the payout denominator.
             AddExtraction(__instance, delta, souls);
         }

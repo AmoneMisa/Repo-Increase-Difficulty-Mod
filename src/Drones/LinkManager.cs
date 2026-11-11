@@ -28,6 +28,10 @@ internal static class LinkManager
         public LineRenderer Line;
         public float OverstretchTime;
         public bool Broken;
+        public readonly LinkedCargoRoute Route = new();
+        public readonly UnityEngine.AI.NavMeshPath DrawPath = new();
+        public Vector3[] DrawCorners;
+        public float DrawNext;
     }
 
     private static readonly Dictionary<long, Link> Links = new();
@@ -99,10 +103,24 @@ internal static class LinkManager
                 DestroyLink(Links[k]);
                 Links.Remove(k);
             }
+        LinkConvoy.Tick();
+    }
+
+    internal static IEnumerable<(PhysGrabObject A, PhysGrabObject B, PlayerAvatar PA, PlayerAvatar PB)> CargoLinks()
+    {
+        foreach (var link in Links.Values)
+        {
+            if (link.Broken || link.A == null || link.B == null || !link.A.Engaged || !link.B.Engaged ||
+                link.A.Drone.targetIsEnemy || link.B.Drone.targetIsEnemy ||
+                Vector3.Distance(link.A.AttachPoint(), link.B.AttachPoint()) > ModConfig.LinkMaxDistance.Value * 1.5f) continue;
+            yield return (link.A.TargetPgo, link.B.TargetPgo, link.A.TargetPlayer, link.B.TargetPlayer);
+        }
     }
 
     private static void UpdateLink(Link link, int index, float dt)
     {
+        if (TryRoute(link, index, dt)) return;
+        link.Route.Clear();
         var rbA = link.A.TargetBody;
         var rbB = link.B.TargetBody;
         if (rbA == null || rbB == null || rbA == rbB)
@@ -134,6 +152,49 @@ internal static class LinkManager
         if (state == 0 && link.Joint != null && dist - link.Joint.linearLimit.limit > 0.5f)
             state = 2;
         SetLine(link, index, ptA, ptB, state);
+    }
+
+    private static bool TryRoute(Link link, int index, float dt)
+    {
+        if (!link.A.Engaged || !link.B.Engaged) return false;
+        var a = link.A.TargetPgo; var b = link.B.TargetPgo;
+        var playerA = link.A.TargetPlayer; var playerB = link.B.TargetPlayer;
+        PhysGrabObject cargo = null;
+        Vector3 destination = default;
+        if (playerA != null && playerB == null && !playerA.deadSet && !playerA.isDisabled)
+        { cargo = b; destination = playerA.transform.position; }
+        else if (playerB != null && playerA == null && !playerB.deadSet && !playerB.isDisabled)
+        { cargo = a; destination = playerB.transform.position; }
+        else if (a != null && b != null && a.grabbed != b.grabbed)
+        { cargo = a.grabbed ? b : a; destination = a.grabbed ? a.transform.position : b.transform.position; }
+        if (cargo == null || cargo.isPlayer || cargo.GetComponentInParent<EnemyRigidbody>() != null ||
+            link.A.Drone.targetIsEnemy || link.B.Drone.targetIsEnemy) return false;
+        DropJoint(link); // A straight joint would pull cargo across pits and through inside corners.
+        var operatorPlayer = playerA ?? playerB ?? (a != null && a.grabbed ? a.lastPlayerGrabbing : b?.lastPlayerGrabbing);
+        if (SemiFunc.IsMasterClientOrSingleplayer()) link.Route.Tick(cargo, destination, dt, operatorPlayer);
+        // Every client draws the route the load follows (its own navmesh query), not a straight line through walls.
+        if (Time.time >= link.DrawNext)
+        {
+            link.DrawNext = Time.time + .5f;
+            link.DrawCorners = null;
+            if (UnityEngine.AI.NavMesh.SamplePosition(cargo.transform.position, out var from, 2f, UnityEngine.AI.NavMesh.AllAreas) &&
+                UnityEngine.AI.NavMesh.SamplePosition(destination, out var to, 2f, UnityEngine.AI.NavMesh.AllAreas) &&
+                UnityEngine.AI.NavMesh.CalculatePath(from.position, to.position, UnityEngine.AI.NavMesh.AllAreas, link.DrawPath) &&
+                link.DrawPath.status == UnityEngine.AI.NavMeshPathStatus.PathComplete && link.DrawPath.corners.Length > 2)
+                link.DrawCorners = link.DrawPath.corners;
+        }
+        bool cargoIsA = cargo == a;
+        SetLine(link, index, link.A.AttachPoint(), link.B.AttachPoint(), SemiFunc.IsMasterClientOrSingleplayer() && link.Route.Blocked ? 1 : 0,
+            link.DrawCorners, cargoIsA);
+        return true;
+    }
+
+    internal static bool Protects(PhysGrabObject cargo)
+    {
+        foreach (var link in Links.Values)
+            if (link.A != null && link.B != null && link.A.Engaged && link.B.Engaged && link.Route.Cargo == cargo && !cargo.grabbed)
+                return true;
+        return false;
     }
 
     private static void HostJoint(Link link, Rigidbody rbA, Rigidbody rbB, Vector3 ptA, Vector3 ptB,
@@ -226,12 +287,13 @@ internal static class LinkManager
 
     private static void DestroyLink(Link link)
     {
+        link.Route.Clear();
         DropJoint(link);
         if (link.Line != null)
             Object.Destroy(link.Line.gameObject);
     }
 
-    private static void SetLine(Link link, int index, Vector3? a, Vector3? b, int state)
+    private static void SetLine(Link link, int index, Vector3? a, Vector3? b, int state, Vector3[] via = null, bool viaFromA = true)
     {
         if (a == null || b == null)
         {
@@ -266,8 +328,21 @@ internal static class LinkManager
             _ => Palette[index % Palette.Length],
         };
         link.Line.startColor = link.Line.endColor = c;
-        link.Line.SetPosition(0, a.Value);
-        link.Line.SetPosition(1, b.Value);
+        if (via == null || via.Length <= 2)
+        {
+            link.Line.positionCount = 2;
+            link.Line.SetPosition(0, a.Value);
+            link.Line.SetPosition(1, b.Value);
+        }
+        else
+        {
+            // Inner corners only (the ends are the drones themselves), lifted to roughly waist height.
+            int inner = via.Length - 2;
+            link.Line.positionCount = inner + 2;
+            link.Line.SetPosition(0, viaFromA ? a.Value : b.Value);
+            for (int i = 0; i < inner; i++) link.Line.SetPosition(i + 1, via[i + 1] + Vector3.up * .6f);
+            link.Line.SetPosition(inner + 1, viaFromA ? b.Value : a.Value);
+        }
         link.Line.enabled = true;
     }
 }

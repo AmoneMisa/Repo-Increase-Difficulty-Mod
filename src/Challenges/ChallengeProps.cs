@@ -771,6 +771,16 @@ internal sealed class MushroomVisual : MonoBehaviour
     private Color _colour;
     private int _index;
     private float _glow, _target;
+    private BoxCollider _landing;
+
+    internal bool Supports(Vector3 feet)
+    {
+        var cap = _landing.bounds;
+        float top = cap.max.y;
+        var contact = new Vector3(feet.x, top - .015f, feet.z);
+        return Mathf.Abs(feet.y - top) <= .17f &&
+            (_landing.ClosestPoint(contact) - contact).sqrMagnitude < .01f;
+    }
 
     internal static MushroomVisual Create(Vector3 floor, int index)
     {
@@ -806,6 +816,7 @@ internal sealed class MushroomVisual : MonoBehaviour
         v._light = ChallengeProps.Lamp(root.transform, new Vector3(0f, h + .5f, 0f), v._colour, 3.2f, .25f);
         // Solid to stand on: a flat top just under the cap's crown, and the stem.
         var cap = root.AddComponent<BoxCollider>();
+        v._landing = cap;
         cap.center = new Vector3(0f, h + .06f, 0f);
         cap.size = new Vector3(r * 1.8f, .14f, r * 1.8f);
         var stem = root.AddComponent<BoxCollider>();

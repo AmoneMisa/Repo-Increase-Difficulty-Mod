@@ -42,7 +42,7 @@ internal static class SkillEffects
 
     // ------------------------------------------------------------------ weapons
 
-    internal enum Weapon : byte { None, Handgun, Revolver, Shotgun, CartCannon, CartLaser, WizardStaff, PoisonCrossbow, OtherGun }
+    internal enum Weapon : byte { None, Handgun, Revolver, Shotgun, CartCannon, CartLaser, WizardStaff, PoisonCrossbow, OtherGun, FlameCart, HandheldLaser }
 
     private static string NodeFor(Weapon weapon) => weapon switch
     {
@@ -51,9 +51,19 @@ internal static class SkillEffects
         Weapon.Shotgun => C.ShotgunDamage,
         Weapon.CartCannon => C.CartCannonDamage,
         Weapon.CartLaser => C.CartLaserDamage,
+        Weapon.FlameCart => C.FlameCartDamage,
+        Weapon.HandheldLaser => C.LaserGunDamage,
         Weapon.WizardStaff => C.StaffDamage,
         Weapon.PoisonCrossbow => C.CrossbowDamage,
         _ => null,
+    };
+
+    internal static float WeaponDamageMax(string node) => node switch
+    {
+        C.HandgunDamage => .8f,
+        C.FlameCartDamage => PerkRules.CappedWeaponBonus(ModConfig.SkillWeaponDamageMax.Value, PerkRules.FlameDamageCap),
+        C.LaserGunDamage => PerkRules.CappedWeaponBonus(ModConfig.SkillWeaponDamageMax.Value, PerkRules.LaserDamageCap),
+        _ => Mathf.Max(0f, ModConfig.SkillWeaponDamageMax.Value),
     };
 
     /// <summary>Damage multiplier for this player's shot: Marksman's small bonus on every gun plus the weapon's own perk.</summary>
@@ -63,7 +73,7 @@ internal static class SkillEffects
         float multiplier = 1f;
         if (Has(shooter, C.Marksman)) multiplier += RootBonus;
         var node = C.Find(NodeFor(weapon));
-        if (node != null) multiplier += Mathf.Max(0f, ModConfig.SkillWeaponDamageMax.Value) * Level(shooter, node.Id) / node.MaxLevel;
+        if (node != null) multiplier += WeaponDamageMax(node.Id) * Level(shooter, node.Id) / node.MaxLevel;
         return multiplier * TradeOffs.DamageFactor(shooter, TradeOffs.KindOf(weapon));
     }
 
@@ -72,6 +82,7 @@ internal static class SkillEffects
         if (source == null) return Weapon.None;
         if (source.GetComponentInParent<ItemCartCannon>() != null) return Weapon.CartCannon;
         if (source.GetComponentInParent<ItemCartLaser>() != null) return Weapon.CartLaser;
+        if (source.GetComponentInParent<ItemGunLaser>() != null) return Weapon.HandheldLaser;
         var gear = source.GetComponentInParent<GearGun>();
         if (gear != null) return gear.kind == GearKind.Lightning ? Weapon.WizardStaff : gear.kind == GearKind.Poison ? Weapon.PoisonCrossbow : Weapon.OtherGun;
         string name = source.GetComponentInParent<ItemAttributes>()?.item?.name ?? source.name;
@@ -81,7 +92,7 @@ internal static class SkillEffects
         return source.GetComponentInParent<ItemGun>() != null ? Weapon.OtherGun : Weapon.None;
     }
 
-    private sealed class Tag { internal Weapon Weapon; internal bool Tranq; }
+    private sealed class Tag { internal Weapon Weapon; internal bool Tranq; internal PlayerAvatar Owner; }
     private static readonly ConditionalWeakTable<HurtCollider, Tag> Tags = new();
     private static Weapon _firing;
     private static bool _firingTranq;
@@ -117,6 +128,43 @@ internal static class SkillEffects
         }
     }
 
+    // The native laser's damage collider can live under SemiLaser rather than
+    // under the cart. Tag that reference explicitly instead of relying on parents.
+    [HarmonyPatch(typeof(ItemCartLaser), "Update")]
+    private static class LaserSource
+    {
+        [HarmonyPrefix]
+        private static void Prefix(ItemCartLaser __instance)
+        {
+            var hurt = __instance.semiLaser != null ? __instance.semiLaser.hurtCollider : null;
+            if (hurt == null) return;
+            var tag = Tags.GetValue(hurt, _ => new Tag());
+            tag.Weapon = Weapon.CartLaser;
+            tag.Owner = __instance.GetComponent<PhysGrabObject>()?.lastPlayerGrabbing;
+            if (tag.Owner == null)
+            {
+                var toggle = __instance.GetComponent<ItemToggle>();
+                if (toggle != null) tag.Owner = SemiFunc.PlayerAvatarGetFromPhotonID(toggle.playerTogglePhotonID);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(ItemGunLaser), "Update")]
+    private static class HandheldLaserSource
+    {
+        [HarmonyPrefix]
+        private static void Prefix(ItemGunLaser __instance)
+        {
+            var hurt = __instance.semiLaser != null ? __instance.semiLaser.hurtCollider : null;
+            if (hurt == null) return;
+            var tag = Tags.GetValue(hurt, _ => new Tag());
+            tag.Weapon = Weapon.HandheldLaser;
+            var equipped = __instance.GetComponent<ItemEquippable>();
+            tag.Owner = equipped != null && equipped.isEquipped ? equipped.GetOwnerPlayerAvatar() :
+                __instance.GetComponent<PhysGrabObject>()?.lastPlayerGrabbing;
+        }
+    }
+
     /// <summary>Which weapon a hit collider belongs to, and who fired it (for the shared monster-hit hook).</summary>
     internal static Weapon WeaponHit(HurtCollider collider, out PlayerAvatar shooter, out bool tranq)
     {
@@ -125,9 +173,17 @@ internal static class SkillEffects
         if (collider == null) return Weapon.None;
         if (Tags.TryGetValue(collider, out var tag))
         {
-            shooter = collider.playerCausingHurt;
+            shooter = collider.playerCausingHurtOverride ?? collider.playerCausingHurt ?? tag.Owner;
             tranq = tag.Tranq;
             return tag.Weapon;
+        }
+        var gunLaser = collider.GetComponentInParent<ItemGunLaser>();
+        if (gunLaser != null)
+        {
+            var equipped = gunLaser.GetComponent<ItemEquippable>();
+            shooter = collider.playerCausingHurtOverride ?? collider.playerCausingHurt ??
+                (equipped != null && equipped.isEquipped ? equipped.GetOwnerPlayerAvatar() : gunLaser.GetComponent<PhysGrabObject>()?.lastPlayerGrabbing);
+            return Weapon.HandheldLaser;
         }
         var laser = collider.GetComponentInParent<ItemCartLaser>();
         if (laser != null)
@@ -147,6 +203,9 @@ internal static class SkillEffects
     internal static float StatusSeconds(PlayerAvatar shooter, Status status, float baseSeconds)
     {
         if (!On || shooter == null) return baseSeconds;
+        if (status == Status.Freeze)
+            return TradeOffs.StatusSeconds(shooter, PerkRules.FreezeSeconds(baseSeconds, Level(shooter, C.FreezeTime),
+                Has(shooter, C.StatusLab), ModConfig.SkillStatusRootSeconds.Value));
         string id = status switch { Status.Tranq => C.TranqTime, Status.Net => C.NetTime, Status.Freeze => C.FreezeTime, _ => C.PoisonRush };
         var node = C.Find(id);
         bool poison = status == Status.Poison;

@@ -21,10 +21,9 @@ namespace IncreaseHardMod.Patches.Effects;
 /// (hosted on the always-alive ModNetwork object) that waits for that head, then
 /// calls Revive().
 ///
-/// Where they come back: ReviveRPC positions the player at their death head. When
-/// AutoReviveAtCar is on, we first teleport the death head to a level SpawnPoint (the
-/// truck/car drop-off) so the player revives back at the car instead of on the spot,
-/// and revive "by truck" so they're fully healed. Otherwise they revive in place.
+/// ReviveRPC uses the death head's position. Recover heads from lethal pits at the truck
+/// even without the modifier, so they are available for a manual revive. AutoReviveAtCar
+/// also moves heads there on ordinary deaths and enables the truck's heal.
 ///
 /// Host authority: Revive() issues an RPC to everyone, so exactly one client — the
 /// host — must trigger it; we gate on IsMasterClientOrSingleplayer. The one-use-per
@@ -43,26 +42,21 @@ internal static class AutoReviveEffect
         UsedThisLevel.Clear();
     }
 
-    [HarmonyPostfix]
-    private static void Postfix(PlayerAvatar __instance)
+    [HarmonyPrefix]
+    private static void Prefix(ref int enemyIndex, out bool __state)
     {
-        if (!ModifierManager.Current.Has(ModifierType.AutoRevive))
-            return;
+        __state = enemyIndex == LethalPitPatch.PitDeath;
+        if (__state) enemyIndex = -1;
+    }
 
-        // Only the host drives revives (Revive() RPCs to everyone).
-        if (!SemiFunc.IsMasterClientOrSingleplayer())
-            return;
-
-        if (__instance == null || UsedThisLevel.Contains(__instance))
-            return;
-
-        UsedThisLevel.Add(__instance);
-
+    [HarmonyPostfix]
+    private static void Postfix(PlayerAvatar __instance, bool __state)
+    {
+        if (!SemiFunc.IsMasterClientOrSingleplayer() || __instance == null || !__instance.deadSet) return;
         var runner = ModNetwork.Instance;
-        if (runner == null)
-            return;
-
-        runner.StartCoroutine(ReviveWhenReady(__instance));
+        if (runner == null) return;
+        bool autoRevive = ModifierManager.Current.Has(ModifierType.AutoRevive) && UsedThisLevel.Add(__instance);
+        if (__state || autoRevive) runner.StartCoroutine(ResolveDeathWhenReady(__instance, __state, autoRevive));
     }
 
     /// <summary>
@@ -73,59 +67,67 @@ internal static class AutoReviveEffect
     /// instant PlayerDeathRPC fires. Reviving then runs mid-death-animation, and the still-pending
     /// PlayerDeathDone() — which sets isDisabled=true and disables the avatar GameObject — fires a
     /// moment later and RE-KILLS the freshly revived player, dropping them into the spectating
-    /// death head ("flying at 0 HP"). So we wait until isDisabled becomes true, which marks the
-    /// death as fully committed; reviving after that is safe and won't be clobbered. Give up after
-    /// a timeout as a safety net so we never spin forever.
+    /// death head ("flying at 0 HP"). Wait for isDisabled and the end of the head's placement timer.
     /// </summary>
-    private static IEnumerator ReviveWhenReady(PlayerAvatar player)
+    private static IEnumerator ResolveDeathWhenReady(PlayerAvatar player, bool recoverHead, bool autoRevive)
     {
         const float timeout = 10f;
         float waited = 0f;
 
-        while (player != null && waited < timeout &&
-               (player.playerDeathHead == null || !player.isDisabled || !player.deadSet))
+        while (player != null && player.deadSet && waited < timeout && !DeathReady(player))
         {
             waited += 0.1f;
             yield return new WaitForSeconds(0.1f);
         }
 
-        if (player == null || player.playerDeathHead == null)
+        if (!SemiFunc.IsMasterClientOrSingleplayer() || !DeathReady(player))
             yield break;
 
-        // Still the host and still fully dead? Then bring them back. (A teammate/truck revive in
-        // the meantime clears deadSet/isDisabled — in that case we must not revive again.)
-        if (!SemiFunc.IsMasterClientOrSingleplayer() || !player.deadSet || !player.isDisabled)
-            yield break;
-
-        if (ModConfig.AutoReviveAtCar.Value && TryMoveHeadToCar(player))
+        bool atCar = (recoverHead || ModConfig.AutoReviveAtCar.Value) && TryMoveHeadToSafety(player.playerDeathHead);
+        if (!autoRevive) yield break;
+        if (atCar)
         {
-            // Revive "by truck" so TruckHealer fully heals them at the car.
-            QuestManager.MarkAutoRevive(player); // the mod's free revive is not a teammate rescue
-            player.Revive(TruckHealer.instance != null);
+            // Revive reads the grab object's cached center, refreshed after teleport.
+            yield return new WaitForSeconds(0.15f);
+            if (!SemiFunc.IsMasterClientOrSingleplayer() || !DeathReady(player)) yield break;
         }
-        else
-        {
-            QuestManager.MarkAutoRevive(player);
-            player.Revive();
-        }
+        QuestManager.MarkAutoRevive(player); // the mod's free revive is not a teammate rescue
+        player.Revive(atCar && ModConfig.AutoReviveAtCar.Value && TruckHealer.instance != null);
     }
+
+    private static bool DeathReady(PlayerAvatar player) =>
+        player != null && player.deadSet && player.isDisabled && player.playerDeathHead != null &&
+        player.playerDeathHead.triggered && player.playerDeathHead.triggeredTimer <= 0f;
 
     /// <summary>
     /// Teleport the player's death head to a level spawn point (the truck/car drop-off).
     /// ReviveRPC reads the head's position for the respawn, so moving it here makes the
     /// player come back at the car. Returns false if no spawn point was found.
     /// </summary>
-    private static bool TryMoveHeadToCar(PlayerAvatar player)
+    internal static bool TryMoveHeadToSafety(PlayerDeathHead head, Transform preferredPoint = null)
     {
-        var head = player.playerDeathHead;
         if (head == null || head.physGrabObject == null)
             return false;
 
-        var spawn = FindCarSpawnPoint();
+        var safety = TruckSafetySpawnPoint.instance;
+        var fallback = preferredPoint == null && safety == null ? FindCarSpawnPoint() : null;
+        var spawn = preferredPoint != null ? preferredPoint :
+            safety != null ? safety.transform : fallback != null ? fallback.transform : null;
         if (spawn == null)
             return false;
 
-        head.physGrabObject.Teleport(spawn.transform.position + Vector3.up, spawn.transform.rotation);
+        var grab = head.physGrabObject;
+        for (int i = grab.playerGrabbing.Count - 1; i >= 0; i--)
+            if (grab.playerGrabbing[i] != null)
+                grab.playerGrabbing[i].OverrideGrabRelease(grab.photonView != null ? grab.photonView.ViewID : -1);
+        // Use the exact position of authored safety points, as the game does.
+        var position = fallback != null ? spawn.position + Vector3.up : spawn.position;
+        grab.Teleport(position, spawn.rotation);
+        if (grab.rb != null)
+        {
+            grab.rb.velocity = Vector3.zero;
+            grab.rb.angularVelocity = Vector3.zero;
+        }
         return true;
     }
 

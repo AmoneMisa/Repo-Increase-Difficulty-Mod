@@ -37,7 +37,9 @@ internal static class CollectionCatalog
         new CollectionEntry("maneki_neko",LootMap.Museum|LootMap.Manor,6f,12000,16000,LootFragility.Fragile),
         new CollectionEntry("plush_corgi",LootMap.Manor|LootMap.Museum|LootMap.Sunstone|LootMap.McJannek,1.5f,3000,4000,LootFragility.Sturdy),
         // Same mass as Swiftbroom's big potion bottles (PhysAttribute Medium+++ = 3 kg, about 1.4 m tall).
-        new CollectionEntry("whiskey_bottle",LootMap.Swiftbroom|LootMap.Manor|LootMap.McJannek|LootMap.Museum,3f,5000,6500,LootFragility.Fragile)
+        new CollectionEntry("whiskey_bottle",LootMap.Swiftbroom|LootMap.Manor|LootMap.McJannek|LootMap.Museum,3f,5000,6500,LootFragility.Fragile),
+        new CollectionEntry("rgb_mouse",LootMap.McJannek,.25f,500,700),
+        new CollectionEntry("rgb_keyboard",LootMap.McJannek,.6f,900,1300),
     };
     internal static float SkeletonPartMass(int index)=>index<3?.16f:.06f;
     internal static float TotalMass(CollectionEntry entry)=>entry.Mass+(entry.Key=="skeleton"?3*SkeletonPartMass(0)+12*SkeletonPartMass(3):0);

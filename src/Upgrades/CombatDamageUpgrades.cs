@@ -100,9 +100,10 @@ internal static class CombatDamageUpgrades
     private static class MeleeEnemyHurt
     {
         [HarmonyPrefix]
-        private static void Prefix(HurtCollider __instance, Enemy _enemy, out (int Damage, float Stun, PlayerAvatar Wielder, int Dealt) __state)
+        private static void Prefix(HurtCollider __instance, Enemy _enemy, out (int Damage, float Stun, PlayerAvatar Wielder, int Dealt, int HealthBefore) __state)
         {
-            __state = (__instance.enemyDamage, __instance.enemyStunTime, null, 0);
+            __state = (__instance.enemyDamage, __instance.enemyStunTime, null, 0,
+                _enemy != null && _enemy.HasHealth && _enemy.Health != null ? _enemy.Health.healthCurrent : 0);
             // Guns and cart weapons: the Arsenal perks (damage per weapon, longer tranquilizer stun).
             var weapon = Skills.SkillEffects.WeaponHit(__instance, out var shooter, out bool tranq);
             if (weapon != Skills.SkillEffects.Weapon.None)
@@ -110,7 +111,7 @@ internal static class CombatDamageUpgrades
                 if (tranq && __instance.enemyStun && __instance.enemyStunTime > 0f)
                     __instance.enemyStunTime = TradeOffStun(shooter,
                         Skills.SkillEffects.StatusSeconds(shooter, Skills.SkillEffects.Status.Tranq, __instance.enemyStunTime), 0f);
-                bool cartLaser = weapon == Skills.SkillEffects.Weapon.CartLaser;
+                bool cartLaser = weapon is Skills.SkillEffects.Weapon.CartLaser or Skills.SkillEffects.Weapon.HandheldLaser;
                 if (__instance.enemyDamage > 0)
                     __instance.enemyDamage = Scale(__instance.enemyDamage,
                         Skills.SkillEffects.WeaponMultiplier(shooter, weapon) * Skills.TradeOffs.TargetFactor(shooter, _enemy) *
@@ -146,7 +147,6 @@ internal static class CombatDamageUpgrades
                 Multiplier(MeleeId, wielder) * Skills.TradeOffs.DamageFactor(wielder, Skills.TradeOffs.Damage.Melee, _enemy) *
                 Skills.BuffPerks.DamageFactorFor(wielder, true, false, false)); // Battle Trance
             Skills.BuffPerks.NoteHit(wielder, _enemy, true, false, false);
-            Skills.SupportPerks.Vampire(wielder, _enemy, __instance.enemyDamage);
             __state.Wielder = wielder;
             __state.Dealt = __instance.enemyDamage;
             // Heavy Hitter: a longer stun from the weapon's own stun. Monsters too big for it still aren't stunned.
@@ -159,8 +159,13 @@ internal static class CombatDamageUpgrades
         }
 
         [HarmonyPostfix]
-        private static void Postfix(HurtCollider __instance, Enemy _enemy, bool __result, (int Damage, float Stun, PlayerAvatar Wielder, int Dealt) __state)
+        private static void Postfix(HurtCollider __instance, Enemy _enemy, bool __result, (int Damage, float Stun, PlayerAvatar Wielder, int Dealt, int HealthBefore) __state)
         {
+            if (__result && __state.Wielder != null && _enemy != null && _enemy.HasHealth && _enemy.Health != null)
+            {
+                int dealt = Skills.PerkRules.ActualHitDamage(__state.HealthBefore, _enemy.Health.healthCurrent);
+                Skills.SupportPerks.Vampire(__state.Wielder, _enemy, dealt);
+            }
             // Thorny Monsters: a melee hit that landed may sting the wielder back.
             if (__result && __state.Wielder != null && __state.Dealt > 0) Modifiers.ThornyMonsters.Reflect(__state.Wielder, _enemy, __state.Dealt);
             __instance.enemyDamage = __state.Damage;
@@ -172,14 +177,23 @@ internal static class CombatDamageUpgrades
     private static class GrenadeExplosion
     {
         [HarmonyPrefix]
-        private static void Prefix(ParticleScriptExplosion __instance, ref int enemyDamage, bool onlyParticleEffect)
+        private static void Prefix(ParticleScriptExplosion __instance, ref float size, ref int enemyDamage, bool onlyParticleEffect,
+            out int __state)
         {
+            __state = 0;
             if (onlyParticleEffect || enemyDamage <= 0) return;
             var grenade = __instance.GetComponent<ItemGrenade>();
             if (grenade == null) return;
             var thrower = grenade.activatorPlayerAvatar != null ? grenade.activatorPlayerAvatar : __instance.playerCausingHurtOverride;
-            float multiplier = Multiplier(GrenadeId, thrower) * Skills.TradeOffs.DamageFactor(thrower, Skills.TradeOffs.Damage.Grenade);
-            if (!Mathf.Approximately(multiplier, 1f)) enemyDamage = Mathf.Max(1, Mathf.RoundToInt(enemyDamage * multiplier));
+            __state = Skills.GrenadePerks.BlastRank(grenade, thrower);
+            size *= Skills.PerkRules.GrenadeRadius(__state);
+            enemyDamage = Skills.GrenadePerks.DamageWithGeneralPerks(Skills.PerkRules.GrenadeDamage(enemyDamage, __state), thrower);
+        }
+
+        [HarmonyPostfix]
+        private static void Postfix(ParticlePrefabExplosion __result, int __state)
+        {
+            if (__state > 0 && __result != null) Skills.GrenadePerks.BoostStun(__result.HurtCollider, __state);
         }
     }
 }

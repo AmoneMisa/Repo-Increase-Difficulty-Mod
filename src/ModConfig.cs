@@ -245,6 +245,12 @@ public static class ModConfig
     public static ConfigEntry<int> PoisonHitDamage, PoisonTotalDamage;
     public static ConfigEntry<float> PoisonSeconds, IceFreezeSeconds, DecoySeconds, StickyFreeLiftMass;
     public static ConfigEntry<int> IceGunDamagePercent, IceMeleeBonusPercent;
+    // New monsters (0.10.0). Prefabs are always registered on every client so a host may spawn them; the switches
+    // below only decide (on the host) whether the director picks them.
+    public static ConfigEntry<bool> MonstersEnabled, PigEnabled, WitchEnabled, BasiliskEnabled, GorgonEnabled, NagaEnabled;
+    public static ConfigEntry<float> PigSpawnChance;
+    public static ConfigEntry<int> MonsterRarity;
+    public static ConfigEntry<UnityEngine.KeyCode> DodgeKey;
     public static ConfigEntry<bool> GhostEnabled;
     public static ConfigEntry<bool> SilencerEnabled;
     public static ConfigEntry<bool> LinkEnabled;
@@ -404,7 +410,7 @@ public static class ModConfig
         Modifiers.ModifierType.ExtraSmallCart     => "An extra small cart spawns on the level.",
         Modifiers.ModifierType.ExtraBigCart       => "An extra big cart spawns on the level.",
         Modifiers.ModifierType.ExtraSouls         => "Monsters drop more souls.",
-        Modifiers.ModifierType.SpreadUpgrades     => "Upgrade pickups are scattered around; usable only back in the truck.",
+        Modifiers.ModifierType.SpreadUpgrades     => "Up to 6 upgrades on the map. Submit them with a successful quota to receive them in the next truck.",
         Modifiers.ModifierType.NoMap              => "No map until you find a map upgrade pickup.",
         Modifiers.ModifierType.ReducedPlayerHp    => "Everyone starts the level wounded — current HP is cut to a rolled percentage (max HP is untouched, so you can heal back up).",
         Modifiers.ModifierType.AutoRevive         => "Each player gets one automatic revive this level.",
@@ -436,7 +442,7 @@ public static class ModConfig
         ScaleEnemyCap = Module(cfg, "Level Scaling", "EnemyCount", true, "ScaleEnemyCount", "More monsters spawn per level the deeper the run goes.");
         ScaleLevelSize = Module(cfg, "Level Scaling", "LevelSize", true, "ScaleLevelSize", "Levels get more modules (a bigger map) the deeper the run goes.");
         ScaleExtractions = Module(cfg, "Level Scaling", "Extractions", true, "ScaleExtractions", "Deeper levels get extra extraction points.");
-        ScaleMoon = Module(cfg, "Level Scaling", "Moon", false, "ScaleMoon", "Moon phases advance every MoonLevelsPerPhase levels instead of every 5 (slows the moon-based difficulty).");
+        ScaleMoon = Module(cfg, "Level Scaling", "Moon", false, "ScaleMoon", "Override the moon phase interval with MoonLevelsPerPhase. Recommended: every 5 levels, matching native progression.");
         ShopEconomyEnabled = Module(cfg, "Shop Economy", "Enabled", true, "ShopEconomy", "Shop price events: when the run reaches a shop it may get a sale, a tax or an inflation spike that changes item, upgrade, health pack and crystal prices (including this mod's own items and upgrades). Host rolls it.");
         BlackMarketEnabled = Module(cfg, "Black Market", "Enabled", true, "BlackMarket", "Black Market: in the shop, pay to keep a surprise modifier, level economy or shop economy from ever being rolled again this run. Keyboard driven.");
         PlayerUpgradesEnabled = Module(cfg, "Player Upgrades", "Enabled", true, "PlayerUpgrades", "Master switch for the mod's custom per-player upgrades that appear in the normal shop. Requires REPOLib. Takes effect on restart.");
@@ -472,7 +478,7 @@ public static class ModConfig
         LevelSizeMax = BindFloat(cfg, Lvl, "LevelSizeMax", 1.5f, 1f, 3f, "Cap on the level size multiplier.");
         ExtractionBonusInterval = BindInt(cfg, Lvl, "ExtractionBonusInterval", 10, 1, 50, "One extra extraction point every this many levels.");
         ExtractionMax = BindInt(cfg, Lvl, "ExtractionMax", 5, 1, 8, "Most extraction points a level can have.");
-        MoonLevelsPerPhase = BindInt(cfg, Lvl, "MoonLevelsPerPhase", 15, 5, 60, "With ScaleMoon on: levels per moon phase (vanilla is 5).");
+        MoonLevelsPerPhase = BindInt(cfg, Lvl, "MoonLevelsPerPhase", 5, 5, 60, "With ScaleMoon on: levels per moon phase. Recommended: 5, matching native progression.");
         GearEnabled = Module(cfg, "Gear", "Enabled", true, "ExtraGear", "Add the extra shop gear (Defence/Protection orbs, Defence drone, poison crossbow, decoy grenade, ice pistol, sticky pistol). EVERY player must run this mod with the same settings. Applies on game restart.");
         DefenceOrbEnabled = Module(cfg, "Gear", "DefenceOrbEnabled", true, "DefenceOrb", "Sell the Defence Orb.");
         DefenceDroneEnabled = Module(cfg, "Gear", "DefenceDroneEnabled", true, "DefenceDrone", "Sell the Defence Drone.");
@@ -489,9 +495,11 @@ public static class ModConfig
         CourierFragments = cfg.Bind("Courier", "CoinHalves", 0, "Half coins from duplicate pulls; two make a coin.");
         CourierStarterCoinGiven = cfg.Bind("Courier", "StarterCoinGiven", false, "Whether you already got the free starter coin.");
         CourierCoinChance = BindFloat(cfg, "Courier", "CoinChancePerLevel", Courier.CourierRules.CoinChance, 0f, 1f, "HOST: chance that a gacha coin is hidden somewhere on a level.");
-        CourierMenuKey = cfg.Bind("Courier", "MenuKey", UnityEngine.KeyCode.G, "Opens the courier command menu. Arrow keys move, Enter/Right picks, Left goes back.");
+        CourierMenuKey = cfg.Bind("Courier", "MenuKey", UnityEngine.KeyCode.C, "Opens the courier command menu. Arrow keys move, Enter/Right picks, Left goes back.");
+        if (CourierMenuKey.Value == UnityEngine.KeyCode.G) CourierMenuKey.Value = UnityEngine.KeyCode.C;
         CustomCartsEnabled = Module(cfg, "Gear", "CustomCartsEnabled", true, "CustomCarts", "Sell the Soul C.A.R.T. (small, souls only), the Wide C.A.R.T. and the Double-Decker C.A.R.T.");
-        SoulCartValueCap = BindInt(cfg, "Carts", "SoulCartValueCap", 55000, 1000, 1000000, "Most soul value the Soul C.A.R.T. carries; a soul that would go over it is pushed back out.");
+        SoulCartValueCap = BindInt(cfg, "Carts", "SoulCartValueCap", 65000, 1000, 65000, "Value of souls the Soul C.A.R.T. hatch can store, up to $65,000.");
+        if (SoulCartValueCap.Value == 55000) SoulCartValueCap.Value = 65000;
         WideCartWidth = BindFloat(cfg, "Carts", "WideCartWidth", 1.25f, 1f, 1.5f, $"How much wider the Wide C.A.R.T. is than the big C.A.R.T. (1.25 = 25% wider). Length is at least {Gear.CustomCarts.MinWideLength.ToString("0.##", CultureInfo.InvariantCulture)}x, with extra length at lower widths to retain floor space. Above about 1.3 it may not fit through doorways. Applies after a game restart.");
         // New keys (not DamagePerTick/TickSeconds/BatteryDamage): saved values of the old keys would keep the slow flame.
         FlameDamagePerSecond = BindInt(cfg, "Flamethrower", "DamagePerSecond", 24, 1, 500, "Damage per second dealt to every monster inside the flame, applied in small fast ticks.");
@@ -708,8 +716,8 @@ public static class ModConfig
             "Modifier Tuning", "ThornyMonstersMaxReflect", 0.10f, 0f, 0.5f,
             "ThornyMonsters: the most of a melee hit a thorny monster reflects to the attacker. Each thorny monster rolls between a third of this and this.");
         SpreadUpgradesCount = BindInt(cfg,
-            "Modifier Tuning", "SpreadUpgradesCount", 3, 0, 10,
-            "SpreadUpgrades: how many upgrade item pickups to scatter across the special level. They can't be used on that level, only once back in the truck.");
+            "Modifier Tuning", "SpreadUpgradesCount", 3, 0, 6,
+            "SpreadUpgrades: at most six pickups across the entire map. Submit them with a successful quota to receive them in the next truck.");
         MysteryBoxCount = BindInt(cfg,
             "Modifier Tuning", "MysteryBoxCount", 3, 1, 8,
             "MysteryBoxes: how many mystery boxes are placed across the map. They use navigation points, never valuable spawn spots. Each box accepts one soul.");
@@ -894,15 +902,15 @@ public static class ModConfig
 
         // --- Utility Drones ---
                 const string Gear = "Gear";
-                                                                        DefenceAbsorb = BindInt(cfg, Gear, "DefenceAbsorb", 350, 50, 2000,
+        DefenceAbsorb = BindInt(cfg, Gear, "DefenceAbsorb", 450, 50, 2000,
             "Total damage a fully charged Defence DRONE can absorb for the player it is attached to.");
-        DefenceItemAbsorb = BindInt(cfg, Gear, "DefenceItemAbsorb", 3500, 100, 50000,
+        DefenceItemAbsorb = BindInt(cfg, Gear, "DefenceItemAbsorb", 10000, 100, 50000,
             "Defence ORB (protects loot): value, in dollars, a fully charged orb can absorb from valuables breaking inside its field. The Defence DRONE protects a player instead, see DefenceAbsorb.");
-        DefenceDroneSeconds = BindFloat(cfg, Gear, "DefenceDroneSeconds", 45f, 5f, 600f,
+        DefenceDroneSeconds = BindFloat(cfg, Gear, "DefenceDroneSeconds", 90f, 5f, 600f,
             "Defence DRONE: seconds from a full battery to empty while it is running, even if the player takes no damage (hits drain it faster).");
-        DefenceIdleDrainPerMinute = BindFloat(cfg, Gear, "DefenceIdleDrainPercentPerMinute", 20f, 0f, 60f,
+        DefenceIdleDrainPerMinute = BindFloat(cfg, Gear, "DefenceIdleDrainPercentPerMinute", 10f, 0f, 60f,
             "Slow passive discharge of an active Defence ORB, in percent of battery per minute, applied whether or not it is taking hits (hits drain it further). 20 = about 5 minutes from full.");
-        ProtectionReductionPercent = BindInt(cfg, Gear, "ProtectionReductionPercent", 25, 5, 90,
+        ProtectionReductionPercent = BindInt(cfg, Gear, "ProtectionReductionPercent", 30, 5, 90,
             "Damage reduction inside an active Protection Orb.");
         PoisonHitDamage = BindInt(cfg, Gear, "PoisonHitDamage", 7, 1, 100, "Direct damage of a poison bolt.");
         PoisonTotalDamage = BindInt(cfg, Gear, "PoisonTotalDamage", 125, 1, 1000, "Total poison damage over the full duration.");
@@ -911,6 +919,16 @@ public static class ModConfig
         IceFreezeSeconds = BindFloat(cfg, Gear, "IceFreezeSeconds", 4.5f, 0.5f, 30f, "How long the Ice Pistol freezes a monster or player. Players receive a visible ice coating and movement pause without shot damage, including in the shop. Repeated hits refresh the timer.");
         IceGunDamagePercent = BindInt(cfg, Gear, "IceGunDamagePercent", 60, 10, 100,
             "Firearm damage frozen enemies take, in percent of normal.");
+        const string Monsters = "Monsters";
+        MonstersEnabled = cfg.Bind(Monsters, "Enabled", true, "Let the director spawn the mod's new monsters (Golden Pig, Witch, Basilisk, Gorgon, Naga Queen). Host setting.");
+        PigEnabled = cfg.Bind(Monsters, "GoldenPig", true, "Golden flying pig (Tier I, neutral). At most one per level, rolled separately. Host setting.");
+        WitchEnabled = cfg.Bind(Monsters, "Witch", true, "Witch (Tier II): fireball and electric levitation. Host setting.");
+        BasiliskEnabled = cfg.Bind(Monsters, "Basilisk", true, "Basilisk (Tier II): ambush constriction and venom bite. Host setting.");
+        GorgonEnabled = cfg.Bind(Monsters, "Gorgon", true, "Gorgon bull (Tier III): charge and death stare. Host setting.");
+        NagaEnabled = cfg.Bind(Monsters, "NagaQueen", true, "Naga Queen (Tier III): sword combos, petrification and bleeding. Host setting.");
+        PigSpawnChance = BindFloat(cfg, Monsters, "GoldenPigChance", .11f, 0f, 1f, "Chance per level that one Golden Pig appears (design: 10-12%).");
+        DodgeKey = cfg.Bind(Monsters, "DodgeRollKey", UnityEngine.KeyCode.LeftAlt, "Key for the Dodge Roll perk (hold A or D for the direction). C, G and I are already used by the mod.");
+        MonsterRarity = BindInt(cfg, Monsters, "Rarity", 60, 1, 100, "How often the director picks each new monster compared with a vanilla one (vanilla presets are about 100).");
         IceMeleeBonusPercent = BindInt(cfg, Gear, "IceMeleeBonusPercent", 35, 0, 300,
             "Extra melee damage frozen enemies take, in percent.");
         DecoySeconds = BindFloat(cfg, Gear, "DecoySeconds", 5f, 1f, 30f, "How long the Decoy Grenade attracts monsters once armed.");
@@ -1134,7 +1152,7 @@ public static class ModConfig
             "Desperation works while your health is below this share of max health (0.30 = under 30%).");
         SkillHeavyHitterPerLevel = BindFloat(cfg, "Skill Tree", "HeavyHitterSecondsPerLevel", .5f, 0f, 3f,
             "Heavy Hitter: extra seconds of stun per level when your melee weapon stuns a monster (8 s max).");
-        SkillMedicPerLevel = BindFloat(cfg, "Skill Tree", "FieldMedicPerLevel", .15f, 0f, 1f,
+        SkillMedicPerLevel = BindFloat(cfg, "Skill Tree", "FieldMedicPerLevel", .12f, 0f, 1f,
             "Field Medic: health packs you use heal this much more per level (0.15 = +15%), and teammates near you get this share of the pack per level.");
         SkillMedicRadius = BindFloat(cfg, "Skill Tree", "FieldMedicRadius", 5f, 1f, 20f,
             "Field Medic: teammates within this many metres share your health pack.");
@@ -1182,6 +1200,7 @@ public static class ModConfig
 
     // Parsed form of EnemyHealthMaxPerEnemy, rebuilt whenever the string changes.
     private static Dictionary<string, float> _perEnemyHealthMax = new();
+    internal static IEnumerable<float> PerEnemyHealthCaps => _perEnemyHealthMax.Values;
 
     private static void RebuildPerEnemyCaps()
     {

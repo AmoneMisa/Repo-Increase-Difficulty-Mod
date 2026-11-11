@@ -14,8 +14,8 @@ namespace IncreaseHardMod.Gear;
 /// radius while Active; the Defence drone covers the player it is attached to. The battery is owned by the
 /// host, so a client that absorbed damage asks the host to drain it (<see cref="ModNetwork.BroadcastBatteryDrain"/>).
 ///
-/// Defence: 100% battery = <c>DefenceAbsorb</c> damage. Protection: -25% damage, and the orb is made to
-/// drain its battery 3x faster than a normal orb.
+/// Defence: a full charge absorbs at least 450 direct damage (drone) or $10,000 lost value (orb).
+/// Protection: at least 30% less direct damage, at 1.5 times the native orb drain.
 /// </summary>
 internal sealed class ShieldItem : MonoBehaviour
 {
@@ -47,11 +47,17 @@ internal sealed class ShieldItem : MonoBehaviour
         if (Battery == null)
             yield break;
         if (mode == ShieldMode.ProtectionOrb)
-            Battery.batteryDrainRate *= 3f;
+            Battery.batteryDrainRate *= UtilityGearRules.ProtectionDrain;
         else if (mode == ShieldMode.DefenceDrone)
-            Battery.batteryDrainRate = 100f / ModConfig.DefenceDroneSeconds.Value / 2f; // time from full to empty
+            Battery.batteryDrainRate = 100f / UtilityGearRules.DefenceSeconds(ModConfig.DefenceDroneSeconds.Value) / 2f;
         else
-            Battery.batteryDrainRate = ModConfig.DefenceIdleDrainPerMinute.Value / 60f / 2f;
+            Battery.batteryDrainRate = Mathf.Min(10f, ModConfig.DefenceIdleDrainPerMinute.Value) / 60f / 2f;
+        if (_drone?.Drone != null) _drone.Drone.batteryDrainRate = Battery.batteryDrainRate;
+        if (_orb != null)
+        {
+            _orb.batteryDrainRate = Battery.batteryDrainRate;
+            _orb.orbRadiusOriginal *= UtilityGearRules.OrbRadius;
+        }
     }
 
     /// <summary>Is this valuable inside an active Defence Orb field?</summary>
@@ -88,7 +94,7 @@ internal static class ShieldPatches
                 !SemiFunc.IsMasterClientOrSingleplayer())
                 return true;
 
-            float perPercent = ModConfig.DefenceItemAbsorb.Value / 100f; // dollars absorbed per 1% of battery
+            float perPercent = UtilityGearRules.LootCapacity(ModConfig.DefenceItemAbsorb.Value) / 100f;
             Vector3 pos = __instance.transform.position;
             foreach (var s in ShieldItem.All)
             {
@@ -112,6 +118,7 @@ internal static class ShieldPatches
         [HarmonyPriority(Priority.Last)]
         private static void Prefix(PlayerHealth __instance, ref int damage, bool hurtByHeal, int enemyIndex)
         {
+            if (Monsters.MonsterAfflictions.DotDamage > 0) return;
             var avatar = __instance.playerAvatar;
             // Match the native Hurt rejection gates before spending a shield's battery.
             // Prefixes run even when the original would ignore a remote or invincible player.
@@ -129,7 +136,7 @@ internal static class ShieldPatches
 
             if (ShieldItem.All.Count == 0)
                 return;
-            float reduction = ModConfig.ProtectionReductionPercent.Value / 100f;
+            float reduction = UtilityGearRules.Protection(ModConfig.ProtectionReductionPercent.Value);
             bool protectedByOrb = false;
             foreach (var s in ShieldItem.All)
                 if (s.mode == ShieldMode.ProtectionOrb && s.Battery != null && s.Battery.batteryLife > 0f && s.Covers(avatar))
@@ -140,14 +147,14 @@ internal static class ShieldPatches
             if (protectedByOrb)
                 damage = Mathf.Max(1, Mathf.CeilToInt(damage * (1f - reduction)));
 
-            float perPercent = ModConfig.DefenceAbsorb.Value / 100f; // damage absorbed per 1% of battery
+            float perPercent = UtilityGearRules.DefenceCapacity(ModConfig.DefenceAbsorb.Value) / 100f;
             foreach (var s in ShieldItem.All)
             {
                 if (damage <= 0)
                     break;
                 if (s.mode != ShieldMode.DefenceDrone || s.Battery == null || s.Battery.batteryLife <= 0f || !s.Covers(avatar))
                     continue;
-                int absorbed = Mathf.Min(damage, Mathf.FloorToInt(s.Battery.batteryLife * perPercent));
+                int absorbed = Mathf.Min(Mathf.Max(0, damage - (enemyIndex >= 0 ? 1 : 0)), Mathf.FloorToInt(s.Battery.batteryLife * perPercent));
                 if (absorbed <= 0)
                     continue;
                 damage -= absorbed;

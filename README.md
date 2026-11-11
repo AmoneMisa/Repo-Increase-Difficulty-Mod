@@ -11,7 +11,9 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.9.4`
+- **Version:** `0.10.0`
+
+Version 0.10.0 adds five monsters (Golden Pig, Witch, Basilisk, Gorgon, Naga Queen), eight perks against them and their HUD statuses, plus Spread Upgrades, Ice/Sticky Pistol, shop info and Link Drone fixes ([details](release-notes/v0.10.0.md)). The monsters are not yet validated in a live game; their models are first-pass.
 
 Version 0.7.12 adds the plush corgi, three Rare wing cosmetics, an Armor HUD row, cleaner pings and a set of shop, HUD and multiplayer fixes ([details](release-notes/v0.7.12.md)).
 
@@ -91,7 +93,7 @@ level is configurable.
 | Level | Extra Small / Big Cart | An extra cart spawns |
 | Level | Extra Souls | Monsters drop more souls |
 | Level | Bigger Soul Drops | Each soul drop is worth more |
-| Level | Spread Upgrades | Upgrades are scattered around, usable only back in the truck |
+| Level | Spread Upgrades | Up to 6 pickups across the map; submit them with a successful quota to receive them in the next truck |
 | Level | More Gacha Cubes | More gacha/cube valuables spawn |
 | Player | No Map | No map until you find a map upgrade pickup |
 | Player | Reduced Player HP | Everyone starts wounded (rolled %) |
@@ -136,7 +138,7 @@ the result through the game's normal sync.
 | **Enemy count** | More monsters per level after level 8: +3% per level, capped at x2 (the extras come from the hardest tier already unlocked). |
 | **Level size** | Bigger maps after level 8: +3% modules and grid per level, capped at x1.5. More modules also means more extraction points through the game's own thresholds. |
 | **Extractions** | One extra extraction point every 10 levels, at most 5 per level. |
-| **Moon phases** | Off by default. When on, the moon advances every 15 levels instead of every 5. |
+| **Moon phases** | Recommended: one phase every 5 levels. The optional interval override defaults to 5; three new cumulative phases follow the four native phases. |
 | **Economic surprises** | Part of `Modules/Surprises`. From level 3 on, a level gets a random economic surprise with 50% chance: a multiplier on loot value, quota and/or extraction pay. 20 events from *Gold Rush* (+35% loot value) and *Windfall* (+30% pay) to *Tax Audit* (-25% pay, +10% quota) and *Crushing Quota* (+40%). Bad events get likelier with depth. Tune `Surprises/EconomyEventChancePercent` and `EconomyStartLevel`; 0% disables this category. Old economy settings migrate automatically. Shop price events remain under `Modules/ShopEconomy`. |
 
 #### Shop economy and the Black Market
@@ -221,12 +223,12 @@ served). Recolour its body, second colour and cap/backpack (12 swatches) in the 
 Couriers idle, run, fly, get petted and change mood (happy, focused, surprised, sad, sleepy).
 
 - **Pet it** like the game's Elsa: aim your grab at any courier and grab. It wriggles free with Elsa's pink hearts, a happy face and one of three sounds of its own animal; keep holding to keep petting.
-- **Courier menu** (`G`, arrows to move, `Enter` to pick): charge the item in your hands at the charging station and
-  bring it back; fetch an item from the truck; put the item in your hands into its backpack and take items out
+- **Courier menu** (`C`, arrows to move, `Enter` to pick): charge the item you're holding or aiming at in the truck and
+  bring it back; leave held equipment in the truck or fetch it; put the item in your hands into its backpack and take items out
   (1 slot, up to 3); drop everything and follow; gacha; appearance.
 - **Monsters go for couriers.** A monster nearby may notice it and come to look, and one right next to it knocks it
   back and hurts it. A knocked-out courier drops what it carries and returns to the truck after 45 s.
-- **Courier perk page** (skill tree page 7, 40 points): *Ally Delivery*, *Cart Delivery*, *Carry Weight*,
+- **Courier perk page** (skill tree page 7, 47 points): *Head Search* (2 points) shows the route to the nearest reachable head, and *Head Rescue* (5 points) brings it back from up to three rooms away. Other perks include *Ally Delivery*, *Cart Delivery*, *Carry Weight*,
   *Bigger Backpack* (up to 3 slots), *Courier Speed*, *Dash*, *Flight*, *Courier Health* (up to double),
   *Tough Courier* (up to 40% less damage), *Low Profile* (monsters go for it less), *Quick Recovery* and
   *Lucky Finds* (a rare random upgrade on a level).
@@ -317,7 +319,9 @@ only on a successful extraction.
 | Spectator map (hold) | `Tab` | Spectator Map |
 | Map zoom in / out (Map Zoom perks) | `-` / `=` | Player Upgrades |
 | Open / close the skill tree | `K` (pages `1`–`7`, `Q` / `E`) | Skill Tree |
-| Courier menu / pet a courier | `G` / grab it | Courier |
+| Courier menu / pet a courier | `C` / grab it | Courier |
+| Shop item info | `I` while aiming at a shop item | Gear |
+| Dodge Roll perk | `Left Alt` + `A`/`D` | Monsters |
 | Map vote | `NumPad 1–6` or click | Map Vote |
 | Extra inventory slots | `4`–`7` | Inventory Slots |
 
@@ -425,7 +429,9 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.9.4`
+- **Версия:** `0.10.0`
+
+Версия 0.10.0 добавляет пять монстров (Золотая свинка, Ведьма, Василиск, Горгона, Королева Наг), восемь перков против них и HUD-статусы, а также исправления Spread Upgrades, ледяного и притягивающего пистолетов, подсказок магазина и Linked Drone ([подробности](release-notes/v0.10.0.md)). Монстры ещё не проверены в живой игре, модели черновые.
 
 В 0.7.12 добавлены плюшевый корги, три редких крыла, строка брони на HUD, более чистые пинги и исправления магазина, HUD и мультиплеера ([подробности](release-notes/v0.7.12.md)).
 
@@ -547,7 +553,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 | **Число врагов** | Больше монстров после 8-го уровня: +3% за уровень, максимум x2 (добавка берётся из самого сильного уже открытого тира). |
 | **Размер уровня** | Карты крупнее после 8-го уровня: +3% модулей и сетки за уровень, максимум x1,5. Больше модулей — больше точек экстракции по пороговым значениям игры. |
 | **Экстракции** | Одна дополнительная точка экстракции раз в 10 уровней, не больше 5 на уровень. |
-| **Фазы луны** | По умолчанию выключено. Если включить, луна меняется раз в 15 уровней вместо 5. |
+| **Фазы луны** | Рекомендуется одна фаза каждые 5 уровней. Необязательная настройка интервала по умолчанию равна 5; после четырёх базовых фаз идут три новые накопительные. |
 | **Экономические сюрпризы** | Входят в общий `Modules/Surprises`. Начиная с 3-го уровня с шансом 50% меняют стоимость лута, квоту и/или оплату за экстракцию. 20 событий, от *Gold Rush* (+35% к стоимости лута) и *Windfall* (+30% к оплате) до *Tax Audit* (-25% к оплате, +10% к квоте) и *Crushing Quota* (+40% к квоте). Плохие события с глубиной выпадают чаще. Параметры — `Surprises/EconomyEventChancePercent` и `EconomyStartLevel`; шанс 0% отключает эту категорию. Прежние значения переносятся автоматически. События цен магазина остаются в `Modules/ShopEconomy`. |
 
 #### Экономика магазина и Чёрный рынок
@@ -704,11 +710,11 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 стоят, бегают, летают, радуются поглаживанию и меняют настроение (радость, сосредоточенность, удивление, грусть, сон).
 
 - **Погладить** как Эльзу: наведите захват на любого курьера и схватите. Он выскользнет с розовыми сердечками, как у Эльзы, довольной мордочкой и одним из трёх звуков своего животного; держите захват, чтобы гладить дальше.
-- **Меню курьера** (`G`, стрелки, `Enter`): зарядить предмет из рук на станции и вернуть; принести предмет из машины;
+- **Меню курьера** (`C`, стрелки, `Enter`): зарядить в машине предмет из рук или под прицелом и вернуть; отнести снаряжение из рук в машину или принести его обратно;
   убрать предмет из рук в рюкзак курьера и достать обратно (1 слот, до 3); бросить всё и идти за вами; гача; внешний вид.
 - **Монстры нападают на курьеров.** Монстр рядом может заметить курьера и подойти, а вплотную — отбросить и ранить.
   Выбитый курьер роняет груз и через 45 с возвращается к машине.
-- **Страница перков «Курьер»** (7-я страница дерева, 40 очков): *Доставка союзнику*, *Доставка тележки*,
+- **Страница перков «Курьер»** (7-я страница дерева, 47 очков): *Поиск головы* (2 очка) показывает путь к ближайшей доступной голове, а *Доставка головы* (5 очков) позволяет принести её с расстояния до трёх комнат. Также доступны *Доставка союзнику*, *Доставка тележки*,
   *Грузоподъёмность*, *Большой рюкзак* (до 3 слотов), *Скорость курьера*, *Рывок*, *Полёт*, *Здоровье курьера*
   (до двух раз больше), *Крепкий курьер* (до 40% меньше урона), *Незаметность* (монстры реже нападают),
   *Быстрое восстановление* и *Удачные находки* (редкое случайное улучшение на уровне).
@@ -726,7 +732,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 | Карта наблюдателя (удержание) | `Tab` | Spectator Map |
 | Зум карты + / − (перки Map Zoom) | `-` / `=` | Player Upgrades |
 | Открыть / закрыть дерево навыков | `K` (страницы `1`–`7`, `Q` / `E`) | Skill Tree |
-| Меню курьера / погладить курьера | `G` / захват | Courier |
+| Меню курьера / погладить курьера | `C` / захват | Courier |
 | Голосование за карту | `NumPad 1–6` или мышь | Map Vote |
 | Дополнительные слоты | `4`–`7` | Inventory Slots |
 

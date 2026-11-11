@@ -24,6 +24,14 @@ internal static class HudScreenArt
             case PlayerCondition.Poisoned: Toxic(pixels); break;
             case PlayerCondition.Netted: Net(pixels); break;
             case PlayerCondition.Shocked: Electric(pixels); break;
+            case PlayerCondition.Electrified: Electric(pixels); break;
+            case PlayerCondition.Venom: Toxic(pixels); break;
+            case PlayerCondition.Burning: Band(pixels, new Color(.9f, .25f, .02f), new Color(1f, .75f, .2f), 51, .2f, .7f); break;
+            case PlayerCondition.Bleeding: Band(pixels, new Color(.45f, 0f, 0f), new Color(.85f, .05f, .05f), 61, .16f, .65f); break;
+            case PlayerCondition.Constricted: Band(pixels, new Color(.15f, .35f, .1f), new Color(.5f, .8f, .3f), 71, .18f, .7f); break;
+            case PlayerCondition.Petrified: Band(pixels, new Color(.35f, .34f, .32f), new Color(.75f, .73f, .68f), 81, .24f, .85f); break;
+            case PlayerCondition.Slowed: Band(pixels, new Color(.5f, .35f, .05f), new Color(1f, .8f, .35f), 91, .15f, .55f); break;
+            case PlayerCondition.Dragged: Band(pixels, new Color(.5f, .12f, .05f), new Color(1f, .45f, .3f), 101, .15f, .6f); break;
             default: Sleepy(pixels); break;
         }
         var texture = new Texture2D(W, H, TextureFormat.RGBA32, false)
@@ -42,7 +50,14 @@ internal static class HudScreenArt
         PlayerCondition.Frozen => HudIcons.Silhouette("snowflake", Snowflake),
         PlayerCondition.Poisoned => HudIcons.Silhouette("biohazard", Biohazard),
         PlayerCondition.Netted => HudIcons.Silhouette("net", NetIcon),
-        PlayerCondition.Shocked => HudIcons.Silhouette("bolt", BoltIcon),
+        PlayerCondition.Shocked or PlayerCondition.Electrified => HudIcons.Silhouette("bolt", BoltIcon),
+        PlayerCondition.Venom => HudIcons.Silhouette("biohazard", Biohazard),
+        PlayerCondition.Burning => HudIcons.Silhouette("flame", Flame),
+        PlayerCondition.Bleeding => HudIcons.Silhouette("drop", Drop),
+        PlayerCondition.Constricted => HudIcons.Silhouette("coil", Coil),
+        PlayerCondition.Petrified => HudIcons.Silhouette("stone", Stone),
+        PlayerCondition.Slowed => HudIcons.Silhouette("eye", EyeIcon),
+        PlayerCondition.Dragged => HudIcons.Silhouette("horns", Horns),
         _ => HudIcons.Silhouette("moon", Moon),
     };
 
@@ -55,6 +70,19 @@ internal static class HudScreenArt
     {
         float dx = Math.Min(x, W - 1 - x), dy = Math.Min(y, H - 1 - y);
         return Clamp01(1f - Mathf.Sqrt(dx * dx + dy * dy) / (reach * H));
+    }
+
+    // A soft noisy band along every edge, darker outside, for the monster afflictions.
+    private static void Band(Color32[] px, Color dark, Color bright, int seed, float reach, float strength)
+    {
+        for (int y = 0; y < H; y++)
+        for (int x = 0; x < W; x++)
+        {
+            float n = Fbm(x / 30f, y / 30f, seed);
+            float a = Smooth(reach, 0f, Edge(x, y) - .06f * (n - .5f));
+            a = Math.Max(a, Mathf.Pow(CornerBump(x, y, reach * 2.6f), 1.8f) * .9f);
+            Put(px, x, y, Color.Lerp(dark, bright, n), a * strength * (.55f + .45f * n));
+        }
     }
 
     private static void Frost(Color32[] px)
@@ -255,6 +283,60 @@ internal static class HudScreenArt
         float centre = v < .5f ? .25f - v * .9f : -.2f + (v - .5f) * .9f; // upper stroke leans left, lower one right
         float half = .2f + (v > .44f && v < .56f ? .25f : 0f);           // the wide middle step
         return Mathf.Abs(u - centre) < half * (1f - Mathf.Abs(v - .5f) * .9f);
+    }
+
+    private static bool Flame(float u, float v)
+    {
+        // A teardrop with a flickering tongue: wide at the bottom, pointed at the top.
+        float y = 1f - v;
+        float width = y < .35f ? Mathf.Sqrt(Mathf.Max(0f, .35f * .35f - (y - .35f) * (y - .35f))) * 1.9f : .66f * (1f - (y - .35f) / .65f);
+        float x = u + .12f * Mathf.Sin(y * 7f) * y;
+        return v > .04f && Mathf.Abs(x) < width && !(Mathf.Abs(u + .05f) < width * .35f && y < .3f && y > .08f);
+    }
+
+    private static bool Drop(float u, float v)
+    {
+        float y = 1f - v;
+        float width = y < .4f ? Mathf.Sqrt(Mathf.Max(0f, .4f * .4f - (y - .4f) * (y - .4f))) * 1.6f : .64f * (1f - (y - .4f) / .6f);
+        return v > .04f && Mathf.Abs(u) < width;
+    }
+
+    private static bool Coil(float u, float v)
+    {
+        float y = (v - .5f) * 2f;
+        for (int k = 0; k < 3; k++)
+        {
+            float cy = -.55f + k * .55f;
+            float d = (u * u) / (.78f * .78f) + ((y - cy) * (y - cy)) / (.2f * .2f);
+            if (d < 1f && d > .45f) return true;
+        }
+        return Mathf.Abs(u - .55f) < .12f && y < -.55f && y > -.95f;
+    }
+
+    private static bool Stone(float u, float v)
+    {
+        float y = (v - .5f) * 2f;
+        bool inside = Mathf.Abs(u) + Mathf.Abs(y) * .8f < .85f && y > -.75f && y < .7f;
+        bool crack = Mathf.Abs(u - (.2f - y * .3f)) < .05f && y > -.3f && y < .5f;
+        return inside && !crack;
+    }
+
+    private static bool EyeIcon(float u, float v)
+    {
+        float y = (v - .5f) * 2f;
+        bool almond = Mathf.Abs(y) < .55f * (1f - u * u);
+        float r = Mathf.Sqrt(u * u + y * y);
+        return almond && !(r > .22f && r < .32f);
+    }
+
+    private static bool Horns(float u, float v)
+    {
+        float y = 1f - v;
+        float x = Mathf.Abs(u);
+        bool head = x < .3f && y < .5f && y > .05f;
+        float hornY = .45f + (x - .3f) * .8f;
+        bool horn = x >= .25f && x < .95f && Mathf.Abs(y - hornY) < .12f * (1f - (x - .25f) / .75f) + .02f;
+        return head || horn;
     }
 
     private static bool Snowflake(float u, float v)

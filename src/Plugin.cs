@@ -14,7 +14,7 @@ public static class PluginInfo
     // Keep the identity stable across the rename: existing config and integrations use it.
     public const string PLUGIN_GUID = "com.kubai.increasehardmod";
     public const string PLUGIN_NAME = "IncreaseDifficultyMod";
-    public const string PLUGIN_VERSION = "0.9.4";
+    public const string PLUGIN_VERSION = "0.10.0";
 }
 
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -128,6 +128,7 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<Valuables.LootSafetyNet>();
         // Challenge shrines: timed side challenges on run levels (host logic, every client draws the props).
         netObject.AddComponent<Challenges.ChallengeManager>();
+        netObject.AddComponent<Challenges.MapRitual>();
         // Wizard Staff shock: slows shocked monsters (host) and halves the local player's stamina recovery.
         netObject.AddComponent<Gear.Shock.Controller>();
         // Instinct buffs: heal-over-time ticks (host) and the buff lines on each player's HUD.
@@ -136,6 +137,7 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<ServerInfoHud>();
         // In-shop cart overlay: aggregates ShopManager.shoppingList into a colour-coded panel.
         netObject.AddComponent<ShoppingListHud>();
+        netObject.AddComponent<Gear.ShopItemInfo>();
         // Map Vote: lobby-phase vote on the next map (host rolls candidates + applies the winner).
         netObject.AddComponent<Patches.Effects.MapVoteController>();
         // Drives the per-player HP Regeneration upgrade (continuous local heal-up-to-cap).

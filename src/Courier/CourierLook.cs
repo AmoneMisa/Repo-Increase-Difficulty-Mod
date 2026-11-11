@@ -9,14 +9,7 @@ internal static class CourierLook
     private static readonly string[] NamesEn = { "Penguin", "Chicken", "Cat", "Owl", "Beaver", "Sheep", "Cow", "Dog", "Fairy", "Little Devil", "Little Angel", "Dragon" };
     private static readonly string[] NamesRu = { "Пингвин", "Курочка", "Котик", "Сова", "Бобёр", "Овечка", "Коровка", "Собачка", "Фея", "Чертёнок", "Ангелочек", "Дракончик" };
 
-    // Reuse available calls until dedicated recordings exist for the additional species.
-    internal static string Voice(int animal) => Keys[Mathf.Clamp(animal, 0, Keys.Length - 1)] switch
-    {
-        "sheep" or "cow" or "dog" => "beaver",
-        "fairy" or "angel" => "chicken",
-        "devil" or "dragon" => "cat",
-        var key => key,
-    };
+    internal static string Voice(int animal) => Keys[Mathf.Clamp(animal, 0, Keys.Length - 1)];
 
     internal static string Name(int animal) =>
         (Localization.GameLanguage.Russian ? NamesRu : NamesEn)[Mathf.Clamp(animal, 0, Keys.Length - 1)];

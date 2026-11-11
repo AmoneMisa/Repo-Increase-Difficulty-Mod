@@ -83,6 +83,7 @@ internal static class SurvivalUpgrades
         [HarmonyPriority(Priority.Low)]
         private static void Prefix(PlayerHealth __instance, ref int damage, bool hurtByHeal)
         {
+            if (Monsters.MonsterAfflictions.DotDamage > 0) return;
             if (damage <= 0) return;
             if (_tumbleSelfScale < 1f) damage = Mathf.FloorToInt(damage * _tumbleSelfScale);
             if (hurtByHeal || __instance.playerAvatar == null) return;
@@ -91,7 +92,7 @@ internal static class SurvivalUpgrades
             if (damage > 0 && !Mathf.Approximately(taken, 1f)) damage = Mathf.Max(1, Mathf.RoundToInt(damage * taken));
             if (!ModConfig.ArmorEnabled.Value) return;
             float level = Level(ArmorId, __instance.playerAvatar, ModConfig.ArmorMaxLevel.Value);
-            if (level > 0f) damage = Reduce(damage, Mathf.Min(ArmorCap, ModConfig.ArmorPercentPerLevel.Value * level));
+            if (level > 0f && damage > 0) damage = Mathf.Max(1, Reduce(damage, Mathf.Min(ArmorCap, ModConfig.ArmorPercentPerLevel.Value * level)));
         }
     }
 

@@ -138,6 +138,7 @@ internal static class BuffPerks
         [HarmonyPriority(Priority.Low + 1)]
         private static void Prefix(PlayerHealth __instance, ref int damage, bool hurtByHeal)
         {
+            if (Monsters.MonsterAfflictions.DotDamage > 0) return;
             var me = __instance != null ? __instance.playerAvatar : null;
             if (damage > 0 && !hurtByHeal && me != null && me.isLocal && Active(me, Buff.IronSkin))
                 damage = Mathf.Max(1, Mathf.RoundToInt(damage * IronSkinFactor));

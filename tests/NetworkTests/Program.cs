@@ -8,6 +8,10 @@ using UnityEngine;
 int checks=0;
 void Check(bool ok,string name){if(!ok)throw new Exception(name);checks++;Console.WriteLine("PASS: "+name);}
 var network=new ModNetwork();
+network.OnEvent(new EventData { Code=StickyRoot.EventCode, Sender=3 });
+Check(StickyRoot.Received==0,"A peer cannot root another player");
+network.OnEvent(new EventData { Code=StickyRoot.EventCode, Sender=1 });
+Check(StickyRoot.Received==1,"Host glue status reaches its validated receiver");
 void Send(byte code,object data,int sender=1)=>network.OnEvent(new EventData{Code=code,CustomData=data,Sender=sender});
 if(args.Contains("--baseline-authority"))
 {
@@ -168,6 +172,10 @@ Send(IncreaseHardMod.Skills.BuffPerks.EventCode,new object[]{(byte)0,4f});Check(
 // Challenge state: host only.
 Send(IncreaseHardMod.Challenges.ChallengeManager.EventCode,new object[]{"k"},3);Check(IncreaseHardMod.Challenges.ChallengeManager.Received==0,"Non-host cannot send challenge state");
 Send(IncreaseHardMod.Challenges.ChallengeManager.EventCode,new object[]{"k"});Check(IncreaseHardMod.Challenges.ChallengeManager.Received==1,"Host challenge state is delivered");
+{bool was=PhotonNetwork.IsMasterClient;PhotonNetwork.IsMasterClient=false;
+ Send(IncreaseHardMod.Challenges.MapRitual.EventCode,new object[]{"k"},3);Check(IncreaseHardMod.Challenges.MapRitual.Received==0,"Non-host cannot send ritual state");
+ Send(IncreaseHardMod.Challenges.MapRitual.EventCode,new object[]{"k"});Check(IncreaseHardMod.Challenges.MapRitual.Received==1,"Host ritual state is delivered");
+ PhotonNetwork.IsMasterClient=was;}
 // Loot safety net notice: host only, well-formed only.
 foreach(var raw in new object[]{null,42,new object[]{0,100,true},new object[]{101,100,true},new object[]{3,-1,true},new object[]{3,100,"yes"},new object[]{3,100}})
  Send(ModNetwork.LootNoticeEventCode,raw);

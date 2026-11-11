@@ -122,4 +122,9 @@ foreach (string mode in new[] { "host", "disabled", "local", "public" })
     native = NativeConnect(); pending = LateJoinSession.WaitForLobbyData(native);
     Check(pending.MoveNext() && ReferenceEquals(pending.Current, native), "No metadata delay for " + mode);
 }
+// Max health raised after the host's upgrades arrive (120 -> 180).
+Check(IncreaseHardMod.Patches.Effects.LateJoinRules.ReconciledHealth(120, 120, 180, 180) == 180, "Health clamped by a stale max is restored to the saved 180");
+Check(IncreaseHardMod.Patches.Effects.LateJoinRules.ReconciledHealth(70, 120, 180, 180) == 70, "A wounded joiner is not healed by the correction");
+Check(IncreaseHardMod.Patches.Effects.LateJoinRules.ReconciledHealth(120, 120, 120, 180) == 120, "Saved health is never invented above what the host saved");
+Check(IncreaseHardMod.Patches.Effects.LateJoinRules.ReconciledHealth(120, 120, 500, 180) == 180, "Never above the new maximum");
 Console.WriteLine($"LATE_JOIN_PASS: {checks}");

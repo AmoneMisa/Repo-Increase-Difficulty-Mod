@@ -12,6 +12,7 @@ internal sealed class StickyTether : MonoBehaviour
     private Vector3 _point;
     private float _until, _began;
     private LineRenderer _line;
+    private Transform _cup;
     private static Material _material;
 
     internal static void Pulse(ItemGun gun, Vector3 end)
@@ -22,7 +23,7 @@ internal sealed class StickyTether : MonoBehaviour
         visual._target = null;
         visual._point = end;
         visual._began = Time.time;
-        visual._until = Time.time + .22f;
+        visual._until = Time.time + .55f;
     }
 
     internal static void Apply(ItemGun gun, PhysGrabObject target, Vector3 localPoint, float seconds)
@@ -49,11 +50,11 @@ internal sealed class StickyTether : MonoBehaviour
     private void LateUpdate()
     {
         bool active = _gun != null && _gun.isActiveAndEnabled && _gun.gunMuzzle != null && Time.time < _until;
-        if (!active) { if (_line != null) _line.enabled = false; return; }
+        if (!active) { if (_line != null) _line.enabled = false; if (_cup != null) _cup.gameObject.SetActive(false); return; }
         var start = _gun.gunMuzzle.position;
         var end = _target != null ? _target.transform.TransformPoint(_point) : _point;
         if (_target != null && (!_target.isActiveAndEnabled || Vector3.Distance(start, end) < 1.2f))
-        { _until = 0f; if (_line != null) _line.enabled = false; return; }
+        { _until = 0f; if (_line != null) _line.enabled = false; if (_cup != null) _cup.gameObject.SetActive(false); return; }
         if (_line == null)
         {
             var go = new GameObject("Sticky cable");
@@ -72,8 +73,24 @@ internal sealed class StickyTether : MonoBehaviour
         }
         _line.enabled = true;
         float age = Time.time - _began;
-        end = Vector3.Lerp(start,end,Mathf.Clamp01(age / .12f));
+        // Launch, flatten on impact, then reel the cup back into the muzzle.
+        float reach = Mathf.Clamp01(age / .12f) * Mathf.Clamp01((_until - Time.time) / .16f);
+        end = Vector3.Lerp(start,end,reach);
         var delta = end-start;
+        if (_cup == null)
+        {
+            var cup = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            cup.name = "Sticky suction cup";
+            var collider = cup.GetComponent<Collider>(); collider.enabled = false; Destroy(collider);
+            cup.GetComponent<Renderer>().sharedMaterial = _material;
+            cup.GetComponent<Renderer>().material.color = new Color(.95f, .35f, .65f);
+            // World-space and unparented: an item's own scale must not stretch the cup.
+            _cup = cup.transform;
+        }
+        _cup.gameObject.SetActive(true);
+        _cup.SetPositionAndRotation(end, Quaternion.LookRotation(delta.sqrMagnitude > .0001f ? delta : transform.forward));
+        float impact = Mathf.Clamp01((age - .1f) / .06f);
+        _cup.localScale = new Vector3(.13f + impact * .1f, .13f + impact * .1f, .12f - impact * .07f);
         var side = Vector3.Cross(delta.normalized,Vector3.up).normalized;
         if (side.sqrMagnitude < .01f) side = Vector3.right;
         for (int i=0;i<24;i++)
@@ -83,5 +100,14 @@ internal sealed class StickyTether : MonoBehaviour
             float coil=Mathf.Sin(t*Mathf.PI*8f-age*24f)*.18f*Mathf.Exp(-age*12f);
             _line.SetPosition(i,Vector3.Lerp(start,end,t)+side*coil*envelope-Vector3.up*(.05f*envelope));
         }
+    }
+
+    private void OnDisable() { if (_cup != null) _cup.gameObject.SetActive(false); }
+
+    private void OnDestroy()
+    {
+        if (_cup == null) return;
+        Destroy(_cup.GetComponent<Renderer>().material);
+        Destroy(_cup.gameObject);
     }
 }

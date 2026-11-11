@@ -7,5 +7,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../src/Patches/Effects/LateJoinSession.cs" Link="Production/LateJoinSession.cs" />
+    <Compile Include="../../src/Patches/Effects/LateJoinRules.cs" Link="Production/LateJoinRules.cs" />
   </ItemGroup>
 </Project>

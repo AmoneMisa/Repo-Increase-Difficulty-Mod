@@ -26,16 +26,19 @@ def voice(length, pitch, harmonics, formants=(), noise=0.0, vibrato=(0, 0), seed
     rng = random.Random(seed); out = []; phase = 0.0; low = 0.0
     for i in range(int(length * RATE)):
         t = i / RATE
-        f = pitch(t) * (1 + vibrato[1] * math.sin(2 * math.pi * vibrato[0] * t))
+        flutter = .008 * math.sin(2 * math.pi * 9.7 * t + seed) + .004 * math.sin(2 * math.pi * 23.1 * t)
+        f = pitch(t) * (1 + flutter + vibrato[1] * math.sin(2 * math.pi * vibrato[0] * t))
         phase += 2 * math.pi * f / RATE
         v = 0.0
         for k, a in enumerate(harmonics, 1):
             boost = 1.0
             for fc, bw, g in formants:
                 boost += g * math.exp(-((k * f - fc) / bw) ** 2)
-            v += a * boost * math.sin(k * phase)
+            v += a * boost * math.sin(k * phase + .13 * k * k)
         n = rng.uniform(-1, 1); low = low * .7 + n * .3
-        out.append((v + noise * low) * env(t, length))
+        shape = env(t, length, min(.025, length * .2), min(.09, length * .45))
+        pulse = .91 + .09 * math.sin(2 * math.pi * 12.7 * t + seed)
+        out.append((v * pulse + noise * (low + .18 * n)) * shape * shape)
     return out
 
 
@@ -121,6 +124,41 @@ def beaver():
     write('beaver_call', concat(chit(.08, 800, 7), chit(.1, 760, 8), gap=.05))
 
 
+def extra_voices():
+    def note(length, start, crest, end, harmonics, formants, breath, seed, flutter=(6, .018)):
+        def contour(t):
+            p = t / length
+            return start * (1 - p) + end * p + (crest - (start + end) * .5) * math.sin(math.pi * p)
+        return voice(length, contour, harmonics, formants, breath, flutter, seed)
+
+    bleat = lambda length, f, s: note(length, f, f * 1.2, f * .82,
+        [1, .75, .52, .34, .23, .12], [(850, 240, 2.4), (1600, 450, 1)], .24, s, (18, .044))
+    moo = lambda length, f, s: note(length, f, f * 1.19, f * .7,
+        [1, .78, .64, .4, .23, .15, .09], [(430, 150, 2.5), (980, 240, 1.5)], .18, s, (6, .035))
+    yip = lambda length, f, s: note(length, f, f * 1.7, f * .7,
+        [1, .8, .61, .45, .34, .22, .15], [(1050, 450, 1.6), (2100, 650, 1.2)], .45, s)
+    peep = lambda length, f, s: note(length, f, f * 1.4, f * .91,
+        [1, .19, .035], [(2200, 400, .8)], .08, s, (20, .023))
+    chuckle = lambda length, f, s: note(length, f, f * 1.45, f * .66,
+        [1, .65, .44, .35, .18], [(930, 200, 1.7), (1780, 300, 1.25)], .28, s, (26, .055))
+    coo = lambda length, f, s: note(length, f, f * 1.26, f * .88,
+        [1, .39, .19, .08], [(1350, 240, .8)], .21, s, (7, .025))
+    chirr = lambda length, f, s: note(length, f, f * 1.28, f * .65,
+        [1, .81, .58, .33, .26, .15], [(660, 190, 2), (1800, 500, 1.3)], .52, s, (31, .075))
+
+    profiles = {
+        'sheep': (bleat, .3, 420), 'cow': (moo, .46, 230), 'dog': (yip, .13, 490),
+        'fairy': (peep, .14, 1330), 'devil': (chuckle, .17, 550), 'angel': (coo, .24, 710),
+        'dragon': (chirr, .21, 360),
+    }
+    for name, (animal, length, f) in profiles.items():
+        write(name + '_call', animal(length, f, 11), .53)
+        write(name + '_happy1', concat(animal(length * .67, f * 1.13, 21), animal(length, f * 1.28, 22)), .58)
+        write(name + '_happy2', animal(length * 1.4, f * 1.09, 31), .58)
+        write(name + '_happy3', concat(animal(length * .75, f, 41), animal(length * .6, f * 1.21, 42),
+            animal(length * .72, f * 1.35, 43), gap=.055), .58)
+
+
 def shared():
     rng = random.Random(3); step = []; low = 0
     for i in range(int(.07 * RATE)):
@@ -142,6 +180,6 @@ def shared():
     write('find', find, .5)
 
 
-for build in (penguin, chicken, cat, owl, beaver, shared):
+for build in (penguin, chicken, cat, owl, beaver, extra_voices, shared):
     build()
 print('IHM_COURIER_AUDIO_OK', sorted(p.name for p in OUT.glob('courier_*.wav')))

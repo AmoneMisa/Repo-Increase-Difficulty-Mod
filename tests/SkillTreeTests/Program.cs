@@ -6,11 +6,48 @@ int checks = 0;
 void Check(bool ok, string name) { if (!ok) throw new Exception("FAIL " + name); Console.WriteLine("PASS " + name); checks++; }
 
 // ---------------------------------------------------------------- catalogue
-Check(C.NormalPageCost(SkillPage.Recon) == 40 && C.NormalPageCost(SkillPage.Combat) == 50 &&
-      C.NormalPageCost(SkillPage.Survival) == 43 && C.NormalPageCost(SkillPage.Utility) == 41 && C.NormalPageCost(SkillPage.Arsenal) == 42, "Normal page costs match the plan");
-Check(C.PageCost(SkillPage.Recon) == 46 && C.PageCost(SkillPage.Combat) == 56 && C.PageCost(SkillPage.Survival) == 49 &&
-      C.PageCost(SkillPage.Utility) == 47 && C.PageCost(SkillPage.Arsenal) == 48, "Each page adds one trade-off per tier (1+2+3 points)");
-Check(C.TotalCost() == 286, "Whole tree costs 286 points (256 normal + 30 trade-off picks)");
+Check(C.NormalPageCost(SkillPage.Recon) == 40 && C.NormalPageCost(SkillPage.Combat) == 73 &&
+      C.NormalPageCost(SkillPage.Survival) == 70 && C.NormalPageCost(SkillPage.Utility) == 55 && C.NormalPageCost(SkillPage.Arsenal) == 54, "Normal page costs include weapon rate and convoy perks");
+Check(C.Find(C.LightBasket).MaxLevel == 5 && C.Find(C.LightBasket).Cost == 1, "Light Basket has five affordable ranks");
+Check(C.Find(C.Hemostasis).Requires.SequenceEqual(new[]{C.Survivor}) && C.Find(C.LinkOperator).Requires.SequenceEqual(new[]{C.Technician}), "New perks have the intended prerequisite");
+Check(PerkRules.BasketLift(0)==1f && PerkRules.BasketLift(5)==1.5f && PerkRules.BasketLift(50)==1.5f, "Cart lifting is capped at +50%, zero without a perk");
+Check(PerkRules.LinkSpeed(3)==1.3f && PerkRules.LinkSpeed(50)==1.3f, "Cargo speed is capped and does not grow with invalid ranks");
+Check(PerkRules.DurationResistance(3)==.5f && PerkRules.SapperFactor(3)==.65f, "Hemostasis halves duration; Sapper retains 65% self damage");
+Check(PerkRules.MedicRate(.15f)==.12f && PerkRules.MedicRate(.1f)==.1f, "Medic nerf applies to existing config without overriding a weaker setting");
+Check(PerkRules.FreezeSeconds(4.5f,3,true,.5f)==6f && PerkRules.FreezeSeconds(4.5f,0,false,.5f)==4.5f, "Freeze cap is six seconds without weakening the base weapon");
+Check(PerkRules.FreezeSeconds(10f,3,true,.5f)==10f, "Custom long base freeze is not shortened by learning a perk");
+foreach(int tick in new[]{1,2,4,10})
+ Check(PerkRules.FinalMobDamage(tick,0,true,tick)==tick, "DoT survives armor and shields without changing tick damage: "+tick);
+Check(PerkRules.FinalMobDamage(10,0,true,0)==1 && PerkRules.FinalMobDamage(0,0,true,0)==0, "Monster hit floor is one, but an empty hit creates no damage");
+Check(PerkRules.FinalMobDamage(10,0,false,0)==0, "Monster minimum does not change other damage sources");
+Check(PerkRules.ActualHitDamage(100,100)==0 && PerkRules.ActualHitDamage(100,80)==20 && PerkRules.ActualHitDamage(30,0)==30 &&
+      PerkRules.ActualHitDamage(30,-100)==30 && PerkRules.ActualHitDamage(30,40)==0, "Vampirism uses actual damage, allows killing blows and rejects blocked hits and healing");
+// 0.10.0 monster perks: stable save ids, three levels each, on existing pages (no new currency).
+foreach (var (id, page, cost) in new[] { (C.Grounding, SkillPage.Survival, 1), (C.ThermalProtection, SkillPage.Survival, 1), (C.Antidote, SkillPage.Survival, 1),
+    (C.StoneResilience, SkillPage.Survival, 1), (C.Evasion, SkillPage.Survival, 1), (C.DodgeRoll, SkillPage.Survival, 2),
+    (C.GoldenNose, SkillPage.Utility, 1), (C.SoulHunter, SkillPage.Utility, 2) })
+    Check(C.Find(id) != null && C.Find(id).Page == page && C.Find(id).MaxLevel == 3 && C.Find(id).Cost == cost && id.StartsWith("IHM_ST_"), "Monster perk " + id + " is in the tree with 3 levels");
+Check(System.Array.IndexOf(C.Find(C.DodgeRoll).Requires, C.Evasion) >= 0, "Dodge Roll requires Evasion");
+Check(C.PageCost(SkillPage.Recon) == 46 && C.PageCost(SkillPage.Combat) == 79 && C.PageCost(SkillPage.Survival) == 76 &&
+      C.PageCost(SkillPage.Utility) == 61 && C.PageCost(SkillPage.Arsenal) == 60, "Each page adds one trade-off per tier (1+2+3 points)");
+Check(C.TotalCost() == 369, "Whole tree includes the new firing-rate perk");
+Check(C.Find(C.RapidFire).Cost == 1 && C.Find(C.RapidFire).MaxLevel == 3 && C.Find(C.RapidFire).Requires.SequenceEqual(new[]{C.Marksman}), "Rapid Fire has three ranks after Marksman");
+Check(PerkRules.CappedWeaponBonus(.4f, PerkRules.FlameDamageCap) == .3f &&
+      PerkRules.CappedWeaponBonus(2f, PerkRules.LaserDamageCap) == .35f &&
+      PerkRules.CappedWeaponBonus(.1f, PerkRules.LaserDamageCap) == .1f, "Flame and photon blaster caps survive higher existing config, while weaker config stays weaker");
+Check(PerkRules.FireRate(0) == 1f && PerkRules.FireRate(3) == 1.25f && PerkRules.FireRate(99) == 1.25f &&
+      Math.Abs(1f / PerkRules.FireRate(3) - .8f) < .0001f, "25 percent faster shooting means 20 percent shorter pause, with a hard rank cap");
+Check(C.Find(C.GhostConvoy).Cost == 2 && C.Find(C.GhostConvoy).MaxLevel == 1 && C.Find(C.GhostConvoy).Requires.SequenceEqual(new[]{C.LinkOperator}), "Ghost Convoy requires Link Operator and costs two points");
+Check(C.Find(C.FlameCartDamage).MaxLevel == 3 && C.Find(C.FlameCartDamage).Requires.SequenceEqual(new[]{C.Marksman}) &&
+      C.Find(C.LaserGunDamage).MaxLevel == 3 && C.Find(C.LaserGunDamage).Requires.SequenceEqual(new[]{C.Marksman}), "Flamethrower and handheld laser join the existing Arsenal damage branch");
+Check(Math.Abs(PerkRules.GunInaccuracy(3) - .64f) < .0001f && PerkRules.GunInaccuracy(0) == 1f,
+    "Gun accuracy removes 36% spread and recoil at rank three");
+Check(Math.Abs(PerkRules.GrenadeRadius(3) - 1.3f) < .0001f && PerkRules.GrenadeDamage(100, 3) == 130 &&
+    PerkRules.GrenadeDamage(0, 3) == 15 && PerkRules.GrenadeDamage(0, 0) == 0,
+    "Grenade rank scales radius and damage and gives non-damaging blasts a small payload");
+foreach (string id in new[] { C.ExplosiveGrenade, C.ClusterGrenade, C.StunGrenade, C.ShockwaveGrenade, C.DecoyGrenade })
+    Check(C.Find(id).MaxLevel == 3 && C.Find(id).Requires.SequenceEqual(new[] { C.GrenadeDamage }),
+        id + " has its own three-rank specialisation");
 
 {
     int look = IncreaseHardMod.Courier.CourierRules.PackLook(3, 5, IncreaseHardMod.Courier.CourierRules.DefaultSwatch, 11);
@@ -24,7 +61,10 @@ Check(C.TotalCost() == 286, "Whole tree costs 286 points (256 normal + 30 trade-
           "Courier respawn: 45 s, 10 s sooner per Quick Recovery level, never under 10 s");
     Check(Math.Abs(IncreaseHardMod.Courier.CourierRules.MaxLoad(3) - 10.5f) < 1e-4 && Math.Abs(IncreaseHardMod.Courier.CourierRules.FindChance(3) - .08f) < 1e-4 && Math.Abs(IncreaseHardMod.Courier.CourierRules.DamageTaken(100f, 3) - 70f) < 1e-3,
           "Courier load, find chance and armor scale per level");
-    Check(C.PageCost(SkillPage.Courier) == 40, "Courier page costs 40 points");
+    Check(C.PageCost(SkillPage.Courier) == 47, "Courier page costs 47 points");
+    Check(C.Find(C.CourierHeadTrail) is { Cost: 2, MaxLevel: 1, Root: true } &&
+          C.Find(C.CourierHeadFetch) is { Cost: 5, MaxLevel: 1 } rescue && rescue.Requires.SequenceEqual(new[] { C.CourierHeadTrail }),
+          "Courier Head Search costs 2 and unlocks the 5-point Head Rescue");
     Check(Math.Abs(IncreaseHardMod.Courier.CourierRules.DamageTaken(100f, 4) - 60f) < 1e-3 && Math.Abs(IncreaseHardMod.Courier.CourierRules.DamageTaken(100f, 9) - 60f) < 1e-3,
           "Tough Courier: at most 40% less damage");
     Check(Math.Abs(IncreaseHardMod.Courier.CourierRules.Health(5) - 200f) < 1e-3 && Math.Abs(IncreaseHardMod.Courier.CourierRules.Health(9) - 200f) < 1e-3 &&

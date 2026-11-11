@@ -32,8 +32,13 @@ internal static class SkillText
             string ru = DescribeRu(id);
             if (!string.IsNullOrEmpty(ru)) return ru;
         }
-        float root = SkillEffects.RootBonus, weaponMax = Mathf.Max(0f, ModConfig.SkillWeaponDamageMax.Value);
-        string Weapon(string node, string weapon) => $"+{Pct(weaponMax / C.Find(node).MaxLevel)} {weapon} damage per level (+{Pct(weaponMax)} at max).";
+        float root = SkillEffects.RootBonus;
+        string Weapon(string node, string weapon)
+        {
+            float max = SkillEffects.WeaponDamageMax(node);
+            string perRank = (100f * max / C.Find(node).MaxLevel).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) + "%";
+            return $"+{perRank} {weapon} damage per level (+{Pct(max)} at max).";
+        }
         var tradeOff = TradeOffRules.Find(id);
         if (tradeOff != null)
             return Russian && tradeOff.UpRu != null
@@ -72,6 +77,13 @@ internal static class SkillText
 
             case C.Brawler: return $"+{Pct(root)} melee, grenade and tumble damage.";
             case C.GrenadeDamage: return $"+{Pct(PerLevel(ModConfig.GrenadeDamagePercentPerLevel.Value, ModConfig.GrenadeDamageMaxLevel.Value, id))} grenade damage per level.";
+            case C.ExplosiveGrenade:
+            case C.ClusterGrenade: return GrenadeSpecialisation(false, false);
+            case C.StunGrenade:
+            case C.ShockwaveGrenade: return GrenadeSpecialisation(false, true);
+            case C.DecoyGrenade: return $"+{Pct(PerkRules.GrenadeRadiusPerRank)} lure radius and +1 s of lure per rank.";
+            case C.GunAccuracy: return $"-{Pct(PerkRules.GunAccuracyPerRank)} shot spread and recoil per rank.";
+            case C.MeleeAccuracy: return $"Hits follow the swing more closely. Whips gain +{Pct(PerkRules.WhipRadiusPerRank)} catch radius per rank.";
             case C.Vampirism:
             {
                 var node = C.Find(id);
@@ -87,6 +99,8 @@ internal static class SkillText
 
             case C.CourierAlly: return "Your courier can carry the item in your hands to a teammate. Valuables are not allowed.";
             case C.CourierCart: return "Your courier can tow the nearest free C.A.R.T. to you.";
+            case C.CourierHeadTrail: return "Show a path to the nearest fallen teammate's head.";
+            case C.CourierHeadFetch: return "Your courier can bring you a fallen teammate's head from up to three rooms away.";
             case C.CourierLoad: return $"Your courier lifts heavier items: +{Courier.CourierRules.LoadPerLevel:0.#} kg per level (base {Courier.CourierRules.BaseLoad:0.#} kg).";
             case C.CourierSpeed: return $"Your courier moves {Pct(Courier.CourierRules.SpeedPerLevel)} faster per level.";
             case C.CourierDash: return $"Unlocks Dash: your courier runs {Pct(Courier.CourierRules.DashFactor - 1f)} faster for {Courier.CourierRules.DashSeconds:0} s. Cooldown {Courier.CourierRules.DashCooldown:0} s.";
@@ -128,6 +142,18 @@ internal static class SkillText
             case C.HuntedWarning: return "Shows HUNTED on your screen while a monster is chasing you.";
             case C.CrouchSpeed: return $"+{Pct(ModConfig.SkillCrouchSpeedPerLevel.Value)} speed while crouched per level (+{Pct(ModConfig.SkillCrouchSpeedPerLevel.Value * C.Find(id).MaxLevel)} at max).";
             case C.SoulWard: return $"Exploding monster souls hurt you {Pct(SoulPerks.WardPerLevel)} less per level (-{Pct(SoulPerks.WardPerLevel * C.Find(id).MaxLevel)} at max).";
+            case C.Hemostasis: return "Bleeding lasts 20 / 35 / 50% less time; ticks keep their full damage.";
+            case C.Sapper: return "Your own grenades deal 15 / 25 / 35% less damage to you. Allies and monsters are unaffected.";
+            case C.LinkOperator: return "Linked cargo follows 10 / 20 / 30% faster. Clearance and pit checks remain active.";
+            case C.LightBasket: return "+10% personal grab force per rank when lifting carts, up to +50%. Does not reduce cargo mass.";
+            case C.Grounding: return "The witch's electric hold lasts 20 / 35 / 50% shorter (by level).";
+            case C.ThermalProtection: return "Burn damage lasts 20 / 35 / 50% less time. Tick damage is unchanged; the +50% damage-taken window still applies.";
+            case C.Antidote: return "Poison and venom last 20 / 40 / 60% shorter (by level).";
+            case C.StoneResilience: return "Petrification lasts 20 / 35 / 50% shorter (by level).";
+            case C.Evasion: return "Break free from a constriction 15 / 30 / 45% faster (by level).";
+            case C.DodgeRoll: return $"Press {Monsters.DodgeRoll.KeyName} with A or D for a short sideways dash. Cooldown 22 / 18 / 14 s (by level). Not while held or petrified.";
+            case C.GoldenNose: return "A Golden Pig on the level glows for you within 8 / 15 / 25 m (by level).";
+            case C.SoulHunter: return "Souls of the new monsters (Golden Pig, Witch, Basilisk, Gorgon, Naga Queen) are worth 5 / 8 / 10% more (by level). The team's best level counts once; it never adds up between players.";
             case C.SoulKeeper: return $"A monster soul you are holding loses {Pct(SoulPerks.KeeperPerLevel)} less value when it is hit, per level (-{Pct(SoulPerks.KeeperPerLevel * C.Find(id).MaxLevel)} at max).";
 
             case C.InventorySlot: return "+1 inventory slot per level (keys 4-7).";
@@ -136,8 +162,8 @@ internal static class SkillText
             case C.HeadLeap: return "A charged death head jump carries 20% further per level, twice as far at level 5.";
             case C.HeadBattery: return "The game's Death Head Battery upgrade: your death head's battery lasts longer.";
             case C.TumbleWings: return "The game's Tumble Wings upgrade: fly longer after a tumble launch.";
-            case C.FieldMedic: return $"Health packs you use heal {Pct(ModConfig.SkillMedicPerLevel.Value)} more per level; teammates within {ModConfig.SkillMedicRadius.Value:0} m get {Pct(ModConfig.SkillMedicPerLevel.Value)} of the pack per level.";
-            case C.BatterySaver: return $"Battery items that aren't guns or drones drain {Pct(ModConfig.SkillBatterySaverPerLevel.Value)} slower per level while you use them.";
+            case C.FieldMedic: return $"Health packs you use heal {Pct(PerkRules.MedicRate(ModConfig.SkillMedicPerLevel.Value))} more per level; teammates within {ModConfig.SkillMedicRadius.Value:0} m get {Pct(PerkRules.MedicRate(ModConfig.SkillMedicPerLevel.Value))} of the pack per level.";
+            case C.BatterySaver: return $"Orbs, cart cannon, cart laser, flamethrower and other battery items drain {Pct(ModConfig.SkillBatterySaverPerLevel.Value)} slower per level. Handheld guns and drones use their own battery perks.";
             case C.LuckyFinder: return $"Skill boxes give points more often, and battery crystals give you +{ModConfig.SkillLuckyCrystalBonus.Value:0}% more charge per level.";
 
             case C.Marksman: return $"+{Pct(root)} damage with every gun.";
@@ -146,13 +172,17 @@ internal static class SkillText
             case C.ShotgunDamage: return Weapon(id, "Shotgun");
             case C.CartCannonDamage: return Weapon(id, "C.A.R.T. Cannon") + " Counts for whoever operates it.";
             case C.CartLaserDamage: return Weapon(id, "C.A.R.T. Laser") + " Counts for whoever operates it.";
+            case C.FlameCartDamage: return Weapon(id, "Flamethrower C.A.R.T.") + " Counts for whoever operates it.";
+            case C.LaserGunDamage: return Weapon(id, "handheld laser");
+            case C.RapidFire: return "Handheld guns fire 8.3 / 16.7 / 25% faster. At max, the pause between shots is 20% shorter. Beam duration and charge per shot are unchanged.";
+            case C.GhostConvoy: return "Cargo linked to you, including the whole connected chain, lets other players pass through. Player contact cannot break it. Walls and floors still stop cargo.";
             case C.StaffDamage: return Weapon(id, "Wizard Staff");
             case C.CrossbowDamage: return Weapon(id, "Poison Crossbow bolt");
 
-            case C.StatusLab: return $"Statuses from your weapons last {Sec(ModConfig.SkillStatusRootSeconds.Value)} longer (8 s max); poison runs that much faster.";
+            case C.StatusLab: return $"Statuses from your weapons last {Sec(ModConfig.SkillStatusRootSeconds.Value)} longer (8 s max); freeze gains at most 0.25 s, capped at 6 s before trade-offs. Poison runs faster.";
             case C.TranqTime: return "Tranquilizer stuns last longer per level, up to 8 s.";
             case C.NetTime: return $"Nets hold longer per level: {Sec(ModConfig.NetSeconds.Value)} up to 8 s.";
-            case C.FreezeTime: return $"Freezes last longer per level: {Sec(ModConfig.IceFreezeSeconds.Value)} up to 8 s.";
+            case C.FreezeTime: return $"Freezes last longer per level: {Sec(ModConfig.IceFreezeSeconds.Value)} up to {Sec(PerkRules.FreezeSeconds(ModConfig.IceFreezeSeconds.Value, 3, true, ModConfig.SkillStatusRootSeconds.Value))} before trade-offs.";
             case C.CartHandling: return $"Push the C.A.R.T. {Pct(ContractPerks.CartPerLevel)} harder per level: full carts climb and turn easier.";
             case C.GentleHands: return $"Loot you carry loses {Pct(ContractPerks.LootPerLevel)} less value per level when it breaks (up to {Pct(ContractPerks.LootPerLevel * 3)}).";
             case C.CalmPresence: return "Monsters chasing you give up sooner once they lose sight of you; more per level.";
@@ -165,10 +195,27 @@ internal static class SkillText
 
     private static string InstinctRu(string trigger, string buff) => $"Когда {trigger}: {buff} на 3/4/5 с (по уровню). Перезарядка 60/45/30 с.";
 
+    private static string GrenadeSpecialisation(bool russian, bool utility)
+    {
+        string radius = Pct(PerkRules.GrenadeRadiusPerRank), damage = Pct(PerkRules.GrenadeDamagePerRank);
+        if (russian)
+        {
+            string text = $"+{radius} к радиусу, +{damage} к урону по монстрам и +{SecRu(PerkRules.GrenadeStunPerRank)} оглушения за ранг.";
+            return utility ? text + $" Если у взрыва нет базового урона, он наносит {PerkRules.GrenadeUtilityDamagePerRank} урона за ранг." : text;
+        }
+        string english = $"+{radius} blast radius, +{damage} monster damage and +{Sec(PerkRules.GrenadeStunPerRank)} of stun per rank.";
+        return utility ? english + $" A blast with no base damage deals {PerkRules.GrenadeUtilityDamagePerRank} damage per rank." : english;
+    }
+
     private static string DescribeRu(string id)
     {
-        float root = SkillEffects.RootBonus, weaponMax = Mathf.Max(0f, ModConfig.SkillWeaponDamageMax.Value);
-        string Weapon(string node, string weapon) => $"+{Pct(weaponMax / C.Find(node).MaxLevel)} к урону: {weapon}, за уровень (+{Pct(weaponMax)} на максимуме).";
+        float root = SkillEffects.RootBonus;
+        string Weapon(string node, string weapon)
+        {
+            float max = SkillEffects.WeaponDamageMax(node);
+            string perRank = (100f * max / C.Find(node).MaxLevel).ToString("0.#", System.Globalization.CultureInfo.GetCultureInfo("ru-RU")) + "%";
+            return $"+{perRank} к урону: {weapon}, за уровень (+{Pct(max)} на максимуме).";
+        }
         switch (id)
         {
             case C.MapUplink: return "Все напарники видны на карте вместе с никами, даже если их никто не видит: белая фигурка, пока жив, красная мёртвая голова, когда погиб. Карта также считает живых и мёртвых.";
@@ -202,6 +249,13 @@ internal static class SkillText
 
             case C.Brawler: return $"+{Pct(root)} к урону в ближнем бою, гранатами и кувырком.";
             case C.GrenadeDamage: return $"+{Pct(PerLevel(ModConfig.GrenadeDamagePercentPerLevel.Value, ModConfig.GrenadeDamageMaxLevel.Value, id))} к урону гранат за уровень.";
+            case C.ExplosiveGrenade:
+            case C.ClusterGrenade: return GrenadeSpecialisation(true, false);
+            case C.StunGrenade:
+            case C.ShockwaveGrenade: return GrenadeSpecialisation(true, true);
+            case C.DecoyGrenade: return $"+{Pct(PerkRules.GrenadeRadiusPerRank)} к радиусу приманки и +1 с действия за ранг.";
+            case C.GunAccuracy: return $"-{Pct(PerkRules.GunAccuracyPerRank)} к разбросу и отдаче за ранг.";
+            case C.MeleeAccuracy: return $"Зона удара точнее следует за замахом. У хлыста +{Pct(PerkRules.WhipRadiusPerRank)} к радиусу захвата за ранг.";
             case C.Vampirism:
             {
                 var node = C.Find(id);
@@ -217,6 +271,8 @@ internal static class SkillText
 
             case C.CourierAlly: return "Курьер может отнести предмет из ваших рук союзнику. Ценности переносить нельзя.";
             case C.CourierCart: return "Курьер может пригнать к вам ближайшую свободную тележку.";
+            case C.CourierHeadTrail: return "Показывает путь к ближайшей голове павшего союзника.";
+            case C.CourierHeadFetch: return "Курьер принесёт голову павшего союзника, если до неё не больше трёх комнат.";
             case C.CourierLoad: return $"Курьер поднимает предметы тяжелее: +{Courier.CourierRules.LoadPerLevel:0.#} кг за уровень (база {Courier.CourierRules.BaseLoad:0.#} кг).";
             case C.CourierSpeed: return $"Курьер двигается на {Pct(Courier.CourierRules.SpeedPerLevel)} быстрее за уровень.";
             case C.CourierDash: return $"Открывает рывок: курьер бежит на {Pct(Courier.CourierRules.DashFactor - 1f)} быстрее {Courier.CourierRules.DashSeconds:0} с. Перезарядка {Courier.CourierRules.DashCooldown:0} с.";
@@ -258,6 +314,18 @@ internal static class SkillText
             case C.HuntedWarning: return "Пока за вами гонится монстр, на экране горит надпись ПОГОНЯ.";
             case C.CrouchSpeed: return $"+{Pct(ModConfig.SkillCrouchSpeedPerLevel.Value)} к скорости в приседе за уровень (+{Pct(ModConfig.SkillCrouchSpeedPerLevel.Value * C.Find(id).MaxLevel)} на максимуме).";
             case C.SoulWard: return $"Взрывы душ монстров ранят вас на {Pct(SoulPerks.WardPerLevel)} меньше за уровень (-{Pct(SoulPerks.WardPerLevel * C.Find(id).MaxLevel)} на максимуме).";
+            case C.Hemostasis: return "Кровотечение длится на 20 / 35 / 50% меньше; урон тика сохраняется.";
+            case C.Sapper: return "Ваши гранаты наносят вам на 15 / 25 / 35% меньше урона. На союзников и монстров не влияет.";
+            case C.LinkOperator: return "Связанный груз следует на 10 / 20 / 30% быстрее. Проверки препятствий и ям сохраняются.";
+            case C.LightBasket: return "+10% вашей силы захвата при подъёме тележек за уровень, до +50%. Массу груза не уменьшает.";
+            case C.Grounding: return "Электрическое удержание ведьмы короче на 20 / 35 / 50% (по уровням).";
+            case C.ThermalProtection: return "Урон горения длится на 20 / 35 / 50% меньше. Урон тика не снижается; окно +50% получаемого урона остаётся.";
+            case C.Antidote: return "Отравление и змеиный яд короче на 20 / 40 / 60% (по уровням).";
+            case C.StoneResilience: return "Окаменение короче на 20 / 35 / 50% (по уровням).";
+            case C.Evasion: return "Освобождение от обвивания быстрее на 15 / 30 / 45% (по уровням).";
+            case C.DodgeRoll: return $"{Monsters.DodgeRoll.KeyName} вместе с A или D — короткий рывок вбок. Перезарядка 22 / 18 / 14 с (по уровням). Не работает в захвате и окаменении.";
+            case C.GoldenNose: return "Золотая свинка на уровне подсвечивается для вас в радиусе 8 / 15 / 25 м (по уровням).";
+            case C.SoulHunter: return "Души новых монстров (Золотая свинка, Ведьма, Василиск, Горгона, Королева Наг) дороже на 5 / 8 / 10% (по уровням). Считается лучший уровень в команде, один раз; между игроками не суммируется.";
             case C.SoulKeeper: return $"Душа монстра в ваших руках теряет при ударах на {Pct(SoulPerks.KeeperPerLevel)} меньше ценности за уровень (-{Pct(SoulPerks.KeeperPerLevel * C.Find(id).MaxLevel)} на максимуме).";
 
             case C.InventorySlot: return "+1 ячейка инвентаря за уровень (клавиши 4-7).";
@@ -266,8 +334,8 @@ internal static class SkillText
             case C.HeadLeap: return "Заряженный прыжок мёртвой головы улетает на 20% дальше за уровень, вдвое дальше на 5 уровне.";
             case C.HeadBattery: return "Игровое улучшение «Батарея мёртвой головы»: заряда головы хватает дольше.";
             case C.TumbleWings: return "Игровое улучшение «Крылья кувырка»: после броска кувырком вы летите дольше.";
-            case C.FieldMedic: return $"Ваши аптечки лечат на {Pct(ModConfig.SkillMedicPerLevel.Value)} больше за уровень; напарники в {ModConfig.SkillMedicRadius.Value:0} м получают {Pct(ModConfig.SkillMedicPerLevel.Value)} лечения аптечки за уровень.";
-            case C.BatterySaver: return $"Предметы на батарейках (кроме оружия и дронов) разряжаются на {Pct(ModConfig.SkillBatterySaverPerLevel.Value)} медленнее за уровень, пока вы ими пользуетесь.";
+            case C.FieldMedic: return $"Ваши аптечки лечат на {Pct(PerkRules.MedicRate(ModConfig.SkillMedicPerLevel.Value))} больше за уровень; напарники в {ModConfig.SkillMedicRadius.Value:0} м получают {Pct(PerkRules.MedicRate(ModConfig.SkillMedicPerLevel.Value))} лечения аптечки за уровень.";
+            case C.BatterySaver: return $"Сферы, пушка и лазер тележки, огнемёт и другие предметы расходуют на {Pct(ModConfig.SkillBatterySaverPerLevel.Value)} меньше заряда за уровень. Для ручного оружия и дронов действуют их отдельные навыки батарей.";
             case C.LuckyFinder: return $"Ящики навыков чаще дают очки. За каждый уровень навыка энергокристаллы дают на {ModConfig.SkillLuckyCrystalBonus.Value:0}% больше заряда.";
 
             case C.Marksman: return $"+{Pct(root)} к урону любого оружия.";
@@ -276,13 +344,17 @@ internal static class SkillText
             case C.ShotgunDamage: return Weapon(id, "дробовик");
             case C.CartCannonDamage: return Weapon(id, "пушка тележки") + " Считается для того, кто ей управляет.";
             case C.CartLaserDamage: return Weapon(id, "лазер тележки") + " Считается для того, кто им управляет.";
+            case C.FlameCartDamage: return Weapon(id, "огнемёт") + " Считается для того, кто им управляет.";
+            case C.LaserGunDamage: return Weapon(id, "ручной лазер");
+            case C.RapidFire: return "Ручное оружие стреляет на 8,3 / 16,7 / 25% чаще. На максимуме пауза между выстрелами короче на 20%. Длительность луча и заряд за выстрел не меняются.";
+            case C.GhostConvoy: return "Другие игроки проходят сквозь привязанный к вам груз и всю цепочку вещей за ним, не повреждая их касанием. Стены и пол останавливают груз.";
             case C.StaffDamage: return Weapon(id, "посох волшебника");
             case C.CrossbowDamage: return Weapon(id, "болт ядовитого арбалета");
 
             case C.StatusLab: return $"Эффекты вашего оружия длятся на {SecRu(ModConfig.SkillStatusRootSeconds.Value)} дольше (до 8 с); яд действует настолько же быстрее.";
             case C.TranqTime: return "Оглушение транквилизатором длится дольше с каждым уровнем, до 8 с.";
             case C.NetTime: return $"Сети держат дольше с каждым уровнем: от {SecRu(ModConfig.NetSeconds.Value)} до 8 с.";
-            case C.FreezeTime: return $"Заморозка длится дольше с каждым уровнем: от {SecRu(ModConfig.IceFreezeSeconds.Value)} до 8 с.";
+            case C.FreezeTime: return $"Заморозка длится дольше: от {SecRu(ModConfig.IceFreezeSeconds.Value)} до {SecRu(PerkRules.FreezeSeconds(ModConfig.IceFreezeSeconds.Value, 3, true, ModConfig.SkillStatusRootSeconds.Value))} до специализаций.";
             case C.CartHandling: return $"Вы толкаете тележку на {Pct(ContractPerks.CartPerLevel)} сильнее за уровень: гружёная тележка легче едет в гору и поворачивает.";
             case C.GentleHands: return $"Добыча в ваших руках теряет на {Pct(ContractPerks.LootPerLevel)} меньше стоимости при ударах за уровень (до {Pct(ContractPerks.LootPerLevel * 3)}).";
             case C.CalmPresence: return "Монстры, потерявшие вас из виду, быстрее прекращают погоню; с каждым уровнем сильнее.";

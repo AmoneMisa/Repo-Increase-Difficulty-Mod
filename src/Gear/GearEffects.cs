@@ -12,9 +12,14 @@ namespace IncreaseHardMod.Gear;
 ///
 ///  * Poison - refreshes a DoT on the enemy to the full duration (never stacks); damage is dealt in small
 ///             whole-number ticks through the game's own EnemyHealth.Hurt so it syncs normally.
-///  * Ice    - Enemy.Freeze for a few seconds, keeps the enemy un-liftable while frozen; frozen enemies take
-///             reduced firearm and boosted melee damage (HurtCollider patch below).
-///  * Sticky - pulls the hit enemy / object toward the shooter if it is light enough.
+///  * Ice    - Enemy.Freeze for a few seconds, keeps the enemy un-liftable while frozen. Starting a freeze deals
+///             20 damage once (the cloned ice bullet itself deals none); hits on an already frozen enemy only
+///             extend it, a shorter repeat never shortens it, and a new freeze after thawing hurts again
+///             (GearCombatRules.RefreshFreeze). Every damage type still lands on a frozen enemy, scaled per hit by
+///             FrozenDamage: gun bullets IceGunDamagePercent (60%), melee +IceMeleeBonusPercent (+35%),
+///             grenade blasts +80%, everything else unchanged. Frozen players keep the damage-free freeze.
+///  * Sticky - roots living targets for 2 s (StickyRoot) and pulls light enough loot toward the shooter; pulled
+///             loot loses 80% less value while it travels (not invulnerable).
 /// </summary>
 internal static class GearEffects
 {
@@ -260,7 +265,6 @@ internal static class GearEffects
             // Lift loot off the floor and slow down as it reaches the player. Protect its
             // value while pulled instead of smashing it with a normal gun impulse.
             p.Object.OverrideZeroGravity(0.2f);
-            p.Object.OverrideIndestructible(0.3f);
             p.Body.WakeUp();
             float speed = Mathf.Min(6f, (to.magnitude - 1.8f) * 5f);
             Vector3 wanted = Vector3.MoveTowards(current, to.normalized * speed, 30f * dt);
@@ -421,9 +425,13 @@ internal static class GearEffects
                     {
                         float t = Skills.SkillEffects.StatusSeconds(SemiFunc.PlayerAvatarGetFromPhotonID(_shooterID),
                             Skills.SkillEffects.Status.Freeze, ModConfig.IceFreezeSeconds.Value);
-                        enemy.Freeze(t);
-                        Frozen[enemy] = Time.time + t;
-                        ModNetwork.BroadcastEnemyStatus(enemy, 1, t);
+                        Frozen.TryGetValue(enemy, out float previousEnd);
+                        int damage = GearCombatRules.RefreshFreeze(Time.time, previousEnd, t, out float end);
+                        Frozen[enemy] = end;
+                        enemy.Freeze(end - Time.time);
+                        if (damage > 0 && enemy.HasHealth && enemy.Health != null)
+                            enemy.Health.Hurt(damage, Vector3.zero);
+                        ModNetwork.BroadcastEnemyStatus(enemy, 1, end - Time.time);
                     }
                     else
                     {
@@ -499,8 +507,13 @@ internal static class GearEffects
 
         var enemyBody = hit.collider.GetComponentInParent<EnemyRigidbody>();
         Enemy enemy = enemyBody != null ? enemyBody.enemy : hit.collider.GetComponentInParent<Enemy>();
-        var pgo = enemy != null && enemy.HasRigidbody ? enemy.Rigidbody.physGrabObject :
-            hit.collider.GetComponentInParent<PhysGrabObject>();
+        var player = PlayerAtHit(hit.collider);
+        if (player != null || enemy != null)
+        {
+            StickyRoot.Send(player, enemy);
+            return;
+        }
+        var pgo = hit.collider.GetComponentInParent<PhysGrabObject>();
         if (pgo == null || pgo == gunObject || pgo.rb == null ||
             hit.collider.GetComponentInParent<PlayerAvatar>() != null)
             return;
@@ -514,8 +527,6 @@ internal static class GearEffects
         if (body.mass > capacity)
             return;
 
-        if (enemy != null)
-            enemy.Freeze(0.9f); // stop its own movement overriding the pull
         Pulls.RemoveAll(x => x.Body == body);
         body.WakeUp();
         Pulls.Add(new Pull { Body = body, Object = pgo, Target = shooter.transform, Until = Time.time + 2f });
@@ -533,24 +544,70 @@ internal static class GearEffects
         }
     }
 
-    // Frozen enemies: less damage from firearms, more from melee. Scales the collider's enemy damage for
-    // the duration of this single hit and restores it afterwards.
+    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), "Break")]
+    private static class PullDamage
+    {
+        [HarmonyPrefix]
+        [HarmonyPriority(Priority.First)]
+        private static void Prefix(PhysGrabObjectImpactDetector __instance, ref float valueLost)
+        {
+            if (!SemiFunc.IsMasterClientOrSingleplayer() || !__instance.isValuable || valueLost <= 0f) return;
+            foreach (var pull in Pulls)
+                if (pull.Object == __instance.physGrabObject && pull.Target != null && Time.time < pull.Until &&
+                    pull.Body != null && Vector3.Distance(pull.Body.position, pull.Target.position + Vector3.up * .8f) >= 1.8f)
+                { valueLost = GearCombatRules.PulledLootLoss(valueLost); return; }
+        }
+    }
+
+    // Do not mutate HurtCollider.enemyDamage: other weapon perks temporarily change it too,
+    // and interleaved restore patches would leak the bonus into later, unfrozen hits.
+    private static EnemyHealth _frozenMeleeTarget;
+    private static float _frozenHitFactor = 1f;
     [HarmonyPatch(typeof(HurtCollider), "EnemyHurt")]
     private static class FrozenDamage
     {
         [HarmonyPrefix]
-        private static void Prefix(HurtCollider __instance, Enemy _enemy, out int __state)
+        private static void Prefix(HurtCollider __instance, Enemy _enemy, out (EnemyHealth Target, float Factor) __state)
         {
-            __state = __instance.enemyDamage;
-            if (!IsFrozen(_enemy))
-                return;
-            if (__instance.GetComponentInParent<ItemGunBullet>() != null)
-                __instance.enemyDamage = Mathf.Max(1, Mathf.RoundToInt(__state * ModConfig.IceGunDamagePercent.Value / 100f));
-            else if (__instance.GetComponentInParent<ItemMelee>() != null)
-                __instance.enemyDamage = Mathf.RoundToInt(__state * (1f + ModConfig.IceMeleeBonusPercent.Value / 100f));
+            __state = (_frozenMeleeTarget, _frozenHitFactor);
+            _frozenMeleeTarget = IsFrozen(_enemy) ? _enemy.Health : null;
+            _frozenHitFactor = __instance.GetComponentInParent<GrenadeBlast>() != null ? 1.8f :
+                __instance.GetComponentInParent<ItemGunBullet>() != null ? ModConfig.IceGunDamagePercent.Value / 100f :
+                __instance.GetComponentInParent<ItemMelee>() != null ? 1f + ModConfig.IceMeleeBonusPercent.Value / 100f : 1f;
         }
 
+        [HarmonyFinalizer]
+        private static void Restore((EnemyHealth Target, float Factor) __state)
+        { _frozenMeleeTarget = __state.Target; _frozenHitFactor = __state.Factor; }
+    }
+
+    [HarmonyPatch(typeof(EnemyHealth), "Hurt")]
+    private static class FrozenMeleeBonus
+    {
+        [HarmonyPrefix]
+        private static void Prefix(EnemyHealth __instance, ref int _damage)
+        {
+            if (_damage > 0 && _frozenMeleeTarget != null && _frozenMeleeTarget == __instance)
+                _damage = Mathf.Max(1, Mathf.RoundToInt(_damage * _frozenHitFactor));
+        }
+    }
+
+    [HarmonyPatch(typeof(ParticleScriptExplosion), nameof(ParticleScriptExplosion.Spawn))]
+    private static class MarkGrenadeBlast
+    {
         [HarmonyPostfix]
-        private static void Postfix(HurtCollider __instance, int __state) => __instance.enemyDamage = __state;
+        private static void Postfix(ParticleScriptExplosion __instance, ParticlePrefabExplosion __result)
+        {
+            // Grenades only (explosive, duct-taped and its child grenades): mines, carts and monster bombs share
+            // ParticleScriptExplosion but are not grenades. Each blast is a fresh instance, so the marker never leaks.
+            bool grenade = __instance.GetComponent<ItemGrenade>() != null || __instance.GetComponent<ItemGrenadeHuman>() != null ||
+                __instance.GetComponent<ItemGrenadeDuctTaped>() != null || __instance.GetComponent<ItemGrenadeExplosive>() != null;
+            if (__result != null && __result.HurtCollider != null && grenade &&
+                __result.HurtCollider.GetComponent<GrenadeBlast>() == null)
+                __result.HurtCollider.gameObject.AddComponent<GrenadeBlast>().Thrower =
+                    __instance.GetComponent<ItemGrenade>()?.activatorPlayerAvatar ?? __instance.playerCausingHurtOverride;
+        }
     }
 }
+
+internal sealed class GrenadeBlast : MonoBehaviour { internal PlayerAvatar Thrower; }

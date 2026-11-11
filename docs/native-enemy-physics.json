@@ -1,0 +1,491 @@
+[
+  {
+    "prefab": "Enemy - Slow Mouth",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 10.0
+      },
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Hunter",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 16.0
+      },
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Spinny",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 16.0
+      },
+      {
+        "component": "NotValuableObject",
+        "presetMass": 4.0
+      },
+      {
+        "component": "Rigidbody",
+        "mass": 3.0
+      },
+      {
+        "component": "EnemyParent",
+        "enemyName": null
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Animal",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 10.0
+      },
+      {
+        "component": "NotValuableObject",
+        "presetMass": 4.0
+      },
+      {
+        "component": "Rigidbody",
+        "mass": 3.0
+      },
+      {
+        "component": "EnemyParent",
+        "enemyName": null
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Upscream",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 10.0
+      },
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Snatcher",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 16.0
+      },
+      {
+        "component": "NotValuableObject",
+        "presetMass": 6.0
+      },
+      {
+        "component": "Rigidbody",
+        "mass": 6.0
+      },
+      {
+        "component": "EnemyParent",
+        "enemyName": null
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Valuable Thrower",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 10.0
+      },
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Bowtie",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 14.0
+      },
+      {
+        "component": "NotValuableObject",
+        "presetMass": 5.0
+      },
+      {
+        "component": "Rigidbody",
+        "mass": 3.0
+      },
+      {
+        "component": "EnemyParent",
+        "enemyName": null
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Robe",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 21.0
+      },
+      {
+        "component": "NotValuableObject",
+        "presetMass": 6.0
+      },
+      {
+        "component": "Rigidbody",
+        "mass": 3.0
+      },
+      {
+        "component": "EnemyParent",
+        "enemyName": null
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Slow Walker",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 21.0
+      },
+      {
+        "component": "NotValuableObject",
+        "presetMass": 4.0
+      },
+      {
+        "component": "Rigidbody",
+        "mass": 3.0
+      },
+      {
+        "component": "EnemyParent",
+        "enemyName": null
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Virus",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 10.0
+      },
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Floater",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 10.0
+      },
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Shadow",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 21.0
+      },
+      {
+        "component": "NotValuableObject",
+        "presetMass": 8.0
+      },
+      {
+        "component": "Rigidbody",
+        "mass": 10.0
+      },
+      {
+        "component": "EnemyParent",
+        "enemyName": null
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Elsa",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 999999.0
+      },
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Head",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 21.0
+      },
+      {
+        "component": "NotValuableObject",
+        "presetMass": 4.0
+      },
+      {
+        "component": "Rigidbody",
+        "mass": 4.0
+      },
+      {
+        "component": "Rigidbody",
+        "mass": 1.0
+      },
+      {
+        "component": "EnemyParent",
+        "enemyName": null
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Tumbler",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 16.0
+      },
+      {
+        "component": "NotValuableObject",
+        "presetMass": 3.5
+      },
+      {
+        "component": "Rigidbody",
+        "mass": 3.0
+      },
+      {
+        "component": "EnemyParent",
+        "enemyName": null
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Oogly",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 16.0
+      },
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Heart Hugger",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 16.0
+      },
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Tricycle",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 16.0
+      },
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Runner",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 16.0
+      },
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Bang",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 0.10000000149011612
+      },
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Bomb Thrower",
+    "physics": [
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Head Grabber",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 10.0
+      },
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Gnome",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 0.10000000149011612
+      },
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Tick",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 999999.0
+      },
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Duck",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 999999.0
+      },
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Beamer",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 21.0
+      },
+      {
+        "component": "NotValuableObject",
+        "presetMass": 4.0
+      },
+      {
+        "component": "Rigidbody",
+        "mass": 3.0
+      },
+      {
+        "component": "EnemyParent",
+        "enemyName": null
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Thin Man",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 16.0
+      },
+      {
+        "component": "NotValuableObject",
+        "presetMass": 4.0
+      },
+      {
+        "component": "Rigidbody",
+        "mass": 3.0
+      },
+      {
+        "component": "EnemyParent",
+        "enemyName": null
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Birthday boy",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 10.0
+      },
+      {
+        "component": "NotValuableObject",
+        "presetMass": 3.5
+      },
+      {
+        "component": "Rigidbody",
+        "mass": 3.0
+      },
+      {
+        "component": "EnemyParent",
+        "enemyName": null
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Hidden",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 10.0
+      },
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Ceiling Eye",
+    "physics": [
+      {
+        "component": "EnemyParent",
+        "enemyName": null
+      }
+    ]
+  },
+  {
+    "prefab": "Enemy - Slow Mouth",
+    "physics": [
+      {
+        "component": "EnemyRigidbody",
+        "grabForce": 10.0
+      },
+      {
+        "error": "'sharedassets0.assets'"
+      }
+    ]
+  }
+]

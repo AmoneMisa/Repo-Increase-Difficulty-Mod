@@ -26,7 +26,7 @@ internal static class SupportPerks
         [HarmonyPriority(Priority.Low - 1)]
         private static void Prefix(PlayerHealth __instance, ref int damage, bool hurtByHeal)
         {
-            if (damage <= 0 || hurtByHeal || __instance.playerAvatar == null) return;
+            if (damage <= 0 || hurtByHeal || Monsters.MonsterAfflictions.DotDamage > 0 || __instance.playerAvatar == null) return;
             int level = SkillEffects.Level(__instance.playerAvatar, C.Desperation);
             float cut = PerkRules.DesperationReduction(__instance.health, __instance.maxHealth, level,
                 ModConfig.SkillDesperationPerLevel.Value, ModConfig.SkillDesperationThreshold.Value);
@@ -98,8 +98,8 @@ internal static class SupportPerks
         if (!SemiFunc.IsMasterClientOrSingleplayer() || wielder == null || wielder.isDisabled || string.IsNullOrEmpty(wielder.steamID)) return;
         int level = SkillEffects.Level(wielder, C.Vampirism);
         if (level <= 0 || damage <= 0 || wielder.playerHealth == null) return;
-        if (target != null && target.HasHealth && target.Health != null)
-            damage = Mathf.Min(damage, Mathf.Max(0, target.Health.healthCurrent));
+        // Caller supplies the confirmed health delta after EnemyHurt, including a
+        // killing blow. Capping by remaining HP here would erase healing on kills.
         float share = PerkRules.VampireShare(level, C.Find(C.Vampirism).MaxLevel, ModConfig.SkillVampireMax.Value);
         VampireCarry.TryGetValue(wielder.steamID, out float carry);
         int heal = PerkRules.VampireHeal(damage, share, ref carry);
@@ -126,7 +126,7 @@ internal static class SupportPerks
             float self = TradeOffs.Factor(user, Fx.SelfHeal); // Second Heart / Medic's Oath: packs heal you less
             if (level <= 0 && Mathf.Approximately(self, 1f)) return;
             __state = (__instance.healAmount, false, user, level);
-            int heal = level > 0 ? PerkRules.MedicSelfHeal(__instance.healAmount, level, ModConfig.SkillMedicPerLevel.Value) : __instance.healAmount;
+            int heal = level > 0 ? PerkRules.MedicSelfHeal(__instance.healAmount, level, PerkRules.MedicRate(ModConfig.SkillMedicPerLevel.Value)) : __instance.healAmount;
             __instance.healAmount = Mathf.Max(1, Mathf.RoundToInt(heal * self));
         }
 
@@ -137,7 +137,7 @@ internal static class SupportPerks
             __instance.healAmount = __state.Heal;
             if (__state.Used || !__instance.used || __state.Level <= 0) return; // not used this frame, or no Field Medic
 
-            int share = Mathf.RoundToInt(PerkRules.MedicShare(__state.Heal, __state.Level, ModConfig.SkillMedicPerLevel.Value) *
+            int share = Mathf.RoundToInt(PerkRules.MedicShare(__state.Heal, __state.Level, PerkRules.MedicRate(ModConfig.SkillMedicPerLevel.Value)) *
                                          TradeOffs.Factor(__state.User, Fx.MedicShare)); // Medic's Oath
             float radius = Mathf.Max(0f, ModConfig.SkillMedicRadius.Value);
             var players = SemiFunc.PlayerGetList();

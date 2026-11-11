@@ -108,8 +108,7 @@ internal static class FlameCartItem
 
             var (turret, head) = BuildModel(go, template, visualLayer);
             AddColliders(go, colliderLayer);
-            var box = AddStorage(go, hauler);
-            MakeBoxGrabbable(box);
+            var box = AddStorage(go, hauler, BoxMount, BoxScale, ModConfig.FlameCartValueCap.Value);
             GrabMarker.AttachToBoxBack(box.transform, visualLayer);
             AddHandle(go);
             go.AddComponent<FlameCartGrabState>();
@@ -179,7 +178,7 @@ internal static class FlameCartItem
         }
     }
 
-    private static ItemVehicle FindHaulerBox(Dictionary<string, Item> items)
+    internal static ItemVehicle FindHaulerBox(Dictionary<string, Item> items)
     {
         if (items.TryGetValue("Item Vehicle Semiscooter", out var named) && Has(named, out var vehicle)) return vehicle;
         var names = new List<string>(items.Keys);
@@ -317,17 +316,17 @@ internal static class FlameCartItem
         if (fixedCount > 0) Plugin.Log.LogInfo($"[Flame] Storage box: {fixedCount} solid collider(s) made grab surfaces.");
     }
 
-    private static ItemValuableBox AddStorage(GameObject go, ItemVehicle hauler)
+    internal static ItemValuableBox AddStorage(GameObject go, ItemVehicle hauler, Vector3 mount, float scale, int cap)
     {
         var obj = Object.Instantiate(hauler.valuableBox.gameObject, go.transform, false);
         obj.name = "Item Valuable Box";
         obj.SetActive(true);
-        obj.transform.localPosition = BoxMount;
+        obj.transform.localPosition = mount;
         obj.transform.localRotation = Quaternion.identity;
-        obj.transform.localScale = Vector3.one * BoxScale;
+        obj.transform.localScale = Vector3.one * scale;
         var box = obj.GetComponent<ItemValuableBox>();
-        int cap = ModConfig.FlameCartValueCap.Value;
         if (cap > 0) box.valueLimit = cap;
+        MakeBoxGrabbable(box);
         return box;
     }
 
@@ -454,7 +453,7 @@ internal sealed class FlameCart : MonoBehaviour
     // The flame only ever hurts enemies (see Burn), so it is safe to try out in the shop too.
     private bool FiringAllowedHere => true;
 
-    private PlayerAvatar Operator()
+    internal PlayerAvatar Operator()
     {
         if (_operatorViewId >= 0)
         {
@@ -597,12 +596,13 @@ internal sealed class FlameCart : MonoBehaviour
         float step = Mathf.Max(.1f, ModConfig.FlameTickSeconds.Value);
         _tick += step;
         // Damage per second split into small ticks; the fraction carries over so low rates still add up exactly.
-        _damageCarry += ModConfig.FlameDamagePerSecond.Value * step;
+        _damageCarry += ModConfig.FlameDamagePerSecond.Value * step *
+            Skills.SkillEffects.WeaponMultiplier(Operator(), Skills.SkillEffects.Weapon.FlameCart);
         int damage = Mathf.FloorToInt(_damageCarry);
         _damageCarry -= damage;
         if (damage > 0) Burn(damage);
         float perTick = 100f * step / Mathf.Max(1f, ModConfig.FlameFuelSeconds.Value);
-        _battery.batteryLife = Mathf.Max(0f, _battery.batteryLife - perTick);
+        _battery.DrainContinuous(perTick / (2f * step), step);
         if (_battery.batteryLife <= 0f) Stop();
     }
 
@@ -626,7 +626,8 @@ internal sealed class FlameCart : MonoBehaviour
             // Monsters are bodies, not points: widen the cone by about half a monster's width at that distance.
             if (distance > 1.2f && Vector3.Angle(aim, to) > cone + Mathf.Atan2(.6f, distance) * Mathf.Rad2Deg) continue;
             if (Blocked(origin, to, distance, enemy)) continue;
-            enemy.Health.Hurt(damage, to.sqrMagnitude > .0001f ? to.normalized : aim);
+            int dealt = Mathf.Max(1, Mathf.RoundToInt(damage * Skills.TradeOffs.TargetFactor(Operator(), enemy)));
+            enemy.Health.Hurt(dealt, to.sqrMagnitude > .0001f ? to.normalized : aim);
         }
     }
 

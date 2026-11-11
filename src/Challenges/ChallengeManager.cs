@@ -51,11 +51,12 @@ internal sealed class ChallengeManager : MonoBehaviour
     private static float _nextWaveAt, _nextLure, _vigilHeld, _nextOfferingScan;
 
     // Mushroom Path (mirrored): the sequence (mushroom indices), the next step, mistakes so far and when the sequence
-    // starts playing (SharedTime, so every client shows it in step). Host: which mushroom each player stands on.
+    // starts playing (SharedTime, so every client shows it in step). Host: which pads are occupied.
     private static readonly List<int> _seq = new();
     private static int _step, _mistakes;
     private static float _showStart;
-    private static readonly Dictionary<PlayerAvatar, int> _standing = new();
+    private static int _occupiedMushrooms;
+    private static readonly List<Vector3> _mushroomLayout = new();
 
     // Capture the Flag (mirrored): stage 0 question, 1 flag out (on the shrine, carried or dropped), 2 planted and held.
     // _wisp is the flag (when nobody carries it) and _home its base. Host: the carrier and the defence wave clock.
@@ -135,7 +136,8 @@ internal sealed class ChallengeManager : MonoBehaviour
         if (_flagGuide != null) Destroy(_flagGuide.gameObject);
         _flagGuideMetres = -1f; _flagChaser = false;
         foreach (var m in _mushrooms) if (m != null) Destroy(m.gameObject);
-        _mushrooms.Clear(); _seq.Clear(); _standing.Clear(); _step = _mistakes = 0; _showStart = 0f;
+        _mushrooms.Clear(); _seq.Clear(); _mushroomLayout.Clear();
+        _step = _mistakes = _occupiedMushrooms = 0; _showStart = 0f;
         _flagStage = _qa = _qb = _qop = _carrierView = 0; _carrier = null;
         _shownStep = _shownMistakes = _shownRound = _shownSlot = _shownStage = -1;
         _waveEnemies.Clear(); _waveDead.Clear(); _shownProgress = -1;
@@ -204,6 +206,19 @@ internal sealed class ChallengeManager : MonoBehaviour
         _yaw = spot.Yaw;
         _phase = ChallengePhase.Ready;
         _kind = ChallengeRules.Kind(Random.value);
+        if (_kind == ChallengeKind.Mushrooms)
+        {
+            int first = Random.Range(0, spots.Count);
+            for (int i = 0; i < spots.Count; i++)
+            {
+                var candidate = spots[(first + i) % spots.Count];
+                if (!PlanMushrooms(candidate.Floor)) continue;
+                _shrine = candidate.Floor;
+                _yaw = candidate.Yaw;
+                break;
+            }
+            if (_mushroomLayout.Count == 0) _kind = ChallengeKind.Vigil;
+        }
         if (_kind == ChallengeKind.Escort && !PlanEscort(points)) _kind = ChallengeKind.Targets;
         Plugin.Log.LogInfo($"[Challenge] Shrine placed at {_shrine}: {_kind}.");
     }
@@ -695,25 +710,41 @@ internal sealed class ChallengeManager : MonoBehaviour
 
     // ---------------------------------------------------------------- Mushroom Path
 
-    // Mushrooms on flat floor at the shrine's level, 2-7 m out, with head room to jump on and between them.
-    private static void PlaceMushrooms()
+    // Two staggered rows in the same view from the shrine. Accept the whole layout or try another spot.
+    private static bool PlanMushrooms(Vector3 shrine)
     {
         int mask = SemiFunc.LayerMaskGetVisionObstruct();
         float h = ChallengeRules.MushroomCapHeight;
-        for (int tries = 0; tries < 260 && _props.Count < ChallengeRules.MushroomCount; tries++)
+        float startYaw = Random.Range(0f, 360f);
+        var eye = shrine + Vector3.up * 1.6f;
+        foreach (float spacing in new[] { ChallengeRules.MushroomSpacing, 1.38f })
+        for (int direction = 0; direction < 16; direction++)
         {
-            var dir = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f) * Vector3.forward;
-            var above = _shrine + dir * Random.Range(2.2f, 7f) + Vector3.up * 1.5f;
-            if (Physics.Linecast(_shrine + Vector3.up * 1.5f, above, mask, QueryTriggerInteraction.Ignore)) continue;
-            if (!Physics.Raycast(above, Vector3.down, out var hit, 3.5f, mask, QueryTriggerInteraction.Ignore) || Vector3.Angle(hit.normal, Vector3.up) > 12f) continue;
-            if (Mathf.Abs(hit.point.y - _shrine.y) > .35f) continue;
-            if (Physics.CheckBox(hit.point + Vector3.up * (h + 1f), new Vector3(.55f, .9f, .55f), Quaternion.identity, mask, QueryTriggerInteraction.Ignore)) continue;
-            if ((hit.point - _shrine).sqrMagnitude < 2.6f) continue;
-            bool spaced = true;
-            foreach (var q in _props)
-                if (((Vector3)q - hit.point).sqrMagnitude < ChallengeRules.MushroomSpacing * ChallengeRules.MushroomSpacing) { spaced = false; break; }
-            if (!spaced) continue;
-            _props.Add(new Vector4(hit.point.x, hit.point.y, hit.point.z, _props.Count));
+            _mushroomLayout.Clear();
+            var rotation = Quaternion.Euler(0f, startYaw + direction * 22.5f, 0f);
+            for (int i = 0; i < ChallengeRules.MushroomCount; i++)
+            {
+                float x = (i < 3 ? i - 1f : i - 4.5f) * spacing;
+                float z = i < 3 ? 3.1f : 3.1f + spacing;
+                var probe = shrine + rotation * new Vector3(x, 1f, z);
+                if (!Physics.Raycast(probe, Vector3.down, out var floor, 1.45f, mask, QueryTriggerInteraction.Ignore) ||
+                    Mathf.Abs(floor.point.y - shrine.y) > .22f || floor.normal.y < .97f ||
+                    Physics.Linecast(eye, floor.point + Vector3.up * (h + .2f), mask, QueryTriggerInteraction.Ignore) ||
+                    Physics.CheckBox(floor.point + Vector3.up * 1.22f, new Vector3(.53f, 1.14f, .53f),
+                        rotation, mask, QueryTriggerInteraction.Ignore)) break;
+                _mushroomLayout.Add(floor.point);
+            }
+            if (_mushroomLayout.Count == ChallengeRules.MushroomCount) return true;
+        }
+        _mushroomLayout.Clear();
+        return false;
+    }
+
+    private static void PlaceMushrooms()
+    {
+        foreach (var floor in _mushroomLayout)
+        {
+            _props.Add(new Vector4(floor.x, floor.y, floor.z, _props.Count));
             _propDone.Add(false);
             _propDrift.Add(false);
         }
@@ -724,7 +755,7 @@ internal sealed class ChallengeManager : MonoBehaviour
         _total = ChallengeRules.MushroomRounds;
         _step = _mistakes = 0;
         _seq.Clear();
-        _standing.Clear();
+        _occupiedMushrooms = 0;
         if (_props.Count < ChallengeRules.MushroomMinCount) return;
         for (int i = 0; i < ChallengeRules.MushroomLength(1); i++) AddToSequence();
         _showStart = SharedTime + 3f; // after the start message
@@ -737,19 +768,26 @@ internal sealed class ChallengeManager : MonoBehaviour
         _seq.Add(pick);
     }
 
-    private static float ShowEnd() => _showStart + _seq.Count * ChallengeRules.MushroomStep;
+    private static float MushroomElapsed()
+    {
+        float elapsed = SharedTime - _showStart;
+        if (!SemiFunc.IsMultiplayer()) return elapsed;
+        if (elapsed < -1800f) return elapsed + 3600f;
+        return elapsed > 1800f ? elapsed - 3600f : elapsed;
+    }
+
+    private static bool MushroomShowing() => MushroomElapsed() < _seq.Count * ChallengeRules.MushroomStep;
 
     // Feet on a cap: within its radius and about its height above the floor it stands on.
     private static int MushroomUnder(PlayerAvatar p)
     {
-        var feet = p.transform.position;
-        float r2 = (ChallengeRules.MushroomCapRadius + .08f) * (ChallengeRules.MushroomCapRadius + .08f);
-        for (int i = 0; i < _props.Count; i++)
-        {
-            var c = (Vector3)_props[i];
-            float dx = feet.x - c.x, dz = feet.z - c.z, dy = feet.y - c.y;
-            if (dx * dx + dz * dz <= r2 && dy >= ChallengeRules.MushroomCapHeight - .2f && dy <= ChallengeRules.MushroomCapHeight + .7f) return i;
-        }
+        if (!p.isGrounded || p.isTumbling || p.deadSet) return -1;
+        var capsule = p.isLocal ? PlayerController.instance?.col : p.playerAvatarCollision?.Collider;
+        if (capsule == null) return -1;
+        var bounds = capsule.bounds;
+        var feet = new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
+        for (int i = 0; i < _mushrooms.Count; i++)
+            if (_mushrooms[i] != null && _mushrooms[i].Supports(feet)) return i;
         return -1;
     }
 
@@ -757,17 +795,18 @@ internal sealed class ChallengeManager : MonoBehaviour
     // While the sequence plays, steps only update where people stand.
     private static void MushroomStep()
     {
-        bool showing = SharedTime < ShowEnd();
+        int occupied = 0;
         foreach (var p in Living())
         {
             int at = MushroomUnder(p);
-            if (!_standing.TryGetValue(p, out int was)) was = -1;
-            if (at == was) continue;
-            _standing[p] = at;
-            if (at < 0 || showing) continue;
-            PressMushroom(at);
-            if (_phase != ChallengePhase.Active || SharedTime < ShowEnd()) return;
+            if (at >= 0) occupied |= 1 << at;
         }
+        // One pad is one press. If co-op landings arrive together, count a correct one first.
+        int press = _step < _seq.Count
+            ? ChallengeRules.MushroomPress(_occupiedMushrooms, occupied, _seq[_step], MushroomShowing())
+            : -1;
+        _occupiedMushrooms = occupied;
+        if (press >= 0) PressMushroom(press);
     }
 
     private static void PressMushroom(int index)
@@ -1178,7 +1217,7 @@ internal sealed class ChallengeManager : MonoBehaviour
         }
         string line = ChallengeRules.Status(_kind, _progress, _total, remaining, Russian);
         if (_kind != ChallengeKind.Mushrooms) return line;
-        string turn = SharedTime < ShowEnd() ? (Russian ? "СМОТРИТЕ" : "WATCH")
+        string turn = MushroomShowing() ? (Russian ? "СМОТРИТЕ" : "WATCH")
             : (Russian ? "ШАГ " : "STEP ") + (_step + 1) + "/" + _seq.Count;
         return $"{line}  {turn}  {(Russian ? "ОШИБКИ" : "MISSES")} {_mistakes}/{ChallengeRules.MushroomMistakes}";
     }
@@ -1187,9 +1226,10 @@ internal sealed class ChallengeManager : MonoBehaviour
     // on, a mistake flashes them all red, a cleared round flashes them all.
     private static void MushroomLights()
     {
-        float t = SharedTime;
-        int slot = t >= _showStart && t < ShowEnd() ? Mathf.FloorToInt((t - _showStart) / ChallengeRules.MushroomStep) : -1;
-        bool lit = slot >= 0 && (t - _showStart) - slot * ChallengeRules.MushroomStep < ChallengeRules.MushroomStep * .72f;
+        float elapsed = MushroomElapsed();
+        int slot = elapsed >= 0f && elapsed < _seq.Count * ChallengeRules.MushroomStep
+            ? Mathf.FloorToInt(elapsed / ChallengeRules.MushroomStep) : -1;
+        bool lit = slot >= 0 && elapsed - slot * ChallengeRules.MushroomStep < ChallengeRules.MushroomStep * .72f;
         for (int i = 0; i < _mushrooms.Count; i++)
             if (_mushrooms[i] != null) _mushrooms[i].Hold(lit && slot < _seq.Count && _seq[slot] == i);
         if (slot != _shownSlot)

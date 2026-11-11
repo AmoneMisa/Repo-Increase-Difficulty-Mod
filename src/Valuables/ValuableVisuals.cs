@@ -17,6 +17,7 @@ internal static class ValuableVisuals
     internal static ValuableArtModel Load(string key)
     {
         if (Models.TryGetValue(key, out var value)) return value;
+        if (RitualLoot.IsProcedural(key)) return Models[key] = RitualLoot.Build(key);
         var assembly = Assembly.GetExecutingAssembly();
         var names = assembly.GetManifestResourceNames();
         string resource = names.FirstOrDefault(n => n.EndsWith(".v11_" + key + ".mesh.json", StringComparison.Ordinal))

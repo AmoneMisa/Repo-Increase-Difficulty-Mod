@@ -15,7 +15,7 @@ namespace IncreaseHardMod.Courier;
 internal sealed class CourierManager : MonoBehaviour
 {
     internal const byte StateCode = 163, RequestCode = 162;
-    internal enum Op : byte { Pet = 1, Charge = 2, Fetch = 3, Ally = 4, Cart = 5, Dash = 6, Fly = 7, Follow = 8, Look = 9, Stash = 10, Unstash = 11, Coin = 12 }
+    internal enum Op : byte { Pet = 1, Charge = 2, Fetch = 3, Ally = 4, Cart = 5, Dash = 6, Fly = 7, Follow = 8, Look = 9, Stash = 10, Unstash = 11, Coin = 12, Store = 13, HeadTrail = 14, HeadFetch = 15 }
 
     internal static CourierManager Instance;
 
@@ -30,6 +30,7 @@ internal sealed class CourierManager : MonoBehaviour
     private Object _level;
     private int _sentLook = int.MinValue;
     private readonly CourierMenu _menu = new();
+    private CourierHeadRoute _headRoute;
 
     private void Awake() { Instance = this; CourierGacha.GiveStarterCoin(); }
 
@@ -107,6 +108,7 @@ internal sealed class CourierManager : MonoBehaviour
 
     private void ClearAll()
     {
+        _headRoute?.Clear();
         foreach (var v in _visuals.Values) if (v != null) Destroy(v.gameObject);
         _visuals.Clear(); _sims.Clear(); Infos.Clear();
         _coinActive = false;
@@ -146,7 +148,7 @@ internal sealed class CourierManager : MonoBehaviour
         }
         var gone = new List<int>();
         foreach (var actor in _sims.Keys) if (!present.Contains(actor)) gone.Add(actor);
-        foreach (var actor in gone) { _sims[actor].UnstashAll(); _sims.Remove(actor); }
+        foreach (var actor in gone) { _sims[actor].Cancel(); _sims[actor].UnstashAll(); _sims.Remove(actor); }
 
         var truck = TruckPoint();
         float dt = Time.deltaTime;
@@ -200,24 +202,97 @@ internal sealed class CourierManager : MonoBehaviour
         if (!_sims.TryGetValue(sender, out var sim)) return;
         if (op == Op.Unstash) { if (sim.TryUnstash(a)) Notify(sender, CourierNotice.Stashed, "-"); return; }
         if (sim.Down) { Notify(sender, CourierNotice.Refused, ((byte)CourierReason.KnockedOut).ToString()); return; }
-        bool levelJob = op is Op.Charge or Op.Fetch or Op.Ally or Op.Cart or Op.Stash;
+        bool levelJob = op is Op.Charge or Op.Fetch or Op.Ally or Op.Cart or Op.Stash or Op.Store or Op.HeadTrail or Op.HeadFetch;
         if (levelJob && !SemiFunc.RunIsLevel()) { Notify(sender, CourierNotice.Refused, ((byte)CourierReason.LevelsOnly).ToString()); return; }
-        PhysGrabObject Item(int viewId) { var v = PhotonView.Find(viewId); return v != null ? v.GetComponent<PhysGrabObject>() : null; }
+        PhysGrabObject item = null;
+        if (op is Op.Charge or Op.Fetch or Op.Ally or Op.Stash or Op.Store)
+        {
+            var view = PhotonView.Find(a);
+            if (view != null) item = view.GetComponent<PhysGrabObject>();
+            if (item != null && ReservedByAnother(sim, item))
+            {
+                Notify(sender, CourierNotice.Refused, ((byte)CourierReason.ItemBusy).ToString());
+                return;
+            }
+        }
         CourierReason? result = op switch
         {
-            Op.Charge => sim.TryCharge(Item(a)),
-            Op.Fetch => sim.TryFetch(Item(a)),
-            Op.Ally => sim.TryAlly(Item(a), FindPlayer(b)),
+            Op.Charge => sim.TryCharge(item, b == 1),
+            Op.Fetch => sim.TryFetch(item),
+            Op.Ally => sim.TryAlly(item, FindPlayer(b)),
             Op.Cart => sim.TryCart(),
             Op.Dash => sim.TryDash(),
             Op.Fly => sim.TryFly(a != 0),
-            Op.Stash => sim.TryStash(Item(a)),
+            Op.Stash => sim.TryStash(item),
+            Op.Store => sim.TryStore(item),
+            Op.HeadTrail => FindHead(sim, carry: false),
+            Op.HeadFetch => FindHead(sim, carry: true),
             _ => null,
         };
         if (op == Op.Follow) sim.Cancel();
         if (result.HasValue) Notify(sender, CourierNotice.Refused, ((byte)result.Value).ToString());
         else if (op == Op.Stash) Notify(sender, CourierNotice.Stashed, "+");
-        else if (levelJob) Notify(sender, CourierNotice.Started, ((byte)op).ToString());
+        else if (levelJob && op != Op.HeadTrail) Notify(sender, CourierNotice.Started, ((byte)op).ToString());
+    }
+
+    private bool ReservedByAnother(CourierSim sim, PhysGrabObject item)
+    {
+        foreach (var other in _sims.Values)
+            if (other != sim && other.HasItem(item)) return true;
+        return false;
+    }
+
+    private CourierReason? FindHead(CourierSim sim, bool carry)
+    {
+        if (sim.Level(carry ? Skills.SkillCatalog.CourierHeadFetch : Skills.SkillCatalog.CourierHeadTrail) <= 0)
+            return CourierReason.NeedPerk;
+        if (sim.Owner == null || sim.Owner.isDisabled || GameDirector.instance == null) return CourierReason.NoHead;
+        var from = sim.Owner.transform.position;
+        PlayerDeathHead best = null;
+        Vector3[] route = null;
+        float shortest = float.PositiveInfinity;
+        bool tooFar = false, busy = false;
+        foreach (var player in GameDirector.instance.PlayerList)
+        {
+            if (player == null || player == sim.Owner || !CourierHeadRoute.Active(player.playerDeathHead)) continue;
+            var head = player.playerDeathHead;
+            var path = CourierHeadRoute.Path(from, head.physGrabObject.midPoint);
+            if (path == null || path.Length == 0) continue;
+            if (carry && !CourierHeadRoute.WithinRoomLimit(path)) { tooFar = true; continue; }
+            if (carry && (!CourierSim.CanPickUp(head.physGrabObject) || ReservedByAnother(sim, head.physGrabObject)))
+            { busy = true; continue; }
+            float length = CourierHeadRoute.Length(path);
+            if (length >= shortest) continue;
+            shortest = length;
+            best = head;
+            route = path;
+        }
+        if (best == null) return busy ? CourierReason.ItemBusy : tooFar ? CourierReason.HeadTooFar : CourierReason.NoHead;
+        if (carry) sim.FetchHead(best);
+        else SendHeadRoute(sim.Actor, best.photonView != null ? best.photonView.ViewID : 0, route);
+        return null;
+    }
+
+    private void SendHeadRoute(int actor, int headView, Vector3[] route)
+    {
+        if (!SemiFunc.IsMultiplayer() || actor == LocalActor) { ShowHeadRoute(headView, route); return; }
+        if (!PhotonNetwork.InRoom || route.Length > CourierHeadRoute.MaxCorners) return;
+        var coordinates = new float[route.Length * 3];
+        for (int i = 0; i < route.Length; i++)
+        {
+            coordinates[i * 3] = route[i].x;
+            coordinates[i * 3 + 1] = route[i].y;
+            coordinates[i * 3 + 2] = route[i].z;
+        }
+        PhotonNetwork.RaiseEvent(StateCode, new object[] { (byte)2, headView, coordinates },
+            new RaiseEventOptions { TargetActors = new[] { actor } }, SendOptions.SendReliable);
+    }
+
+    private void ShowHeadRoute(int headView, Vector3[] route)
+    {
+        if (_headRoute == null) _headRoute = gameObject.AddComponent<CourierHeadRoute>();
+        _headRoute.Show(headView, route);
+        HudNotify.Toast(L("FOLLOW THE TRAIL TO THE HEAD", "СЛЕДУЙТЕ ПО ЛИНИИ К ГОЛОВЕ"), HudStyle.Info, 3f, "courier");
     }
 
     internal static PlayerAvatar FindPlayer(int actor)
@@ -242,7 +317,7 @@ internal sealed class CourierManager : MonoBehaviour
     {
         if (Instance == null || !ModConfig.CourierEnabled.Value) return;
         if (e.CustomData is not object[] d || d.Length != 3 || d[0] is not byte op || d[1] is not int a || d[2] is not int b) return;
-        if (op < (byte)Op.Pet || op > (byte)Op.Coin) return;
+        if (op < (byte)Op.Pet || op > (byte)Op.HeadFetch) return;
         Instance.Handle(e.Sender, (Op)op, a, b);
     }
 
@@ -262,6 +337,15 @@ internal sealed class CourierManager : MonoBehaviour
         }
         else if (kind == 1 && d.Length == 4 && d[1] is int actor && d[2] is byte notice && d[3] is string arg && arg.Length < 200)
             ShowNotice(actor, (CourierNotice)notice, arg);
+        else if (kind == 2 && d.Length == 3 && d[1] is int headView && d[2] is float[] coordinates &&
+            coordinates.Length >= 3 && coordinates.Length <= CourierHeadRoute.MaxCorners * 3 && coordinates.Length % 3 == 0 &&
+            InWorld() && SemiFunc.RunIsLevel())
+        {
+            var route = new Vector3[coordinates.Length / 3];
+            for (int i = 0; i < route.Length; i++)
+                route[i] = new Vector3(coordinates[i * 3], coordinates[i * 3 + 1], coordinates[i * 3 + 2]);
+            Instance.ShowHeadRoute(headView, route);
+        }
     }
 
     private void Apply(int[] actors, float[] f, byte[] b, int[] looks, string[] stash)
@@ -317,6 +401,8 @@ internal sealed class CourierManager : MonoBehaviour
                     CourierJob.Fetch => L($"BROUGHT FROM THE TRUCK: {item}", $"ПРИНЁС ИЗ МАШИНЫ: {item}"),
                     CourierJob.Ally => L($"DELIVERED TO TEAMMATE: {item}", $"ОТНЁС СОЮЗНИКУ: {item}"),
                     CourierJob.Cart => L("THE C.A.R.T. IS HERE", "ТЕЛЕЖКА НА МЕСТЕ"),
+                    CourierJob.Store => L($"LEFT IN THE TRUCK: {item}", $"В МАШИНЕ: {item}"),
+                    CourierJob.Head => L("BROUGHT BACK THE HEAD", "ПРИНЁС ГОЛОВУ"),
                     _ => L("DONE", "ГОТОВО"),
                 };
                 HudNotify.Toast($"{pet}: {text}", HudStyle.Good, 3f, "courier");
@@ -358,6 +444,10 @@ internal sealed class CourierManager : MonoBehaviour
         CourierReason.LevelsOnly => L("ONLY ON A LEVEL", "ТОЛЬКО НА УРОВНЕ"),
         CourierReason.Gone => L("THE ITEM IS GONE", "ПРЕДМЕТ ПРОПАЛ"),
         CourierReason.BackpackFull => L("MY BACKPACK IS FULL", "РЮКЗАК ПОЛОН"),
+        CourierReason.ItemBusy => L("THAT ITEM IS BUSY", "ПРЕДМЕТ ЗАНЯТ"),
+        CourierReason.ChargeTimedOut => L("I BROUGHT IT BACK WITHOUT A FULL CHARGE", "ВЕРНУЛ ПРЕДМЕТ БЕЗ ПОЛНОЙ ЗАРЯДКИ"),
+        CourierReason.NoHead => L("NO REACHABLE DEATH HEAD", "НЕТ ДОСТУПНОЙ ГОЛОВЫ"),
+        CourierReason.HeadTooFar => L("THE HEAD IS MORE THAN THREE ROOMS AWAY", "ДО ГОЛОВЫ БОЛЬШЕ ТРЁХ КОМНАТ"),
         _ => L("CAN'T DO THAT", "НЕ МОГУ"),
     };
 

@@ -34,11 +34,11 @@ internal static class SoulsExplodeHarderEffect
     [HarmonyPostfix]
     private static void Postfix(EnemyValuableExplosion __instance)
     {
-        if (!ModifierManager.Current.Has(ModifierType.SoulsExplodeHarder))
-            return;
-
-        float factor = Mathf.Max(1f, ModConfig.SoulsExplodeHarderFactor.Value);
-        if (factor <= 1f)
+        bool moon = Economy.ExtendedMoons.Current >= Economy.MoonRules.First;
+        float factor = ModifierManager.Current.Has(ModifierType.SoulsExplodeHarder)
+            ? Mathf.Max(1f, ModConfig.SoulsExplodeHarderFactor.Value) : 1f;
+        if (moon) factor *= Economy.MoonRules.SoulDanger;
+        if (factor <= 1f && !moon)
             return;
 
         var root = __instance.transform.root;
@@ -46,6 +46,7 @@ internal static class SoulsExplodeHarderEffect
         int scaledPpe = 0;
         foreach (var ppe in root.GetComponentsInChildren<ParticlePrefabExplosion>(true))
         {
+            if (moon) ppe.explosionDamageEnemy = Mathf.RoundToInt(ppe.explosionDamageEnemy * .5f);
             if (ppe.explosionDamage > 0)
             {
                 ppe.explosionDamage = Mathf.RoundToInt(ppe.explosionDamage * factor);
@@ -56,15 +57,17 @@ internal static class SoulsExplodeHarderEffect
         int scaledHc = 0;
         // Only scale colliders directly when nothing will overwrite them from a
         // ParticlePrefabExplosion; otherwise the PPE scaling above already covers it.
-        if (scaledPpe == 0)
+        var generated = new System.Collections.Generic.HashSet<HurtCollider>();
+        foreach (var ppe in root.GetComponentsInChildren<ParticlePrefabExplosion>(true))
+            if (!ppe.SkipHurtColliderSetup && ppe.HurtCollider != null) generated.Add(ppe.HurtCollider);
+        foreach (var hc in root.GetComponentsInChildren<HurtCollider>(true))
         {
-            foreach (var hc in root.GetComponentsInChildren<HurtCollider>(true))
+            if (generated.Contains(hc)) continue;
+            if (moon) hc.enemyDamage = Mathf.RoundToInt(hc.enemyDamage * .5f);
+            if (hc.playerDamage > 0)
             {
-                if (hc.playerDamage > 0)
-                {
-                    hc.playerDamage = Mathf.RoundToInt(hc.playerDamage * factor);
-                    scaledHc++;
-                }
+                hc.playerDamage = Mathf.RoundToInt(hc.playerDamage * factor);
+                scaledHc++;
             }
         }
 

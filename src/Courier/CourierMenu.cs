@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using IncreaseHardMod.Hud;
+using IncreaseHardMod.Patches.Effects;
 using UnityEngine;
 using C = IncreaseHardMod.Skills.SkillCatalog;
 using L = IncreaseHardMod.Courier.CourierManager;
@@ -26,6 +27,7 @@ internal sealed class CourierMenu
     private HudListPanel _panel;
     private Page _page;
     private int _cursor;
+    private PhysGrabObject _aimedChargeItem;
     internal bool Open { get; private set; }
 
     internal void Close()
@@ -45,6 +47,8 @@ internal sealed class CourierMenu
         if (!Open) return;
         if (PlayerAvatar.instance == null || PlayerAvatar.instance.isDisabled) { Close(); return; }
 
+        _aimedChargeItem = _page == Page.Main && CourierGacha.HasCourier && SemiFunc.RunIsLevel() && Held() == null
+            ? AimedChargeItem() : null;
         var entries = Build(manager);
         if (!chat)
         {
@@ -93,6 +97,7 @@ internal sealed class CourierMenu
         }
         if (rows.Count == 0) rows.Add(new HudListRow(L.L("  NOTHING HERE", "  ЗДЕСЬ ПУСТО"), "", new Color(.55f, .55f, .55f)));
         _panel.SetRows(rows);
+        _panel.ShowPageContainingRow(_cursor);
         var info = manager.Infos.TryGetValue(L.LocalActor, out var i2) ? i2 : default;
         _panel.Footer = !CourierGacha.HasCourier || _page == Page.Gacha
             ? L.L($"COINS {CourierGacha.Coins}   HALVES {CourierGacha.Halves}/2   [↑↓] MOVE  [ENTER] PICK  [←] BACK",
@@ -110,6 +115,8 @@ internal sealed class CourierMenu
         CourierJob.Fetch => L.L("FETCHING", "НЕСЁТ ИЗ МАШИНЫ"),
         CourierJob.Ally => L.L("DELIVERING", "ДОСТАВЛЯЕТ"),
         CourierJob.Cart => L.L("TOWING A C.A.R.T.", "ТАЩИТ ТЕЛЕЖКУ"),
+        CourierJob.Store => L.L("HEADING TO THE TRUCK", "НЕСЁТ В МАШИНУ"),
+        CourierJob.Head => L.L("RETRIEVING A HEAD", "ЗАБИРАЕТ ГОЛОВУ"),
         _ => L.L("FOLLOWING", "СЛЕДУЕТ"),
     };
 
@@ -130,6 +137,16 @@ internal sealed class CourierMenu
         return grabber != null && grabber.grabbed ? grabber.grabbedPhysGrabObject : null;
     }
 
+    private static PhysGrabObject AimedChargeItem()
+    {
+        var camera = PingController.ActiveCamera();
+        if (camera == null) return null;
+        var ray = camera.ViewportPointToRay(new Vector3(.5f, .5f, 0f));
+        if (!PingController.TryAim(ray, CourierRules.ChargeTargetRange, out var hit)) return null;
+        var item = hit.collider.GetComponentInParent<PhysGrabObject>();
+        return item != null && !item.grabbed ? item : null;
+    }
+
     private static int Lv(string node) => Skills.SkillEffects.LocalLevel(node);
 
     private List<Entry> MainPage(CourierManager m)
@@ -144,15 +161,41 @@ internal sealed class CourierMenu
         var info = m.Infos.TryGetValue(L.LocalActor, out var i) ? i : default;
         bool level = SemiFunc.RunIsLevel();
         var held = Held();
-        var battery = held != null ? held.GetComponent<ItemBattery>() : null;
+        var chargeItem = held != null ? held : _aimedChargeItem;
+        var battery = chargeItem != null ? chargeItem.GetComponent<ItemBattery>() : null;
+        int chargeView = battery != null && chargeItem.photonView != null ? chargeItem.photonView.ViewID : 0;
+        bool pickUp = held == null;
         list.Add(new Entry
         {
-            Text = L.L("CHARGE THE ITEM IN MY HANDS", "ЗАРЯДИТЬ ПРЕДМЕТ ИЗ РУК"),
-            Note = !level ? L.L("LEVELS ONLY", "ТОЛЬКО НА УРОВНЕ") : battery == null ? L.L("HOLD A BATTERY ITEM", "ВОЗЬМИТЕ ПРЕДМЕТ С БАТАРЕЕЙ") : $"{Mathf.RoundToInt(battery.batteryLife)}%",
-            Enabled = level && battery != null,
-            Pick = () => { m.Request(CourierManager.Op.Charge, held.photonView.ViewID, 0); Close(); },
+            Text = L.L("CHARGE IN THE TRUCK", "ЗАРЯДИТЬ В МАШИНЕ"),
+            Note = !level ? L.L("LEVELS ONLY", "ТОЛЬКО НА УРОВНЕ") : battery == null
+                ? L.L("AIM AT A BATTERY ITEM", "НАВЕДИТЕСЬ НА ПРЕДМЕТ С БАТАРЕЕЙ")
+                : $"{Mathf.RoundToInt(battery.batteryLife)}%",
+            Enabled = level && chargeView != 0 && battery.batteryLife < 100f,
+            Pick = () => { m.Request(CourierManager.Op.Charge, chargeView, pickUp ? 1 : 0); Close(); },
         });
         list.Add(new Entry { Text = L.L("FETCH FROM THE TRUCK", "ПРИНЕСТИ ИЗ МАШИНЫ") + " >", Note = level ? "" : L.L("LEVELS ONLY", "ТОЛЬКО НА УРОВНЕ"), Enabled = level, Pick = () => Go(Page.Truck) });
+        int heldView = held != null && held.photonView != null ? held.photonView.ViewID : 0;
+        list.Add(new Entry
+        {
+            Text = L.L("LEAVE MY ITEM IN THE TRUCK", "ОТНЕСТИ ВЕЩЬ В МАШИНУ"),
+            Note = !level ? L.L("LEVELS ONLY", "ТОЛЬКО НА УРОВНЕ") : heldView == 0 ? L.L("HOLD AN ITEM", "ВОЗЬМИТЕ ВЕЩЬ") : "",
+            Enabled = level && heldView != 0,
+            Pick = () => { m.Request(CourierManager.Op.Store, heldView, 0); Close(); },
+        });
+        AddHeadCommand(C.CourierHeadTrail, CourierManager.Op.HeadTrail, L.L("SHOW THE PATH TO A HEAD", "ПОКАЗАТЬ ПУТЬ К ГОЛОВЕ"));
+        AddHeadCommand(C.CourierHeadFetch, CourierManager.Op.HeadFetch, L.L("BRING A HEAD", "ПРИНЕСТИ ГОЛОВУ"));
+        void AddHeadCommand(string perk, CourierManager.Op op, string text)
+        {
+            bool unlocked = Lv(perk) > 0;
+            list.Add(new Entry
+            {
+                Text = text,
+                Note = !unlocked ? L.L("PERK", "ПЕРК") : !level ? L.L("LEVELS ONLY", "ТОЛЬКО НА УРОВНЕ") : "",
+                Enabled = unlocked && level,
+                Pick = () => { m.Request(op, 0, 0); Close(); },
+            });
+        }
         bool ally = Lv(C.CourierAlly) > 0;
         list.Add(new Entry
         {
