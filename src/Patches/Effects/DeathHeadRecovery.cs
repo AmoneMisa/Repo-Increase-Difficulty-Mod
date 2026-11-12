@@ -53,6 +53,24 @@ internal static class DeathHeadRecovery
         }
     }
 
+    /// <summary>
+    /// Host: put a death head on the nearest safe floor to where it is now (beside the pit it fell into, or where it
+    /// left the level). The truck is only a last resort when the level has no reachable floor at all.
+    /// </summary>
+    internal static bool TryMoveHeadNear(PlayerDeathHead head)
+    {
+        if (head == null || head.physGrabObject == null) return false;
+        var grab = head.physGrabObject;
+        if (!TryFindSafePosition(grab.transform.position, out var destination)) return false;
+        for (int i = grab.playerGrabbing.Count - 1; i >= 0; i--)
+            if (grab.playerGrabbing[i] != null)
+                grab.playerGrabbing[i].OverrideGrabRelease(grab.photonView != null ? grab.photonView.ViewID : -1);
+        grab.Teleport(destination + Vector3.up * .5f, grab.transform.rotation);
+        if (grab.rb != null) { grab.rb.velocity = Vector3.zero; grab.rb.angularVelocity = Vector3.zero; }
+        Plugin.Log.LogInfo($"[DeathHead] Head placed on the floor near its death spot at {destination}.");
+        return true;
+    }
+
     private static bool HasStandingClearance(Vector3 floor)
     {
         var feet = floor + Vector3.up * .29f;
@@ -141,10 +159,8 @@ internal static class DeathHeadRecovery
             }
             var position = __instance.physGrabObject.transform.position;
             if (!SustainedExit(__instance, position, requirePriorSafePosition: false)) return;
-            var round = RoundDirector.instance;
-            var extraction = round != null && round.extractionPointActive && round.extractionPointCurrent != null
-                ? round.extractionPointCurrent.safetySpawn : null;
-            if (!AutoReviveEffect.TryMoveHeadToSafety(__instance, extraction)) return;
+            // Back onto the nearest safe floor near where it left the level, not to the truck or extraction.
+            if (!TryMoveHeadNear(__instance)) return;
 
             Watches.Remove(__instance);
             __instance.outsideLevelTimer = 0f;

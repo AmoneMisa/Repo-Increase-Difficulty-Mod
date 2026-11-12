@@ -202,4 +202,12 @@ Check(MonsterRules.HoldImpactArms(true, 0f, 9f), "Swinging a held monster fast a
 Check(MonsterRules.HoldImpactArms(false, .1f, 8f), "A fast release (a throw) arms impact damage");
 Check(!MonsterRules.HoldImpactArms(false, .1f, 1f), "Gently letting go does not arm impact damage");
 Check(!MonsterRules.HoldImpactArms(false, 2f, 8f), "A monster nobody touched recently is not hurt by its own fast movement");
+// The bull has no close-range dead zone: the head toss reaches almost to where a charge starts.
+Check(MonsterRules.HeadTossReach >= 2.8f && MonsterRules.ChargeMinDistance - MonsterRules.HeadTossReach <= .6f,
+    "Gorgon: no gap between head-toss reach and the closest charge distance");
+Check(MonsterRules.GorgonCloseNotice > MonsterRules.HeadTossReach, "Gorgon notices a player standing within head-toss reach even outside its vision cone");
+// The witch flies just under the ceiling: high in a tall hall, low in a low room, never below 1 m.
+Check(Math.Abs(MonsterRules.WitchHoverFor(3.2f) - 2.2f) < .01f, "Witch: in a 3.2 m room she flies 1 m below the ceiling");
+Check(MonsterRules.WitchHoverFor(12f) == MonsterRules.WitchHoverMax, "Witch: in a tall hall she stops at her highest hover");
+Check(MonsterRules.WitchHoverFor(1.5f) == 1f, "Witch: under a very low ceiling she still keeps 1 m");
 Console.WriteLine("MONSTER_CHECKS_PASSED: " + checks);

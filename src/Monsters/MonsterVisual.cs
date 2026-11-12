@@ -380,9 +380,13 @@ internal sealed class MonsterVisual : MonoBehaviour
             case MonsterKind.Pig when !landed: rate = 3.5f; cue = MonsterAudio.Cue.Flap; volume = .22f; pitch = 1.2f; break;
             case MonsterKind.Witch: rate = speed > .4f ? .7f : 0f; cue = MonsterAudio.Cue.Whoosh; volume = .3f; break;
             case MonsterKind.Basilisk: rate = speed > .3f ? 1.3f : 0f; cue = MonsterAudio.Cue.Slither; volume = .2f; break;
-            case MonsterKind.Gorgon: rate = speed > .3f ? Mathf.Clamp(speed * 1.1f, 1.2f, 6f) : 0f; cue = MonsterAudio.Cue.Stomp; volume = .65f; pitch = .9f; break;
+            case MonsterKind.Gorgon:
+                // A continuous gait: 1.2 s stretches of recorded hoof clatter, started back to back (slightly overlapping)
+                // instead of single chopped steps; faster and a little higher while it charges.
+                rate = speed > .3f ? Mathf.Clamp(speed * .33f, .85f, 1.7f) : 0f; cue = MonsterAudio.Cue.Gait; volume = .8f;
+                pitch = speed > 4.5f ? 1f : .88f; break; // heavy, unhurried steps; a drumroll only in the charge
             case MonsterKind.Naga: rate = speed > .3f ? 1.5f : 0f; cue = MonsterAudio.Cue.Slither; volume = .35f; pitch = .8f; break;
-            case MonsterKind.Fairy: rate = 4f; cue = MonsterAudio.Cue.Flap; volume = .07f; pitch = 1.1f; break;
+            case MonsterKind.Fairy: rate = .5f; cue = MonsterAudio.Cue.FairyFlight; volume = .45f; break; // 2.4 s wing recording every 2 s: a seamless flutter
             default: rate = speed > .3f ? Mathf.Clamp(speed * 1.8f, 2f, 6f) : 0f; cue = MonsterAudio.Cue.Step; volume = .3f; break;
         }
         if (rate > 0f)
@@ -408,7 +412,7 @@ internal sealed class MonsterVisual : MonoBehaviour
                 case MonsterKind.Pig: MonsterAudio.Play(MonsterAudio.Cue.Oink, at, .6f); break;
                 case MonsterKind.Witch: MonsterAudio.Play(MonsterAudio.Cue.Whoosh, at, .35f, .8f); break; // humming broom
                 case MonsterKind.Basilisk: MonsterAudio.Play(MonsterAudio.Cue.Hiss, at, .25f, 1.25f); break;
-                case MonsterKind.Gorgon: MonsterAudio.Play(MonsterAudio.Cue.Roar, at, .3f, 1.6f); break;   // idle snort
+                case MonsterKind.Gorgon: MonsterAudio.Play(MonsterAudio.Cue.Snort, at, .45f, Random.Range(.9f, 1.05f)); break; // idle snort
                 case MonsterKind.Naga: MonsterAudio.Play(MonsterAudio.Cue.Slither, at, .4f, .7f); break;
                 case MonsterKind.Fairy: MonsterAudio.Play(MonsterAudio.Cue.Giggle, at, .2f, 1f); break;
                 case MonsterKind.Twins: MonsterAudio.Play(MonsterAudio.Cue.Giggle, at, .3f, 1.1f); break;
@@ -421,7 +425,7 @@ internal sealed class MonsterVisual : MonoBehaviour
                     if (_brain is not WitchBrain witch || !witch.TryLaugh(.55f)) MonsterAudio.Play(MonsterAudio.Cue.Whoosh, at, .5f, .7f);
                     break;
                 case MonsterKind.Basilisk: MonsterAudio.Play(MonsterAudio.Cue.Hiss, at, .5f, .9f); break;
-                case MonsterKind.Gorgon: MonsterAudio.Play(MonsterAudio.Cue.Growl, at, .7f); break;
+                case MonsterKind.Gorgon: MonsterAudio.Play(MonsterAudio.Cue.Moo, at, .8f, Random.Range(.85f, .95f)); break;
                 case MonsterKind.Naga: MonsterAudio.Play(MonsterAudio.Cue.Chitter, at, .75f, .9f); break;
                 case MonsterKind.Fairy: MonsterAudio.Play(MonsterAudio.Cue.Giggle, at, .3f, .9f); break;
                 case MonsterKind.Twins: MonsterAudio.Play(MonsterAudio.Cue.Giggle, at, .55f, .8f); break; // lower, creepier

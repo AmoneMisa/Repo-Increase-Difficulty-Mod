@@ -10,7 +10,7 @@ internal static class ItemAudio
 {
     private static readonly Dictionary<string, AudioClip> Clips = new();
 
-    private static AudioClip Load(string key)
+    internal static AudioClip Load(string key)
     {
         if (Clips.TryGetValue(key, out var cached)) return cached;
         var asm = Assembly.GetExecutingAssembly();

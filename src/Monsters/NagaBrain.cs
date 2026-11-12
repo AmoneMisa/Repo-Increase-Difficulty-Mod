@@ -50,6 +50,14 @@ internal sealed class NagaBrain : MonsterBrain
         if (State == Guard) Destination = position;
     }
 
+    // Hit while guarding: she turns on the nearest player she can see.
+    protected override void OnHurt()
+    {
+        if (State != Guard) return;
+        var p = Notice(MonsterRules.NagaSight * 1.5f, force: true);
+        if (p != null) { Target = p; SetState(Hunt); }
+    }
+
     protected override void OnStunned() { if (State is Combo1 or Combo2 or Petrify or Bleed) Announce(Vulnerable); }
 
     protected override void PlayStateCue(byte state)
@@ -69,8 +77,12 @@ internal sealed class NagaBrain : MonsterBrain
         switch (State)
         {
             case Guard:
+            {
                 Roam(MonsterRules.NagaPatrolSpeed);
+                var near = Notice(MonsterRules.GorgonCloseNotice); // someone right at her side, outside the vision cone
+                if (near != null) { Target = near; SetState(Hunt); }
                 break;
+            }
             case Hunt:
                 HuntTick(dt);
                 break;

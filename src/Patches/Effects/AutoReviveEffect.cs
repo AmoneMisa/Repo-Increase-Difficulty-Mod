@@ -21,9 +21,9 @@ namespace IncreaseHardMod.Patches.Effects;
 /// (hosted on the always-alive ModNetwork object) that waits for that head, then
 /// calls Revive().
 ///
-/// ReviveRPC uses the death head's position. Recover heads from lethal pits at the truck
-/// even without the modifier, so they are available for a manual revive. AutoReviveAtCar
-/// also moves heads there on ordinary deaths and enables the truck's heal.
+/// ReviveRPC uses the death head's position. Heads from lethal pits are put back on the nearest
+/// safe floor beside the pit (never in the truck), so they are available for a manual revive.
+/// AutoReviveAtCar revives the auto-revived player at the car and enables the truck's heal.
 ///
 /// Host authority: Revive() issues an RPC to everyone, so exactly one client — the
 /// host — must trigger it; we gate on IsMasterClientOrSingleplayer. The one-use-per
@@ -83,7 +83,10 @@ internal static class AutoReviveEffect
         if (!SemiFunc.IsMasterClientOrSingleplayer() || !DeathReady(player))
             yield break;
 
-        bool atCar = (recoverHead || ModConfig.AutoReviveAtCar.Value) && TryMoveHeadToSafety(player.playerDeathHead);
+        // A head that fell into a pit is put back on the floor next to it (not in the truck), so the team can still
+        // carry it to a revive. Only the AutoRevive modifier with AutoReviveAtCar brings the player back at the car.
+        bool atCar = autoRevive && ModConfig.AutoReviveAtCar.Value && TryMoveHeadToSafety(player.playerDeathHead);
+        if (!atCar && recoverHead) DeathHeadRecovery.TryMoveHeadNear(player.playerDeathHead);
         if (!autoRevive) yield break;
         if (atCar)
         {

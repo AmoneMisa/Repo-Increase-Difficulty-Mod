@@ -6,11 +6,11 @@ namespace IncreaseHardMod.Monsters;
 
 /// <summary>
 /// Monster cues through the native Sound path (mixer, distance, occlusion).
-/// Warnings are procedural; the witch laugh uses a user-supplied embedded recording.
+/// Warnings are procedural; the witch laugh, the gorgon's hoofsteps and bellow, and the fairy's wings use user-supplied embedded recordings.
 /// </summary>
 internal static class MonsterAudio
 {
-    internal enum Cue { Oink, Chomp, Charge, Fireball, Zap, Hiss, Rustle, Bite, Roar, Thud, Stare, Swing, SwingWide, Petrify, Slash, Hurt, Death, WitchLaugh, Giggle, Chime, Step, Stomp, Slither, Flap, Whoosh, BladeDraw, Growl, Snort, Shriek, Hum, Sparkle, Rattle, Spit, Squeeze, Chitter }
+    internal enum Cue { Oink, Chomp, Charge, Fireball, Zap, Hiss, Rustle, Bite, Roar, Thud, Stare, Swing, SwingWide, Petrify, Slash, Hurt, Death, WitchLaugh, Giggle, Chime, Step, Stomp, Slither, Flap, Whoosh, BladeDraw, Growl, Snort, Shriek, Hum, Sparkle, Rattle, Spit, Squeeze, Chitter, Hoof, HoofRun, FairyFlight, Moo, Gait }
 
     private static readonly Dictionary<Cue, Sound> Sounds = new();
 
@@ -19,11 +19,16 @@ internal static class MonsterAudio
         try
         {
             if (!Sounds.TryGetValue(cue, out var sound))
-                Sounds[cue] = sound = cue == Cue.WitchLaugh
-                    ? Visuals.ItemAudio.Cue("monster_witch_laugh", .32f)
+                Sounds[cue] = sound = cue == Cue.WitchLaugh ? Visuals.ItemAudio.Cue("monster_witch_laugh", .32f)
+                    // The fairy's wings: a user-supplied 2.4 s recording with soft ends, replayed with overlap while she flies.
+                    : cue == Cue.FairyFlight ? Visuals.ItemAudio.Cue("monster_fairy_flight", .5f)
+                    // The bull's bellow: a user-supplied recording, pitched down for the roar before the charge.
+                    : cue == Cue.Moo ? Visuals.ItemAudio.Cue("monster_gorgon_moo", .5f)
                     : new Sound
                 {
-                    Sounds = new[] { Make(cue) }, Volume = .5f, VolumeRandom = .05f, Pitch = 1f, PitchRandom = .06f,
+                    // Hoofsteps: four steps cut from a user-supplied recording of a large animal; the game picks one at random.
+                    Sounds = cue is Cue.Hoof or Cue.HoofRun ? HoofClips("monster_gorgon_hoof", 4) :
+                             cue == Cue.Gait ? HoofClips("monster_gorgon_gait", 2) : new[] { Make(cue) }, Volume = .5f, VolumeRandom = .05f, Pitch = 1f, PitchRandom = .06f,
                     SpatialBlend = 1f, Doppler = 0f, Type = AudioManager.AudioType.Default,
                 };
             sound.Volume = (cue == Cue.WitchLaugh ? .32f : .5f) * volume;
@@ -31,6 +36,21 @@ internal static class MonsterAudio
             sound.Play(position);
         }
         catch (Exception e) { Plugin.Log.LogWarning($"[Monsters] Sound {cue} failed: {e.Message}"); }
+    }
+
+    private static AudioClip[] HoofClips(string key, int count)
+    {
+        try
+        {
+            var clips = new AudioClip[count];
+            for (int i = 0; i < clips.Length; i++) clips[i] = Visuals.ItemAudio.Load(key + (i + 1));
+            return clips;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.LogWarning($"[Monsters] Hoof recording missing ({e.Message}); using the synthesized step.");
+            return new[] { Make(Cue.Hoof) };
+        }
     }
 
     private static AudioClip Make(Cue cue)
@@ -42,12 +62,12 @@ internal static class MonsterAudio
             Cue.Rustle => .6f, Cue.Bite => .25f, Cue.Roar => 1.1f, Cue.Thud => .5f, Cue.Stare => 2f, Cue.Swing => .3f,
             Cue.SwingWide => .45f, Cue.Petrify => 1.5f, Cue.Slash => .4f, Cue.Hurt => .3f, Cue.Giggle => 1.1f, Cue.Chime => .9f,
             Cue.Step => .14f, Cue.Stomp => .35f, Cue.Slither => .7f, Cue.Flap => .22f, Cue.Whoosh => .8f, Cue.BladeDraw => .55f, Cue.Growl => .9f,
-            Cue.Snort => .6f, Cue.Shriek => .7f, Cue.Hum => 1f, Cue.Sparkle => .9f, Cue.Rattle => .85f, Cue.Spit => .5f, Cue.Squeeze => .9f, Cue.Chitter => 1f, _ => .9f,
+            Cue.Snort => .6f, Cue.Shriek => .7f, Cue.Hum => 1f, Cue.Sparkle => .9f, Cue.Rattle => .85f, Cue.Spit => .5f, Cue.Squeeze => .9f, Cue.Chitter => 1f, Cue.Hoof => .32f, _ => .9f,
         };
         int n = (int)(rate * length);
         var data = new float[n];
         var rng = new System.Random((int)cue * 7919 + 13);
-        float low = 0f, phase = 0f, svLow = 0f, svBand = 0f;
+        float low = 0f, phase = 0f, svLow = 0f, svBand = 0f, svLow2 = 0f, svBand2 = 0f;
         for (int i = 0; i < n; i++)
         {
             float t = i / (float)rate, u = t / length;
@@ -159,6 +179,26 @@ internal static class MonsterAudio
                     phase += 2 * Mathf.PI * 110f / rate;
                     s = (Mathf.Sin(phase) * .2f + Mathf.Sign(Mathf.Sin(phase * 2f)) * .06f) * (.8f + .2f * Mathf.Sin(u * 30f))
                         + (rng.NextDouble() < .02 ? noise * .5f : 0f); break;
+                case Cue.Hoof:
+                {
+                    // A cloven hoof on a hard floor: "clip-clop" - a hard click of horn that rings two hollow knock
+                    // resonances (~520 and ~1350 Hz), a small body thump under it, then the second hoof softer and lower.
+                    float x = 0f, thump = 0f, tone = 1f;
+                    for (int h = 0; h < 2; h++)
+                    {
+                        float dt = t - (h == 0 ? 0f : .105f);
+                        if (dt < 0f) continue;
+                        float a = h == 0 ? 1f : .55f; tone = h == 0 ? 1f : .88f;
+                        x += noise * a * Mathf.Exp(-dt / .0025f);
+                        thump += a * Mathf.Sin(2 * Mathf.PI * 95f * tone * dt) * Mathf.Exp(-dt / .045f);
+                    }
+                    float f1 = 2f * Mathf.Sin(Mathf.PI * 520f * tone / rate), f2 = 2f * Mathf.Sin(Mathf.PI * 1350f * tone / rate);
+                    svLow += f1 * svBand; svBand += f1 * (x - svLow - .06f * svBand);
+                    svLow2 += f2 * svBand2; svBand2 += f2 * (x - svLow2 - .09f * svBand2);
+                    s = (svBand * .11f + svBand2 * .06f + x * .18f + thump * .35f) * 2f;
+                    env = 1f; // the click must start at full strength; the default fade-in would soften it
+                    break;
+                }
                 case Cue.Step: s = low * 1.4f * Mathf.Exp(-u * 10f); break;
                 case Cue.Stomp:
                     // Heavy hoof: a low thump with a gritty tail.

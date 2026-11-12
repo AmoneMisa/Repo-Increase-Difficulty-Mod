@@ -78,6 +78,11 @@ internal static class MonsterRules
     internal const float BurnDotPerSecond = 2f, BurnDotSeconds = 3f, BurnVulnerableSeconds = 4f, BurnVulnerability = 1.25f;
     internal const float LevitateSeconds = 2.5f, LevitatePerSecond = 3f, LevitateCooldown = 22f, LevitateHeight = 1.4f;
     internal const float WitchKeepMin = 6f, WitchKeepMax = 10f, WitchHover = 2.5f;
+    /// <summary>How far up she looks for the ceiling, and how far her body's centre stays below it.</summary>
+    internal const float WitchCeilingProbe = 6f, WitchCeilingGap = 1f, WitchHoverMax = 4f;
+
+    /// <summary>Hover height (body above the floor point) under a ceiling this high: just below it, 1..4 m.</summary>
+    internal static float WitchHoverFor(float ceiling) => Math.Max(1f, Math.Min(WitchHoverMax, ceiling - WitchCeilingGap));
 
     /// <summary>Incoming damage while burning: x1.5 once, however many fireballs hit (no stacking).</summary>
     internal static int BurningDamage(int damage, bool burning) =>
@@ -98,6 +103,11 @@ internal static class MonsterRules
     internal const float RoarSeconds = 1f, ChargeSpeed = 7.5f, ChargeMaxSeconds = 2.4f, GorgonStunSeconds = 3f;
     /// <summary>Time between two charges (and head tosses) of one gorgon.</summary>
     internal const float ChargeCooldown = 8f, HeadTossCooldown = 4f;
+    /// <summary>
+    /// Gorgon ranges from the middle of its body (it is about 3 m long): the head toss reaches past the horns, and
+    /// it charges only from beyond that, so there is no gap where it neither tosses nor charges.
+    /// </summary>
+    internal const float HeadTossReach = 3f, ChargeMinDistance = 3.5f, GorgonCloseNotice = 4.5f, GorgonHurtNotice = 20f;
     internal const int RamDamage = 45, WallImpactDamage = 10, TrampleDamage = 15;
     /// <summary>Speed factor of the Slowed affliction (kept for compatibility; the gorgon stare that caused it is gone).</summary>
     internal const float StareSlowFactor = .35f;

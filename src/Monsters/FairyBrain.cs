@@ -70,7 +70,7 @@ internal sealed class FairyBrain : MonsterBrain
         // Got away with it: a pleased giggle as she flies off with the loot.
         else if (state == Carry) MonsterAudio.Play(MonsterAudio.Cue.Giggle, BodyPosition, .45f, 1.1f);
         // Startled (hit, grabbed, stunned, or someone took the loot back): a sharp bell and fast wing beats.
-        else if (state == Flee) { MonsterAudio.Play(MonsterAudio.Cue.Chime, BodyPosition, .8f, 1.3f); MonsterAudio.Play(MonsterAudio.Cue.Flap, BodyPosition, .6f, 1.5f); }
+        else if (state == Flee) { MonsterAudio.Play(MonsterAudio.Cue.Chime, BodyPosition, .8f, 1.3f); MonsterAudio.Play(MonsterAudio.Cue.FairyFlight, BodyPosition, .8f, 1.4f); }
     }
 
     private float _sparkleAt;

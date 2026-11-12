@@ -366,7 +366,13 @@ internal abstract class MonsterBrain : MonoBehaviour
     protected bool Sees(PlayerAvatar p, float range)
     {
         if (p == null || p.isDisabled) return false;
-        var from = Eye;
+        // The donor's vision point may sit far from our body (on the floor under a flying witch, inside a long bull):
+        // a clear line from either it or the body's head counts.
+        return SeesFrom(Eye, p, range) || SeesFrom(BodyPosition + Vector3.up * .5f, p, range);
+    }
+
+    private bool SeesFrom(Vector3 from, PlayerAvatar p, float range)
+    {
         var to = Chest(p) - from;
         if (to.magnitude > range) return false;
         foreach (var hit in Physics.RaycastAll(from, to.normalized, to.magnitude, SemiFunc.LayerMaskGetVisionObstruct(), QueryTriggerInteraction.Ignore))
@@ -378,6 +384,19 @@ internal abstract class MonsterBrain : MonoBehaviour
             return false;
         }
         return true;
+    }
+
+    private float _noticeAt;
+
+    /// <summary>
+    /// Host: a player it can see right next to it (or anyone in sight after it was hit) - for monsters whose native
+    /// vision cone can miss someone standing at their flank or shooting them. Checked at most every 0.4 s.
+    /// </summary>
+    protected PlayerAvatar Notice(float range, bool force = false)
+    {
+        if (!force && Time.time < _noticeAt) return null;
+        _noticeAt = Time.time + .4f;
+        return NearestVisible(range);
     }
 
     protected PlayerAvatar NearestVisible(float range)

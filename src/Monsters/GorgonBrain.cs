@@ -57,6 +57,14 @@ internal sealed class GorgonBrain : MonsterBrain
         if (State == Patrol) Destination = position;
     }
 
+    // Shot or hit while it had nobody to chase: it turns on the nearest player it can see.
+    protected override void OnHurt()
+    {
+        if (State != Patrol) return;
+        var p = Notice(MonsterRules.GorgonHurtNotice, force: true);
+        if (p != null) { Target = p; SetState(Hunt); }
+    }
+
     protected override void OnStunned() { DropVictim(); if (State is Charge or Roar or Acquire or Stare) Announce(Recover); }
     protected override void OnDied() => DropVictim();
 
@@ -68,11 +76,12 @@ internal sealed class GorgonBrain : MonsterBrain
 
     protected override void PlayStateCue(byte state)
     {
-        if (state == Acquire) MonsterAudio.Play(MonsterAudio.Cue.Growl, BodyPosition, 1f);
-        else if (state == Roar) MonsterAudio.Play(MonsterAudio.Cue.Roar, BodyPosition, 1.4f);
+        // Wind-up: a snort and a scrape of the hoof as it locks on, then a deep, drawn-out bellow (the 1 s roar).
+        if (state == Acquire) { MonsterAudio.Play(MonsterAudio.Cue.Snort, BodyPosition, 1f); MonsterAudio.Play(MonsterAudio.Cue.Hoof, BodyPosition, .9f, .7f); }
+        else if (state == Roar) MonsterAudio.Play(MonsterAudio.Cue.Moo, BodyPosition, 1.5f, .72f);
         // Dazed after hitting a wall or being stunned: a heavy, slow snort and a low groan.
-        else if (state == Recover) { MonsterAudio.Play(MonsterAudio.Cue.Snort, BodyPosition, .9f, .7f); MonsterAudio.Play(MonsterAudio.Cue.Growl, BodyPosition, .5f, .8f); }
-        else if (state == Charge) { MonsterAudio.Play(MonsterAudio.Cue.Snort, BodyPosition, 1.2f); MonsterAudio.Play(MonsterAudio.Cue.Stomp, BodyPosition, 1f, .8f); }
+        else if (state == Recover) { MonsterAudio.Play(MonsterAudio.Cue.Snort, BodyPosition, .9f, .7f); MonsterAudio.Play(MonsterAudio.Cue.Moo, BodyPosition, .45f, .6f); }
+        else if (state == Charge) { MonsterAudio.Play(MonsterAudio.Cue.Snort, BodyPosition, 1.2f); MonsterAudio.Play(MonsterAudio.Cue.HoofRun, BodyPosition, 1f, .8f); }
     }
 
     protected override void HostTick(float dt)
@@ -80,8 +89,13 @@ internal sealed class GorgonBrain : MonsterBrain
         switch (State)
         {
             case Patrol:
+            {
                 Roam(2.2f);
+                // Someone at its flank or right behind it, outside the native vision cone, is still noticed.
+                var near = Notice(MonsterRules.GorgonCloseNotice);
+                if (near != null) { Target = near; SetState(Hunt); }
                 break;
+            }
             case Hunt:
                 HuntTick(dt);
                 break;
@@ -120,7 +134,10 @@ internal sealed class GorgonBrain : MonsterBrain
         if (sees) _lostSight = 0f;
         else if ((_lostSight += dt) > 5f) { Target = null; SetState(Patrol); return; }
         float d = DistanceTo(Target);
-        if (d < 2.2f && Time.time >= _tramplReady && InReach(Target, 2.2f) && MayAttack(Target))
+        // Distances are from the middle of a long body: the horns reach about 3 m. Up close it turns to face the
+        // player (no more milling about flank-on) and tosses them whenever the toss is ready.
+        if (d < MonsterRules.ChargeMinDistance) Face(Target.transform.position, 5f);
+        if (d < MonsterRules.HeadTossReach && Time.time >= _tramplReady && InReach(Target, MonsterRules.HeadTossReach) && MayAttack(Target))
         {
             // Too close to charge: a head toss.
             _tramplReady = Time.time + Economy.ExtendedMoons.Cooldown(MonsterRules.HeadTossCooldown);
@@ -133,7 +150,7 @@ internal sealed class GorgonBrain : MonsterBrain
         {
             var dy = Target.transform.position.y - E.transform.position.y;
             bool sameFloor = MonsterRules.InReach(Kind, 0f, dy, 0f, 1f); // no charge at someone on a ledge
-            if (sameFloor && d >= 3.5f && d <= 14f && Time.time >= _chargeReady && ClearRun(Target))
+            if (sameFloor && d >= MonsterRules.ChargeMinDistance && d <= 14f && Time.time >= _chargeReady && ClearRun(Target))
             { _chargeReady = Time.time + Economy.ExtendedMoons.Cooldown(MonsterRules.ChargeCooldown); Announce(Acquire); return; }
         }
         Move(Target.transform.position, 2.6f);

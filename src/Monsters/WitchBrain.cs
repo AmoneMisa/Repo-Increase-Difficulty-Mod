@@ -6,7 +6,7 @@ namespace IncreaseHardMod.Monsters;
 /// <summary>
 /// Witch (Tier II, ranged caster). AirPatrol -> TargetDetected -> ChooseSpell -> Cast -> Reposition -> Search.
 ///
-/// Flies 2-3 m up (lower under a low ceiling), keeps 6-10 m from its target and needs line of sight to cast.
+/// Flies just under the ceiling (up to 4 m above the floor, at least 1 m), keeps 6-10 m from its target and needs line of sight to cast.
 /// Fireball: 1.2 s of fire gathering in the hand (sound + pose), then a dodgeable projectile the host flies and
 /// collides (walls block it): 22 damage and Burning (4 HP/s for 3 s, +50% damage taken for 5 s). Cooldown 5 s.
 /// Electric Levitation: a 0.8 s crackling warning, then the target is lifted and held 3 s at 5 HP/s while the
@@ -70,10 +70,17 @@ internal sealed class WitchBrain : MonsterBrain
         if (Time.time >= _ceilingCheck)
         {
             _ceilingCheck = Time.time + .5f;
-            float ceiling = Physics.Raycast(E.transform.position + Vector3.up * .3f, Vector3.up, out var hit, 4f,
-                SemiFunc.LayerMaskGetVisionObstruct(), QueryTriggerInteraction.Ignore) ? hit.distance + .3f : 4f;
-            // In a low room she has to come down, and is easier to hit.
-            _hover = Mathf.Clamp(ceiling - 1.1f, 1f, MonsterRules.WitchHover);
+            // The ray starts on the floor under her and passes through her own flying body: skip her colliders
+            // (hitting them read as a "ceiling" and kept pulling her down to 1 m) and players.
+            float ceiling = MonsterRules.WitchCeilingProbe;
+            foreach (var hit in Physics.RaycastAll(E.transform.position + Vector3.up * .3f, Vector3.up, MonsterRules.WitchCeilingProbe,
+                         SemiFunc.LayerMaskGetVisionObstruct(), QueryTriggerInteraction.Ignore))
+            {
+                if (hit.collider.transform.IsChildOf(Parent.transform) || hit.collider.GetComponentInParent<PlayerAvatar>() != null) continue;
+                ceiling = Mathf.Min(ceiling, hit.distance + .3f);
+            }
+            // Up under the ceiling; in a low room she has to come down, and is easier to hit.
+            _hover = MonsterRules.WitchHoverFor(ceiling);
         }
         return _hover > 0f ? _hover : Hover;
     }
