@@ -207,6 +207,16 @@ internal static class MonsterRules
     /// <summary>After a player lets go, impacts keep hurting this long (the throw and its landing).</summary>
     internal const float ThrownHurtSeconds = 1.5f;
 
+    /// <summary>
+    /// Speed (m/s) at which a held or just-released monster counts as swung or thrown (above a sprint). Simply holding it is not
+    /// an attack: the body twitches against the grab (its own walking pull) and those small knocks must not hurt.
+    /// </summary>
+    internal const float SwingHurtSpeed = 6.5f, ReleaseGraceSeconds = .3f;
+
+    /// <summary>Whether this frame starts or extends the impact-damage window for a monster in a player's hands.</summary>
+    internal static bool HoldImpactArms(bool held, float sinceRelease, float speed) =>
+        (held || sinceRelease <= ReleaseGraceSeconds) && speed >= SwingHurtSpeed;
+
     // ---------------------------------------------------------------- perks
 
     /// <summary>Grounding: electric hold time -20/35/50%.</summary>

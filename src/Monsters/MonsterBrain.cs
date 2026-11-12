@@ -231,7 +231,7 @@ internal abstract class MonsterBrain : MonoBehaviour
         if (attacking || winding) E.SetChaseTimer();
     }
 
-    private float _heldHurtUntil;
+    private float _heldHurtUntil, _lastHeldAt = -100f;
 
     // Native rule: impacts hurt a monster only while it is stunned or a "non-stun hurt" window is open. Keep that
     // window open while players hold it and briefly after they let go, so slamming it into the floor or a wall
@@ -239,7 +239,12 @@ internal abstract class MonsterBrain : MonoBehaviour
     private void HoldHurts()
     {
         if (!E.HasRigidbody || !E.HasHealth || E.Rigidbody.physGrabObject == null) return;
-        if (E.Rigidbody.physGrabObject.playerGrabbing.Count > 0) _heldHurtUntil = Time.time + MonsterRules.ThrownHurtSeconds;
+        // Impacts hurt only while it is swung or thrown (fast), not while it simply hangs in someone's grip.
+        var pgo = E.Rigidbody.physGrabObject;
+        bool held = pgo.playerGrabbing.Count > 0;
+        if (held) _lastHeldAt = Time.time;
+        float speed = pgo.rb != null ? pgo.rb.velocity.magnitude : 0f;
+        if (MonsterRules.HoldImpactArms(held, Time.time - _lastHeldAt, speed)) _heldHurtUntil = Time.time + MonsterRules.ThrownHurtSeconds;
         if (Time.time < _heldHurtUntil) E.Health.NonStunHurtOverride(.25f);
     }
 

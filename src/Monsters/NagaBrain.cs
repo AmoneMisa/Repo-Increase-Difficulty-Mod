@@ -57,9 +57,9 @@ internal sealed class NagaBrain : MonsterBrain
         if (state == Combo1) MonsterAudio.Play(MonsterAudio.Cue.BladeDraw, BodyPosition, .9f);
         else if (state == Combo2) MonsterAudio.Play(MonsterAudio.Cue.BladeDraw, BodyPosition, 1f, .8f);
         // The bleeding cut: a long hiss and a slow, heavy blade draw - different from the combo's quick draws.
-        else if (state == Bleed) { MonsterAudio.Play(MonsterAudio.Cue.Hiss, BodyPosition, 1.1f, .8f); MonsterAudio.Play(MonsterAudio.Cue.BladeDraw, BodyPosition, 1f, .6f); }
+        else if (state == Bleed) { MonsterAudio.Play(MonsterAudio.Cue.Chitter, BodyPosition, 1.4f, .9f); MonsterAudio.Play(MonsterAudio.Cue.BladeDraw, BodyPosition, 1f, .6f); }
         // Winded after the combo (or stunned out of an attack): a tired, low hiss - the window to hit her.
-        else if (state == Vulnerable) MonsterAudio.Play(MonsterAudio.Cue.Hiss, BodyPosition, .8f, .55f);
+        else if (state == Vulnerable) MonsterAudio.Play(MonsterAudio.Cue.Hiss, BodyPosition, 1.1f, .8f);
     }
 
     private bool SpecialReady => Time.time >= _lastSpecialEnd + Economy.ExtendedMoons.Cooldown(MonsterRules.SpecialRecovery);

@@ -196,4 +196,10 @@ for (float s = MonsterAnimRules.FlinchPeak + .02f; s < MonsterAnimRules.FlinchSe
     flinchPrev = f;
 }
 Check(flinchFalls && flinchPrev < .05f, "After the peak the flinch only eases back to rest, staying within 0..1");
+// Holding a monster still is not an attack; swinging or throwing it is.
+Check(!MonsterRules.HoldImpactArms(true, 0f, 5.5f), "Holding a monster still or carrying it at a sprint does not arm impact damage");
+Check(MonsterRules.HoldImpactArms(true, 0f, 9f), "Swinging a held monster fast arms impact damage");
+Check(MonsterRules.HoldImpactArms(false, .1f, 8f), "A fast release (a throw) arms impact damage");
+Check(!MonsterRules.HoldImpactArms(false, .1f, 1f), "Gently letting go does not arm impact damage");
+Check(!MonsterRules.HoldImpactArms(false, 2f, 8f), "A monster nobody touched recently is not hurt by its own fast movement");
 Console.WriteLine("MONSTER_CHECKS_PASSED: " + checks);

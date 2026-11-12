@@ -422,7 +422,7 @@ internal sealed class MonsterVisual : MonoBehaviour
                     break;
                 case MonsterKind.Basilisk: MonsterAudio.Play(MonsterAudio.Cue.Hiss, at, .5f, .9f); break;
                 case MonsterKind.Gorgon: MonsterAudio.Play(MonsterAudio.Cue.Growl, at, .7f); break;
-                case MonsterKind.Naga: MonsterAudio.Play(MonsterAudio.Cue.Hiss, at, .55f, .7f); break;
+                case MonsterKind.Naga: MonsterAudio.Play(MonsterAudio.Cue.Chitter, at, .75f, .9f); break;
                 case MonsterKind.Fairy: MonsterAudio.Play(MonsterAudio.Cue.Giggle, at, .3f, .9f); break;
                 case MonsterKind.Twins: MonsterAudio.Play(MonsterAudio.Cue.Giggle, at, .55f, .8f); break; // lower, creepier
             }

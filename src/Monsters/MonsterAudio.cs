@@ -10,7 +10,7 @@ namespace IncreaseHardMod.Monsters;
 /// </summary>
 internal static class MonsterAudio
 {
-    internal enum Cue { Oink, Chomp, Charge, Fireball, Zap, Hiss, Rustle, Bite, Roar, Thud, Stare, Swing, SwingWide, Petrify, Slash, Hurt, Death, WitchLaugh, Giggle, Chime, Step, Stomp, Slither, Flap, Whoosh, BladeDraw, Growl, Snort, Shriek, Hum, Sparkle, Rattle, Spit, Squeeze }
+    internal enum Cue { Oink, Chomp, Charge, Fireball, Zap, Hiss, Rustle, Bite, Roar, Thud, Stare, Swing, SwingWide, Petrify, Slash, Hurt, Death, WitchLaugh, Giggle, Chime, Step, Stomp, Slither, Flap, Whoosh, BladeDraw, Growl, Snort, Shriek, Hum, Sparkle, Rattle, Spit, Squeeze, Chitter }
 
     private static readonly Dictionary<Cue, Sound> Sounds = new();
 
@@ -42,12 +42,12 @@ internal static class MonsterAudio
             Cue.Rustle => .6f, Cue.Bite => .25f, Cue.Roar => 1.1f, Cue.Thud => .5f, Cue.Stare => 2f, Cue.Swing => .3f,
             Cue.SwingWide => .45f, Cue.Petrify => 1.5f, Cue.Slash => .4f, Cue.Hurt => .3f, Cue.Giggle => 1.1f, Cue.Chime => .9f,
             Cue.Step => .14f, Cue.Stomp => .35f, Cue.Slither => .7f, Cue.Flap => .22f, Cue.Whoosh => .8f, Cue.BladeDraw => .55f, Cue.Growl => .9f,
-            Cue.Snort => .6f, Cue.Shriek => .7f, Cue.Hum => 1f, Cue.Sparkle => .9f, Cue.Rattle => .85f, Cue.Spit => .5f, Cue.Squeeze => .9f, _ => .9f,
+            Cue.Snort => .6f, Cue.Shriek => .7f, Cue.Hum => 1f, Cue.Sparkle => .9f, Cue.Rattle => .85f, Cue.Spit => .5f, Cue.Squeeze => .9f, Cue.Chitter => 1f, _ => .9f,
         };
         int n = (int)(rate * length);
         var data = new float[n];
         var rng = new System.Random((int)cue * 7919 + 13);
-        float low = 0f, phase = 0f;
+        float low = 0f, phase = 0f, svLow = 0f, svBand = 0f;
         for (int i = 0; i < n; i++)
         {
             float t = i / (float)rate, u = t / length;
@@ -68,7 +68,26 @@ internal static class MonsterAudio
                 case Cue.Zap:
                     phase += 2 * Mathf.PI * 95f / rate;
                     s = Mathf.Sign(Mathf.Sin(phase)) * .25f * (rng.NextDouble() < .3 ? 1f : .2f) + noise * .35f; break;
-                case Cue.Hiss: case Cue.Rustle: s = (noise - low) * (cue == Cue.Hiss ? .7f : .35f) * (cue == Cue.Rustle ? (.5f + .5f * Mathf.Sin(u * 40f)) : 1f); break;
+                case Cue.Rustle: s = (noise - low) * .35f * (.5f + .5f * Mathf.Sin(u * 40f)); break;
+                case Cue.Hiss: case Cue.Chitter:
+                {
+                    // Snake breath, not TV static: noise through a resonant band (~4-5.5 kHz) instead of flat white
+                    // noise, swelling in and tapering off. The hiss flutters lightly; the chitter is the same breath
+                    // chopped ~17 times a second - the dry "ts-ts-ts" of a snake tongue.
+                    float fc = cue == Cue.Hiss ? 4000f + 1500f * u : 4600f + 600f * Mathf.Sin(u * 9f);
+                    float f = 2f * Mathf.Sin(Mathf.PI * fc / rate);
+                    svLow += f * svBand; svBand += f * (noise - svLow - .45f * svBand);
+                    if (cue == Cue.Hiss)
+                        s = (svBand * .4f + (noise - low) * .12f) * Mathf.Clamp01(u / .1f) * (1f - Mathf.SmoothStep(0f, 1f, (u - .55f) / .45f))
+                            * (1f - .3f * (.5f + .5f * Mathf.Sin(2 * Mathf.PI * 26f * t)));
+                    else
+                    {
+                        float gate = .5f + .5f * Mathf.Sin(2 * Mathf.PI * (17f + 3f * Mathf.Sin(u * 7f)) * t);
+                        s = (svBand * .45f + (noise - low) * .1f) * gate * gate * gate * Mathf.Clamp01(u / .15f)
+                            * (1f - Mathf.SmoothStep(0f, 1f, (u - .7f) / .3f));
+                    }
+                    break;
+                }
                 case Cue.Bite: case Cue.Slash: s = (noise - low) * Mathf.Exp(-u * 9f) * 1.2f; break;
                 case Cue.Roar:
                     phase += 2 * Mathf.PI * (60f + 25f * Mathf.Sin(u * 3f)) / rate;
