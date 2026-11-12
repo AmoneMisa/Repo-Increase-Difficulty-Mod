@@ -16,9 +16,9 @@ internal enum CartKind : byte { Soul = 1, Wide = 2, Double = 3 }
 /// and extraction all stay the game's own):
 ///  - Soul C.A.R.T.: the little Pocket C.A.R.T. with a Hauler hatch for up to $65K in monster souls.
 ///  - Wide C.A.R.T.: 1.25x the big C.A.R.T.'s width by default (ModConfig.WideCartWidth) and at least 1.4x its
-///    length to fit the Museum Tray, with slightly higher walls; 20% dearer.
+///    length to fit the Museum Tray, with slightly higher walls and 10% more mass; 20% dearer.
 ///  - Double-Decker C.A.R.T.: the big C.A.R.T. 15% shorter, with walls twice as tall (the upper half clear glass)
-///    and 40% more mass; 25% dearer.
+///    and 20% more mass; 25% dearer.
 /// Reshaping moves and scales the cart's own parts (walls, floor, the in-cart volume the haul screen reads), so
 /// the game's logic sees a bigger or taller cart.
 /// </summary>
@@ -33,7 +33,8 @@ internal static class CustomCarts
     private static float WideWidth => Mathf.Clamp(ModConfig.WideCartWidth.Value, 1f, 1.5f);
     private static float WideLength => Mathf.Max(MinWideLength, MinWideArea / WideWidth);
     private const float WideHeight = 1.15f;
-    private const float DoubleLength = .85f, DoubleHeight = 2f, DoubleMassFactor = 1.4f;
+    private const float DoubleLength = .85f, DoubleHeight = 2f, DoubleMassFactor = 1.2f;
+    private const float WideMassFactor = 1.1f;
     private const float StandardMass = 8f; // PhysGrabCart.Start sets every cart to this
 
     internal static void Build()
@@ -54,12 +55,12 @@ internal static class CustomCarts
             int lengthPercent = Mathf.RoundToInt((WideLength - 1f) * 100f);
             Make(big, big, WideAsset, "Wide C.A.R.T.", CartKind.Wide, 1.2f, new Color(.3f, .85f, .8f),
                 Localization.GameLanguage.Russian
-                    ? $"На {widthPercent}% шире и на {lengthPercent}% длиннее большой тележки. При стандартной ширине сервиз помещается вдоль кузова."
-                    : $"{widthPercent}% wider and {lengthPercent}% longer than the big C.A.R.T. The Museum Tray fits lengthwise at the default width.");
+                    ? $"На {widthPercent}% шире и на {lengthPercent}% длиннее большой тележки. На 10% тяжелее. При стандартной ширине сервиз помещается вдоль кузова."
+                    : $"{widthPercent}% wider and {lengthPercent}% longer than the big C.A.R.T. and 10% heavier. The Museum Tray fits lengthwise at the default width.");
             Make(big, big, DoubleAsset, "Double-Decker C.A.R.T.", CartKind.Double, 1.25f, new Color(.55f, .9f, .35f),
                 Localization.GameLanguage.Russian
-                    ? "На 15% короче и на 40% тяжелее большой тележки. Стенки вдвое выше."
-                    : "15% shorter and 40% heavier than the big C.A.R.T., with walls twice as tall.");
+                    ? "На 15% короче и на 20% тяжелее большой тележки. Стеклянные стенки вдвое выше."
+                    : "15% shorter and 20% heavier than the big C.A.R.T., with glass walls twice as tall.");
             var hauler = FlameCartItem.FindHaulerBox(items);
             if (hauler != null)
             {
@@ -104,6 +105,7 @@ internal static class CustomCarts
         {
             Reshape(go, new Vector3(WideWidth, WideHeight, WideLength));
             RaiseWalls(go, WideHeight);
+            mass = StandardMass * WideMassFactor;
         }
         if (kind == CartKind.Double)
         {
@@ -111,6 +113,9 @@ internal static class CustomCarts
             // The body keeps the normal walls; the extra height is clear glass on top (the wall colliders are tall).
             AddGlassWalls(go);
             mass = StandardMass * DoubleMassFactor;
+        }
+        if (mass > 0f)
+        {
             var rb = go.GetComponent<Rigidbody>();
             if (rb != null) rb.mass = mass;
             var grab = go.GetComponent<PhysGrabObject>();
@@ -245,6 +250,34 @@ internal static class CustomCarts
         }
         Plugin.Log.LogInfo($"[Carts] {go.name} walls x{factor:0.##}: {raised} mesh(es) raised" +
                            (stretched > 0 ? $", {stretched} unreadable: body stretched instead" : "") + ".");
+        // The handle plates (hand icon, green/red switch, arrows) are separate from the body: move them with it.
+        LiftHandleDisplay(go, body, y => stretched > 0 ? (y - WallBottom) * (factor - 1f) : y > split ? lift : 0f);
+    }
+
+    /// <summary>
+    /// The handle's hand icon and green/red state plates (PhysGrabCart.grabMesh, under "Cart Handle") are separate
+    /// renderers from the body. Taller walls lift the handle bump they sit on, so they move up by the same amount;
+    /// otherwise they end up buried inside the body.
+    /// </summary>
+    private static void LiftHandleDisplay(GameObject go, Transform body, Func<float, float> liftAt)
+    {
+        var physCart = go.GetComponent<PhysGrabCart>();
+        if (physCart == null || physCart.grabMesh == null) return;
+        var cart = go.transform;
+        // Move each top-most transform once, so a plate under an already moved parent isn't moved twice.
+        var roots = new List<Transform>();
+        foreach (var r in physCart.grabMesh)
+            if (r != null && !r.transform.IsChildOf(body) && !roots.Contains(r.transform)) roots.Add(r.transform);
+        roots.RemoveAll(t => roots.Exists(o => o != t && t.IsChildOf(o)));
+        foreach (var t in roots)
+        {
+            var mf = t.GetComponent<MeshFilter>();
+            var centre = mf != null && mf.sharedMesh != null ? t.TransformPoint(mf.sharedMesh.bounds.center) : t.position;
+            float delta = liftAt(cart.InverseTransformPoint(centre).y);
+            if (delta <= 0f) continue;
+            t.position += cart.TransformVector(Vector3.up * delta);
+            Plugin.Log.LogInfo($"[Carts] {go.name}: handle display '{t.name}' lifted {delta:0.000} with the body.");
+        }
     }
 
     /// <summary>
@@ -254,7 +287,8 @@ internal static class CustomCarts
     private static void AddGlassWalls(GameObject go)
     {
         var cart = go.transform;
-        var glass = Challenges.ChallengeProps.Glass(new Color(.78f, .9f, 1f, .16f), new Color(.02f, .03f, .04f));
+        // Clearly see-through, yet tinted, glossy and faintly lit so the panes read as glass even in dark levels.
+        var glass = Challenges.ChallengeProps.Glass(new Color(.7f, .88f, 1f, .3f), new Color(.05f, .08f, .1f));
         glass.name = "IHM Cart Glass";
         var frame = new Material(Shader.Find("Standard")) { name = "IHM Cart Glass Frame", color = new Color(.2f, .18f, .15f) };
         frame.SetFloat("_Glossiness", .45f);
@@ -266,16 +300,8 @@ internal static class CustomCarts
         foreach (Transform t in cart) if (t.name.Contains("Cart Wall Collider") && t.localPosition.y <= .3f) walls.Add(t);
         foreach (var t in walls)
         {
-            var filter = t.GetComponent<MeshFilter>();
-            if (filter == null || filter.sharedMesh == null) continue;
-            var b = filter.sharedMesh.bounds;
-            Vector3 min = Vector3.positiveInfinity, max = Vector3.negativeInfinity;
-            for (int i = 0; i < 8; i++)
-            {
-                var corner = b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
-                var p = cart.InverseTransformPoint(t.TransformPoint(corner));
-                min = Vector3.Min(min, p); max = Vector3.Max(max, p);
-            }
+            // The wall's shape lives on its collider (the "Semi Box Collider" child), not on a mesh.
+            if (!WallBounds(cart, t, out var min, out var max)) continue;
             float height = max.y - WallTop;
             if (height < .05f) continue;
             var size = max - min;
@@ -290,6 +316,33 @@ internal static class CustomCarts
             panels++;
         }
         Plugin.Log.LogInfo($"[Carts] {go.name}: {panels} glass wall panel(s) above the rim.");
+    }
+
+    // Cart-space bounds of a wall from its box/mesh colliders (or a mesh, if it has one).
+    private static bool WallBounds(Transform cart, Transform wall, out Vector3 min, out Vector3 max)
+    {
+        Vector3 lo = Vector3.positiveInfinity, hi = Vector3.negativeInfinity;
+        bool any = false;
+        void Add(Transform t, Bounds b)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                var corner = b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                var p = cart.InverseTransformPoint(t.TransformPoint(corner));
+                lo = Vector3.Min(lo, p); hi = Vector3.Max(hi, p);
+            }
+            any = true;
+        }
+        foreach (var c in wall.GetComponentsInChildren<Collider>(true))
+        {
+            if (c is BoxCollider box) Add(c.transform, new Bounds(box.center, box.size));
+            else if (c is MeshCollider mc && mc.sharedMesh != null) Add(c.transform, mc.sharedMesh.bounds);
+        }
+        if (!any)
+            foreach (var f in wall.GetComponentsInChildren<MeshFilter>(true))
+                if (f.sharedMesh != null) Add(f.transform, f.sharedMesh.bounds);
+        min = lo; max = hi;
+        return any;
     }
 
     private static void Block(Transform parent, string name, Vector3 centre, Vector3 size, Material material)
@@ -317,7 +370,7 @@ internal static class CustomCarts
             }
     }
 
-    // PhysGrabCart.Start puts every cart back to the standard mass; the Double-Decker keeps its own.
+    // PhysGrabCart.Start puts every cart back to the standard mass; the Wide and Double-Decker keep their own.
     [HarmonyPatch(typeof(PhysGrabCart), "Start")]
     private static class KeepMass
     {

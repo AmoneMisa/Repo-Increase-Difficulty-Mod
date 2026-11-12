@@ -128,7 +128,7 @@ internal static class AutoReviveEffect
         grab.Teleport(position, spawn.rotation);
         if (grab.rb != null)
         {
-            grab.rb.velocity = Vector3.zero;
+            grab.rb.linearVelocity = Vector3.zero;
             grab.rb.angularVelocity = Vector3.zero;
         }
         return true;
@@ -136,7 +136,7 @@ internal static class AutoReviveEffect
 
     private static SpawnPoint FindCarSpawnPoint()
     {
-        var points = Object.FindObjectsOfType<SpawnPoint>();
+        var points = Object.FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None);
         if (points == null || points.Length == 0)
             return null;
 

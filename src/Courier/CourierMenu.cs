@@ -330,7 +330,7 @@ internal sealed class CourierMenu
     {
         var list = new List<Entry>();
         float cap = CourierRules.MaxLoad(Lv(C.CourierLoad));
-        foreach (var attributes in UnityEngine.Object.FindObjectsOfType<ItemAttributes>())
+        foreach (var attributes in UnityEngine.Object.FindObjectsByType<ItemAttributes>(FindObjectsSortMode.None))
         {
             if (list.Count >= 24) break;
             var grab = attributes.GetComponent<PhysGrabObject>();

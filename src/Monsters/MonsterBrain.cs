@@ -277,7 +277,7 @@ internal abstract class MonsterBrain : MonoBehaviour
         // Impacts hurt only while it is swung or thrown (fast), not while it simply hangs in someone's grip.
         var pgo = E.Rigidbody.physGrabObject;
         bool held = pgo.playerGrabbing.Count > 0;
-        float speed = pgo.rb != null ? pgo.rb.velocity.magnitude : 0f;
+        float speed = pgo.rb != null ? pgo.rb.linearVelocity.magnitude : 0f;
         // Smoothed speed in the hands (one-frame physics spikes from the body fighting the grab do not count).
         if (held) { _lastHeldAt = Time.time; _heldSpeed = Mathf.Lerp(_heldSpeed, speed, Mathf.Clamp01(Time.deltaTime / .12f)); }
         if (MonsterRules.HoldImpactArms(held, Time.time - _lastHeldAt, Mathf.Min(speed, _heldSpeed + 1f))) _heldHurtUntil = Time.time + MonsterRules.ThrownHurtSeconds;

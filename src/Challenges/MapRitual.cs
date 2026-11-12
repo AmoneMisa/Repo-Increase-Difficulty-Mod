@@ -378,7 +378,7 @@ internal sealed class MapRitual : MonoBehaviour
             Quaternion.identity, SemiFunc.LayerMaskGetPhysGrabObject(), QueryTriggerInteraction.Ignore))
         {
             var grab = collider.GetComponentInParent<PhysGrabObject>();
-            if (grab == null || grab.grabbed || grab.dead || grab.rb == null || grab.rb.velocity.sqrMagnitude > .65f ||
+            if (grab == null || grab.grabbed || grab.dead || grab.rb == null || grab.rb.linearVelocity.sqrMagnitude > .65f ||
                 (grab.centerPoint - surface).sqrMagnitude > 1.22f ||
                 Physics.Linecast(surface, grab.centerPoint, World, QueryTriggerInteraction.Ignore) ||
                 !grab.TryGetComponent<ValuableArtInstance>(out var art) || _nearAltar.Contains(art)) continue;
@@ -412,7 +412,7 @@ internal sealed class MapRitual : MonoBehaviour
             value.roomVolumeCheck.CheckSet();
             if (value.roomVolumeCheck.CurrentRooms.Count > 0) continue;
             grab.Teleport(OfferingPosition(offering.Floor, Quaternion.identity, grab, .14f), Quaternion.identity);
-            if (grab.rb != null) { grab.rb.velocity = Vector3.zero; grab.rb.angularVelocity = Vector3.zero; }
+            if (grab.rb != null) { grab.rb.linearVelocity = Vector3.zero; grab.rb.angularVelocity = Vector3.zero; }
         }
         return changed;
     }

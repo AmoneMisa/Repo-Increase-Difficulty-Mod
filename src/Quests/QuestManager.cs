@@ -738,9 +738,9 @@ public static class QuestManager
         ctx.HaulGoal = rd != null ? rd.haulGoal : 0;
         ctx.Halloween = SemiFunc.GameEventIsHalloween();
         if (ctx.Halloween)
-            ctx.Towers = Object.FindObjectsOfType<ExtractionHalloweenTower>().Length;
+            ctx.Towers = Object.FindObjectsByType<ExtractionHalloweenTower>(FindObjectsSortMode.None).Length;
 
-        var valuables = Object.FindObjectsOfType<ValuableObject>();
+        var valuables = Object.FindObjectsByType<ValuableObject>(FindObjectsSortMode.None);
         ctx.ValuableCount = valuables != null ? valuables.Length : 0;
         // Crown Jewel: the most valuable item on the level (monster souls don't count).
         ValuableObject jewel = null;
@@ -756,7 +756,7 @@ public static class QuestManager
         }
 
         // Which monster types and tiers are actually on this level.
-        var enemies = Object.FindObjectsOfType<EnemyParent>();
+        var enemies = Object.FindObjectsByType<EnemyParent>(FindObjectsSortMode.None);
         var seenNames = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
         var seenTiers = new HashSet<int>();
         if (enemies != null)
@@ -774,7 +774,7 @@ public static class QuestManager
         }
 
         // Does the level have any death pits?
-        var hurts = Object.FindObjectsOfType<HurtCollider>();
+        var hurts = Object.FindObjectsByType<HurtCollider>(FindObjectsSortMode.None);
         if (hurts != null)
         {
             foreach (var h in hurts)

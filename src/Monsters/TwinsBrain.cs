@@ -206,7 +206,7 @@ internal sealed class TwinsBrain : MonsterBrain
         {
             _pitsLevel = LevelGenerator.Instance;
             _pits = new List<Collider>();
-            foreach (var hurt in Object.FindObjectsOfType<HurtCollider>())
+            foreach (var hurt in Object.FindObjectsByType<HurtCollider>(FindObjectsSortMode.None))
                 if (hurt != null && hurt.deathPit && hurt.TryGetComponent<Collider>(out var c)) _pits.Add(c);
         }
         bool pit = false; best = MonsterRules.TwinsThrowSearch;

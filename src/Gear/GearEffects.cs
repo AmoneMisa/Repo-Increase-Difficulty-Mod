@@ -144,9 +144,9 @@ internal static class GearEffects
             {
                 var rb = enemy.Rigidbody.rb;
                 var to = net.Anchor - rb.position;
-                var v = rb.velocity;
+                var v = rb.linearVelocity;
                 // Firm horizontally, and never let it rise off the floor; it may still drop.
-                rb.velocity = new Vector3(to.x * 9f, Mathf.Min(v.y, to.y * 9f), to.z * 9f);
+                rb.linearVelocity = new Vector3(to.x * 9f, Mathf.Min(v.y, to.y * 9f), to.z * 9f);
             }
         }
         foreach (var e in Scratch) Netted.Remove(e);

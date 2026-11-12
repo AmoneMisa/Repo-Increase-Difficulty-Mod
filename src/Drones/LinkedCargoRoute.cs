@@ -46,13 +46,13 @@ internal sealed class LinkedCargoRoute
         if (!onRoute)
         {
             Blocked = true; _corners = null;
-            body.velocity = Vector3.zero;
+            body.linearVelocity = Vector3.zero;
             if (_hasSafe && Vector3.Distance(center, _safe) < 2f)
             {
                 // Recovery only to the last verified point, not through an arbitrary wall or to the player.
                 var back = _safe - center;
                 if (!Obstructed(body, back.normalized, back.magnitude))
-                    body.velocity = Vector3.ClampMagnitude(back * 5f, 2f);
+                    body.linearVelocity = Vector3.ClampMagnitude(back * 5f, 2f);
             }
             return;
         }
@@ -101,7 +101,7 @@ internal sealed class LinkedCargoRoute
         { velocity.x = velocity.z = 0f; Blocked = true; _repath = 0f; }
         if (velocity.sqrMagnitude > .001f && Obstructed(body, velocity.normalized, velocity.magnitude * dt + .08f))
         { velocity.x = velocity.z = 0f; velocity.y = Mathf.Max(0f, velocity.y); Blocked = true; _repath = 0f; }
-        body.velocity = Vector3.MoveTowards(body.velocity, velocity, 20f * dt);
+        body.linearVelocity = Vector3.MoveTowards(body.linearVelocity, velocity, 20f * dt);
         body.angularVelocity *= .8f;
     }
 

@@ -65,8 +65,8 @@ internal sealed class PlayerNetEffect : MonoBehaviour
             controller.VelocityImpulse = Vector3.zero;
             if (controller.rb != null && !controller.rb.isKinematic)
             {
-                var v = controller.rb.velocity;
-                controller.rb.velocity = new Vector3(0f, Mathf.Min(v.y, 0f), 0f);
+                var v = controller.rb.linearVelocity;
+                controller.rb.linearVelocity = new Vector3(0f, Mathf.Min(v.y, 0f), 0f);
             }
         }
         // Tumble bodies are simulated by the host, including remote players.

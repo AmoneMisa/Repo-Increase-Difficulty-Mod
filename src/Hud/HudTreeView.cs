@@ -79,7 +79,7 @@ internal sealed class HudTreeView
         _subtitle = Text("Subtitle", HudStyle.Body * 1.15f, TextAlignmentOptions.Center, new Vector2(960f, 118f), new Vector2(1400f, 34f), Color.white);
         _corner = Text("Points", HudStyle.Heading, TextAlignmentOptions.Left, new Vector2(Left + 300f, 70f), new Vector2(600f, 40f), HudStyle.Good);
         _tooltip = Text("Tooltip", HudStyle.Body, TextAlignmentOptions.TopLeft, new Vector2(960f, 960f), new Vector2(Right - Left, 96f), Color.white);
-        _tooltip.enableWordWrapping = true;
+        _tooltip.textWrappingMode = TextWrappingModes.Normal;
         _tooltip.enableAutoSizing = false;
         _tooltip.overflowMode = TextOverflowModes.Truncate;
         var content = new GameObject("Content", typeof(RectTransform));
@@ -303,7 +303,7 @@ internal sealed class HudTreeView
         float text = Mathf.Clamp(rowHeight * .46f, HudStyle.Small, HudStyle.Body * 1.05f);
         node.Name = Text("Name", text, TextAlignmentOptions.Left, Vector2.zero, new Vector2(size.x - 92f, size.y - 4f), Color.white, node.Box);
         // Long names take a second line rather than shrinking below the page's size.
-        node.Name.enableWordWrapping = true;
+        node.Name.textWrappingMode = TextWrappingModes.Normal;
         node.Name.fontSizeMin = text * .82f;
         node.Name.lineSpacing = -18f;
         node.Name.rectTransform.anchorMin = node.Name.rectTransform.anchorMax = new Vector2(.5f, .5f);

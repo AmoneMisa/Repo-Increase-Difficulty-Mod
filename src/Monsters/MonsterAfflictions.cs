@@ -362,7 +362,7 @@ internal static class MonsterAfflictions
                 float floor = Physics.Raycast(rb.position + Vector3.up * .2f, Vector3.down, out var hit, 4f, SemiFunc.LayerMaskGetVisionObstruct(), QueryTriggerInteraction.Ignore)
                     ? hit.point.y : rb.position.y - MonsterRules.LevitateHeight;
                 float wanted = floor + MonsterRules.LevitateHeight + .1f * Mathf.Sin(now * 6f);
-                rb.velocity = new Vector3(rb.velocity.x * .5f, Mathf.Clamp((wanted - rb.position.y) * 6f, -3f, 3f), rb.velocity.z * .5f);
+                rb.linearVelocity = new Vector3(rb.linearVelocity.x * .5f, Mathf.Clamp((wanted - rb.position.y) * 6f, -3f, 3f), rb.linearVelocity.z * .5f);
             }
             else if (drag && source != null)
             {
@@ -370,17 +370,17 @@ internal static class MonsterAfflictions
                 var bull = source;
                 var target = bull.position + bull.forward * 1.6f;
                 var delta = target - rb.position; delta.y = 0f;
-                rb.velocity = new Vector3(Mathf.Clamp(delta.x * 10f, -9f, 9f), rb.velocity.y, Mathf.Clamp(delta.z * 10f, -9f, 9f));
+                rb.linearVelocity = new Vector3(Mathf.Clamp(delta.x * 10f, -9f, 9f), rb.linearVelocity.y, Mathf.Clamp(delta.z * 10f, -9f, 9f));
             }
             else if (seized && source != null)
             {
                 // Held between the twins and swung from side to side before the throw.
                 var target = source.position + source.forward * .9f + Vector3.up * .45f + source.right * (Mathf.Sin(now * 15.7f) * .4f);
                 var delta = target - rb.position;
-                rb.velocity = new Vector3(Mathf.Clamp(delta.x * 10f, -8f, 8f), Mathf.Clamp(delta.y * 8f, -4f, 4f), Mathf.Clamp(delta.z * 10f, -8f, 8f));
+                rb.linearVelocity = new Vector3(Mathf.Clamp(delta.x * 10f, -8f, 8f), Mathf.Clamp(delta.y * 8f, -4f, 4f), Mathf.Clamp(delta.z * 10f, -8f, 8f));
             }
             else if (coil || stone || seized)
-                rb.velocity = new Vector3(0f, Mathf.Min(rb.velocity.y, 0f), 0f);
+                rb.linearVelocity = new Vector3(0f, Mathf.Min(rb.linearVelocity.y, 0f), 0f);
         }
         if (coil && !_struggleSent)
         {

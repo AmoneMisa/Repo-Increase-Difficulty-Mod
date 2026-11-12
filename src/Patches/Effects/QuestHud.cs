@@ -61,7 +61,7 @@ internal sealed class QuestHud : MonoBehaviour
                 new Vector2(0f, 1f), new Vector2(Margin, -200f), 0f);
             if (_surface == null) return false;
             _label = _surface.Label("Quests", 22f, TextAlignmentOptions.TopLeft);
-            _label.enableWordWrapping = true;
+            _label.textWrappingMode = TextWrappingModes.Normal;
             _label.enableAutoSizing = false;
             _label.overflowMode = TextOverflowModes.Ellipsis;
             var rt = _label.rectTransform;

@@ -54,7 +54,7 @@ internal static class AutoscanUpgrade
                 _director = ValuableDirector.instance;
                 // Include objects whose Awake happened before this controller/patch existed.
                 CustomTargets.Clear();
-                foreach (var target in Object.FindObjectsOfType<ValuableDiscoverCustom>(true)) CustomTargets.Add(target);
+                foreach (var target in Object.FindObjectsByType<ValuableDiscoverCustom>(FindObjectsInactive.Include, FindObjectsSortMode.None)) CustomTargets.Add(target);
             }
             Scan(avatar.transform.position, level * Mathf.Clamp(ModConfig.AutoscanRangePerLevel.Value, 1f, 30f) *
                 Skills.TradeOffs.Factor(avatar, Skills.Fx.AutoscanReach)); // Scout

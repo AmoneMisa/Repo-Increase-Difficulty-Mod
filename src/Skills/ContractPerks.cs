@@ -34,7 +34,7 @@ internal static class ContractPerks
         private static void Prefix(PhysGrabCart __instance)
         {
             var rb = __instance.rb;
-            _cartBefore = rb != null ? rb.velocity : Vector3.zero;
+            _cartBefore = rb != null ? rb.linearVelocity : Vector3.zero;
         }
 
         [HarmonyPostfix]
@@ -48,11 +48,11 @@ internal static class ContractPerks
             // The game steps the cart's velocity toward where the pusher wants it; take a bigger step and allow a bit
             // more speed. Vertical speed is the game's (gravity, ramps).
             var rb = __instance.rb;
-            var now = rb.velocity;
+            var now = rb.linearVelocity;
             var step = new Vector3(now.x - _cartBefore.x, 0f, now.z - _cartBefore.z);
             var boosted = now + step * (CartPerLevel * levels);
             var flat = Vector3.ClampMagnitude(new Vector3(boosted.x, 0f, boosted.z), 5f * (1f + .1f * levels));
-            rb.velocity = new Vector3(flat.x, now.y, flat.z);
+            rb.linearVelocity = new Vector3(flat.x, now.y, flat.z);
         }
     }
 

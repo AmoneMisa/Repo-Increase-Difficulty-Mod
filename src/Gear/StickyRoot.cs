@@ -86,7 +86,7 @@ internal sealed class StickyRoot : MonoBehaviour
         if (body == null || body.isKinematic) return;
         var delta = _anchor - body.position;
         float down = _enemy != null ? Mathf.Clamp(delta.y * 8f, -5f, 0f) : 0f;
-        body.velocity = new Vector3(Mathf.Clamp(delta.x * 8f, -3f, 3f), Mathf.Min(body.velocity.y, down), Mathf.Clamp(delta.z * 8f, -3f, 3f));
+        body.linearVelocity = new Vector3(Mathf.Clamp(delta.x * 8f, -3f, 3f), Mathf.Min(body.linearVelocity.y, down), Mathf.Clamp(delta.z * 8f, -3f, 3f));
     }
 
     private void LateUpdate()

@@ -137,7 +137,7 @@ internal static class TruckUpgrades
 
         float fraction = Mathf.Clamp01(ModConfig.TruckSellFraction.Value);
         float total = 0f;
-        foreach (var v in Object.FindObjectsOfType<ValuableObject>())
+        foreach (var v in Object.FindObjectsByType<ValuableObject>(FindObjectsSortMode.None))
         {
             if (v.dollarValueCurrent > 0f)
             {

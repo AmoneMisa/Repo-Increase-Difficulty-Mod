@@ -189,7 +189,7 @@ internal sealed class ValuableGuard : MonoBehaviour
         if (_pullPending) _stuckTimer = 0f;
         _pullPending = false;
 
-        bool resting = _rb == null || _rb.velocity.sqrMagnitude < RestSpeed * RestSpeed;
+        bool resting = _rb == null || _rb.linearVelocity.sqrMagnitude < RestSpeed * RestSpeed;
         bool embedded = IsEmbedded();
 
         if (embedded && resting)
@@ -396,7 +396,7 @@ internal sealed class ValuableGuard : MonoBehaviour
         _pgo.Teleport(target, rot);
         if (_rb != null)
         {
-            _rb.velocity = Vector3.zero;
+            _rb.linearVelocity = Vector3.zero;
             _rb.angularVelocity = Vector3.zero;
             _rb.WakeUp();
         }

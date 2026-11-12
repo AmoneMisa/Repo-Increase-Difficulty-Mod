@@ -120,7 +120,7 @@ internal sealed class VoiceRecoveryController : MonoBehaviour
         var recorder = local != null ? local.GetComponent<Recorder>() : null;
         if (recorder != null && recorder.isActiveAndEnabled && recorder.RecordingEnabled)
             recorder.RestartRecording();
-        foreach (var speaker in UnityEngine.Object.FindObjectsOfType<Speaker>())
+        foreach (var speaker in UnityEngine.Object.FindObjectsByType<Speaker>(FindObjectsSortMode.None))
             if (speaker.isActiveAndEnabled) speaker.RestartPlayback();
         Plugin.Log.LogInfo("[VoiceRecovery] Voice stream restart requested after audio reinitialization.");
     }

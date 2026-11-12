@@ -78,7 +78,7 @@ internal static class LevelUICompact
         text.enableAutoSizing = false;
         text.fontSize = size;
         text.alignment = alignment;
-        text.enableWordWrapping = false;
+        text.textWrappingMode = TextWrappingModes.NoWrap;
         text.overflowMode = TextOverflowModes.Overflow;
     }
 

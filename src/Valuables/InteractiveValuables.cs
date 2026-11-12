@@ -90,7 +90,7 @@ internal static class InteractiveValuables
             value.durabilityPreset.fragility=durability.Fragility;value.durabilityPreset.durability=durability.Durability;
             value.physAttributePreset = Object.Instantiate(donor.physAttributePreset);value.physAttributePreset.mass = mass;
             var body = go.GetComponent<Rigidbody>();body.mass = mass;body.constraints=RigidbodyConstraints.None;
-            body.drag=.05f;body.angularDrag=.25f;
+            body.linearDamping=.05f;body.angularDamping=.25f;
             if(key=="cannon"||key=="robot_vacuum"||key=="skeleton")WheeledPropPhysics.Prepare(body);
             var pgo = go.GetComponent<PhysGrabObject>();pgo.massOriginal = mass;pgo.colliders.Clear();
             if(key=="cannon"||key=="robot_vacuum"||key=="skeleton")

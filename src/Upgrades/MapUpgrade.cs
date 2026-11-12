@@ -489,7 +489,7 @@ internal static class MapUpgrade
 
         private static void SweepCosmetics()
         {
-            foreach (var box in Object.FindObjectsOfType<CosmeticWorldObject>())
+            foreach (var box in Object.FindObjectsByType<CosmeticWorldObject>(FindObjectsSortMode.None))
             {
                 if (box == null)
                     continue;
@@ -565,7 +565,7 @@ internal static class MapUpgrade
 
         private static void SweepLandmarks()
         {
-            foreach (var shrine in Object.FindObjectsOfType<Challenges.ShrineVisual>())
+            foreach (var shrine in Object.FindObjectsByType<Challenges.ShrineVisual>(FindObjectsSortMode.None))
             {
                 if (shrine == null) continue;
                 EnsureMarker(shrine.gameObject, shrine.transform, ShrineGold);
@@ -610,7 +610,7 @@ internal static class MapUpgrade
                 entry.Text = Challenges.ChallengeProps.Label(null, Vector3.zero, 1f, colour);
                 entry.Text.gameObject.name = "IHM Map Name";
                 entry.Text.alignment = TextAlignmentOptions.Left;
-                entry.Text.enableWordWrapping = false;
+                entry.Text.textWrappingMode = TextWrappingModes.NoWrap;
                 entry.Text.overflowMode = TextOverflowModes.Overflow;
                 entry.Text.rectTransform.pivot = new Vector2(0f, .5f);
             }

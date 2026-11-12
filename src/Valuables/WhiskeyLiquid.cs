@@ -68,7 +68,7 @@ internal sealed class WhiskeyLiquid : MonoBehaviour
     {
         if (_frame == null) return;
         float dt = Mathf.Max(Time.fixedDeltaTime, .001f);
-        Vector3 velocity = _body != null ? _body.velocity : (_frame.position - _lastPos) / dt;
+        Vector3 velocity = _body != null ? _body.linearVelocity : (_frame.position - _lastPos) / dt;
         _lastPos = _frame.position;
         if (!_primed) { _lastVelocity = velocity; _primed = true; return; }
         Vector3 raw = Vector3.ClampMagnitude((velocity - _lastVelocity) / dt, MaxAccel * 3f);

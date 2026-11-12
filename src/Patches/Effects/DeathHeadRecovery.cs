@@ -66,7 +66,7 @@ internal static class DeathHeadRecovery
             if (grab.playerGrabbing[i] != null)
                 grab.playerGrabbing[i].OverrideGrabRelease(grab.photonView != null ? grab.photonView.ViewID : -1);
         grab.Teleport(destination + Vector3.up * .5f, grab.transform.rotation);
-        if (grab.rb != null) { grab.rb.velocity = Vector3.zero; grab.rb.angularVelocity = Vector3.zero; }
+        if (grab.rb != null) { grab.rb.linearVelocity = Vector3.zero; grab.rb.angularVelocity = Vector3.zero; }
         Plugin.Log.LogInfo($"[DeathHead] Head placed on the floor near its death spot at {destination}.");
         return true;
     }
@@ -139,7 +139,7 @@ internal static class DeathHeadRecovery
             __instance.FallDamageResetSet(2f);
             tumble.TumbleSet(_isTumbling: true, _playerInput: false, _reset: true);
             body.Teleport(destination + Vector3.up * .3f, __instance.transform.rotation);
-            body.rb.velocity = Vector3.zero;
+            body.rb.linearVelocity = Vector3.zero;
             body.rb.angularVelocity = Vector3.zero;
             Plugin.Log.LogInfo($"[DeathHead] Moved living player from outside the level at {position} to {destination}.");
         }

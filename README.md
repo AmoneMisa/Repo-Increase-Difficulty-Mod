@@ -11,7 +11,7 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.10.4`
+- **Version:** `0.10.5`
 
 Mid-level joining also catches up live battery charge, upgraded capacity and native battery indicator colours. New-monster selection now recommends a score of 100.
 
@@ -435,7 +435,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.10.4`
+- **Версия:** `0.10.5`
 
 При входе посреди уровня также досылаются фактический заряд, увеличенная ёмкость и восстанавливаются штатные цвета индикатора батареи. Рекомендуемый балл выбора новых монстров — 100.
 

@@ -34,7 +34,7 @@ internal sealed class CorgiVoice : MonoBehaviour
         _holders = holders;
 
         // Pushed/pulled: a sharp change of velocity (filtered so a steady carry stays quiet).
-        var velocity = _body.velocity;
+        var velocity = _body.linearVelocity;
         float accel = (velocity - _lastVelocity).magnitude / Mathf.Max(Time.fixedDeltaTime, .001f);
         _lastVelocity = velocity;
         _jerk = Mathf.Max(accel, _jerk * .85f);

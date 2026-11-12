@@ -1,6 +1,4 @@
 using UnityEngine;
-using System;
-using System.Reflection;
 
 namespace IncreaseHardMod.Valuables;
 
@@ -21,28 +19,21 @@ internal static class WheeledPropPhysics
         }
         return !float.IsPositiveInfinity(nearest);
     }
-    private static UnityEngine.Object _rolling;
-    private static readonly PropertyInfo SharedMaterial=typeof(Collider).GetProperty("sharedMaterial");
-    private static UnityEngine.Object RollingContact
+    private static PhysicsMaterial _rolling;
+    private static PhysicsMaterial RollingContact
     {
         get
         {
             if(_rolling==null)
-            {
-                // Unity 6 renamed PhysicMaterial to PhysicsMaterial. Use the installed engine's
-                // real property type, avoiding the obsolete dummy type in newer runtimes.
-                var type=SharedMaterial.PropertyType;
-                _rolling=(UnityEngine.Object)Activator.CreateInstance(type,new object[]{"IHM Wheeled Rolling Contact"});
-                type.GetProperty("staticFriction").SetValue(_rolling,.035f);
-                type.GetProperty("dynamicFriction").SetValue(_rolling,.025f);
-                type.GetProperty("bounciness").SetValue(_rolling,0f);
-                foreach(string name in new[]{"frictionCombine","bounceCombine"})
-                {var property=type.GetProperty(name);property.SetValue(_rolling,Enum.Parse(property.PropertyType,"Minimum"));}
-            }
+                _rolling=new PhysicsMaterial("IHM Wheeled Rolling Contact")
+                {
+                    staticFriction=.035f,dynamicFriction=.025f,bounciness=0f,
+                    frictionCombine=PhysicsMaterialCombine.Minimum,bounceCombine=PhysicsMaterialCombine.Minimum,
+                };
             return _rolling;
         }
     }
-    internal static void SetRollingContact(Collider collider)=>SharedMaterial.SetValue(collider,RollingContact);
+    internal static void SetRollingContact(Collider collider)=>collider.sharedMaterial=RollingContact;
     internal static Quaternion Upright(Quaternion rotation)
     {
         var forward=Vector3.ProjectOnPlane(rotation*Vector3.forward,Vector3.up);
@@ -52,7 +43,7 @@ internal static class WheeledPropPhysics
     }
     internal static void Prepare(Rigidbody body)
     {
-        body.constraints=RigidbodyConstraints.None;body.drag=.04f;body.angularDrag=.2f;body.useGravity=true;
+        body.constraints=RigidbodyConstraints.None;body.linearDamping=.04f;body.angularDamping=.2f;body.useGravity=true;
     }
     internal static void AlignAtSpawn(Rigidbody body)
     {
@@ -71,7 +62,7 @@ internal static class WheeledPropPhysics
         if(body.isKinematic||!grabbed||!grounded||Vector3.Dot(body.transform.up,Vector3.up)<.65f)return;
         var input=Vector3.ClampMagnitude(Vector3.ProjectOnPlane(pull,groundNormal),1);
         if(input.sqrMagnitude<.0004f)return;
-        var horizontal=Vector3.ProjectOnPlane(body.velocity,groundNormal);
+        var horizontal=Vector3.ProjectOnPlane(body.linearVelocity,groundNormal);
         var acceleration=Vector3.ClampMagnitude((input*1.6f-horizontal)*4,4);
         body.AddForce(acceleration,ForceMode.Acceleration);
         // Steer the axle toward the pull, while allowing the carriage to roll backwards.
@@ -101,8 +92,8 @@ internal sealed class WheeledSpawnPose:MonoBehaviour
             yield return new WaitForSeconds(.5f);
             if(body==null||body.isKinematic||grab.grabbed)continue;
             float tilt=Vector3.Angle(body.transform.up,Vector3.up);
-            if(tilt<35f||body.velocity.sqrMagnitude>.05f||body.angularVelocity.sqrMagnitude>.2f)continue;
-            body.velocity=Vector3.zero;body.angularVelocity=Vector3.zero;
+            if(tilt<35f||body.linearVelocity.sqrMagnitude>.05f||body.angularVelocity.sqrMagnitude>.2f)continue;
+            body.linearVelocity=Vector3.zero;body.angularVelocity=Vector3.zero;
             WheeledPropPhysics.AlignAtSpawn(body);
             grab.Teleport(body.position,body.rotation);
             fixes++;

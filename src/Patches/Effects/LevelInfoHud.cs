@@ -360,7 +360,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
             _detailsPageLabel = CreateLabel("IHM_DetailsPage", template, ModColor,
                 TextAlignmentOptions.TopRight, new Vector2(1f, 1f), Vector2.zero, 300f);
             _detailsPageLabel.fontSize *= 0.5f;
-            _detailsPageLabel.enableWordWrapping = true;
+            _detailsPageLabel.textWrappingMode = TextWrappingModes.Normal;
         }
         return true;
     }
@@ -451,7 +451,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
         tmp.lineSpacing = template.lineSpacing;
         tmp.color = color;
         tmp.alignment = align;
-        tmp.enableWordWrapping = false;
+        tmp.textWrappingMode = TextWrappingModes.NoWrap;
         tmp.raycastTarget = false;
         tmp.richText = false;
 
@@ -478,7 +478,7 @@ internal sealed class LevelInfoHud : MonoBehaviour
 
     private static void ConfigureModifierLabel(TextMeshProUGUI label)
     {
-        label.enableWordWrapping = true;
+        label.textWrappingMode = TextWrappingModes.Normal;
         label.richText = true;
         label.enableAutoSizing = false;
         label.fontSizeMax = label.fontSize;

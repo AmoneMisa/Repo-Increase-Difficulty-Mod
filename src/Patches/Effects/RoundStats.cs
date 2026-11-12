@@ -442,7 +442,7 @@ internal static class RoundStats
             if (!_tracking || !Upgrades.TruckUpgrades.CanSellNow()) return;
             __state.receipts = new List<Receipt>();
             __state.currency = SemiFunc.StatGetRunCurrency();
-            foreach (var v in UnityEngine.Object.FindObjectsOfType<ValuableObject>())
+            foreach (var v in UnityEngine.Object.FindObjectsByType<ValuableObject>(FindObjectsSortMode.None))
                 if (v.dollarValueCurrent > 0f)
                 {
                     var receipt = Capture(v.gameObject);

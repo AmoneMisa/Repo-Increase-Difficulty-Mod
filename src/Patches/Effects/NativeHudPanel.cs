@@ -110,7 +110,7 @@ internal sealed class NativeHudPanel : MonoBehaviour
         text.lineSpacing = _lineSpacing;
         text.color = Color.white;
         text.alignment = alignment;
-        text.enableWordWrapping = false;
+        text.textWrappingMode = TextWrappingModes.NoWrap;
         text.overflowMode = TextOverflowModes.Ellipsis;
         text.raycastTarget = false;
         text.richText = true;

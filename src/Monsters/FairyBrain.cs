@@ -154,7 +154,7 @@ internal sealed class FairyBrain : MonsterBrain
         item.OverrideZeroGravity(.3f);
         item.OverrideIndestructible(.3f);
         var delta = point - item.midPoint;
-        item.rb.velocity = Vector3.ClampMagnitude(delta * 12f, 10f);
+        item.rb.linearVelocity = Vector3.ClampMagnitude(delta * 12f, 10f);
         item.rb.angularVelocity *= .85f;
         _itemAwayFor = delta.magnitude > 2.5f ? _itemAwayFor + dt : 0f;
         if (_itemAwayFor > 1.5f) { item.Teleport(point, item.transform.rotation); _itemAwayFor = 0f; }
@@ -166,7 +166,7 @@ internal sealed class FairyBrain : MonsterBrain
         if (_item != null && _item.rb != null && !_item.dead)
         {
             _item.OverrideIndestructible(2f);
-            if (gently) _item.rb.velocity = Vector3.down * .5f;
+            if (gently) _item.rb.linearVelocity = Vector3.down * .5f;
         }
         _item = null;
     }

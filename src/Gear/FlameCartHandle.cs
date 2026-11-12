@@ -111,11 +111,11 @@ internal sealed class FlameCartHandle : MonoBehaviour
             if (tilt < 4f) { _righting = false; _tippedTimer = 0f; }
             return;
         }
-        bool resting = _rb.velocity.sqrMagnitude < .09f && _rb.angularVelocity.sqrMagnitude < .25f;
+        bool resting = _rb.linearVelocity.sqrMagnitude < .09f && _rb.angularVelocity.sqrMagnitude < .25f;
         _tippedTimer = tilt > 50f && resting && _pgo.playerGrabbing.Count == 0 ? _tippedTimer + Time.fixedDeltaTime : 0f;
         if (_tippedTimer < 1.2f) return;
         _righting = true;
-        _rb.velocity = Vector3.up * 2.2f; // clear the floor before turning
+        _rb.linearVelocity = Vector3.up * 2.2f; // clear the floor before turning
     }
 
     // ------------------------------------------------------------------ air cushion
@@ -186,7 +186,7 @@ internal sealed class FlameCartHandle : MonoBehaviour
         // Vanilla follow distance: 2 m, 2.5 m at speed; 3-4 m when sprinting forward.
         float near = 2f, far = 2.5f;
         Vector3 playerVelocity = g.isLocal && PlayerController.instance != null && PlayerController.instance.rb != null
-            ? PlayerController.instance.rb.velocity : avatar.rbVelocityRaw;
+            ? PlayerController.instance.rb.linearVelocity : avatar.rbVelocityRaw;
         bool forward = Vector3.Dot(playerVelocity, transform.forward) > 0f;
         float topSpeed = avatar.isSprinting ? 7f : 5f;
         if (avatar.isSprinting && forward) { near = 3f; far = 4f; }
@@ -196,16 +196,16 @@ internal sealed class FlameCartHandle : MonoBehaviour
         look.y = 0f;
         if (look.sqrMagnitude < .01f) look = avatar.transform.forward;
         look.Normalize();
-        float t = Mathf.Clamp01(Vector3.Dot(_rb.velocity, look) / topSpeed);
+        float t = Mathf.Clamp01(Vector3.Dot(_rb.linearVelocity, look) / topSpeed);
         float distance = Mathf.Lerp(near, far, t);
         var target = avatar.transform.position + look * distance;
         target.y = transform.position.y; // steer flat: on stairs the player's height must not slow the push
         float pull = Mathf.Clamp01(Vector3.Distance(transform.position, target));
         var wanted = Vector3.ClampMagnitude((target - transform.position).normalized * 5f * pull, 5f);
-        float y = _rb.velocity.y;
-        var v = Vector3.MoveTowards(_rb.velocity, wanted, pull * 2f);
+        float y = _rb.linearVelocity.y;
+        var v = Vector3.MoveTowards(_rb.linearVelocity, wanted, pull * 2f);
         var flat = Vector3.ClampMagnitude(new Vector3(v.x, 0f, v.z), 5f);
-        _rb.velocity = new Vector3(flat.x, Hover(flat, y), flat.z);
+        _rb.linearVelocity = new Vector3(flat.x, Hover(flat, y), flat.z);
 
         // Face away from the player (gun side forward). Gentler while firing: the turret aims, not the cart.
         // Measured flat from the player's feet; right next to the player that direction is noise, so hold the heading.

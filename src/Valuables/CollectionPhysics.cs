@@ -65,8 +65,8 @@ internal sealed class CollectionPhysics : MonoBehaviour
             if(_tubes)
             {
                 _slosh-=Time.fixedDeltaTime;
-                float agitation=(_rootBody.velocity-_lastVelocity).magnitude+_rootBody.angularVelocity.magnitude*.12f;
-                _lastVelocity=_rootBody.velocity;
+                float agitation=(_rootBody.linearVelocity-_lastVelocity).magnitude+_rootBody.angularVelocity.magnitude*.12f;
+                _lastVelocity=_rootBody.linearVelocity;
                 if(_slosh<=0&&agitation>.2f&&_parts.Any(p=>!p.released))
                 {_sound?.Emit(ValuableFoley.Drip,Mathf.Clamp(agitation*.025f,.025f,.09f));_slosh=.65f;}
                 var sample=node.gameObject.AddComponent<CentrifugeSampleContact>();sample.owner=this;sample.index=i;
@@ -173,7 +173,7 @@ internal sealed class CollectionPhysics : MonoBehaviour
         }
         foreach(var p in _parts.Where((p,i)=>selected<0||i==selected))
         {
-            if(p.released)continue;Release(p);p.body.velocity=_rootBody.GetPointVelocity(p.node.position);p.body.angularVelocity=_rootBody.angularVelocity;
+            if(p.released)continue;Release(p);p.body.linearVelocity=_rootBody.GetPointVelocity(p.node.position);p.body.angularVelocity=_rootBody.angularVelocity;
         }
         _sound.Emit(ValuableFoley.Glass,.18f);_send=0;
         ApplyTubePenalty();
@@ -204,7 +204,7 @@ internal sealed class CollectionPhysics : MonoBehaviour
     private static Rigidbody AddBody(Transform node,float mass)
     {
         var body=node.gameObject.AddComponent<Rigidbody>();body.mass=mass;body.interpolation=RigidbodyInterpolation.Interpolate;
-        body.collisionDetectionMode=CollisionDetectionMode.ContinuousSpeculative;body.maxAngularVelocity=8;body.drag=.12f;body.angularDrag=.5f;return body;
+        body.collisionDetectionMode=CollisionDetectionMode.ContinuousSpeculative;body.maxAngularVelocity=8;body.linearDamping=.12f;body.angularDamping=.5f;return body;
     }
     private static ValuablePartBinding TubeGroup(Transform parent,IGrouping<string,ValuablePartBinding> parts)
     {
@@ -240,7 +240,7 @@ internal sealed class CollectionPhysics : MonoBehaviour
         {
             p.body.isKinematic=true;p.node.SetParent(p.parent,false);p.node.localPosition=p.rest;p.node.localRotation=p.rotation;p.released=false;p.releaseAge=0;p.clearedCase=false;
             p.body.isKinematic=_tubes||!_host;p.collider.enabled=!_tubes;
-            if(!p.body.isKinematic){p.body.velocity=Vector3.zero;p.body.angularVelocity=Vector3.zero;}
+            if(!p.body.isKinematic){p.body.linearVelocity=Vector3.zero;p.body.angularVelocity=Vector3.zero;}
         }
         if(!_tubes)
             foreach(var p in _parts)

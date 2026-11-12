@@ -109,8 +109,8 @@ internal sealed class ChallengeManager : MonoBehaviour
         controller.VelocityImpulse = Vector3.zero;
         if (controller.rb != null && !controller.rb.isKinematic)
         {
-            var v = controller.rb.velocity;
-            controller.rb.velocity = new Vector3(0f, Mathf.Min(v.y, 0f), 0f);
+            var v = controller.rb.linearVelocity;
+            controller.rb.linearVelocity = new Vector3(0f, Mathf.Min(v.y, 0f), 0f);
         }
     }
     private static bool Russian => Localization.GameLanguage.Russian;
@@ -463,7 +463,7 @@ internal sealed class ChallengeManager : MonoBehaviour
                 if (hit == null || hit.GetComponentInParent<CrateVisual>() != null) continue;
                 bool melee = hit.GetComponent<HurtCollider>() != null && hit.GetComponentInParent<ItemMelee>() != null && hit.gameObject.activeInHierarchy;
                 var body = hit.attachedRigidbody;
-                bool impact = body != null && body.GetComponentInParent<PhysGrabObject>() != null && body.velocity.magnitude >= ChallengeRules.CrateImpactSpeed;
+                bool impact = body != null && body.GetComponentInParent<PhysGrabObject>() != null && body.linearVelocity.magnitude >= ChallengeRules.CrateImpactSpeed;
                 if (melee || impact) { BreakProp(i); break; }
             }
         }
@@ -683,7 +683,7 @@ internal sealed class ChallengeManager : MonoBehaviour
     private static float LevelLootValue()
     {
         float total = 0f;
-        foreach (var v in FindObjectsOfType<ValuableObject>()) if (v != null) total += v.dollarValueCurrent;
+        foreach (var v in FindObjectsByType<ValuableObject>(FindObjectsSortMode.None)) if (v != null) total += v.dollarValueCurrent;
         return total;
     }
 
@@ -691,7 +691,7 @@ internal sealed class ChallengeManager : MonoBehaviour
     private static void ScanOffering()
     {
         float sum = 0f, r2 = ChallengeRules.OfferingRadius * ChallengeRules.OfferingRadius;
-        foreach (var v in FindObjectsOfType<ValuableObject>())
+        foreach (var v in FindObjectsByType<ValuableObject>(FindObjectsSortMode.None))
         {
             if (v == null) continue;
             var d = v.transform.position - _shrine;

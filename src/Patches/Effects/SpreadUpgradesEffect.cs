@@ -45,7 +45,7 @@ internal static class SpreadUpgradesEffect
                 StatsManager.instance == null || __instance.roomVolume == null) return;
             var rooms = __instance.roomVolume.GetComponentsInChildren<RoomVolume>(true);
             var volumes = __instance.roomVolume.GetComponentsInChildren<BoxCollider>(true);
-            foreach (var attributes in Object.FindObjectsOfType<ItemAttributes>())
+            foreach (var attributes in Object.FindObjectsByType<ItemAttributes>(FindObjectsSortMode.None))
             {
                 if (!IsUncollected(attributes) || Collected.Contains(attributes.gameObject) || attributes.item == null) continue;
                 var body = attributes.GetComponent<PhysGrabObject>();

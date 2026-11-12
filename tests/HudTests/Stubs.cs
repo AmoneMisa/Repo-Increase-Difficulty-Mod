@@ -24,8 +24,9 @@ namespace TMPro {
  public enum TextAlignmentOptions {Top,TopRight}
  [Flags] public enum FontStyles {Normal=0,UpperCase=1}
  public enum TextOverflowModes {Ellipsis,Page}
+ public enum TextWrappingModes {NoWrap,Normal}
  public class TextInfo {public int pageCount=1,lineCount=1;}
- public class TextMeshProUGUI:Component {public object font,fontSharedMaterial;public float fontSize=30,fontSizeMax=30,fontSizeMin=30,characterSpacing,lineSpacing;public FontStyles fontStyle;public Color color;public TextAlignmentOptions alignment;public bool enableWordWrapping,raycastTarget,richText,enableAutoSizing,enabled;public bool isActiveAndEnabled=>enabled&&gameObject.activeInHierarchy;public string text="";public TextOverflowModes overflowMode;public int pageToDisplay=1;public TextInfo textInfo=new();public UnityEngine.Canvas canvas;public RectTransform rectTransform=>(RectTransform)transform;public Bounds textBounds=new(){min=new(0,100),max=new(200,140)};public void ForceMeshUpdate(){}public Vector2 GetPreferredValues(string t,float w,float h)=>new(w,(t.Split('\n').Length)*fontSize);}
+ public class TextMeshProUGUI:Component {public object font,fontSharedMaterial;public float fontSize=30,fontSizeMax=30,fontSizeMin=30,characterSpacing,lineSpacing;public FontStyles fontStyle;public Color color;public TextAlignmentOptions alignment;public TextWrappingModes textWrappingMode;public bool raycastTarget,richText,enableAutoSizing,enabled;public bool isActiveAndEnabled=>enabled&&gameObject.activeInHierarchy;public string text="";public TextOverflowModes overflowMode;public int pageToDisplay=1;public TextInfo textInfo=new();public UnityEngine.Canvas canvas;public RectTransform rectTransform=>(RectTransform)transform;public Bounds textBounds=new(){min=new(0,100),max=new(200,140)};public void ForceMeshUpdate(){}public Vector2 GetPreferredValues(string t,float w,float h)=>new(w,(t.Split('\n').Length)*fontSize);}
 }
 namespace ExitGames.Client.Photon {public class EventData{public byte Code;public int Sender;public object CustomData;}public struct SendOptions{public static SendOptions SendReliable=>new();}}
 namespace Photon.Realtime {public enum ReceiverGroup{MasterClient}public class RaiseEventOptions{public int[] TargetActors;public ReceiverGroup Receivers;}public class Player{public int ActorNumber=1;}public class Room{public string Name="room";public Player GetPlayer(int actor)=>new(){ActorNumber=actor};}}
@@ -69,3 +70,6 @@ public class MenuManager{public static MenuManager instance;public object curren
 
 // Status notices used by ModifierText; the HUD tests do not check them.
 namespace IncreaseHardMod.Hud{internal enum HudStyle{Caution}internal static class HudNotify{public static void Status(string key,string text,HudStyle style){}public static void Clear(string key){}}}
+
+// The real GameLanguage reads Unity Localization; the engine-free HUD tests use English.
+namespace IncreaseHardMod.Localization {internal static class GameLanguage {internal static bool Russian => false;}}

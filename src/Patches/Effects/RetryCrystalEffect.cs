@@ -188,7 +188,7 @@ internal static class RetryCrystalEffect
         var grabber = player.physGrabber;
         int grabberView = grabber != null && grabber.photonView != null ? grabber.photonView.ViewID : -1;
         var mine = new List<ItemBattery>();
-        foreach (var battery in Object.FindObjectsOfType<ItemBattery>())
+        foreach (var battery in Object.FindObjectsByType<ItemBattery>(FindObjectsSortMode.None))
         {
             if (battery == null || !battery.isActiveAndEnabled) continue;
             var grab = battery.GetComponent<PhysGrabObject>();

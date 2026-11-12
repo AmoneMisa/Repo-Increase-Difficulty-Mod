@@ -125,7 +125,7 @@ internal sealed class CourierSim
     {
         item.OverrideDeactivateReset();
         item.Teleport(at, item.transform.rotation);
-        if (item.rb != null) item.rb.velocity = Vector3.up * .5f;
+        if (item.rb != null) item.rb.linearVelocity = Vector3.up * .5f;
     }
 
     /// <summary>Out on a job (not just tagging along): the only time it can be hurt or draw monsters.</summary>
@@ -237,7 +237,7 @@ internal sealed class CourierSim
     {
         if (Level(C.CourierCart) <= 0) return CourierReason.NeedPerk;
         PhysGrabCart best = null; float bestD = 80f;
-        foreach (var cart in Object.FindObjectsOfType<PhysGrabCart>())
+        foreach (var cart in Object.FindObjectsByType<PhysGrabCart>(FindObjectsSortMode.None))
         {
             if (cart == null || cart.rb == null) continue;
             var grab = cart.GetComponent<PhysGrabObject>();
@@ -436,7 +436,7 @@ internal sealed class CourierSim
                 var anchor = Pos - Fwd() * 1.1f;
                 var pull = Flat(anchor - _cart.transform.position);
                 var v = Vector3.ClampMagnitude(pull * 4f, 4f);
-                _cart.rb.velocity = new Vector3(v.x, _cart.rb.velocity.y, v.z);
+                _cart.rb.linearVelocity = new Vector3(v.x, _cart.rb.linearVelocity.y, v.z);
                 if (grab != null) grab.OverrideGrabDisable(.2f);
                 if (there) { Job = CourierJob.None; _phase = Phase.Follow; _cart = null; _happyUntil = Time.time + 1.5f; return (CourierNotice.Done, ((byte)CourierJob.Cart) + "|"); }
                 return null;
@@ -483,7 +483,7 @@ internal sealed class CourierSim
         item.OverrideGrabDisable(.4f);
         item.OverrideIndestructible(.3f);
         var delta = point - item.midPoint;
-        item.rb.velocity = Vector3.ClampMagnitude(delta * 14f, 12f);
+        item.rb.linearVelocity = Vector3.ClampMagnitude(delta * 14f, 12f);
         item.rb.angularVelocity *= .85f;
         _itemAwayFor = delta.magnitude > 2.5f ? _itemAwayFor + dt : 0f;
         if (_itemAwayFor > 1.5f) { item.Teleport(point, item.transform.rotation); _itemAwayFor = 0f; }
@@ -494,7 +494,7 @@ internal sealed class CourierSim
         if (_item != null && _item.rb != null)
         {
             var push = towards.sqrMagnitude > .01f ? towards.normalized * 1.2f : Vector3.zero;
-            _item.rb.velocity = push + Vector3.up * .5f;
+            _item.rb.linearVelocity = push + Vector3.up * .5f;
         }
         _item = null;
     }

@@ -3,37 +3,6 @@ using System.Collections.Generic;
 namespace IncreaseHardMod.Localization;
 
 /// <summary>
-/// The game's language, read from Unity Localization when running inside the game.
-/// </summary>
-internal static class GameLanguage
-{
-    private static System.Reflection.PropertyInfo _selectedLocale;
-    private static bool _looked;
-
-    internal static bool Russian
-    {
-        get
-        {
-            try
-            {
-                if (!_looked)
-                {
-                    _looked = true;
-                    var settings = System.Type.GetType("UnityEngine.Localization.Settings.LocalizationSettings, Unity.Localization");
-                    _selectedLocale = settings?.GetProperty("SelectedLocale",
-                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                }
-                var locale = _selectedLocale?.GetValue(null);
-                var identifier = locale?.GetType().GetProperty("Identifier")?.GetValue(locale);
-                var code = identifier?.GetType().GetProperty("Code")?.GetValue(identifier) as string;
-                return code != null && code.StartsWith("ru", System.StringComparison.OrdinalIgnoreCase);
-            }
-            catch { return false; }
-        }
-    }
-}
-
-/// <summary>
 /// Russian names and descriptions for everything the level HUD lists as a modifier: surprise modifiers, stat
 /// modifiers, level economy events and shop economy events. Keyed by the English text, so the definitions stay as
 /// they are; text without an entry is shown in English.

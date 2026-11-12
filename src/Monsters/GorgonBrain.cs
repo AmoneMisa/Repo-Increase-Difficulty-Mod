@@ -183,7 +183,7 @@ internal sealed class GorgonBrain : MonsterBrain
         }
         E.NavMeshAgent.Disable(.25f);
         E.Rigidbody.DisableFollowPosition(.25f, 5f);
-        rb.velocity = new Vector3(_dir.x * MonsterRules.ChargeSpeed, rb.velocity.y, _dir.z * MonsterRules.ChargeSpeed);
+        rb.linearVelocity = new Vector3(_dir.x * MonsterRules.ChargeSpeed, rb.linearVelocity.y, _dir.z * MonsterRules.ChargeSpeed);
         E.transform.rotation = Quaternion.LookRotation(_dir);
 
         var front = rb.position + _dir * .9f;
@@ -210,7 +210,7 @@ internal sealed class GorgonBrain : MonsterBrain
             (wall.collider.attachedRigidbody == null || wall.collider.attachedRigidbody.isKinematic || wall.collider.attachedRigidbody.mass > 60f))
         {
             Fx(MonsterFx.WallImpact, wall.point, Vector3.zero);
-            rb.velocity = new Vector3(0f, rb.velocity.y, 0f);
+            rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
             E.NavMeshAgent.Warp(rb.position);
             if (_victim != null)
             {
@@ -227,7 +227,7 @@ internal sealed class GorgonBrain : MonsterBrain
         }
         if (StateTime >= MonsterRules.ChargeMaxSeconds)
         {
-            rb.velocity = new Vector3(rb.velocity.x * .3f, rb.velocity.y, rb.velocity.z * .3f);
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x * .3f, rb.linearVelocity.y, rb.linearVelocity.z * .3f);
             E.NavMeshAgent.Warp(rb.position);
             if (_victim != null) { MonsterAfflictions.Damage(_victim, MonsterRules.TrampleDamage, E); DropVictim(); }
             Announce(Recover);
