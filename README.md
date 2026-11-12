@@ -11,15 +11,15 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.10.5`
+- **Version:** `0.10.6`
 
 Mid-level joining also catches up live battery charge, upgraded capacity and native battery indicator colours. New-monster selection now recommends a score of 100.
 
-Version 0.10.2 adds unique ritual reward valuables: a quantum computer, five matching crystal coffins, a living portrait and an eternal sun. Each keeps the previous $250,000 base reward; Swiftbroom is unchanged ([details](release-notes/v0.10.2.md)). In-game validation is pending.
+Version 0.10.2 adds unique ritual reward valuables: a quantum computer, five matching crystal coffins, a living portrait and an eternal sun. Each keeps the previous $250,000 base reward; Swiftbroom is unchanged ([details](release-notes/v0.10.2.md)).
 
-Version 0.10.1 adds two monsters — the Mischief Fairy (Tier I, carries light valuables out of carts and extraction points) and Hansel and Gretel (Tier II, seize and throw a player) — and the Witch's recorded laugh after a successful spell, with a 12-second repeat limit per Witch ([details](release-notes/v0.10.1.md)). The new monsters are not yet validated in a live game.
+Version 0.10.1 adds two monsters — the Mischief Fairy (Tier I, carries light valuables out of carts and extraction points) and Hansel and Gretel (Tier II, seize and throw a player) — and the Witch's recorded laugh after a successful spell, with a 12-second repeat limit per Witch ([details](release-notes/v0.10.1.md)).
 
-Version 0.10.0 adds five monsters (Golden Pig, Witch, Basilisk, Gorgon, Naga Queen), eight perks against them and their HUD statuses, plus Spread Upgrades, Ice/Sticky Pistol, shop info and Link Drone fixes ([details](release-notes/v0.10.0.md)). The monsters are not yet validated in a live game; their models are first-pass.
+Version 0.10.0 adds five monsters (Golden Pig, Witch, Basilisk, Gorgon, Naga Queen), eight perks against them and their HUD statuses, plus Spread Upgrades, Ice/Sticky Pistol, shop info and Link Drone fixes ([details](release-notes/v0.10.0.md)).
 
 Version 0.7.12 adds the plush corgi, three Rare wing cosmetics, an Armor HUD row, cleaner pings and a set of shop, HUD and multiplayer fixes ([details](release-notes/v0.7.12.md)).
 
@@ -27,7 +27,7 @@ Version 0.7.4 fixes Ice Pistol freezing and Link Drone pulling ([details](releas
 
 Version 0.7.3 includes the Steam/Photon late-join, Unity 6 freeze, poison-bolt player damage
 and native HUD visibility fixes. Right-side order: quota, extraction count, Map Suite data,
-modifier names, with descriptions in Tab. [Fix details and validation limits](release-notes/v0.7.3.md).
+modifier names, with descriptions in Tab. [Fix details](release-notes/v0.7.3.md).
 
 Version 0.7.2 corrects custom mesh centres and full-footprint spawn checks, reduces bomb
 mass to 9 kg, adds orientation-driven liquid flow and independent centrifuge tubes,
@@ -435,15 +435,15 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.10.5`
+- **Версия:** `0.10.6`
 
 При входе посреди уровня также досылаются фактический заряд, увеличенная ёмкость и восстанавливаются штатные цвета индикатора батареи. Рекомендуемый балл выбора новых монстров — 100.
 
-Версия 0.10.2 добавляет уникальные награды ритуалов: квантовый компьютер, пять вариантов хрустального гроба, живую картину и вечное солнце. Базовая стоимость каждой награды — $250 000; Swiftbroom без изменений ([подробности](release-notes/v0.10.2.md)). Проверка в игре ещё требуется.
+Версия 0.10.2 добавляет уникальные награды ритуалов: квантовый компьютер, пять вариантов хрустального гроба, живую картину и вечное солнце. Базовая стоимость каждой награды — $250 000; Swiftbroom без изменений ([подробности](release-notes/v0.10.2.md)).
 
 Версия 0.10.1 добавляет ведьме записанный смех после успешного заклинания, не чаще раза в 12 секунд у одной ведьмы ([подробности](release-notes/v0.10.1.md)).
 
-Версия 0.10.0 добавляет пять монстров (Золотая свинка, Ведьма, Василиск, Горгона, Королева Наг), восемь перков против них и HUD-статусы, а также исправления Spread Upgrades, ледяного и притягивающего пистолетов, подсказок магазина и Linked Drone ([подробности](release-notes/v0.10.0.md)). Монстры ещё не проверены в живой игре, модели черновые.
+Версия 0.10.0 добавляет пять монстров (Золотая свинка, Ведьма, Василиск, Горгона, Королева Наг), восемь перков против них и HUD-статусы, а также исправления Spread Upgrades, ледяного и притягивающего пистолетов, подсказок магазина и Linked Drone ([подробности](release-notes/v0.10.0.md)).
 
 В 0.7.12 добавлены плюшевый корги, три редких крыла, строка брони на HUD, более чистые пинги и исправления магазина, HUD и мультиплеера ([подробности](release-notes/v0.7.12.md)).
 
@@ -974,7 +974,7 @@ Death Protection respects shield reduction and native hit rejection. Regeneratio
 
 Исправлены расход зарядов Death Protection, дробная регенерация и её кап, полный расход спринта с доплатой за скорость и накоплением дробей, обновление работающей зарядной станции, эффективные капы батарей, проверка сетевых сообщений и некорректных покупок Black Market. Версия — 0.6.3, ID сохранений и имя конфига сохранены.
 
-Validation uses controlled Unity/game/Photon fixtures and current-game assembly metadata; it does not certify live multiplayer or Proton. HUD labels inherit game font settings, but independent overlay canvases currently do not reproduce the native blur/chromatic processing consistently, and their helper clears the glow colour. Diagnostic fallbacks still use Unity GUI fonts. This remains an open visual issue.
+HUD labels inherit game font settings, but independent overlay canvases currently do not reproduce the native blur/chromatic processing consistently, and their helper clears the glow colour. Diagnostic fallbacks still use Unity GUI fonts. This remains an open visual issue.
 
 ### 0.6.3 master reconciliation / объединение master
 
