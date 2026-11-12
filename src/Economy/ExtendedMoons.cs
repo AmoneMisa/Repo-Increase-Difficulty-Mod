@@ -29,7 +29,7 @@ internal static class ExtendedMoons
         return Deaths.GetValue(health, _ => new DeathRoll { Drops = MoonRules.SoulDrops(Current, UnityEngine.Random.value) }).Drops;
     }
 
-    [HarmonyPatch(typeof(EnemyHealth), "OnSpawn")]
+    [HarmonyPatch(typeof(EnemyHealth), nameof(EnemyHealth.OnSpawn))]
     private static class NewLife
     {
         [HarmonyPostfix] private static void Postfix(EnemyHealth __instance) => Deaths.Remove(__instance);

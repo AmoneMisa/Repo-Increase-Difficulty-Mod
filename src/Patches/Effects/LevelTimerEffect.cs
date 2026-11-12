@@ -12,7 +12,7 @@ namespace IncreaseHardMod.Patches.Effects;
 internal static class LevelTimerEffect
 {
     // Countdown begins the moment the host finishes generating a LevelTimer level.
-    [HarmonyPatch(typeof(LevelGenerator), "GenerateDone")]
+    [HarmonyPatch(typeof(LevelGenerator), nameof(LevelGenerator.GenerateDone))]
     private static class Start
     {
         [HarmonyPostfix]
@@ -28,7 +28,7 @@ internal static class LevelTimerEffect
     }
 
     // Each enemy death adds time. EnemyHealth.Death only runs on the host.
-    [HarmonyPatch(typeof(EnemyHealth), "Death")]
+    [HarmonyPatch(typeof(EnemyHealth), nameof(EnemyHealth.Death))]
     private static class OnKill
     {
         [HarmonyPostfix]
@@ -41,7 +41,7 @@ internal static class LevelTimerEffect
     }
 
     // Each player death removes time.
-    [HarmonyPatch(typeof(PlayerAvatar), "PlayerDeathRPC")]
+    [HarmonyPatch(typeof(PlayerAvatar), nameof(PlayerAvatar.PlayerDeathRPC))]
     private static class OnPlayerDeath
     {
         [HarmonyPostfix]
@@ -56,7 +56,7 @@ internal static class LevelTimerEffect
     }
 
     // Completing an extraction point's quota adds time.
-    [HarmonyPatch(typeof(ExtractionPoint), "StateSet")]
+    [HarmonyPatch(typeof(ExtractionPoint), nameof(ExtractionPoint.StateSet))]
     private static class OnQuota
     {
         [HarmonyPostfix]

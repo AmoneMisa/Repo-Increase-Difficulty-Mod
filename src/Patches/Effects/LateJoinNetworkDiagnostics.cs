@@ -31,13 +31,13 @@ internal static class LateJoinNetworkDiagnostics
         Plugin.Log.LogInfo($"[LateJoin] Guest joined room {room?.Name}: players={room?.PlayerCount}, scene={SceneManager.GetActiveScene().name}, queue={PhotonNetwork.IsMessageQueueRunning}, syncScene={PhotonNetwork.AutomaticallySyncScene}.");
     }
 
-    [HarmonyPatch(typeof(NetworkConnect), "OnJoinedRoom")]
+    [HarmonyPatch(typeof(NetworkConnect), nameof(NetworkConnect.OnJoinedRoom))]
     private static class JoinedPatch
     {
         [HarmonyPostfix] private static void Postfix() { try { Joined(); } catch { } }
     }
 
-    [HarmonyPatch(typeof(PhotonNetwork), "NetworkInstantiate", new[] { typeof(ExitGames.Client.Photon.Hashtable), typeof(Photon.Realtime.Player) })]
+    [HarmonyPatch(typeof(PhotonNetwork), nameof(PhotonNetwork.NetworkInstantiate), new[] { typeof(ExitGames.Client.Photon.Hashtable), typeof(Photon.Realtime.Player) })]
     private static class CachedSpawnPatch
     {
         [HarmonyPostfix]
@@ -57,7 +57,7 @@ internal static class LateJoinNetworkDiagnostics
         }
     }
 
-    [HarmonyPatch(typeof(PhotonNetwork), "LocalCleanupAnythingInstantiated")]
+    [HarmonyPatch(typeof(PhotonNetwork), nameof(PhotonNetwork.LocalCleanupAnythingInstantiated))]
     private static class CleanupPatch
     {
         [HarmonyPrefix]

@@ -65,7 +65,7 @@ internal static class TestShortcuts
         }
     }
 
-    [HarmonyPatch(typeof(RunManager), "ChangeLevel")]
+    [HarmonyPatch(typeof(RunManager), nameof(RunManager.ChangeLevel))]
     private static class SkipToShop
     {
         [HarmonyPrefix]

@@ -16,7 +16,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// the number and moon children only once, so they are laid out here after every LevelUI.Update, relative to the
 /// heading. Text sizes are taken from the game's own values each time (never compounded).
 /// </summary>
-[HarmonyPatch(typeof(LevelUI), "Update")]
+[HarmonyPatch(typeof(LevelUI), nameof(LevelUI.Update))]
 internal static class LevelUICompact
 {
     private const float HeadingScale = .62f, NumberScale = 1.1f, MoonScale = .62f;

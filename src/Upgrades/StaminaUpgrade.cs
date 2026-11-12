@@ -61,15 +61,15 @@ internal static class StaminaUpgrade
         return result;
     }
 
-    [HarmonyPatch(typeof(PlayerController), "FixedUpdate")]
+    [HarmonyPatch(typeof(PlayerController), nameof(PlayerController.FixedUpdate))]
     private static class SprintCost
     {
         [HarmonyTranspiler]
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             var code = instructions.ToList();
-            var drain = AccessTools.Field(typeof(PlayerController), "EnergySprintDrain");
-            var energy = AccessTools.Field(typeof(PlayerController), "EnergyCurrent");
+            var drain = AccessTools.Field(typeof(PlayerController), nameof(PlayerController.EnergySprintDrain));
+            var energy = AccessTools.Field(typeof(PlayerController), nameof(PlayerController.EnergyCurrent));
             var matches = new List<int>();
             for (int start = 0; start < code.Count; start++)
             {
@@ -93,7 +93,7 @@ internal static class StaminaUpgrade
             load.blocks.AddRange(code[index].blocks);
             code[index] = load;
             code.Insert(index + 1, new CodeInstruction(OpCodes.Call,
-                typeof(StaminaUpgrade).GetMethod(nameof(SpendSprintEnergy), BindingFlags.Static | BindingFlags.NonPublic)));
+                AccessTools.Method(typeof(StaminaUpgrade), nameof(SpendSprintEnergy))));
             return code;
         }
     }

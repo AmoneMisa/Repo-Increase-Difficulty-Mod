@@ -28,7 +28,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// standalone collider with no ParticlePrefabExplosion). We log what we found so the
 /// exact prefab layout can be confirmed in-game.
 /// </summary>
-[HarmonyPatch(typeof(EnemyValuableExplosion), "Start")]
+[HarmonyPatch(typeof(EnemyValuableExplosion), nameof(EnemyValuableExplosion.Start))]
 internal static class SoulsExplodeHarderEffect
 {
     [HarmonyPostfix]

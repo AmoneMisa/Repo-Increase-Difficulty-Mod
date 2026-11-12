@@ -11,39 +11,41 @@ namespace IncreaseHardMod.Economy;
 internal static class MoonAttackCooldowns
 {
     private static readonly Dictionary<MethodBase, FieldInfo[]> Fields = new();
-    private static readonly string[] Timers = { "attackCooldown", "headAttackCooldown", "meleeCooldown", "laserCooldown",
-        "attackCooldownTimer", "mainAttackCooldownTimer", "tongueAttackRecoveryTimer", "attackPauseTimer",
-        "frontPunchCooldownTimer", "backKickCooldownTimer" };
+
+    // Each enemy's attack cooldown clocks, ticked down in the method listed with them.
+    private static readonly (Type Type, string Method, string[] Timers)[] Clocks =
+    {
+        (typeof(EnemyBombThrower), nameof(EnemyBombThrower.Update),
+            new[] { nameof(EnemyBombThrower.headAttackCooldown), nameof(EnemyBombThrower.meleeCooldown) }),
+        (typeof(EnemyBeamer), nameof(EnemyBeamer.Update), new[] { nameof(EnemyBeamer.laserCooldown) }),
+        (typeof(EnemyGnome), nameof(EnemyGnome.Update), new[] { nameof(EnemyGnome.attackCooldown) }),
+        (typeof(EnemyHeadGrabber), nameof(EnemyHeadGrabber.Update), new[] { nameof(EnemyHeadGrabber.attackCooldown) }),
+        (typeof(EnemyOogly), nameof(EnemyOogly.Update), new[] { nameof(EnemyOogly.attackCooldownTimer) }),
+        (typeof(EnemySnatcher), nameof(EnemySnatcher.Update), new[] {
+            nameof(EnemySnatcher.mainAttackCooldownTimer), nameof(EnemySnatcher.tongueAttackRecoveryTimer),
+            nameof(EnemySnatcher.attackPauseTimer), nameof(EnemySnatcher.frontPunchCooldownTimer),
+            nameof(EnemySnatcher.backKickCooldownTimer) }),
+        (typeof(EnemyTricycle), nameof(EnemyTricycle.Update), new[] { nameof(EnemyTricycle.attackCooldown) }),
+        (typeof(EnemyBeamer), nameof(EnemyBeamer.StateAttackEnd), new[] { nameof(EnemyBeamer.stateTimer) }),
+        (typeof(EnemyHunter), nameof(EnemyHunter.StateShootEnd), new[] { nameof(EnemyHunter.stateTimer) }),
+        (typeof(EnemyShadow), nameof(EnemyShadow.StateCoolDown), new[] { nameof(EnemyShadow.stateTimer) }),
+    };
 
     [HarmonyTargetMethods]
     private static IEnumerable<MethodBase> Targets()
     {
-        foreach (string typeName in new[] { "EnemyBombThrower", "EnemyBeamer", "EnemyGnome", "EnemyHeadGrabber",
-                     "EnemyOogly", "EnemySnatcher", "EnemyTricycle" })
+        foreach (var (type, method, timers) in Clocks)
         {
-            var type = typeof(Enemy).Assembly.GetType(typeName);
-            if (type == null) continue;
-            var update = AccessTools.DeclaredMethod(type, "Update");
-            if (update == null) continue;
+            var target = AccessTools.DeclaredMethod(type, method);
+            if (target == null) continue;
             var fields = new List<FieldInfo>();
-            foreach (string timer in Timers)
+            foreach (string timer in timers)
             {
-                // Missing optional clocks are expected for other enemy types;
-                // AccessTools.Field logs a warning for each unsuccessful probe.
-                var field = type.GetField(timer, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                var field = AccessTools.Field(type, timer);
                 if (field?.FieldType == typeof(float)) fields.Add(field);
             }
             if (fields.Count == 0) continue;
-            Fields[update] = fields.ToArray();
-            yield return update;
-        }
-        foreach (var (type, method) in new[] { (typeof(EnemyBeamer), "StateAttackEnd"),
-                     (typeof(EnemyHunter), "StateShootEnd"), (typeof(EnemyShadow), "StateCoolDown") })
-        {
-            var target = AccessTools.DeclaredMethod(type, method);
-            var field = AccessTools.Field(type, "stateTimer");
-            if (target == null || field == null) continue;
-            Fields[target] = new[] { field };
+            Fields[target] = fields.ToArray();
             yield return target;
         }
     }
@@ -73,7 +75,7 @@ internal static class MoonAttackCooldowns
         }
     }
 
-    [HarmonyPatch(typeof(EnemySnatcher), "PlayerAttackCooldownSet")]
+    [HarmonyPatch(typeof(EnemySnatcher), nameof(EnemySnatcher.PlayerAttackCooldownSet))]
     private static class PlayerClock
     {
         [HarmonyPrefix]
@@ -89,7 +91,7 @@ internal static class MoonAttackCooldowns
         }
     }
 
-    [HarmonyPatch(typeof(EnemySnatcher), "DefensiveAttackPlayerCooldownSet")]
+    [HarmonyPatch(typeof(EnemySnatcher), nameof(EnemySnatcher.DefensiveAttackPlayerCooldownSet))]
     private static class DefensiveClock
     {
         [HarmonyPrefix]

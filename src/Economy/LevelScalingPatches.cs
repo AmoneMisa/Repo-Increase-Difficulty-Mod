@@ -20,7 +20,7 @@ internal static class LevelScalingPatches
 
     // ---- map value (+ economy "Loot" multiplier) ---------------------------------------------
 
-    [HarmonyPatch(typeof(ValuableObject), "DollarValueSetLogic")]
+    [HarmonyPatch(typeof(ValuableObject), nameof(ValuableObject.DollarValueSetLogic))]
     private static class MapValue
     {
         [HarmonyPrefix]
@@ -51,7 +51,7 @@ internal static class LevelScalingPatches
 
     // ---- enemy count ------------------------------------------------------------------------
 
-    [HarmonyPatch(typeof(EnemyDirector), "AmountSetup")]
+    [HarmonyPatch(typeof(EnemyDirector), nameof(EnemyDirector.AmountSetup))]
     private static class EnemyCap
     {
         [HarmonyPostfix]
@@ -98,7 +98,7 @@ internal static class LevelScalingPatches
         }
     }
 
-    [HarmonyPatch(typeof(EnemyDirector), "PickEnemies")]
+    [HarmonyPatch(typeof(EnemyDirector), nameof(EnemyDirector.PickEnemies))]
     private static class EnemyRoster
     {
         [HarmonyPrefix]
@@ -121,7 +121,7 @@ internal static class LevelScalingPatches
 
     // ---- level size and extraction points -----------------------------------------------------
 
-    [HarmonyPatch(typeof(LevelGenerator), "TileGeneration")]
+    [HarmonyPatch(typeof(LevelGenerator), nameof(LevelGenerator.TileGeneration))]
     private static class LevelSize
     {
         [HarmonyPrefix]
@@ -174,7 +174,7 @@ internal static class LevelScalingPatches
     // ---- verification log --------------------------------------------------------------------
 
     /// <summary>One line per level with the monster factors actually in force, to check the ramp in-game.</summary>
-    [HarmonyPatch(typeof(LevelGenerator), "GenerateDoneApply")]
+    [HarmonyPatch(typeof(LevelGenerator), nameof(LevelGenerator.GenerateDoneApply))]
     private static class ScalingReport
     {
         [HarmonyPostfix]
@@ -202,7 +202,7 @@ internal static class LevelScalingPatches
     // was not. The host's value is now the one everyone uses (room property MoonProperty).
     internal const string MoonProperty = "ihm_moon";
 
-    [HarmonyPatch(typeof(RunManager), "CalculateMoonLevel")]
+    [HarmonyPatch(typeof(RunManager), nameof(RunManager.CalculateMoonLevel))]
     private static class Moon
     {
         [HarmonyPostfix]

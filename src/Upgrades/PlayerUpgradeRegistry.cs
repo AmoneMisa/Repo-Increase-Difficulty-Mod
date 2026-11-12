@@ -82,7 +82,7 @@ internal static class PlayerUpgradeRegistry
 
     // REPOLib 4.3 loads an existing stats dictionary into a local variable during registration.
     // Rebind the public PlayerDictionary as well so GetLevel, saved levels and effect gates agree.
-    [HarmonyPatch(typeof(RepoUpgrades), "RegisterUpgrades")]
+    [HarmonyPatch(typeof(RepoUpgrades), nameof(RepoUpgrades.RegisterUpgrades))]
     private static class BindSavedLevels
     {
         [HarmonyPostfix]
@@ -273,7 +273,7 @@ internal static class PlayerUpgradeRegistry
     }
 
     // Resolve before StatsUI's fallback/cache; REPOLib and StatsManager may rebuild their dictionaries.
-    [HarmonyPatch(typeof(StatsUI), "GetUpgradeDisplayName")]
+    [HarmonyPatch(typeof(StatsUI), nameof(StatsUI.GetUpgradeDisplayName))]
     private static class DisplayNamePatch
     {
         [HarmonyPrefix]
@@ -292,7 +292,7 @@ internal static class PlayerUpgradeRegistry
     }
 
     /// <summary>Runs after itemDictionary is populated, before REPOLib flushes its content.</summary>
-    [HarmonyPatch(typeof(StatsManager), "RunStartStats")]
+    [HarmonyPatch(typeof(StatsManager), nameof(StatsManager.RunStartStats))]
     private static class RegisterPatch
     {
         [HarmonyPostfix]

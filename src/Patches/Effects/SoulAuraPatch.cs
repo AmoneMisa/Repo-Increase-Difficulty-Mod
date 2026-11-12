@@ -5,7 +5,7 @@ namespace IncreaseHardMod.Patches.Effects;
 
 /// <summary>Gives every enemy soul spawned in a level the red soul-style <see cref="HeroAura"/>, shown while pinged.
 /// Runs on each client for its own copy, so it is local visuals only.</summary>
-[HarmonyPatch(typeof(ValuableObject), "Start")]
+[HarmonyPatch(typeof(ValuableObject), nameof(ValuableObject.Start))]
 internal static class SoulAuraPatch
 {
     [HarmonyPostfix]

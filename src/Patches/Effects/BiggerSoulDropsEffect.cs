@@ -18,7 +18,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// client and is also what gets added to RoundDirector.haulGoalMax. We only touch
 /// the three enemy-valuable prefabs so ordinary loot is untouched.
 /// </summary>
-[HarmonyPatch(typeof(ValuableObject), "DollarValueSetLogic")]
+[HarmonyPatch(typeof(ValuableObject), nameof(ValuableObject.DollarValueSetLogic))]
 internal static class BiggerSoulDropsEffect
 {
     [HarmonyPrefix]

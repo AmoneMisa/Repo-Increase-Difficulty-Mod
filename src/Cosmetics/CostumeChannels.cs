@@ -249,7 +249,7 @@ internal static class CostumeChannels
         }
     }
 
-    [HarmonyPatch(typeof(MenuPageColor), "Start")]
+    [HarmonyPatch(typeof(MenuPageColor), nameof(MenuPageColor.Start))]
     private static class ChannelButtons
     {
         private static void Postfix(MenuPageColor __instance)

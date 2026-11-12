@@ -16,7 +16,7 @@ internal static class InteractiveValuables
     internal static ConfigEntry<float> FlowSeconds;
     private static readonly HashSet<string> Registered = new();
 
-    [HarmonyPatch(typeof(RunManager), "Awake")]
+    [HarmonyPatch(typeof(RunManager), nameof(RunManager.Awake))]
     private static class Register
     {
         // Queue models before REPOLib's lowest-priority valuable preset initialization.

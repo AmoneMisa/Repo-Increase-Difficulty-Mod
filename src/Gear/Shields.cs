@@ -84,7 +84,7 @@ internal static class ShieldPatches
 {
     // Defence Orb: protects LOOT. Value lost to breakage inside its field is absorbed from the battery
     // (100% = DefenceItemAbsorb dollars). Break only runs on the host, which owns the batteries.
-    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), "Break")]
+    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), nameof(PhysGrabObjectImpactDetector.Break))]
     private static class BreakValuable
     {
         [HarmonyPrefix]
@@ -110,7 +110,7 @@ internal static class ShieldPatches
         }
     }
 
-    [HarmonyPatch(typeof(PlayerHealth), "Hurt")]
+    [HarmonyPatch(typeof(PlayerHealth), nameof(PlayerHealth.Hurt))]
     private static class Hurt
     {
         // After the difficulty scaling (which runs First) so shields work on the final number.

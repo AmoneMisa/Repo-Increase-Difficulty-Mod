@@ -118,7 +118,7 @@ internal static class LateJoinSession
     }
 }
 
-[HarmonyPatch(typeof(LevelGenerator), "GenerateDoneApply")]
+[HarmonyPatch(typeof(LevelGenerator), nameof(LevelGenerator.GenerateDoneApply))]
 internal static class LateJoinReadyPatch
 {
     [HarmonyPostfix]
@@ -130,7 +130,7 @@ internal static class LateJoinReadyPatch
 }
 
 // Friends, invites and steam://joinlobby all use this native connection coroutine.
-[HarmonyPatch(typeof(NetworkConnect), "CreateLobby")]
+[HarmonyPatch(typeof(NetworkConnect), nameof(NetworkConnect.CreateLobby))]
 internal static class LateJoinLobbyDataPatch
 {
     [HarmonyPostfix]

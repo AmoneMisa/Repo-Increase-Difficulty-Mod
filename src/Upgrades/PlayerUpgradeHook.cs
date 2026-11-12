@@ -68,7 +68,7 @@ internal sealed class PlayerUpgradeHook : MonoBehaviour
             Plugin.Log.LogError($"[Upgrades] Hook fired for unknown upgrade id '{UpgradeId}'.");
     }
 
-    [HarmonyPatch(typeof(ItemUpgrade), "PlayerUpgrade")]
+    [HarmonyPatch(typeof(ItemUpgrade), nameof(ItemUpgrade.PlayerUpgrade))]
     private static class PreventOverCap
     {
         private static float _nextHint;

@@ -65,7 +65,7 @@ public class GameDirector
     public static GameDirector instance;
     public gameState currentState = gameState.Main;
 }
-public class LevelGenerator { public static LevelGenerator Instance; public bool Generated = true; }
+public class LevelGenerator { public static LevelGenerator Instance; public bool Generated = true; public void GenerateDoneApply() { } }
 public class DataDirector { public static DataDirector instance; public string PhotonVersionGet() => "v0.5.0.net3"; }
 public static class SemiFunc
 {
@@ -74,7 +74,7 @@ public static class SemiFunc
     public static bool RunIsShop() => Shop;
     public static bool RunIsLobby() => Truck;
 }
-public class NetworkConnect { }
+public class NetworkConnect { public void CreateLobby() { } }
 namespace IncreaseHardMod
 {
     public class Entry { public bool Value = true; }

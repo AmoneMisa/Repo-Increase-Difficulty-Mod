@@ -161,7 +161,7 @@ internal static class LateJoinBattery
         if (hud != null && hud.itemBattery == battery) hud.BatteryBarsSet();
     }
 
-    [HarmonyPatch(typeof(ItemBattery), "Start")]
+    [HarmonyPatch(typeof(ItemBattery), nameof(ItemBattery.Start))]
     private static class Started
     {
         [HarmonyPostfix]
@@ -178,7 +178,7 @@ internal static class LateJoinBattery
         [HarmonyPrefix] private static void Prefix(BatteryVisualLogic __instance) => EnsureColors(__instance.itemBattery);
     }
 
-    [HarmonyPatch(typeof(ItemBattery), "BatteryFullPercentChangeRPC")]
+    [HarmonyPatch(typeof(ItemBattery), nameof(ItemBattery.BatteryFullPercentChangeRPC))]
     private static class NativeUpdate
     {
         [HarmonyPrefix]

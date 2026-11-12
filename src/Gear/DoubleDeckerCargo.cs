@@ -24,7 +24,7 @@ internal sealed class DoubleDeckerCargo : MonoBehaviour
 
     private void OnDisable() => Active.Remove(this);
 
-    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), "OnCollisionStay")]
+    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), nameof(PhysGrabObjectImpactDetector.OnCollisionStay))]
     private static class RegisterLoadBeforeImpact
     {
         [HarmonyPrefix]
@@ -53,7 +53,7 @@ internal sealed class DoubleDeckerCargo : MonoBehaviour
         }
     }
 
-    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), "OnTriggerStay")]
+    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), nameof(PhysGrabObjectImpactDetector.OnTriggerStay))]
     private static class KeepCartsIndependent
     {
         [HarmonyPrefix]

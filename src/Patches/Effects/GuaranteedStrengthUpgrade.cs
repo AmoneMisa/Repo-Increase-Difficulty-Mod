@@ -12,7 +12,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// in it (when the team may still buy it) and move it to the end: the game's SpawnShopItem takes upgrades
 /// from the end of the list, so the first upgrade stand gets it. Host only, since only the host stocks the shop.
 /// </summary>
-[HarmonyPatch(typeof(ShopManager), "GetAllItemsFromStatsManager")]
+[HarmonyPatch(typeof(ShopManager), nameof(ShopManager.GetAllItemsFromStatsManager))]
 internal static class GuaranteedStrengthUpgrade
 {
     private const string MoreStandsGuid = "DarkSpider90.MoreStandsForShops";

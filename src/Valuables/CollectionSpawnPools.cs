@@ -21,11 +21,9 @@ internal static class CollectionSpawnPools
             {
                 preset=ScriptableObject.CreateInstance<LevelValuables>();preset.name=name;
                 preset.tiny=new();preset.small=new();preset.medium=new();preset.big=new();preset.wide=new();preset.tall=new();preset.veryTall=new();
-                // REPOLib 4.3 exposes registration only internally. Register an empty preset
+                // REPOLib 4.3 exposes registration only internally (publicized). Register an empty preset
                 // before adding network prefabs, including when this is a later RunManager.
-                var register=AccessTools.Method(typeof(ValuablePresets),"RegisterValuablePreset",new[]{typeof(LevelValuables)});
-                if(register==null)throw new MissingMethodException("REPOLib valuable preset registration is unavailable.");
-                register.Invoke(null,new object[]{preset});
+                ValuablePresets.RegisterValuablePreset(preset);
             }
             if(!level.ValuablePresets.Contains(preset))level.ValuablePresets.Add(preset);
             Names[map]=name;

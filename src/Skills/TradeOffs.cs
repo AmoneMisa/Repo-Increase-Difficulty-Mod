@@ -179,7 +179,7 @@ internal static class TradeOffs
         }
     }
 
-    [HarmonyPatch(typeof(ValuableObject), "DiscoverRPC")]
+    [HarmonyPatch(typeof(ValuableObject), nameof(ValuableObject.DiscoverRPC))]
     private static class OracleNoDoubleDot
     {
         [HarmonyPrefix]
@@ -198,7 +198,7 @@ internal static class TradeOffs
     private static class HunterSeen
     {
         private static System.Reflection.MethodBase TargetMethod() =>
-            AccessTools.EnumeratorMoveNext(AccessTools.Method(typeof(EnemyVision), "Vision"));
+            AccessTools.EnumeratorMoveNext(AccessTools.Method(typeof(EnemyVision), nameof(EnemyVision.Vision)));
 
         [HarmonyPrefix]
         private static void Prefix(out List<(PlayerAvatar Player, bool Crouch, bool Crawl)> __state)

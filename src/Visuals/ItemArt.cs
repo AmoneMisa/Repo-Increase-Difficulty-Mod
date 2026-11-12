@@ -352,7 +352,7 @@ internal sealed class ItemArtMotion : MonoBehaviour
         }
     }
 
-    [HarmonyPatch(typeof(ItemGun), "ShootBulletRPC")]
+    [HarmonyPatch(typeof(ItemGun), nameof(ItemGun.ShootBulletRPC))]
     private static class ShotAnimation
     {
         // Deliberately independent of host-only hit effects: misses also animate on all clients.

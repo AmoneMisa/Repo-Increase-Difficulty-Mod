@@ -33,7 +33,7 @@ internal static class ItemDisplayName
            && !name.StartsWith("ITEM.", StringComparison.Ordinal)
            && !name.StartsWith("No translation found for ", StringComparison.Ordinal);
 
-    [HarmonyPatch(typeof(ItemAttributes), "RefreshLocalizations")]
+    [HarmonyPatch(typeof(ItemAttributes), nameof(ItemAttributes.RefreshLocalizations))]
     private static class RefreshLocalizations
     {
         // Unity can return a diagnostic string when a translation is missing.

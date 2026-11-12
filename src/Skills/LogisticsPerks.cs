@@ -8,7 +8,7 @@ internal static class LogisticsPerks
 {
     // Only the cart's own grabbing calculation receives the extra force. Neither
     // the player nor other held objects keep a modified Strength stat afterwards.
-    [HarmonyPatch(typeof(PhysGrabObject), "PhysicsGrabbingManipulation")]
+    [HarmonyPatch(typeof(PhysGrabObject), nameof(PhysGrabObject.PhysicsGrabbingManipulation))]
     private static class BasketLift
     {
         [HarmonyPrefix]
@@ -35,7 +35,7 @@ internal static class LogisticsPerks
         }
     }
 
-    [HarmonyPatch(typeof(HurtCollider), "PlayerHurt")]
+    [HarmonyPatch(typeof(HurtCollider), nameof(HurtCollider.PlayerHurt))]
     private static class SapperHit
     {
         [HarmonyPrefix]

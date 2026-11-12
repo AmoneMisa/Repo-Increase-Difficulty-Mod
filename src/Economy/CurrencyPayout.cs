@@ -31,21 +31,21 @@ internal static class CurrencyPayout
         return (int)Math.Min(int.MaxValue, current + increase);
     }
 
-    [HarmonyPatch(typeof(ExtractionPoint), "StateComplete")]
+    [HarmonyPatch(typeof(ExtractionPoint), nameof(ExtractionPoint.StateComplete))]
     private static class CompleteScope
     {
         [HarmonyPrefix] private static void Prefix() => _extractionDepth++;
         [HarmonyFinalizer] private static void Finalizer() => _extractionDepth = Math.Max(0, _extractionDepth - 1);
     }
 
-    [HarmonyPatch(typeof(ExtractionPoint), "StateTaxReturn")]
+    [HarmonyPatch(typeof(ExtractionPoint), nameof(ExtractionPoint.StateTaxReturn))]
     private static class TaxReturnScope
     {
         [HarmonyPrefix] private static void Prefix() => _extractionDepth++;
         [HarmonyFinalizer] private static void Finalizer() => _extractionDepth = Math.Max(0, _extractionDepth - 1);
     }
 
-    [HarmonyPatch(typeof(SemiFunc), "StatSetRunCurrency")]
+    [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.StatSetRunCurrency))]
     private static class Pay
     {
         [HarmonyPrefix]
@@ -70,7 +70,7 @@ internal static class CurrencyPayout
     private static bool _rollingBack;
 
     /// <summary>Host: a run level starts (also a restarted one): nothing earned on this attempt yet.</summary>
-    [HarmonyPatch(typeof(LevelGenerator), "GenerateDone")]
+    [HarmonyPatch(typeof(LevelGenerator), nameof(LevelGenerator.GenerateDone))]
     private static class AttemptStart
     {
         [HarmonyPostfix] private static void Postfix() => _earnedThisAttempt = 0;

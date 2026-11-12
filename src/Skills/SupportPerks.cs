@@ -113,7 +113,7 @@ internal static class SupportPerks
 
     // ItemHealthPack.Update heals the player who switched the pack on, on the host. Scale that heal for the
     // user's Field Medic level, then give teammates near them a share once the pack is used up.
-    [HarmonyPatch(typeof(ItemHealthPack), "Update")]
+    [HarmonyPatch(typeof(ItemHealthPack), nameof(ItemHealthPack.Update))]
     private static class MedicPack
     {
         [HarmonyPrefix]

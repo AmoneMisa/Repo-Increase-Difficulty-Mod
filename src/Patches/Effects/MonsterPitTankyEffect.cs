@@ -29,7 +29,7 @@ internal static class MonsterPitTankyEffect
     // True only for the duration of a single pit chip-damage Hurt call.
     private static bool _inPitChip;
 
-    [HarmonyPatch(typeof(HurtCollider), "EnemyHurt")]
+    [HarmonyPatch(typeof(HurtCollider), nameof(HurtCollider.EnemyHurt))]
     private static class Bracket
     {
         [HarmonyPrefix]
@@ -63,7 +63,7 @@ internal static class MonsterPitTankyEffect
         }
     }
 
-    [HarmonyPatch(typeof(EnemyHealth), "Hurt")]
+    [HarmonyPatch(typeof(EnemyHealth), nameof(EnemyHealth.Hurt))]
     private static class Reduce
     {
         [HarmonyPrefix]

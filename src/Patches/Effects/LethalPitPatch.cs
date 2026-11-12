@@ -4,7 +4,7 @@ using HarmonyLib;
 
 namespace IncreaseHardMod.Patches.Effects;
 
-[HarmonyPatch(typeof(HurtCollider), "PlayerHurt")]
+[HarmonyPatch(typeof(HurtCollider), nameof(HurtCollider.PlayerHurt))]
 internal static class LethalPitPatch
 {
     internal const int PitDeath = -2; // normalized to -1 by AutoReviveEffect before vanilla sees it

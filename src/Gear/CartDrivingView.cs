@@ -5,7 +5,7 @@ using UnityEngine;
 namespace IncreaseHardMod.Gear;
 
 /// <summary>Give the local driver a higher first-person view while holding a cart by its handle.</summary>
-[HarmonyPatch(typeof(CameraPosition), "Update")]
+[HarmonyPatch(typeof(CameraPosition), nameof(CameraPosition.Update))]
 internal static class CartDrivingView
 {
     private const float WideLift = .45f, FlameLift = .6f, LiftSpeed = 2f;

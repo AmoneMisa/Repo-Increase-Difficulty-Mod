@@ -112,7 +112,7 @@ internal static class DeathHeadRecovery
         return now - watch.OutsideSince >= OutsideSeconds;
     }
 
-    [HarmonyPatch(typeof(PlayerAvatar), "Update")]
+    [HarmonyPatch(typeof(PlayerAvatar), nameof(PlayerAvatar.Update))]
     private static class RecoverPlayer
     {
         [HarmonyPostfix]
@@ -145,7 +145,7 @@ internal static class DeathHeadRecovery
         }
     }
 
-    [HarmonyPatch(typeof(PlayerDeathHead), "Update")]
+    [HarmonyPatch(typeof(PlayerDeathHead), nameof(PlayerDeathHead.Update))]
     private static class RecoverHead
     {
         [HarmonyPostfix]

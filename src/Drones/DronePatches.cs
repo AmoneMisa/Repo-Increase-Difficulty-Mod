@@ -6,7 +6,7 @@ namespace IncreaseHardMod.Drones;
 /// <summary>Game hooks used by the Ghost and Silencer drones.</summary>
 internal static class DronePatches
 {
-    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), "Break")]
+    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), nameof(PhysGrabObjectImpactDetector.Break))]
     private static class GhostCargoProtection
     {
         [HarmonyPrefix, HarmonyPriority(Priority.High)]
@@ -20,7 +20,7 @@ internal static class DronePatches
     // ---------------------------------------------------------------- Ghost
 
     // A ghosted valuable never joins the extraction haul (so it is neither counted nor sucked in).
-    [HarmonyPatch(typeof(ValuableObject), "AddToDollarHaulList")]
+    [HarmonyPatch(typeof(ValuableObject), nameof(ValuableObject.AddToDollarHaulList))]
     private static class SkipGhostHaul
     {
         [HarmonyPrefix]
@@ -30,7 +30,7 @@ internal static class DronePatches
     // ------------------------------------------------------------- Silencer
     // Sounds carry no owner, so "belongs to a silenced target" means "is emitted on/next to it".
 
-    [HarmonyPatch(typeof(Sound), "Play", new[] { typeof(Vector3), typeof(float), typeof(float), typeof(float), typeof(float) })]
+    [HarmonyPatch(typeof(Sound), nameof(Sound.Play), new[] { typeof(Vector3), typeof(float), typeof(float), typeof(float), typeof(float) })]
     private static class QuietPlayAt
     {
         [HarmonyPrefix]
@@ -38,7 +38,7 @@ internal static class DronePatches
             volumeMultiplier *= UtilityDrone.NoiseFactorAt(position);
     }
 
-    [HarmonyPatch(typeof(Sound), "Play", new[] { typeof(Transform), typeof(float), typeof(float), typeof(float), typeof(float) })]
+    [HarmonyPatch(typeof(Sound), nameof(Sound.Play), new[] { typeof(Transform), typeof(float), typeof(float), typeof(float), typeof(float) })]
     private static class QuietPlayFollow
     {
         [HarmonyPrefix]
@@ -49,7 +49,7 @@ internal static class DronePatches
         }
     }
 
-    [HarmonyPatch(typeof(Sound), "Play", new[] { typeof(Transform), typeof(Vector3), typeof(float), typeof(float), typeof(float), typeof(float) })]
+    [HarmonyPatch(typeof(Sound), nameof(Sound.Play), new[] { typeof(Transform), typeof(Vector3), typeof(float), typeof(float), typeof(float), typeof(float) })]
     private static class QuietPlayContact
     {
         [HarmonyPrefix]
@@ -57,7 +57,7 @@ internal static class DronePatches
             volumeMultiplier *= UtilityDrone.NoiseFactorAt(contactPoint);
     }
 
-    [HarmonyPatch(typeof(Sound), "PlayLoop")]
+    [HarmonyPatch(typeof(Sound), nameof(Sound.PlayLoop))]
     private static class QuietLoop
     {
         [HarmonyPrefix]
@@ -69,7 +69,7 @@ internal static class DronePatches
     }
 
     // Enemies only investigate what is loud enough, so shrink the radius too.
-    [HarmonyPatch(typeof(EnemyDirector), "SetInvestigate")]
+    [HarmonyPatch(typeof(EnemyDirector), nameof(EnemyDirector.SetInvestigate))]
     private static class QuietInvestigate
     {
         [HarmonyPrefix]
@@ -78,7 +78,7 @@ internal static class DronePatches
     }
 
     // In-game voice chat / TTS of a silenced player.
-    [HarmonyPatch(typeof(PlayerVoiceChat), "Update")]
+    [HarmonyPatch(typeof(PlayerVoiceChat), nameof(PlayerVoiceChat.Update))]
     private static class QuietVoice
     {
         [HarmonyPostfix]

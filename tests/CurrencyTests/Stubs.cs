@@ -1,8 +1,8 @@
 using System.Reflection;
 using IncreaseHardMod.Economy;
 namespace HarmonyLib {public class HarmonyPatch:Attribute{public HarmonyPatch(Type t,string name){}}public class HarmonyPrefix:Attribute{}public class HarmonyFinalizer:Attribute{}public class HarmonyPostfix:Attribute{}}
-public class LevelGenerator{}
-public class ExtractionPoint{}
+public class LevelGenerator{public void GenerateDone(){}}
+public class ExtractionPoint{public void StateComplete(){}public void StateTaxReturn(){}}
 public class RunManager {public static RunManager instance=new();public object levelCurrent=new();}
 public class CurrencyUI {public static CurrencyUI instance=new();public int Fetches;public void FetchCurrency(){Fetches++;}}
 public static class SemiFunc {

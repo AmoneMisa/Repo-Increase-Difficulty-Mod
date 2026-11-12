@@ -127,6 +127,10 @@
 
   <ItemGroup>
     <Publicize Include="Assembly-CSharp" />
+    <!-- Internal hooks we call or patch directly: REPOLib registration, Photon instantiation, BepInEx orphaned config. -->
+    <Publicize Include="REPOLib" />
+    <Publicize Include="PhotonUnityNetworking" />
+    <Publicize Include="BepInEx:BepInEx.Configuration.ConfigFile.OrphanedEntries" />
   </ItemGroup>
 
   <!-- Deployment is explicit so packaging/building never adds a second active DLL to a profile. -->

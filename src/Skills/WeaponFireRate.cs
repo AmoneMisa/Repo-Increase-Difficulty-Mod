@@ -21,7 +21,7 @@ internal static class WeaponFireRate
     [HarmonyTargetMethods]
     private static IEnumerable<MethodBase> Targets()
     {
-        yield return AccessTools.Method(typeof(ItemGun), "Update");
+        yield return AccessTools.Method(typeof(ItemGun), nameof(ItemGun.Update));
         foreach (string name in new[] { "Update", "TriggerPull", "TriggerRPC", "ChamberRPC" })
             yield return AccessTools.Method(typeof(ItemGunRevolver), name);
     }

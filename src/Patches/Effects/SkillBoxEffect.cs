@@ -61,7 +61,7 @@ internal static class SkillBoxEffect
         _key = "";
     }
 
-    [HarmonyPatch(typeof(LevelGenerator), "GenerateDone")]
+    [HarmonyPatch(typeof(LevelGenerator), nameof(LevelGenerator.GenerateDone))]
     private static class SpawnOnGenerated
     {
         [HarmonyPostfix]

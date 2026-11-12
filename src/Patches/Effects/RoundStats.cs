@@ -243,7 +243,7 @@ internal static class RoundStats
 
     // Start runs after scene Awake methods and before this generator starts spawning valuables.
     // Awake can run before RunManager exists on boot; RunIsLevel dereferences that singleton.
-    [HarmonyPatch(typeof(LevelGenerator), "Start")]
+    [HarmonyPatch(typeof(LevelGenerator), nameof(LevelGenerator.Start))]
     private static class OnGenerationBegin
     {
         [HarmonyPrefix]
@@ -257,7 +257,7 @@ internal static class RoundStats
         }
     }
 
-    [HarmonyPatch(typeof(ValuableObject), "Start")]
+    [HarmonyPatch(typeof(ValuableObject), nameof(ValuableObject.Start))]
     private static class OnValuableSpawn
     {
         [HarmonyPostfix]
@@ -269,14 +269,14 @@ internal static class RoundStats
         }
     }
 
-    [HarmonyPatch(typeof(ValuableObject), "DollarValueSetLogic")]
+    [HarmonyPatch(typeof(ValuableObject), nameof(ValuableObject.DollarValueSetLogic))]
     private static class OnValuablePriced
     {
         [HarmonyPostfix, HarmonyPriority(Priority.Last)]
         private static void Postfix(ValuableObject __instance) => RegisterValuable(__instance);
     }
 
-    [HarmonyPatch(typeof(LevelGenerator), "GenerateDoneApply")]
+    [HarmonyPatch(typeof(LevelGenerator), nameof(LevelGenerator.GenerateDoneApply))]
     private static class OnLevelStart
     {
         [HarmonyPostfix]
@@ -298,7 +298,7 @@ internal static class RoundStats
 
     // Absorption destroys the original valuable. Keep its identity and soul classification
     // until the containing box is extracted; merely packing it is not an extraction/payout.
-    [HarmonyPatch(typeof(ItemValuableBox), "StartAbsorbLocal")]
+    [HarmonyPatch(typeof(ItemValuableBox), nameof(ItemValuableBox.StartAbsorbLocal))]
     private static class OnBoxAbsorb
     {
         [HarmonyPrefix]
@@ -324,7 +324,7 @@ internal static class RoundStats
         private static void Postfix(ItemValuableBox __instance) => BoxContents.Remove(__instance);
     }
 
-    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), "BreakRPC")]
+    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), nameof(PhysGrabObjectImpactDetector.BreakRPC))]
     private static class OnBreak
     {
         [HarmonyPostfix]
@@ -344,7 +344,7 @@ internal static class RoundStats
     }
 
     // Cache values before network destruction; credit only objects the extraction consumed.
-    [HarmonyPatch(typeof(ExtractionPoint), "DestroyTheFirstPhysObjectsInHaulList")]
+    [HarmonyPatch(typeof(ExtractionPoint), nameof(ExtractionPoint.DestroyTheFirstPhysObjectsInHaulList))]
     private static class OnExtractOne
     {
         [HarmonyPrefix]
@@ -368,7 +368,7 @@ internal static class RoundStats
         }
     }
 
-    [HarmonyPatch(typeof(ExtractionPoint), "DestroyAllPhysObjectsInHaulList")]
+    [HarmonyPatch(typeof(ExtractionPoint), nameof(ExtractionPoint.DestroyAllPhysObjectsInHaulList))]
     private static class OnExtractAll
     {
         [HarmonyPrefix]
@@ -410,8 +410,8 @@ internal static class RoundStats
     {
         private static IEnumerable<MethodBase> TargetMethods()
         {
-            yield return AccessTools.Method(typeof(ExtractionPoint), "StateComplete");
-            yield return AccessTools.Method(typeof(ExtractionPoint), "StateTaxReturn");
+            yield return AccessTools.Method(typeof(ExtractionPoint), nameof(ExtractionPoint.StateComplete));
+            yield return AccessTools.Method(typeof(ExtractionPoint), nameof(ExtractionPoint.StateTaxReturn));
         }
         [HarmonyPrefix]
         private static void Prefix(ExtractionPoint __instance, out (ExtractionTotals totals, int currency) __state)
@@ -432,7 +432,7 @@ internal static class RoundStats
         }
     }
 
-    [HarmonyPatch(typeof(Upgrades.TruckUpgrades), "SellRemainingLoot")]
+    [HarmonyPatch(typeof(Upgrades.TruckUpgrades), nameof(Upgrades.TruckUpgrades.SellRemainingLoot))]
     private static class OnAutoSale
     {
         [HarmonyPrefix]
@@ -464,7 +464,7 @@ internal static class RoundStats
         }
     }
 
-    [HarmonyPatch(typeof(PlayerAvatar), "PlayerDeathRPC")]
+    [HarmonyPatch(typeof(PlayerAvatar), nameof(PlayerAvatar.PlayerDeathRPC))]
     private static class OnDeath
     {
         [HarmonyPostfix]
@@ -480,7 +480,7 @@ internal static class RoundStats
 
     // Credit goes to whoever brought the head back (held it, or last carried it before it was
     // revived by the truck / extraction). Self-revives and never-carried heads give nobody credit.
-    [HarmonyPatch(typeof(PlayerAvatar), "ReviveRPC")]
+    [HarmonyPatch(typeof(PlayerAvatar), nameof(PlayerAvatar.ReviveRPC))]
     private static class OnRevive
     {
         [HarmonyPostfix]
@@ -505,7 +505,7 @@ internal static class RoundStats
     }
 
     // Snapshot before ChangeLevel starts scene cleanup. Ignore rejected/repeated requests.
-    [HarmonyPatch(typeof(RunManager), "ChangeLevel")]
+    [HarmonyPatch(typeof(RunManager), nameof(RunManager.ChangeLevel))]
     private static class OnLevelEnd
     {
         [HarmonyPrefix]

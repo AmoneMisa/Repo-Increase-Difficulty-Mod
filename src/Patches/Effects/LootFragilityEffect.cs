@@ -17,7 +17,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// for that valuable's whole life. Every client runs Start on its own copy and
 /// reads the same synced modifier set, so break behavior stays consistent.
 /// </summary>
-[HarmonyPatch(typeof(PhysGrabObjectImpactDetector), "Start")]
+[HarmonyPatch(typeof(PhysGrabObjectImpactDetector), nameof(PhysGrabObjectImpactDetector.Start))]
 internal static class LootFragilityEffect
 {
     [HarmonyPostfix]

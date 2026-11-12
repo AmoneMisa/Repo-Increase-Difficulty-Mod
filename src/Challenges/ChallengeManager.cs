@@ -151,7 +151,7 @@ internal sealed class ChallengeManager : MonoBehaviour
 
     private const string StatusKey = "ihm.challenge";
 
-    [HarmonyPatch(typeof(LevelGenerator), "GenerateDone")]
+    [HarmonyPatch(typeof(LevelGenerator), nameof(LevelGenerator.GenerateDone))]
     private static class OnGenerated
     {
         [HarmonyPostfix]

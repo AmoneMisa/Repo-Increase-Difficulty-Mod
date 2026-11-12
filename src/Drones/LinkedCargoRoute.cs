@@ -133,7 +133,7 @@ internal sealed class LinkedCargoRoute
         return false;
     }
 
-    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), "Break")]
+    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), nameof(PhysGrabObjectImpactDetector.Break))]
     private static class CargoDamage
     {
         [HarmonyPrefix]

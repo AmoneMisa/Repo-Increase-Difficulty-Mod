@@ -17,7 +17,7 @@ namespace IncreaseHardMod.Patches;
 ///   3. a short stack above an already used slot of a fitting class, so it settles on top of that item.
 /// Everything else (resetting inventory spots, destroying the volumes afterwards) is unchanged.
 /// </summary>
-[HarmonyPatch(typeof(PunManager), "TruckPopulateItemVolumes", new[] { typeof(List<PunManager.ItemSpawn>) })]
+[HarmonyPatch(typeof(PunManager), nameof(PunManager.TruckPopulateItemVolumes), new[] { typeof(List<PunManager.ItemSpawn>) })]
 internal static class TruckItemSlotsPatch
 {
     private static readonly Dictionary<SemiFunc.itemVolume, SemiFunc.itemVolume[]> Bigger = new()

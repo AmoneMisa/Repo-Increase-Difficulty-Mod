@@ -96,7 +96,7 @@ internal static class CombatDamageUpgrades
         return grab.lastPlayerGrabbing;
     }
 
-    [HarmonyPatch(typeof(HurtCollider), "EnemyHurt")]
+    [HarmonyPatch(typeof(HurtCollider), nameof(HurtCollider.EnemyHurt))]
     private static class MeleeEnemyHurt
     {
         [HarmonyPrefix]

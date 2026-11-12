@@ -31,7 +31,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// the modifier set changes (ModifierManager.SetCurrent -> ResetForNewLevel), which
 /// is precisely once per level transition.
 /// </summary>
-[HarmonyPatch(typeof(PlayerAvatar), "PlayerDeathRPC")]
+[HarmonyPatch(typeof(PlayerAvatar), nameof(PlayerAvatar.PlayerDeathRPC))]
 internal static class AutoReviveEffect
 {
     private static readonly HashSet<PlayerAvatar> UsedThisLevel = new();

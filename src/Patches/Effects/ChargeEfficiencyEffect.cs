@@ -5,25 +5,17 @@ using IncreaseHardMod.Upgrades;
 namespace IncreaseHardMod.Patches.Effects;
 
 /// <summary>Keep each station's authored cost and apply the current team upgrade without compounding.</summary>
-[HarmonyPatch(typeof(ChargingStation), "Start")]
+[HarmonyPatch(typeof(ChargingStation), nameof(ChargingStation.Start))]
 internal static class ChargeEfficiencyEffect
 {
-    private static readonly System.Reflection.FieldInfo RateField =
-        AccessTools.Field(typeof(ChargingStation), "batteryChargeCost") ??
-        AccessTools.Field(typeof(ChargingStation), "chargeRate");
     private sealed class State { internal float BaseRate; }
     private static readonly ConditionalWeakTable<ChargingStation, State> States = new();
 
     [HarmonyPostfix]
     private static void Postfix(ChargingStation __instance)
     {
-        if (RateField == null)
-        {
-            Plugin.Log.LogWarning("[ChargeEfficiency] No compatible charging cost field found; upgrade not applied.");
-            return;
-        }
         States.Remove(__instance);
-        States.Add(__instance, new State { BaseRate = (float)RateField.GetValue(__instance) });
+        States.Add(__instance, new State { BaseRate = __instance.batteryChargeCost });
         Apply(__instance);
     }
 
@@ -34,11 +26,11 @@ internal static class ChargeEfficiencyEffect
 
     internal static void Apply(ChargingStation station)
     {
-        if (station == null || RateField == null || !States.TryGetValue(station, out var state)) return;
-        RateField.SetValue(station, state.BaseRate * TruckUpgrades.ChargeDrainMultiplier);
+        if (station == null || !States.TryGetValue(station, out var state)) return;
+        station.batteryChargeCost = state.BaseRate * TruckUpgrades.ChargeDrainMultiplier;
     }
 
-    [HarmonyPatch(typeof(ChargingStation), "Update")]
+    [HarmonyPatch(typeof(ChargingStation), nameof(ChargingStation.Update))]
     private static class Refresh
     {
         // Before native charging consumes energy, pick up purchases, shared levels and config switches.

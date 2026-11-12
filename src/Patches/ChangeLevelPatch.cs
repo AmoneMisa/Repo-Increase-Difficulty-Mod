@@ -16,7 +16,7 @@ namespace IncreaseHardMod.Patches;
 ///
 /// The host rolls, stores the result locally, and broadcasts it to clients.
 /// </summary>
-[HarmonyPatch(typeof(RunManager), "ChangeLevel")]
+[HarmonyPatch(typeof(RunManager), nameof(RunManager.ChangeLevel))]
 internal static class ChangeLevelPatch
 {
     [HarmonyPrefix]

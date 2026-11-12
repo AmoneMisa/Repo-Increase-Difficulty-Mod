@@ -353,7 +353,7 @@ internal static class BatteryLifeUpgrade
         _states.GetOrCreateValue(battery).PrevLife = battery.batteryLife;
     }
 
-    [HarmonyPatch(typeof(ItemGun), "ShootRPC")]
+    [HarmonyPatch(typeof(ItemGun), nameof(ItemGun.ShootRPC))]
     private static class ShotDrain
     {
         [HarmonyPrefix]
@@ -366,7 +366,7 @@ internal static class BatteryLifeUpgrade
         }
     }
 
-    [HarmonyPatch(typeof(ItemBattery), "RemoveFullBar")]
+    [HarmonyPatch(typeof(ItemBattery), nameof(ItemBattery.RemoveFullBar))]
     private static class FullBarDrain
     {
         [HarmonyPrefix]
@@ -381,7 +381,7 @@ internal static class BatteryLifeUpgrade
 
     // Continuous consumers must receive the cheaper cost before they see an empty
     // battery and switch off: orbs, C.A.R.T. weapons and the flamethrower included.
-    [HarmonyPatch(typeof(ItemBattery), "DrainContinuous")]
+    [HarmonyPatch(typeof(ItemBattery), nameof(ItemBattery.DrainContinuous))]
     private static class ContinuousDrain
     {
         [HarmonyPrefix]
@@ -400,7 +400,7 @@ internal static class BatteryLifeUpgrade
         }
     }
 
-    [HarmonyPatch(typeof(ItemBattery), "Update")]
+    [HarmonyPatch(typeof(ItemBattery), nameof(ItemBattery.Update))]
     private static class RefundPatch
     {
         [HarmonyPrefix]

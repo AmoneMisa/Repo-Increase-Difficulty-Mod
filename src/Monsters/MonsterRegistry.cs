@@ -70,7 +70,7 @@ internal static class MonsterRegistry
         "EnemyGrounded", "EnemyJump", "EnemyAttackStuckPhysObject",
     };
 
-    [HarmonyPatch(typeof(EnemyDirector), "Awake")]
+    [HarmonyPatch(typeof(EnemyDirector), nameof(EnemyDirector.Awake))]
     private static class BuildOnDirectorAwake
     {
         [HarmonyPrefix]
@@ -118,7 +118,7 @@ internal static class MonsterRegistry
 
     internal static EnemySetup SetupOf(MonsterKind kind) => Setups.TryGetValue(kind, out var s) ? s : null;
 
-    [HarmonyPatch(typeof(EnemyDirector), "AmountSetup")]
+    [HarmonyPatch(typeof(EnemyDirector), nameof(EnemyDirector.AmountSetup))]
     private static class RosterDiagnostics
     {
         [HarmonyPostfix, HarmonyPriority(Priority.Last)]
@@ -272,16 +272,13 @@ internal static class MonsterRegistry
         setup.rarityPreset = ScriptableObject.CreateInstance<RarityPreset>();
         setup.rarityPreset.chance = ModConfig.MonsterRarity.Value;
         var content = ScriptableObject.CreateInstance<EnemyContent>();
-        Set(content, "_setup", setup);
-        Set(content, "_spawnObjects", new List<GameObject> { go });
+        content._setup = setup;
+        content._spawnObjects = new List<GameObject> { go };
         Enemies.RegisterEnemy(content);
         if (setup.spawnObjects == null || setup.spawnObjects.Count == 0) throw new InvalidOperationException("REPOLib refused the prefab");
         Setups[spec.Kind] = setup;
         Plugin.Log.LogInfo($"[Monsters] Registered {spec.Name} ({spec.Difficulty}, {spec.Health} HP, {spec.Mass} kg).");
     }
-
-    private static void Set(object target, string field, object value) =>
-        target.GetType().GetField(field, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)?.SetValue(target, value);
 
     private static void Strip(GameObject go)
     {
@@ -351,7 +348,7 @@ internal static class MonsterRegistry
 
     private static LevelGenerator _pigRolled;
 
-    [HarmonyPatch(typeof(LevelGenerator), "GenerateDone")]
+    [HarmonyPatch(typeof(LevelGenerator), nameof(LevelGenerator.GenerateDone))]
     private static class PigRoll
     {
         [HarmonyPostfix]
@@ -383,7 +380,7 @@ internal static class MonsterRegistry
         Pending.Add(new PendingSoul { Position = position, Value = value, Time = Time.time });
     }
 
-    [HarmonyPatch(typeof(ValuableObject), "DollarValueSetLogic")]
+    [HarmonyPatch(typeof(ValuableObject), nameof(ValuableObject.DollarValueSetLogic))]
     private static class SoulValue
     {
         [HarmonyPrefix]

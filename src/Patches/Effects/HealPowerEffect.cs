@@ -14,7 +14,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// from the team's highest Heal Power level (<see cref="TruckUpgrades.HealMultiplier"/>),
 /// so one buyer lifts healing for everyone; REPOLib already syncs each player's level.
 /// </summary>
-[HarmonyPatch(typeof(PlayerHealth), "Heal")]
+[HarmonyPatch(typeof(PlayerHealth), nameof(PlayerHealth.Heal))]
 internal static class HealPowerEffect
 {
     private static PlayerHealth _regenerationTarget;

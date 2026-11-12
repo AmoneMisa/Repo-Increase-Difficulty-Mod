@@ -296,7 +296,7 @@ internal sealed class LootSafetyNet : MonoBehaviour
     }
 
     /// <summary>The safety net replaces the game's own soft-lock top-up, so the two never spawn at once.</summary>
-    [HarmonyPatch(typeof(ValuableDirector), "SoftLockExtractionCheck")]
+    [HarmonyPatch(typeof(ValuableDirector), nameof(ValuableDirector.SoftLockExtractionCheck))]
     private static class DisableNativeTopUp
     {
         [HarmonyPrefix]

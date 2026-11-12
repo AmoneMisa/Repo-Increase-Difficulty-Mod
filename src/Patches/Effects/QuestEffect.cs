@@ -39,7 +39,7 @@ internal static class QuestEffect
     }
 
     // Start the quest set once a real run level finishes generating.
-    [HarmonyPatch(typeof(LevelGenerator), "GenerateDone")]
+    [HarmonyPatch(typeof(LevelGenerator), nameof(LevelGenerator.GenerateDone))]
     private static class OnGenerated
     {
         [HarmonyPostfix]
@@ -53,7 +53,7 @@ internal static class QuestEffect
 
     // Finalize survival/personal quests as the level flips. _completedLevel is the game's
     // own "this level was actually completed" flag.
-    [HarmonyPatch(typeof(RunManager), "ChangeLevel")]
+    [HarmonyPatch(typeof(RunManager), nameof(RunManager.ChangeLevel))]
     private static class OnLevelChange
     {
         [HarmonyPrefix]
@@ -65,7 +65,7 @@ internal static class QuestEffect
     }
 
     // Every enemy death: count the kill (and a pit kill if it followed a pit shove).
-    [HarmonyPatch(typeof(EnemyHealth), "Death")]
+    [HarmonyPatch(typeof(EnemyHealth), nameof(EnemyHealth.Death))]
     private static class OnKill
     {
         [HarmonyPostfix]
@@ -103,7 +103,7 @@ internal static class QuestEffect
     // Track what last hurt each enemy: a death pit (for pit kills) and/or a weapon (for
     // melee-only / no-gun quests). A gun's / melee's HurtCollider sits under its item, and a
     // bullet's under the bullet, so a parent lookup identifies the weapon type.
-    [HarmonyPatch(typeof(HurtCollider), "EnemyHurt")]
+    [HarmonyPatch(typeof(HurtCollider), nameof(HurtCollider.EnemyHurt))]
     private static class OnEnemyHurt
     {
         [HarmonyPrefix]
@@ -148,7 +148,7 @@ internal static class QuestEffect
     }
 
     // Team death count for the no-deaths survival quest.
-    [HarmonyPatch(typeof(PlayerAvatar), "PlayerDeathRPC")]
+    [HarmonyPatch(typeof(PlayerAvatar), nameof(PlayerAvatar.PlayerDeathRPC))]
     private static class OnPlayerDeath
     {
         [HarmonyPostfix]
@@ -160,7 +160,7 @@ internal static class QuestEffect
     }
 
     // Extraction quota closed: re-evaluate haul-value quests.
-    [HarmonyPatch(typeof(ExtractionPoint), "StateSet")]
+    [HarmonyPatch(typeof(ExtractionPoint), nameof(ExtractionPoint.StateSet))]
     private static class OnExtraction
     {
         [HarmonyPostfix]
@@ -175,7 +175,7 @@ internal static class QuestEffect
     // DestroyTheFirstPhysObjectsInHaulList (paced) and any stragglers via
     // DestroyAllPhysObjectsInHaulList (final sweep). We read each valuable's value in a PREFIX,
     // before the object is destroyed; QuestManager de-dupes across the two hooks by instance ID.
-    [HarmonyPatch(typeof(ExtractionPoint), "DestroyTheFirstPhysObjectsInHaulList")]
+    [HarmonyPatch(typeof(ExtractionPoint), nameof(ExtractionPoint.DestroyTheFirstPhysObjectsInHaulList))]
     private static class OnExtractFirst
     {
         [HarmonyPrefix]
@@ -190,7 +190,7 @@ internal static class QuestEffect
         }
     }
 
-    [HarmonyPatch(typeof(ExtractionPoint), "DestroyAllPhysObjectsInHaulList")]
+    [HarmonyPatch(typeof(ExtractionPoint), nameof(ExtractionPoint.DestroyAllPhysObjectsInHaulList))]
     private static class OnExtractAll
     {
         [HarmonyPrefix]
@@ -208,7 +208,7 @@ internal static class QuestEffect
     // Local player took real damage: fail our personal no-damage quest. Judged by the health actually dropping,
     // not by the call: Hurt is also called while the game ignores it (invincibility after a revive, god mode,
     // the level not running, the testing FullInvulnerability), and those must not fail the quest.
-    [HarmonyPatch(typeof(PlayerHealth), "Hurt")]
+    [HarmonyPatch(typeof(PlayerHealth), nameof(PlayerHealth.Hurt))]
     private static class OnLocalDamage
     {
         [HarmonyPrefix]
@@ -226,7 +226,7 @@ internal static class QuestEffect
     }
 
     // An enemy newly stunned (not one already stunned being re-stunned).
-    [HarmonyPatch(typeof(EnemyStateStunned), "Set")]
+    [HarmonyPatch(typeof(EnemyStateStunned), nameof(EnemyStateStunned.Set))]
     private static class OnStun
     {
         [HarmonyPrefix]
@@ -241,7 +241,7 @@ internal static class QuestEffect
     }
 
     // A teammate brought back (the truck's revive and the mod's free auto-revive do not count).
-    [HarmonyPatch(typeof(PlayerAvatar), "ReviveRPC")]
+    [HarmonyPatch(typeof(PlayerAvatar), nameof(PlayerAvatar.ReviveRPC))]
     private static class OnRevive
     {
         [HarmonyPostfix]
@@ -250,7 +250,7 @@ internal static class QuestEffect
     }
 
     // Halloween: the moon accepted an offering at an extraction point ("A moon is judging").
-    [HarmonyPatch(typeof(ExtractionHalloweenTower), "HalloweenRewardCommitRPC")]
+    [HarmonyPatch(typeof(ExtractionHalloweenTower), nameof(ExtractionHalloweenTower.HalloweenRewardCommitRPC))]
     private static class OnMoonApproval
     {
         [HarmonyPostfix]

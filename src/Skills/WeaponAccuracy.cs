@@ -30,7 +30,7 @@ internal static class WeaponAccuracy
         }
     }
 
-    [HarmonyPatch(typeof(ItemMelee), "HurtColliderRotationLogic")]
+    [HarmonyPatch(typeof(ItemMelee), nameof(ItemMelee.HurtColliderRotationLogic))]
     private static class Swing
     {
         [HarmonyPostfix]
@@ -55,7 +55,7 @@ internal static class WeaponAccuracy
         }
     }
 
-    [HarmonyPatch(typeof(ItemMeleeWhip), "CrackTargetGet")]
+    [HarmonyPatch(typeof(ItemMeleeWhip), nameof(ItemMeleeWhip.CrackTargetGet))]
     private static class Whip
     {
         [HarmonyPrefix]

@@ -28,7 +28,7 @@ internal static class NoMapEffect
         return key == InputKey.Map && ModifierManager.Current.Has(ModifierType.NoMap);
     }
 
-    [HarmonyPatch(typeof(InputManager), "KeyHold")]
+    [HarmonyPatch(typeof(InputManager), nameof(InputManager.KeyHold))]
     private static class BlockHold
     {
         [HarmonyPostfix]
@@ -39,7 +39,7 @@ internal static class NoMapEffect
         }
     }
 
-    [HarmonyPatch(typeof(InputManager), "InputToggleGet", new[] { typeof(InputKey) })]
+    [HarmonyPatch(typeof(InputManager), nameof(InputManager.InputToggleGet), new[] { typeof(InputKey) })]
     private static class BlockToggle
     {
         [HarmonyPostfix]
@@ -50,7 +50,7 @@ internal static class NoMapEffect
         }
     }
 
-    [HarmonyPatch(typeof(InputManager), "InputToggleGet", new[] { typeof(InputKey), typeof(string) })]
+    [HarmonyPatch(typeof(InputManager), nameof(InputManager.InputToggleGet), new[] { typeof(InputKey), typeof(string) })]
     private static class BlockToggleScheme
     {
         [HarmonyPostfix]

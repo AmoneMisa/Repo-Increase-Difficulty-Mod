@@ -16,7 +16,7 @@ namespace IncreaseHardMod.Patches;
 /// buff environmental damage. "ref int damage" lets us rewrite the argument that
 /// the original method will then use.
 /// </summary>
-[HarmonyPatch(typeof(PlayerHealth), "Hurt")]
+[HarmonyPatch(typeof(PlayerHealth), nameof(PlayerHealth.Hurt))]
 internal static class EnemyDamagePatch
 {
     // Run FIRST among our Hurt prefixes so the damage is fully scaled before

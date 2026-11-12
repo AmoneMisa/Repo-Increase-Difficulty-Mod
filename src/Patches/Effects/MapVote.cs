@@ -185,7 +185,7 @@ internal sealed class MapVoteController : MonoBehaviour
     private int _hudSession = -1;
 
     private static readonly FieldInfo PreviousRunLevelField =
-        AccessTools.Field(typeof(RunManager), "previousRunLevel");
+        AccessTools.Field(typeof(RunManager), nameof(RunManager.previousRunLevel));
 
     private void Update()
     {

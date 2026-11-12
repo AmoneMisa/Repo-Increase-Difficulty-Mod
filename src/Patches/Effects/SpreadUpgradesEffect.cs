@@ -35,7 +35,7 @@ internal static class SpreadUpgradesEffect
             (view?.InstantiationData is object[] data && data.Length == 1 && data[0] as string == SpawnTag);
     }
 
-    [HarmonyPatch(typeof(ExtractionPoint), "DestroyAllPhysObjectsInHaulList")]
+    [HarmonyPatch(typeof(ExtractionPoint), nameof(ExtractionPoint.DestroyAllPhysObjectsInHaulList))]
     private static class ExtractUpgrades
     {
         [HarmonyPrefix]
@@ -83,14 +83,14 @@ internal static class SpreadUpgradesEffect
         return false;
     }
 
-    [HarmonyPatch(typeof(ItemToggle), "ToggleItemLogic")]
+    [HarmonyPatch(typeof(ItemToggle), nameof(ItemToggle.ToggleItemLogic))]
     private static class BlockPickupToggle
     {
         [HarmonyPrefix]
         private static bool Prefix(ItemToggle __instance, bool toggle) => !toggle || !IsUncollected(__instance);
     }
 
-    [HarmonyPatch(typeof(LevelGenerator), "GenerateDone")]
+    [HarmonyPatch(typeof(LevelGenerator), nameof(LevelGenerator.GenerateDone))]
     private static class SpawnOnGenerated
     {
         [HarmonyPostfix]
@@ -197,7 +197,7 @@ internal static class SpreadUpgradesEffect
         }
     }
 
-    [HarmonyPatch(typeof(ItemUpgrade), "PlayerUpgrade")]
+    [HarmonyPatch(typeof(ItemUpgrade), nameof(ItemUpgrade.PlayerUpgrade))]
     private static class BlockUseOnLevel
     {
         // A found pickup stays inert until it has been extracted and re-delivered by the truck as a normal

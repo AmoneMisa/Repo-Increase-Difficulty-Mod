@@ -16,7 +16,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// and spawnValuableMax is deterministic from the synced modifier set, so counts
 /// stay consistent for everyone.
 /// </summary>
-[HarmonyPatch(typeof(EnemyHealth), "Awake")]
+[HarmonyPatch(typeof(EnemyHealth), nameof(EnemyHealth.Awake))]
 internal static class ExtraSoulsEffect
 {
     [HarmonyPostfix]

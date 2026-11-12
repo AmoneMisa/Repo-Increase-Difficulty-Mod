@@ -14,7 +14,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// (<see cref="TruckItemSlotsPatch.Fits"/>). No duplicates: every placed item comes out of the game's own pool, which
 /// holds each item only as often as the game allows. Items are never stacked here, so price tags don't overlap.
 /// </summary>
-[HarmonyPatch(typeof(PunManager), "ShopPopulateItemVolumes", new[] { typeof(List<PunManager.ItemSpawn>) })]
+[HarmonyPatch(typeof(PunManager), nameof(PunManager.ShopPopulateItemVolumes), new[] { typeof(List<PunManager.ItemSpawn>) })]
 internal static class ShopStockEffect
 {
     private static int _baseItems = -1, _baseUpgrades = -1;

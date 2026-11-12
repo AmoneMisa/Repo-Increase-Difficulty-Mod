@@ -6,7 +6,7 @@ namespace IncreaseHardMod.Valuables;
 
 // The native categories describe a slot, not the custom mesh. Never spawn an
 // oversized reference model into furniture merely because its category matched.
-[HarmonyPatch(typeof(ValuableDirector),"SpawnValuable")]
+[HarmonyPatch(typeof(ValuableDirector), nameof(ValuableDirector.SpawnValuable))]
 internal static class CollectionSpawnSafety
 {
     // Instantiate receives the volume's rotation, not the prefab rotation. Apply

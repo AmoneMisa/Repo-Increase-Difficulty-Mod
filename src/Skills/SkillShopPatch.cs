@@ -14,7 +14,7 @@ namespace IncreaseHardMod.Skills;
 /// This runs right after the game builds and shuffles the candidate lists and before any shelf is filled.
 /// As a last guard, <see cref="BlockSpawn"/> refuses to spawn one of those upgrades in the shop by any other route.
 /// </summary>
-[HarmonyPatch(typeof(ShopManager), "GetAllItemsFromStatsManager")]
+[HarmonyPatch(typeof(ShopManager), nameof(ShopManager.GetAllItemsFromStatsManager))]
 internal static class SkillShopPatch
 {
     [HarmonyPostfix]
@@ -52,7 +52,7 @@ internal static class SkillShopPatch
     // The shop's upgrade reroll stand picks replacements straight from every item in the game (not from the lists
     // above), so a reroll brought the tree-owned upgrades back. Pick again until it lands on another upgrade;
     // if nothing else is left, the stand keeps that slot's current upgrade (the game's own handling of null).
-    [HarmonyPatch(typeof(UpgradeStand), "GetWeightedUpgradeExcluding")]
+    [HarmonyPatch(typeof(UpgradeStand), nameof(UpgradeStand.GetWeightedUpgradeExcluding))]
     private static class RerollStand
     {
         private static bool _repicking;
@@ -62,14 +62,13 @@ internal static class SkillShopPatch
             Dictionary<string, int> selectedDuringReroll, bool secondAttempt, ref Item __result)
         {
             if (_repicking || !ModConfig.PlayerUpgradesEnabled.Value || !IsTreeOwnedVanilla(__result)) return;
-            var pick = AccessTools.Method(typeof(UpgradeStand), "GetWeightedUpgradeExcluding");
             var rejected = __result;
             _repicking = true;
             try
             {
                 for (int attempt = 0; attempt < 12; attempt++)
                 {
-                    var next = (Item)pick.Invoke(__instance, new object[] { excludeItem, displayedCounts, selectedDuringReroll, secondAttempt });
+                    var next = __instance.GetWeightedUpgradeExcluding(excludeItem, displayedCounts, selectedDuringReroll, secondAttempt);
                     if (!IsTreeOwnedVanilla(next)) { __result = next; return; }
                 }
                 __result = null;
@@ -83,7 +82,7 @@ internal static class SkillShopPatch
     }
 
     // Every shop shelf item is spawned here (directly, or from the list the level generator collects).
-    [HarmonyPatch(typeof(PunManager), "ItemSpawnApply")]
+    [HarmonyPatch(typeof(PunManager), nameof(PunManager.ItemSpawnApply))]
     private static class BlockSpawn
     {
         [HarmonyPrefix]

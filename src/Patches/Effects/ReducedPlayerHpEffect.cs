@@ -22,7 +22,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// each owner computes the same reduction for their own avatar. Between levels the modifier
 /// set is Empty, so no reduction is applied and carried-over HP is used as normal.
 /// </summary>
-[HarmonyPatch(typeof(StatsManager), "GetPlayerHealth")]
+[HarmonyPatch(typeof(StatsManager), nameof(StatsManager.GetPlayerHealth))]
 internal static class ReducedPlayerHpEffect
 {
     [HarmonyPostfix]

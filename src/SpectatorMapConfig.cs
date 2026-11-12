@@ -14,9 +14,7 @@ internal sealed class SpectatorMapConfig
 
     internal static SpectatorMapConfig Bind(ConfigFile cfg)
     {
-        var orphans = typeof(ConfigFile).GetProperty("OrphanedEntries",
-            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(cfg)
-            as Dictionary<ConfigDefinition, string>;
+        var orphans = cfg.OrphanedEntries; // BepInEx keeps it protected (publicized)
         var enabledDef = new ConfigDefinition("Modules", "SpectatorMap");
         var keyDef = new ConfigDefinition("Spectator Map", "HoldKey");
         bool enabledExists = cfg.ContainsKey(enabledDef) || (orphans?.ContainsKey(enabledDef) ?? false);

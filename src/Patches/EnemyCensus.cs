@@ -11,7 +11,7 @@ namespace IncreaseHardMod.Patches;
 /// 60 s after the level is built - to check group enemies (a Gnome pack is a director + 4, Bangers a director + 3)
 /// against what players see. One line each time.
 /// </summary>
-[HarmonyPatch(typeof(LevelGenerator), "GenerateDone")]
+[HarmonyPatch(typeof(LevelGenerator), nameof(LevelGenerator.GenerateDone))]
 internal static class EnemyCensus
 {
     private static LevelGenerator _done;

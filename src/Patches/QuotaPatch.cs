@@ -17,7 +17,7 @@ namespace IncreaseHardMod.Patches;
 /// up higher than the host. So we ONLY scale when we are the host (or in
 /// singleplayer). The host's scaled haulGoal is then broadcast to clients as-is.
 /// </summary>
-[HarmonyPatch(typeof(RoundDirector), "StartRoundLogic")]
+[HarmonyPatch(typeof(RoundDirector), nameof(RoundDirector.StartRoundLogic))]
 internal static class QuotaPatch
 {
     [HarmonyPostfix]

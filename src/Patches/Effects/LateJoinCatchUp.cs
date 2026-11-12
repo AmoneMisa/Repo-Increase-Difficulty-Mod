@@ -32,7 +32,7 @@ internal static class LateJoinCatchUp
         _subscribed = true;
     }
 
-    [HarmonyPatch(typeof(LevelGenerator), "GenerateDoneApply")]
+    [HarmonyPatch(typeof(LevelGenerator), nameof(LevelGenerator.GenerateDoneApply))]
     private static class Generated
     {
         [HarmonyPostfix]

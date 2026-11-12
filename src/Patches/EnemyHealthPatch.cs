@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace IncreaseHardMod.Patches;
 
-[HarmonyPatch(typeof(EnemyHealth), "Awake")]
+[HarmonyPatch(typeof(EnemyHealth), nameof(EnemyHealth.Awake))]
 internal static class EnemyHealthPatch
 {
     private sealed class State { internal int Base; }
@@ -33,13 +33,13 @@ internal static class EnemyHealthPatch
         health.health = desired;
     }
 
-    [HarmonyPatch(typeof(EnemyHealth), "OnSpawn")]
+    [HarmonyPatch(typeof(EnemyHealth), nameof(EnemyHealth.OnSpawn))]
     private static class Spawn
     {
         [HarmonyPrefix]
         private static void Prefix(EnemyHealth __instance) => Refresh(__instance, false);
     }
-    [HarmonyPatch(typeof(EnemyHealth), "Update")]
+    [HarmonyPatch(typeof(EnemyHealth), nameof(EnemyHealth.Update))]
     private static class Live
     {
         [HarmonyPostfix]

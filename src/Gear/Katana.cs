@@ -164,7 +164,7 @@ internal sealed class Katana : MonoBehaviour
         }
     }
 
-    [HarmonyPatch(typeof(ItemMelee), "SwingDetectionLogic")]
+    [HarmonyPatch(typeof(ItemMelee), nameof(ItemMelee.SwingDetectionLogic))]
     private static class PreventContinuousSwing
     {
         private static bool Prefix(ItemMelee __instance) =>

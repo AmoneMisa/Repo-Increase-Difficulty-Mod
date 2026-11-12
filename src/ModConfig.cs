@@ -597,13 +597,8 @@ public static class ModConfig
         return entry;
     }
 
-    // Values present in the .cfg that nothing has bound (yet). BepInEx keeps this non-public.
-    private static Dictionary<ConfigDefinition, string> Orphans(ConfigFile cfg)
-    {
-        var prop = typeof(ConfigFile).GetProperty("OrphanedEntries",
-            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
-        return prop?.GetValue(cfg) as Dictionary<ConfigDefinition, string>;
-    }
+    // Values present in the .cfg that nothing has bound (yet). BepInEx keeps this protected (publicized).
+    private static Dictionary<ConfigDefinition, string> Orphans(ConfigFile cfg) => cfg.OrphanedEntries;
 
     public static void Init(ConfigFile cfg)
     {

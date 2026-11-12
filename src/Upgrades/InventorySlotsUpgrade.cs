@@ -208,7 +208,7 @@ internal static class InventorySlotsUpgrade
         }
     }
 
-    [HarmonyPatch(typeof(InventorySpot), "Update")]
+    [HarmonyPatch(typeof(InventorySpot), nameof(InventorySpot.Update))]
     private static class ExtraInput
     {
         [HarmonyPostfix]
@@ -223,7 +223,7 @@ internal static class InventorySlotsUpgrade
     }
 
     // Native validation uses the host's own local slot count, which rejects upgraded remote players.
-    [HarmonyPatch(typeof(ItemEquippable), "RPC_RequestEquip")]
+    [HarmonyPatch(typeof(ItemEquippable), nameof(ItemEquippable.RPC_RequestEquip))]
     private static class ValidateExtraEquip
     {
         [HarmonyPrefix]
@@ -249,7 +249,7 @@ internal static class InventorySlotsUpgrade
     }
     private static readonly List<PendingEquip> Pending = new();
 
-    [HarmonyPatch(typeof(ItemEquippable), "RPC_UpdateItemState")]
+    [HarmonyPatch(typeof(ItemEquippable), nameof(ItemEquippable.RPC_UpdateItemState))]
     private static class ReadyBeforeRestore
     {
         [HarmonyPrefix]
@@ -278,14 +278,14 @@ internal static class InventorySlotsUpgrade
         return data;
     }
 
-    [HarmonyPatch(typeof(StatsManager), "Awake")]
+    [HarmonyPatch(typeof(StatsManager), nameof(StatsManager.Awake))]
     private static class RegisterStorage
     {
         [HarmonyPostfix]
         private static void Postfix() { for(int i=BaseSlots;i<MaxSlots;i++) SlotData(i); }
     }
 
-    [HarmonyPatch(typeof(StatsManager), "PlayerInventoryUpdate")]
+    [HarmonyPatch(typeof(StatsManager), nameof(StatsManager.PlayerInventoryUpdate))]
     private static class SaveExtraItem
     {
         [HarmonyPrefix]
@@ -302,14 +302,14 @@ internal static class InventorySlotsUpgrade
         }
     }
 
-    [HarmonyPatch(typeof(PunManager), "TruckPopulateItemVolumes", new[] { typeof(List<PunManager.ItemSpawn>) })]
+    [HarmonyPatch(typeof(PunManager), nameof(PunManager.TruckPopulateItemVolumes), new[] { typeof(List<PunManager.ItemSpawn>) })]
     private static class ResetRestoreClaims
     {
         [HarmonyPrefix]
         private static void Prefix() { Restored.Clear(); Pending.Clear(); }
     }
 
-    [HarmonyPatch(typeof(PunManager), "SetItemNameLOGIC")]
+    [HarmonyPatch(typeof(PunManager), nameof(PunManager.SetItemNameLOGIC))]
     private static class RestoreExtraItem
     {
         [HarmonyPostfix]

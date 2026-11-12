@@ -168,11 +168,11 @@ internal static class LateJoinProgress
     {
         private static IEnumerable<MethodBase> TargetMethods()
         {
-            yield return AccessTools.Method(typeof(PlayerHealth), "Fetch");
-            yield return AccessTools.Method(typeof(PlayerAvatar), "LateStart");
-            yield return AccessTools.Method(typeof(PlayerController), "LateStart");
-            yield return AccessTools.Method(typeof(PhysGrabber), "LateStart");
-            yield return AccessTools.Method(typeof(PlayerTumble), "TumbleLaunchFetch");
+            yield return AccessTools.Method(typeof(PlayerHealth), nameof(PlayerHealth.Fetch));
+            yield return AccessTools.Method(typeof(PlayerAvatar), nameof(PlayerAvatar.LateStart));
+            yield return AccessTools.Method(typeof(PlayerController), nameof(PlayerController.LateStart));
+            yield return AccessTools.Method(typeof(PhysGrabber), nameof(PhysGrabber.LateStart));
+            yield return AccessTools.Method(typeof(PlayerTumble), nameof(PlayerTumble.TumbleLaunchFetch));
         }
 
         [HarmonyPostfix]

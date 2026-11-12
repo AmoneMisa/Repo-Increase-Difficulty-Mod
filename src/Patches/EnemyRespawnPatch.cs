@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace IncreaseHardMod.Patches;
 
-[HarmonyPatch(typeof(EnemyParent), "Awake")]
+[HarmonyPatch(typeof(EnemyParent), nameof(EnemyParent.Awake))]
 internal static class EnemyRespawnPatch
 {
     private sealed class State { internal float Min, Max, Factor = 1f; }
@@ -21,13 +21,13 @@ internal static class EnemyRespawnPatch
     }
     [HarmonyPostfix]
     private static void Postfix(EnemyParent __instance) => Refresh(__instance, false);
-    [HarmonyPatch(typeof(EnemyParent), "Despawn")]
+    [HarmonyPatch(typeof(EnemyParent), nameof(EnemyParent.Despawn))]
     private static class Despawn
     {
         [HarmonyPrefix]
         private static void Prefix(EnemyParent __instance) => Refresh(__instance, false);
     }
-    [HarmonyPatch(typeof(EnemyParent), "Update")]
+    [HarmonyPatch(typeof(EnemyParent), nameof(EnemyParent.Update))]
     private static class Live
     {
         [HarmonyPostfix]

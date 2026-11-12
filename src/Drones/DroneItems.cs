@@ -53,7 +53,7 @@ internal static class DroneItems
         return _holder;
     }
 
-    [HarmonyPatch(typeof(StatsManager), "RunStartStats")]
+    [HarmonyPatch(typeof(StatsManager), nameof(StatsManager.RunStartStats))]
     private static class OnRunStartStats
     {
         // Run before REPOLib's own postfix so our items are queued in time to be added this pass.
@@ -198,7 +198,7 @@ internal static class DroneItems
     }
 
     /// <summary>Buying the Link set also buys its second half, so both are delivered by the truck.</summary>
-    [HarmonyPatch(typeof(StatsManager), "ItemPurchase")]
+    [HarmonyPatch(typeof(StatsManager), nameof(StatsManager.ItemPurchase))]
     private static class OnPurchase
     {
         [HarmonyPrefix]

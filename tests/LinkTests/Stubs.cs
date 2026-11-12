@@ -2,7 +2,7 @@ using IncreaseHardMod.Drones;
 namespace HarmonyLib {public class HarmonyPatch:Attribute{public HarmonyPatch(Type t,string name){}}public class HarmonyPostfix:Attribute{}public class HarmonyPrefix:Attribute{}}
 public static class SemiFunc {public static bool Host=true;public static bool IsMasterClientOrSingleplayer()=>Host;}
 public class Item {public string name; public bool physicalItem=true;}
-public class ItemAttributes {public string instanceName, cachedItemName, itemName;public Item item;}
+public class ItemAttributes {public string instanceName, cachedItemName, itemName;public Item item;public void Update(){}}
 public class StatsManager {
  public static StatsManager instance=new();public Dictionary<string,int> item=new(),runStats=new(),itemsPurchased=new();public Dictionary<string,Item> itemDictionary=new();public int PartnerPurchases;public bool Shop;
  public void ItemPurchase(string name){var before=LinkSets.BeforePurchase(this,name);itemsPurchased[name]=itemsPurchased.GetValueOrDefault(name)+1;if(itemDictionary[name].physicalItem)ItemAdd(name);if(name==DroneItems.LinkBName)PartnerPurchases++;LinkSets.AfterPurchase(this,name,before);}

@@ -114,7 +114,7 @@ internal static class WingCosmetics
     // chainloader can be destroyed on the first scene change, which would leave the cosmetic prefabs dead.
     // MetaManager is the game's persistent cosmetics owner, and REPOLib accepts cosmetics registered after
     // its initial pass (it adds them at once and reloads saved modded unlocks).
-    [HarmonyLib.HarmonyPatch(typeof(MetaManager), "Awake")]
+    [HarmonyLib.HarmonyPatch(typeof(MetaManager), nameof(MetaManager.Awake))]
     private static class RegisterWithMetaManager
     {
         [HarmonyLib.HarmonyPostfix]

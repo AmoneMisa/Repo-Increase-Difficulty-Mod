@@ -371,7 +371,7 @@ internal static class CustomCarts
     }
 
     // PhysGrabCart.Start puts every cart back to the standard mass; the Wide and Double-Decker keep their own.
-    [HarmonyPatch(typeof(PhysGrabCart), "Start")]
+    [HarmonyPatch(typeof(PhysGrabCart), nameof(PhysGrabCart.Start))]
     private static class KeepMass
     {
         [HarmonyPostfix]

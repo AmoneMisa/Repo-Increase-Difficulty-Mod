@@ -74,7 +74,7 @@ internal static class LinkSets
 
     // In a shop, native ItemPurchase updates delivery counts but ItemAdd deliberately does not
     // add an owned item. The real instance key becomes available when the truck delivers it.
-    [HarmonyPatch(typeof(StatsManager), "ItemAdd")]
+    [HarmonyPatch(typeof(StatsManager), nameof(StatsManager.ItemAdd))]
     private static class Delivery
     {
         [HarmonyPrefix]
@@ -149,7 +149,7 @@ internal static class LinkSets
         for (int i = 0; i < Math.Min(a.Count, b.Count); i++) Bind(a[i], b[i]);
     }
 
-    [HarmonyPatch(typeof(ItemAttributes), "Update")]
+    [HarmonyPatch(typeof(ItemAttributes), nameof(ItemAttributes.Update))]
     private static class PartName
     {
         [HarmonyPrefix]

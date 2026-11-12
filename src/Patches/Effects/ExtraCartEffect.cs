@@ -27,7 +27,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// geometry. Small vs big is picked by the cart Item's name; we log the cart names we
 /// find so the exact asset strings can be verified/tuned in-game.
 /// </summary>
-[HarmonyPatch(typeof(LevelGenerator), "GenerateDone")]
+[HarmonyPatch(typeof(LevelGenerator), nameof(LevelGenerator.GenerateDone))]
 internal static class ExtraCartEffect
 {
     [HarmonyPostfix]

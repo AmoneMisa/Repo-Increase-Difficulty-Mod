@@ -11,12 +11,12 @@ namespace IncreaseHardMod.Patches.Effects;
 /// Guest only, once per join: after this client's own level intro has finished, mark the avatars that were
 /// already playing as finished too. Normal level starts are untouched (no join happened).
 /// </summary>
-[HarmonyPatch(typeof(LoadingUI), "LateUpdate")] // LoadingUI has no Update: its all-players check runs in LateUpdate
+[HarmonyPatch(typeof(LoadingUI), nameof(LoadingUI.LateUpdate))] // LoadingUI has no Update: its all-players check runs in LateUpdate
 internal static class LateJoinLoadingPatch
 {
     private static bool _pending;
 
-    [HarmonyPatch(typeof(NetworkConnect), "OnJoinedRoom")]
+    [HarmonyPatch(typeof(NetworkConnect), nameof(NetworkConnect.OnJoinedRoom))]
     private static class JoinedPatch
     {
         [HarmonyPostfix] private static void Postfix() => _pending = PhotonNetwork.InRoom && !PhotonNetwork.IsMasterClient;

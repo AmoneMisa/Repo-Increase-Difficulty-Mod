@@ -23,7 +23,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// EnemyRigidbody on the object). Mass simulates identically on every client and the
 /// modifier set is synced, so behaviour stays consistent in co-op.
 /// </summary>
-[HarmonyPatch(typeof(NotValuableObject), "Start")]
+[HarmonyPatch(typeof(NotValuableObject), nameof(NotValuableObject.Start))]
 internal static class MonsterMassEffect
 {
     private sealed class MassState
@@ -92,7 +92,7 @@ internal static class MonsterMassEffect
 }
 
 /// <summary>Light monsters yield to one player's grab instead of fighting it with AI follow forces.</summary>
-[HarmonyPatch(typeof(EnemyRigidbody), "FixedUpdate")]
+[HarmonyPatch(typeof(EnemyRigidbody), nameof(EnemyRigidbody.FixedUpdate))]
 internal static class LightMonsterGrabEffect
 {
     [HarmonyPrefix]
@@ -117,7 +117,7 @@ internal static class LightMonsterGrabEffect
     }
 }
 
-[HarmonyPatch(typeof(PhysGrabObject), "PhysicsGrabbingManipulation")]
+[HarmonyPatch(typeof(PhysGrabObject), nameof(PhysGrabObject.PhysicsGrabbingManipulation))]
 internal static class MonsterGrabMassRefresh
 {
     [HarmonyPrefix]
@@ -140,7 +140,7 @@ internal static class MonsterGrabMassRefresh
 /// force using the original/clamped mass ratio. The current mass and the native mass floor are
 /// included so stun-time overrides and caps below one do not over-amplify impact damage.
 /// </summary>
-[HarmonyPatch(typeof(PhysGrabObjectImpactDetector), "FixedUpdate")]
+[HarmonyPatch(typeof(PhysGrabObjectImpactDetector), nameof(PhysGrabObjectImpactDetector.FixedUpdate))]
 internal static class LightMonsterImpactDamageFix
 {
     // Compensation factor (originalMass / clampedMass) per detector. ConditionalWeakTable lets the

@@ -6,7 +6,7 @@ namespace IncreaseHardMod.Economy;
 
 internal static class MoonPhysics
 {
-    [HarmonyPatch(typeof(EnemyRigidbody), "FixedUpdate")]
+    [HarmonyPatch(typeof(EnemyRigidbody), nameof(EnemyRigidbody.FixedUpdate))]
     private static class Lift
     {
         [HarmonyPrefix]
@@ -28,7 +28,7 @@ internal static class MoonPhysics
     private sealed class SoulHit { internal float Until; }
     private static readonly ConditionalWeakTable<PhysGrabObjectImpactDetector, SoulHit> SoulHits = new();
 
-    [HarmonyPatch(typeof(HurtCollider), "PhysObjectHurt")]
+    [HarmonyPatch(typeof(HurtCollider), nameof(HurtCollider.PhysObjectHurt))]
     private static class SoulImpact
     {
         [HarmonyPostfix]
@@ -42,7 +42,7 @@ internal static class MoonPhysics
         }
     }
 
-    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), "Break")]
+    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), nameof(PhysGrabObjectImpactDetector.Break))]
     private static class SoulValueDamage
     {
         [HarmonyPrefix, HarmonyPriority(Priority.First + 10)]

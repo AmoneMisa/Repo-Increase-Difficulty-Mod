@@ -27,7 +27,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// item gags, etc.): if some other override is currently active with a different
 /// target we leave it alone, and re-take control only once it has decayed.
 /// </summary>
-[HarmonyPatch(typeof(PlayerVoiceChat), "FixedUpdate")]
+[HarmonyPatch(typeof(PlayerVoiceChat), nameof(PlayerVoiceChat.FixedUpdate))]
 internal static class ChangeVoicesEffect
 {
     // How quickly audioSource.pitch eases toward our target, and how long each

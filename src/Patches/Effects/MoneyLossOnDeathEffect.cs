@@ -17,7 +17,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// authority that mutates the stat, and PunManager syncs the new value to
 /// everyone. The rolled MoneyLossPercent parameter (5-25) decides how much.
 /// </summary>
-[HarmonyPatch(typeof(PlayerAvatar), "PlayerDeathRPC")]
+[HarmonyPatch(typeof(PlayerAvatar), nameof(PlayerAvatar.PlayerDeathRPC))]
 internal static class MoneyLossOnDeathEffect
 {
     [HarmonyPostfix]

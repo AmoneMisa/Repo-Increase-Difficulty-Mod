@@ -358,7 +358,7 @@ internal static class GearEffects
         return !float.IsPositiveInfinity(nearest);
     }
 
-    [HarmonyPatch(typeof(ItemGun), "ShootBulletRPC")]
+    [HarmonyPatch(typeof(ItemGun), nameof(ItemGun.ShootBulletRPC))]
     private static class OnShot
     {
         [HarmonyPrefix]
@@ -456,7 +456,7 @@ internal static class GearEffects
 
     // Native tranq shots (Tranq Gun, Spritz) knock a hit player out; tell that player so their screen shows it.
     // Host-side, after the native bullet resolved: the player nearest the hit point within a small radius.
-    [HarmonyPatch(typeof(ItemGun), "ShootBulletRPC")]
+    [HarmonyPatch(typeof(ItemGun), nameof(ItemGun.ShootBulletRPC))]
     private static class TranqPlayerHit
     {
         [HarmonyPostfix]
@@ -533,7 +533,7 @@ internal static class GearEffects
         ModNetwork.BroadcastStickyTether(gun, pgo, pgo.transform.InverseTransformPoint(hit.point), 2f);
     }
 
-    [HarmonyPatch(typeof(ItemGun), "MuzzleFlash")]
+    [HarmonyPatch(typeof(ItemGun), nameof(ItemGun.MuzzleFlash))]
     private static class StickyMuzzleFlash
     {
         [HarmonyPrefix]
@@ -544,7 +544,7 @@ internal static class GearEffects
         }
     }
 
-    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), "Break")]
+    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), nameof(PhysGrabObjectImpactDetector.Break))]
     private static class PullDamage
     {
         [HarmonyPrefix]
@@ -563,7 +563,7 @@ internal static class GearEffects
     // and interleaved restore patches would leak the bonus into later, unfrozen hits.
     private static EnemyHealth _frozenMeleeTarget;
     private static float _frozenHitFactor = 1f;
-    [HarmonyPatch(typeof(HurtCollider), "EnemyHurt")]
+    [HarmonyPatch(typeof(HurtCollider), nameof(HurtCollider.EnemyHurt))]
     private static class FrozenDamage
     {
         [HarmonyPrefix]
@@ -581,7 +581,7 @@ internal static class GearEffects
         { _frozenMeleeTarget = __state.Target; _frozenHitFactor = __state.Factor; }
     }
 
-    [HarmonyPatch(typeof(EnemyHealth), "Hurt")]
+    [HarmonyPatch(typeof(EnemyHealth), nameof(EnemyHealth.Hurt))]
     private static class FrozenMeleeBonus
     {
         [HarmonyPrefix]

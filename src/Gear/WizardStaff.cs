@@ -63,7 +63,7 @@ internal sealed class WizardStaff : MonoBehaviour
     }
 
     // The native empty click also kicks the tip back and up; cancel it exactly for the staff.
-    [HarmonyLib.HarmonyPatch(typeof(ItemGun), "DryFireRPC")]
+    [HarmonyLib.HarmonyPatch(typeof(ItemGun), nameof(ItemGun.DryFireRPC))]
     private static class NoDryFireKick
     {
         [HarmonyLib.HarmonyPostfix]

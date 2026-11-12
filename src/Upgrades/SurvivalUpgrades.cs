@@ -169,7 +169,7 @@ internal static class SurvivalUpgrades
         }
     }
 
-    [HarmonyPatch(typeof(PhysGrabber), "PhysGrabOverChargeLogic")]
+    [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.PhysGrabOverChargeLogic))]
     private static class OverchargeRecovery
     {
         [HarmonyPostfix]

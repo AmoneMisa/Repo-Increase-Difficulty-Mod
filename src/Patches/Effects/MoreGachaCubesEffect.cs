@@ -24,14 +24,10 @@ namespace IncreaseHardMod.Patches.Effects;
 /// A static reentry flag stops our own re-invocations from triggering this Postfix
 /// again (which would recurse). Unity's single main thread makes the flag safe.
 /// </summary>
-[HarmonyPatch(typeof(ValuableDirector), "SpawnCosmeticWorldObject")]
+[HarmonyPatch(typeof(ValuableDirector), nameof(ValuableDirector.SpawnCosmeticWorldObject))]
 internal static class MoreGachaCubesEffect
 {
     private static bool _reentry;
-
-    // Cached handle to the (private) method so we can call the game's own logic.
-    private static readonly System.Reflection.MethodInfo SpawnMethod =
-        AccessTools.Method(typeof(ValuableDirector), "SpawnCosmeticWorldObject");
 
     [HarmonyPostfix]
     private static void Postfix(
@@ -52,9 +48,9 @@ internal static class MoreGachaCubesEffect
         _reentry = true;
         try
         {
-            var args = new object[] { _cosmeticRarity, _volumeIndex, _volumes };
+            // The game's own spawn logic (publicized), called again for each extra cube.
             for (int i = 0; i < extra; i++)
-                SpawnMethod.Invoke(__instance, args);
+                __instance.SpawnCosmeticWorldObject(_cosmeticRarity, _volumeIndex, _volumes);
         }
         finally
         {

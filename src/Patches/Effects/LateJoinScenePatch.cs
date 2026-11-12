@@ -39,7 +39,7 @@ internal static class LateJoinSceneState
         LevelGenerator.Instance.Level!=RunManager.instance.levelMainMenu;
 }
 
-[HarmonyPatch(typeof(NetworkConnect),"OnJoinedRoom")]
+[HarmonyPatch(typeof(NetworkConnect), nameof(NetworkConnect.OnJoinedRoom))]
 internal static class LateJoinRoomScenePatch
 {
     [HarmonyPostfix]
@@ -49,12 +49,12 @@ internal static class LateJoinRoomScenePatch
         LateJoinProgress.JoinedRoom();
     }
 }
-[HarmonyPatch(typeof(LevelGenerator),"Start")]
+[HarmonyPatch(typeof(LevelGenerator), nameof(LevelGenerator.Start))]
 internal static class LateJoinGenerationScenePatch
 {
     [HarmonyPrefix] private static void Prefix(){LateJoinSceneState.Apply();}
 }
-[HarmonyPatch(typeof(LobbyMenuOpen),"Update")]
+[HarmonyPatch(typeof(LobbyMenuOpen), nameof(LobbyMenuOpen.Update))]
 internal static class LateJoinLobbyOverlayPatch
 {
     [HarmonyPrefix] private static bool Prefix()
@@ -66,7 +66,7 @@ internal static class LateJoinLobbyOverlayPatch
     }
 }
 
-[HarmonyPatch(typeof(LevelGenerator),"PlayerSpawn")]
+[HarmonyPatch(typeof(LevelGenerator), nameof(LevelGenerator.PlayerSpawn))]
 internal static class LateJoinKeepExistingPlayersPatch
 {
     [HarmonyTranspiler] private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)

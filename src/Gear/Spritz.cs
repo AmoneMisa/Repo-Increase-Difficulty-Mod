@@ -18,7 +18,7 @@ internal static class SpritzItems
     internal const int PriceThousands = 5;
     private static bool _built;
 
-    [HarmonyPatch(typeof(StatsManager), "RunStartStats")]
+    [HarmonyPatch(typeof(StatsManager), nameof(StatsManager.RunStartStats))]
     private static class Register
     {
         [HarmonyPostfix, HarmonyPriority(Priority.High)]
@@ -139,7 +139,7 @@ internal static class SpritzItems
 
     // GetValue stores prices in thousands. Run after the mod's shop-economy scaling;
     // the requested $5,000 remains fixed even when a sale/tax or player-count multiplier is active.
-    [HarmonyPatch(typeof(ItemAttributes), "GetValue")]
+    [HarmonyPatch(typeof(ItemAttributes), nameof(ItemAttributes.GetValue))]
     private static class FixedPrice
     {
         [HarmonyPostfix, HarmonyPriority(Priority.Last)]
@@ -208,7 +208,7 @@ internal sealed class SpritzDose : MonoBehaviour
         if (Used && !_removing && SemiFunc.IsMasterClientOrSingleplayer()) FinishUse();
     }
 
-    [HarmonyPatch(typeof(ItemGun), "Shoot")]
+    [HarmonyPatch(typeof(ItemGun), nameof(ItemGun.Shoot))]
     private static class BlockReactivation
     {
         [HarmonyPrefix]
@@ -221,14 +221,14 @@ internal sealed class SpritzDose : MonoBehaviour
         }
     }
 
-    [HarmonyPatch(typeof(ItemGun), "MuzzleFlash")]
+    [HarmonyPatch(typeof(ItemGun), nameof(ItemGun.MuzzleFlash))]
     private static class NoGunFlash
     {
         [HarmonyPrefix]
         private static bool Prefix(ItemGun __instance) => __instance.GetComponent<SpritzDose>() == null;
     }
 
-    [HarmonyPatch(typeof(ItemGun), "ShootRPC")]
+    [HarmonyPatch(typeof(ItemGun), nameof(ItemGun.ShootRPC))]
     private static class UseOnce
     {
         [HarmonyPrefix]

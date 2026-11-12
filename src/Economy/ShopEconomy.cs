@@ -126,21 +126,21 @@ internal static class ShopEconomy
 
     // ---- price channels the game computes through ShopManager -----------------------------------
 
-    [HarmonyPatch(typeof(ShopManager), "UpgradeValueGet")]
+    [HarmonyPatch(typeof(ShopManager), nameof(ShopManager.UpgradeValueGet))]
     private static class UpgradePrice
     {
         [HarmonyPostfix]
         private static void Postfix(ref float __result) => __result = Mathf.Ceil(__result * UpgradeMult);
     }
 
-    [HarmonyPatch(typeof(ShopManager), "HealthPackValueGet")]
+    [HarmonyPatch(typeof(ShopManager), nameof(ShopManager.HealthPackValueGet))]
     private static class HealthPrice
     {
         [HarmonyPostfix]
         private static void Postfix(ref float __result) => __result = Mathf.Ceil(__result * HealthMult);
     }
 
-    [HarmonyPatch(typeof(ShopManager), "CrystalValueGet")]
+    [HarmonyPatch(typeof(ShopManager), nameof(ShopManager.CrystalValueGet))]
     private static class CrystalPrice
     {
         [HarmonyPostfix]

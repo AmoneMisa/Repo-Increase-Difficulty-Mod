@@ -13,7 +13,7 @@ namespace IncreaseHardMod.Patches;
 /// ceiling allows it. The room's MaxPlayers is authored by the host, so only the host needs
 /// this enabled; the patch is a no-op when disabled or when our value isn't larger.
 /// </summary>
-[HarmonyPatch(typeof(GameManager), "SetMaxPlayers")]
+[HarmonyPatch(typeof(GameManager), nameof(GameManager.SetMaxPlayers))]
 internal static class MaxPlayersPatch
 {
     [HarmonyPrefix]

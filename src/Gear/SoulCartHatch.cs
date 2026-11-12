@@ -26,7 +26,7 @@ internal sealed class SoulCartHatch : MonoBehaviour
         return value != null && value.dollarValueSet && value.dollarValueCurrent > 0f ? value : null;
     }
 
-    [HarmonyPatch(typeof(ItemValuableBox), "OnObjectsFound")]
+    [HarmonyPatch(typeof(ItemValuableBox), nameof(ItemValuableBox.OnObjectsFound))]
     private static class FilterIntake
     {
         private static bool Prefix(ItemValuableBox __instance, ref List<PhysGrabObject> foundObjects)
@@ -48,7 +48,7 @@ internal sealed class SoulCartHatch : MonoBehaviour
         }
     }
 
-    [HarmonyPatch(typeof(ItemValuableBox), "StateOpen")]
+    [HarmonyPatch(typeof(ItemValuableBox), nameof(ItemValuableBox.StateOpen))]
     private static class DiscardStaleSouls
     {
         private static void Prefix(ItemValuableBox __instance, List<PhysGrabObject> ___validObjectsInBox)
@@ -57,7 +57,7 @@ internal sealed class SoulCartHatch : MonoBehaviour
         }
     }
 
-    [HarmonyPatch(typeof(ItemValuableBox), "UpdateValue")]
+    [HarmonyPatch(typeof(ItemValuableBox), nameof(ItemValuableBox.UpdateValue))]
     private static class PreserveValueForLateJoin
     {
         private static bool Prefix(ItemValuableBox __instance, float newValue, PhotonView ___photonView)

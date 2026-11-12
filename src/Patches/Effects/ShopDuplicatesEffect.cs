@@ -17,7 +17,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// We only duplicate the regular-item pool (potentialItems), which is where guns/tools
 /// live; upgrades and health packs are intentionally left alone.
 /// </summary>
-[HarmonyPatch(typeof(ShopManager), "GetAllItemsFromStatsManager")]
+[HarmonyPatch(typeof(ShopManager), nameof(ShopManager.GetAllItemsFromStatsManager))]
 internal static class ShopDuplicatesEffect
 {
     [HarmonyPostfix]

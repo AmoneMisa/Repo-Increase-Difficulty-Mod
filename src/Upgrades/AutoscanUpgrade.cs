@@ -21,7 +21,7 @@ internal static class AutoscanUpgrade
         });
     }
 
-    [HarmonyPatch(typeof(ValuableDiscoverCustom), "Awake")]
+    [HarmonyPatch(typeof(ValuableDiscoverCustom), nameof(ValuableDiscoverCustom.Awake))]
     private static class TrackCustomTarget
     {
         [HarmonyPostfix]

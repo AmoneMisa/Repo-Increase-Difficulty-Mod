@@ -12,9 +12,7 @@ internal sealed class EconomicSurpriseConfig
 
     internal static EconomicSurpriseConfig Bind(ConfigFile cfg)
     {
-        var orphans = typeof(ConfigFile).GetProperty("OrphanedEntries",
-            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(cfg)
-            as Dictionary<ConfigDefinition, string>;
+        var orphans = cfg.OrphanedEntries; // BepInEx keeps it protected (publicized)
         string Raw(string section, string key)
         {
             var definition = new ConfigDefinition(section, key);

@@ -60,7 +60,7 @@ internal static class InventoryItemVisuals
         }
     }
 
-    [HarmonyPatch(typeof(ItemAttributes), "Start")]
+    [HarmonyPatch(typeof(ItemAttributes), nameof(ItemAttributes.Start))]
     private static class PerInstanceSprite
     {
         [HarmonyPrefix]
@@ -76,7 +76,7 @@ internal static class InventoryItemVisuals
         }
     }
 
-    [HarmonyPatch(typeof(InventorySpot), "Update")]
+    [HarmonyPatch(typeof(InventorySpot), nameof(InventorySpot.Update))]
     private static class AlwaysShowBattery
     {
         [HarmonyPostfix]

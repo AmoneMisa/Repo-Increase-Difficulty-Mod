@@ -40,7 +40,7 @@ internal static class DeathProtectionUpgrade
         });
     }
 
-    [HarmonyPatch(typeof(PlayerHealth), "Hurt")]
+    [HarmonyPatch(typeof(PlayerHealth), nameof(PlayerHealth.Hurt))]
     private static class HurtPatch
     {
         // __instance fields (health, playerAvatar) are accessible via Publicizer.

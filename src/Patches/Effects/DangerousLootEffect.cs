@@ -24,7 +24,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// boosted damage consistently. Standalone level traps (LightningTrap, ToiletTrap,
 /// …) are not ValuableObjects and are intentionally left alone.
 /// </summary>
-[HarmonyPatch(typeof(HurtCollider), "PlayerHurt")]
+[HarmonyPatch(typeof(HurtCollider), nameof(HurtCollider.PlayerHurt))]
 internal static class DangerousLootEffect
 {
     private static bool _boosted;

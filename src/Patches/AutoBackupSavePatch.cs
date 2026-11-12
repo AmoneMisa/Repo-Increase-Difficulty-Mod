@@ -21,7 +21,7 @@ namespace IncreaseHardMod.Patches;
 /// <c>StatsManager.SaveFileDelete</c> so the manual "delete save" menu button keeps
 /// working normally.
 /// </summary>
-[HarmonyPatch(typeof(DataDirector), "SaveDeleteCheck")]
+[HarmonyPatch(typeof(DataDirector), nameof(DataDirector.SaveDeleteCheck))]
 internal static class AutoBackupSavePatch
 {
     [HarmonyPrefix]

@@ -17,7 +17,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// The multiplier is 1 + PricePerExtraPlayer * (players - BaselinePlayers), clamped so it
 /// never drops below vanilla for small lobbies.
 /// </summary>
-[HarmonyPatch(typeof(ItemAttributes), "GetValue")]
+[HarmonyPatch(typeof(ItemAttributes), nameof(ItemAttributes.GetValue))]
 internal static class ShopPriceScaleEffect
 {
     [HarmonyPostfix]

@@ -18,7 +18,7 @@ internal static class DeathHeadPerks
     /// <summary>Jump distance multiplier for a Head Leap level (1 = the game's own jump, 2 at level 5).</summary>
     internal static float LeapDistance(int level) => 1f + LeapDistancePerLevel * Mathf.Max(0, level);
 
-    [HarmonyPatch(typeof(SpectateCamera), "HeadEnergyLogic")]
+    [HarmonyPatch(typeof(SpectateCamera), nameof(SpectateCamera.HeadEnergyLogic))]
     private static class Recharge
     {
         [HarmonyPostfix]
@@ -32,7 +32,7 @@ internal static class DeathHeadPerks
         }
     }
 
-    [HarmonyPatch(typeof(PlayerDeathHead), "FixedUpdate")]
+    [HarmonyPatch(typeof(PlayerDeathHead), nameof(PlayerDeathHead.FixedUpdate))]
     private static class Leap
     {
         [HarmonyPrefix]

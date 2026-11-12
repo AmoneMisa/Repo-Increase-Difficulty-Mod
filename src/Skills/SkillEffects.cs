@@ -130,7 +130,7 @@ internal static class SkillEffects
 
     // The native laser's damage collider can live under SemiLaser rather than
     // under the cart. Tag that reference explicitly instead of relying on parents.
-    [HarmonyPatch(typeof(ItemCartLaser), "Update")]
+    [HarmonyPatch(typeof(ItemCartLaser), nameof(ItemCartLaser.Update))]
     private static class LaserSource
     {
         [HarmonyPrefix]
@@ -149,7 +149,7 @@ internal static class SkillEffects
         }
     }
 
-    [HarmonyPatch(typeof(ItemGunLaser), "Update")]
+    [HarmonyPatch(typeof(ItemGunLaser), nameof(ItemGunLaser.Update))]
     private static class HandheldLaserSource
     {
         [HarmonyPrefix]
@@ -292,7 +292,7 @@ internal static class SkillEffects
         Plugin.Log.LogInfo($"[Skills] Flashlight colour for {(owner != null ? SemiFunc.PlayerGetName(owner) : "?")}: {BeamColourNames[colour]}{(owner != null && owner.isLocal ? " (you)" : "")}.");
     }
 
-    [HarmonyPatch(typeof(FlashlightController), "Update")]
+    [HarmonyPatch(typeof(FlashlightController), nameof(FlashlightController.Update))]
     private static class FlashlightBeam
     {
         [HarmonyPostfix]

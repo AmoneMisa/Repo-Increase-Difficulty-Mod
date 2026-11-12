@@ -17,7 +17,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// get reverted. This targets valuables only (it's a ValuableObject patch), and mass
 /// simulates identically on every client, so the effect stays consistent in co-op.
 /// </summary>
-[HarmonyPatch(typeof(ValuableObject), "Start")]
+[HarmonyPatch(typeof(ValuableObject), nameof(ValuableObject.Start))]
 internal static class LootMassEffect
 {
     [HarmonyPostfix]

@@ -27,7 +27,7 @@ internal static class ContractPerks
 
     private static Vector3 _cartBefore;
 
-    [HarmonyPatch(typeof(PhysGrabCart), "CartSteer")]
+    [HarmonyPatch(typeof(PhysGrabCart), nameof(PhysGrabCart.CartSteer))]
     private static class CartPush
     {
         [HarmonyPrefix]
@@ -76,7 +76,7 @@ internal static class ContractPerks
 
     // ------------------------------------------------------------------ calm monsters
 
-    [HarmonyPatch(typeof(EnemyStateChase), "Update")]
+    [HarmonyPatch(typeof(EnemyStateChase), nameof(EnemyStateChase.Update))]
     private static class CalmChase
     {
         [HarmonyPostfix]
@@ -130,14 +130,14 @@ internal static class ContractPerks
         [HarmonyPostfix] private static void Postfix() => _noisy = null;
     }
 
-    [HarmonyPatch(typeof(PlayerAvatar), "LandRPC")]
+    [HarmonyPatch(typeof(PlayerAvatar), nameof(PlayerAvatar.LandRPC))]
     private static class LandingNoise
     {
         [HarmonyPrefix] private static void Prefix(PlayerAvatar __instance) => _noisy = __instance;
         [HarmonyPostfix] private static void Postfix() => _noisy = null;
     }
 
-    [HarmonyPatch(typeof(PlayerVoiceChat), "Update")]
+    [HarmonyPatch(typeof(PlayerVoiceChat), nameof(PlayerVoiceChat.Update))]
     private static class VoiceNoise
     {
         [HarmonyPrefix] private static void Prefix(PlayerVoiceChat __instance) => _noisy = __instance.playerAvatar;

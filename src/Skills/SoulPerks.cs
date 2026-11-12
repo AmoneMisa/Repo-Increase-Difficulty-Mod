@@ -21,7 +21,7 @@ internal static class SoulPerks
 
     private static bool FromSoul(Component c) => c != null && c.GetComponentInParent<SoulBlast>() != null;
 
-    [HarmonyPatch(typeof(EnemyValuableExplosion), "Start")]
+    [HarmonyPatch(typeof(EnemyValuableExplosion), nameof(EnemyValuableExplosion.Start))]
     private static class MarkBlast
     {
         [HarmonyPostfix]
@@ -45,7 +45,7 @@ internal static class SoulPerks
         }
     }
 
-    [HarmonyPatch(typeof(HurtCollider), "PlayerHurt")]
+    [HarmonyPatch(typeof(HurtCollider), nameof(HurtCollider.PlayerHurt))]
     private static class WardBlast
     {
         [HarmonyPrefix]
