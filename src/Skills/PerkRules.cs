@@ -7,6 +7,9 @@ public static class PerkRules
 {
     internal const float FlameDamageCap = .30f, LaserDamageCap = .35f;
     internal static float CappedWeaponBonus(float configured, float cap) => Math.Min(Math.Max(0f, configured), cap);
+    /// <summary>Wide View: degrees added to the camera's base field of view, +5 per rank, never more than +15.</summary>
+    internal const float FovPerRank = 5f, FovCap = 15f;
+    internal static float FovBonus(int rank) => Math.Min(FovCap, FovPerRank * Math.Clamp(rank, 0, 3));
     internal static float FireRate(int rank) => 1f + .25f * Math.Clamp(rank, 0, 3) / 3f;
     internal static float DurationResistance(int rank) => rank <= 0 ? 0f : rank == 1 ? .2f : rank == 2 ? .35f : .5f;
     internal static float SapperFactor(int rank) => rank <= 0 ? 1f : rank == 1 ? .85f : rank == 2 ? .75f : .65f;

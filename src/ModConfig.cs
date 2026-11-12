@@ -347,6 +347,7 @@ public static class ModConfig
         SkillDesperationPerLevel, SkillDesperationThreshold, SkillHeavyHitterPerLevel, SkillMedicPerLevel, SkillMedicRadius,
         SkillBatterySaverPerLevel, SkillLuckyCrystalBonus, SkillCrouchSpeedPerLevel, SkillVampireMax;
     public static ConfigEntry<int> SkillLuckyBoxShift;
+    public static ConfigEntry<bool> SkillWideViewOn;
 
     // --- Level Info panel ---
     // Right-side overlay logging each level change (number + name + rolled surprises),
@@ -1134,6 +1135,8 @@ public static class ModConfig
             "Run money (in $K) to refund only your trade-off skills, so you can pick others. Shop or truck only. 0 = free.");
         SkillPointBasePrice = BindInt(cfg, "Skill Tree", "SkillPointBasePrice", 6000, 500, 1000000,
             "Approximate shop price of the first Skill Point; the game raises it with each one the team buys, like any upgrade. Takes effect on restart.");
+        SkillWideViewOn = cfg.Bind("Skill Tree", "WideViewOn", true,
+            "Wide View perk: use the wider camera view you learned. Also switched by right-clicking the perk in the skill tree. Only affects your own screen.");
         SkillTreeKey = cfg.Bind("Skill Tree", "OpenKey", UnityEngine.KeyCode.K,
             "Key that opens and closes the skill tree during a run (the Esc menu also has a SKILL TREE button).");
         SkillRootBonus = BindFloat(cfg, "Skill Tree", "RootDamageBonus", .05f, 0f, .5f,

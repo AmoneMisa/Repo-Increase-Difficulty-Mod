@@ -44,14 +44,14 @@ internal sealed class SkillTreeScreen : MonoBehaviour
     };
     private static readonly Dictionary<string, string> GroupNames = new()
     {
-        ["Map"] = "MAP", ["Ping"] = "PING", ["Flashlight"] = "FLASHLIGHT", ["Damage"] = "DAMAGE", ["Guns"] = "GUN CHARGES",
+        ["Map"] = "MAP", ["Ping"] = "PING", ["Flashlight"] = "FLASHLIGHT", ["Vision"] = "VISION", ["Damage"] = "DAMAGE", ["Guns"] = "GUN CHARGES",
         ["Tech"] = "TECH", ["Survival"] = "SURVIVAL", ["Gear"] = "GEAR", ["Support"] = "SUPPORT", ["Weapons"] = "WEAPONS", ["Status"] = "STATUS EFFECTS", ["Grenades"] = "GRENADES",
         ["Contracts"] = "EARNED FROM SPECIAL CONTRACTS", ["Instincts"] = "INSTINCTS · SHORT BUFFS FROM CONTRACTS",
         ["TradeOffs1"] = "TRADE-OFFS I · PICK ONE", ["TradeOffs2"] = "TRADE-OFFS II · PICK ONE", ["TradeOffs3"] = "TRADE-OFFS III · PICK ONE",
     };
     private static readonly Dictionary<string, string> GroupNamesRu = new()
     {
-        ["Map"] = "КАРТА", ["Ping"] = "ПИНГ", ["Flashlight"] = "ФОНАРЬ", ["Damage"] = "УРОН", ["Guns"] = "ЗАРЯДЫ ОРУЖИЯ",
+        ["Map"] = "КАРТА", ["Ping"] = "ПИНГ", ["Flashlight"] = "ФОНАРЬ", ["Vision"] = "ОБЗОР", ["Damage"] = "УРОН", ["Guns"] = "ЗАРЯДЫ ОРУЖИЯ",
         ["Tech"] = "ТЕХНИКА", ["Survival"] = "ВЫЖИВАНИЕ", ["Gear"] = "СНАРЯЖЕНИЕ", ["Support"] = "ПОДДЕРЖКА", ["Weapons"] = "ОРУЖИЕ", ["Status"] = "ЭФФЕКТЫ", ["Grenades"] = "ГРАНАТЫ",
         ["Contracts"] = "НАГРАДЫ ЗА ОСОБЫЕ КОНТРАКТЫ", ["Instincts"] = "ИНСТИНКТЫ · КОРОТКИЕ БАФФЫ ЗА КОНТРАКТЫ",
         ["TradeOffs1"] = "КОМПРОМИССЫ I · ОДИН НА ВЫБОР", ["TradeOffs2"] = "КОМПРОМИССЫ II · ОДИН НА ВЫБОР", ["TradeOffs3"] = "КОМПРОМИССЫ III · ОДИН НА ВЫБОР",
@@ -119,6 +119,7 @@ internal sealed class SkillTreeScreen : MonoBehaviour
 
         _view.Tick(Input.mousePosition);
         if (Input.GetMouseButtonDown(0)) Click();
+        if (Input.GetMouseButtonDown(1) && _view.HoveredNode == C.WideView) WideView.Toggle();
         Draw();
     }
 
@@ -171,6 +172,12 @@ internal sealed class SkillTreeScreen : MonoBehaviour
         {
             int next = (SkillEffects.BeamColourIndex(SemiFunc.PlayerAvatarLocal()) + 1) % SkillEffects.BeamColours.Length;
             SkillEffects.ChooseBeamColour(next);
+            return;
+        }
+        // Wide View at max: a left click switches it too (right-click works at any learned level).
+        if (id == C.WideView && SkillEffects.LocalLevel(id) >= C.Find(id).MaxLevel)
+        {
+            WideView.Toggle();
             return;
         }
         SkillStore.RequestBuy(id);
@@ -227,6 +234,8 @@ internal sealed class SkillTreeScreen : MonoBehaviour
             bool hover = _view.HoveredNode == node.Id;
             string value = node.Id == C.BeamColour && level > 0 ? SkillEffects.BeamColourNames[SkillEffects.BeamColourIndex(local)].ToUpperInvariant()
                 : $"[{level}/{node.MaxLevel}]";
+            bool wideOff = node.Id == C.WideView && level > 0 && !WideView.Enabled;
+            if (wideOff) value += L(" OFF", " ВЫКЛ");
             // A trade-off still behind its page gate shows how far along the page is.
             if (node.Tier > 0 && level == 0 && block == BuyBlock.GateNotMet)
                 value = $"{SkillRules.PageSpent(loadout, node.Page)}/{TradeOffRules.Gate(node.Page, node.Tier)}";
@@ -235,6 +244,7 @@ internal sealed class SkillTreeScreen : MonoBehaviour
             else if (level > 0) { look.Edge = accent; look.Fill = accent * new Color(.2f, .2f, .2f, .95f); look.Text = Color.white; look.ValueColour = Color.white; }
             else if (locked) { look.Edge = new Color(.35f, .35f, .35f, .9f); look.Fill = new Color(.05f, .05f, .05f, .95f); look.Text = new Color(.5f, .5f, .5f); look.ValueColour = look.Text; }
             else { look.Edge = accent * new Color(.7f, .7f, .7f, 1f); look.Fill = new Color(.06f, .06f, .07f, .95f); look.Text = new Color(.85f, .85f, .85f); look.ValueColour = look.Text; }
+            if (wideOff) look.ValueColour = new Color(.6f, .6f, .6f);
             if (affordable && canSpend && !maxed) look.Edge = Color.Lerp(look.Edge, Color.white, .35f * pulse);
             if (hover) { look.Edge = Color.white; look.Fill = Color.Lerp(look.Fill, accent, .25f); }
             _view.SetNode(node.Id, look);
@@ -283,11 +293,15 @@ internal sealed class SkillTreeScreen : MonoBehaviour
             text.Append(L("   ·   Needs: ", "   ·   Нужно: ")).Append(required != null ? SkillText.Name(required) : need);
         }
         text.Append("</color>   ");
+        if (node.Id == C.WideView && level > 0)
+            text.Append(WideView.Enabled ? L("<color=#80E6FF>On: right-click to turn off</color>   ", "<color=#80E6FF>Включено: правый клик выключает</color>   ")
+                : L("<color=#BBBBBB>Off: right-click to turn on</color>   ", "<color=#BBBBBB>Выключено: правый клик включает</color>   "));
         string state = SkillRules.CanBuy(loadout, node.Id) switch
         {
             BuyBlock.None => canSpend ? L("<color=#80FF80>Click to learn</color>", "<color=#80FF80>Нажмите, чтобы изучить</color>")
                 : L("<color=#FFCC4D>Learn it in the shop or truck</color>", "<color=#FFCC4D>Изучается в магазине или грузовике</color>"),
             BuyBlock.Maxed => node.Id == C.BeamColour ? L("<color=#80E6FF>Click to change colour</color>", "<color=#80E6FF>Нажмите, чтобы сменить цвет</color>")
+                : node.Id == C.WideView ? L("<color=#FFD966>Maxed: click to switch</color>", "<color=#FFD966>Максимум: нажмите, чтобы переключить</color>")
                 : L("<color=#FFD966>Maxed</color>", "<color=#FFD966>Максимум</color>"),
             BuyBlock.MissingPrerequisite => L("<color=#FF7373>Locked: learn the perk before it first</color>", "<color=#FF7373>Закрыто: сначала изучите предыдущий навык</color>"),
             BuyBlock.NotEnoughPoints => L("<color=#FF7373>Not enough points</color>", "<color=#FF7373>Не хватает очков</color>"),

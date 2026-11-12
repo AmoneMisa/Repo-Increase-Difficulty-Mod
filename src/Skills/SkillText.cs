@@ -74,6 +74,7 @@ internal static class SkillText
             case C.Brightness: return $"+{Pct(ModConfig.SkillFlashBrightnessPerLevel.Value)} brighter beam per level.";
             case C.FlashStun: return $"Needs maxed Brightness. Press [{ModConfig.FlashStunKey.Value}] to flare your flashlight: monsters in the beam are stunned for {ModConfig.FlashStunSeconds.Value:0.#} s. Level 1 stuns tier 1 monsters, level 2 also tier 2, level 3 every tier. {ModConfig.FlashStunCooldown.Value:0} s cooldown.";
             case C.BeamColour: return "Choose a beam colour your team sees too. Click again to change it.";
+            case C.WideView: return $"Your camera sees {PerkRules.FovPerRank:0} degrees wider per level (+{PerkRules.FovCap:0} at max). Sprint, map and other zooms still work. Right-click to turn it off or on; only your screen changes.";
 
             case C.Brawler: return $"+{Pct(root)} melee, grenade and tumble damage.";
             case C.GrenadeDamage: return $"+{Pct(PerLevel(ModConfig.GrenadeDamagePercentPerLevel.Value, ModConfig.GrenadeDamageMaxLevel.Value, id))} grenade damage per level.";
@@ -245,6 +246,7 @@ internal static class SkillText
             case C.Brightness: return $"Луч на {Pct(ModConfig.SkillFlashBrightnessPerLevel.Value)} ярче за уровень.";
             case C.FlashStun: return $"Нужна максимальная яркость. Нажмите [{ModConfig.FlashStunKey.Value}], чтобы фонарь вспыхнул: монстры в луче оглушены на {ModConfig.FlashStunSeconds.Value:0.#} с. 1 уровень оглушает монстров 1-го уровня опасности, 2 — ещё и 2-го, 3 — всех. Перезарядка {ModConfig.FlashStunCooldown.Value:0} с.";
             case C.BeamColour: return "Выберите цвет луча, его видит и команда. Нажмите ещё раз, чтобы сменить.";
+            case C.WideView: return $"Обзор камеры шире на {PerkRules.FovPerRank:0} градусов за уровень (+{PerkRules.FovCap:0} на максимуме). Приближение при беге, карте и прочем работает как обычно. Правый клик включает и выключает навык; меняется только ваш экран.";
 
             case C.Brawler: return $"+{Pct(root)} к урону в ближнем бою, гранатами и кувырком.";
             case C.GrenadeDamage: return $"+{Pct(PerLevel(ModConfig.GrenadeDamagePercentPerLevel.Value, ModConfig.GrenadeDamageMaxLevel.Value, id))} к урону гранат за уровень.";

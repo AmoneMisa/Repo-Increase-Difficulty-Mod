@@ -6,7 +6,7 @@ int checks = 0;
 void Check(bool ok, string name) { if (!ok) throw new Exception("FAIL " + name); Console.WriteLine("PASS " + name); checks++; }
 
 // ---------------------------------------------------------------- catalogue
-Check(C.NormalPageCost(SkillPage.Recon) == 40 && C.NormalPageCost(SkillPage.Combat) == 73 &&
+Check(C.NormalPageCost(SkillPage.Recon) == 43 && C.NormalPageCost(SkillPage.Combat) == 73 &&
       C.NormalPageCost(SkillPage.Survival) == 67 && C.NormalPageCost(SkillPage.Utility) == 55 && C.NormalPageCost(SkillPage.Arsenal) == 54, "Normal page costs include weapon rate and convoy perks");
 Check(C.Find(C.LightBasket).MaxLevel == 5 && C.Find(C.LightBasket).Cost == 1, "Light Basket has five affordable ranks");
 Check(C.Find(C.Hemostasis).Requires.SequenceEqual(new[]{C.Survivor}) && C.Find(C.LinkOperator).Requires.SequenceEqual(new[]{C.Technician}), "New perks have the intended prerequisite");
@@ -28,9 +28,16 @@ foreach (var (id, page, cost) in new[] { (C.Grounding, SkillPage.Survival, 1), (
     (C.GoldenNose, SkillPage.Utility, 1), (C.SoulHunter, SkillPage.Utility, 2) })
     Check(C.Find(id) != null && C.Find(id).Page == page && C.Find(id).MaxLevel == 3 && C.Find(id).Cost == cost && id.StartsWith("IHM_ST_"), "Monster perk " + id + " is in the tree with 3 levels");
 Check(System.Array.IndexOf(C.Find(C.DodgeRoll).Requires, C.Evasion) >= 0, "Dodge Roll requires Evasion");
-Check(C.PageCost(SkillPage.Recon) == 46 && C.PageCost(SkillPage.Combat) == 79 && C.PageCost(SkillPage.Survival) == 73 &&
+Check(C.PageCost(SkillPage.Recon) == 49 && C.PageCost(SkillPage.Combat) == 79 && C.PageCost(SkillPage.Survival) == 73 &&
       C.PageCost(SkillPage.Utility) == 61 && C.PageCost(SkillPage.Arsenal) == 60, "Each page adds one trade-off per tier (1+2+3 points)");
-Check(C.TotalCost() == 366, "Whole tree includes the new firing-rate perk (Stone Resilience retired)");
+Check(C.TotalCost() == 369, "Whole tree includes the firing-rate and Wide View perks (Stone Resilience retired)");
+Check(C.Find(C.WideView) is { Page: SkillPage.Recon, Branch: "Vision", Cost: 1, MaxLevel: 3, Root: true, Tier: 0, QuestOnly: false } &&
+      C.Find(C.WideView).Requires.Length == 0 && C.Find(C.WideView).NameRu.Length > 0, "Wide View is a 3-rank root perk on the first page");
+Check(PerkRules.FovBonus(0) == 0f && PerkRules.FovBonus(1) == 5f && PerkRules.FovBonus(3) == 15f && PerkRules.FovBonus(99) == 15f &&
+      PerkRules.FovBonus(-2) == 0f, "Wide View adds 5 degrees per rank, capped at +15");
+var wide = new SkillLoadout { Earned = 3 };
+Check(SkillRules.Buy(wide, C.WideView, 3) == BuyBlock.None && SkillRules.CanBuy(wide, C.WideView) == BuyBlock.Maxed &&
+      SkillRules.PageSpent(wide, SkillPage.Recon) == 3, "Wide View buys from the start and counts toward Recon gates");
 Check(C.Find("IHM_ST_StoneResilience") == null && System.Array.IndexOf(C.Retired, "IHM_ST_StoneResilience") >= 0, "Stone Resilience is retired: not buyable, save key still registered");
 var refund = new SkillLoadout { Earned = 10 }; refund.Bought["IHM_ST_StoneResilience"] = 3;
 Check(refund.Spent == 0 && refund.Available == 10, "Points spent on a retired perk count as unspent again");

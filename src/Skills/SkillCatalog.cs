@@ -20,6 +20,7 @@ internal static class SkillCatalog
         Weight = P + "Weight", Threat = P + "Threat", PingRange = P + "PingRange", PingPath = P + "PingPath", PingCompass = P + "PingCompass";
     public const string FlashTuning = P + "FlashTuning", BeamWidth = P + "BeamWidth", Brightness = P + "Brightness", BeamColour = P + "BeamColour",
         FlashStun = P + "FlashStun";
+    public const string WideView = P + "WideView";
     // Combat
     public const string Brawler = P + "Brawler", GrenadeDamage = P + "GrenadeDamage", MeleeDamage = P + "MeleeDamage", TumbleDamage = P + "TumbleDamage",
         Vampirism = P + "Vampirism";
@@ -237,6 +238,8 @@ internal static class SkillCatalog
         Add(combat, "Tech", GhostConvoy, "Ghost Convoy", "Призрачный обоз", 2, 1, LinkOperator);
         Add(arsenal, "Weapons", LaserGunDamage, "Laser Gun Damage", "Урон лазерного оружия", 1, 3, Marksman);
         Add(arsenal, "Weapons", RapidFire, "Rapid Fire", "Скорострельность", 1, 3, Marksman);
+        // Wider camera view, local to each player and switchable in the tree (see WideView.cs).
+        Add(recon, "Vision", WideView, "Wide View", "Широкий обзор", 1, 3, root: true);
     }
 
     // Trade-off skills, page by page. The numbers live only here; the tree text is the Up and Down lines.

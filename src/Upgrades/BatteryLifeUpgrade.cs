@@ -45,6 +45,7 @@ internal static class BatteryLifeUpgrade
         public Category Category = (Category)(-1); // -1 = not yet resolved
         public int BaseBars = -1;       // the gun's native bar count, captured before we add any
         public int Level;               // last known upgrade level of the gun's user
+        public float GunDrainFactor = 1f; // last known battery trade-off factor of the gun's user (whole-bar guns)
         public float BarsCheckTimer;
         public int RemoteBars = -1;
     }
@@ -133,13 +134,18 @@ internal static class BatteryLifeUpgrade
     }
 
     // Shots one full battery gives a gun, before the upgrade: whole bars for bar-per-shot guns, else 100 / drain.
-    private static float BaseShots(ItemGun gun, int baseBars)
-    {
-        float shots = gun.batteryDrainFullBar
-            ? baseBars / (float)Mathf.Max(1, gun.batteryDrainFullBars)
-            : 100f / Mathf.Max(0.01f, gun.batteryDrain);
-        return Mathf.Max(1f, shots);
-    }
+    private static float BaseShots(ItemGun gun, int baseBars) =>
+        UtilityGearRules.ShotsPerCharge(gun.hasOneShot, gun.batteryDrainFullBar, gun.batteryDrainFullBars, baseBars, gun.batteryDrain);
+
+    // A gun whose shots remove whole bars (every mod gun, and vanilla full-bar or state-fired guns). Its bars must be
+    // exactly the shots left, so upgrades and battery trade-offs change only its bar count, never the cost of a shot.
+    private static bool SpendsWholeBars(ItemGun gun) =>
+        gun != null && UtilityGearRules.SpendsWholeBars(gun.hasOneShot, gun.batteryDrainFullBar);
+
+    // Battery trade-offs of the gun's user (Overclock: slower; Overdrive, Sharpshooter: dearer). Skill levels are
+    // synced, so host and clients compute the same bar count.
+    private static float GunDrainFactor(PlayerAvatar user) =>
+        user == null || !ModConfig.PlayerUpgradesEnabled.Value ? -1f : Skills.TradeOffs.Factor(user, Skills.Fx.BatteryGuns);
 
     // The vanilla Handgun is the reference gun: it gets exactly GunExtraBulletsPerLevel extra shots per level.
     private const string ReferenceGun = "Item Gun Handgun";
@@ -186,8 +192,14 @@ internal static class BatteryLifeUpgrade
 
     // Bars the widget should show: the same proportional growth as the shots, so a fuller bar reads as
     // "more shots" for bar-per-shot and continuous-drain (laser) guns alike.
-    private static int TargetGunBars(ItemGun gun, int baseBars, int level)
+    private static int TargetGunBars(ItemGun gun, int baseBars, int level, float drainFactor)
     {
+        if (SpendsWholeBars(gun))
+        {
+            float shots = BaseShots(gun, baseBars);
+            return UtilityGearRules.UpgradedBars(baseBars, shots, level > 0 ? ExtraShots(level, shots) : 0f, drainFactor,
+                UtilityGearRules.BarsPerShot(gun.hasOneShot, gun.batteryDrainFullBar, gun.batteryDrainFullBars), MaxGunBars);
+        }
         if (level <= 0) return baseBars;
         float baseShots = BaseShots(gun, baseBars);
         float scaled = baseBars * (baseShots + ExtraShots(level, baseShots)) / baseShots;
@@ -240,10 +252,13 @@ internal static class BatteryLifeUpgrade
         var gun = IsGun(state.Category) ? battery.GetComponent<ItemGun>() : null;
         if (IsGun(state.Category) && gun == null) return;
         int baseBars = BaseBars(battery, state);
-        int level = LevelOf(UserOf(battery), state.Category);
+        var user = UserOf(battery);
+        int level = LevelOf(user, state.Category);
         if (level >= 0) state.Level = level; // nobody using it: keep the last user's bars
+        float factor = gun != null ? GunDrainFactor(user) : -1f;
+        if (factor > 0f) state.GunDrainFactor = factor;
         int target = !ModConfig.PlayerUpgradesEnabled.Value ? baseBars
-            : gun != null ? TargetGunBars(gun, baseBars, state.Level)
+            : gun != null ? TargetGunBars(gun, baseBars, state.Level, state.GunDrainFactor)
             : TargetDroneBars(baseBars, state.Level);
         // A late joiner's perk/last-user data may still be arriving. Never replace
         // the host's capacity with a speculative local zero-perk calculation.
@@ -294,6 +309,8 @@ internal static class BatteryLifeUpgrade
         var category = _states.GetOrCreateValue(battery).Category;
         if ((int)category == -1) category = Resolve(battery);
         if (IsGun(category) && Challenges.ChallengeManager.FreeGunBattery) return 0f; // Target Practice: free shots
+        // Whole-bar guns carry their trade-offs in the bar count (SyncUpgradeBars): a shot costs exactly its bars.
+        if (IsGun(category) && SpendsWholeBars(battery.GetComponent<ItemGun>())) return perks;
         var fx = category == Category.Drone ? Skills.Fx.BatteryDrones : IsGun(category) ? Skills.Fx.BatteryGuns :
             category == Category.Other ? Skills.Fx.BatteryItems : (Skills.Fx?)null;
         return fx == null ? perks : perks * Skills.TradeOffs.Factor(UserOf(battery), fx.Value);
@@ -319,15 +336,17 @@ internal static class BatteryLifeUpgrade
             return level <= 0 ? 1f : 1f / (1f + Mathf.Clamp01(ModConfig.DroneBatteryPercentPerLevel.Value * level));
         }
 
-        // Guns: the bar count already grew with the level (SyncUpgradeBars), so a bar-per-shot gun's native
-        // RemoveFullBar is usually exact. Whatever the bars don't cover (laser drain, the MaxGunBars cap,
-        // fractional config values) is settled as a cheaper drain: desired cost / native cost.
+        // Guns: the bar count already grew with the level (SyncUpgradeBars). A gun that spends whole bars keeps the
+        // native RemoveFullBar cost untouched, so its bars stay exactly the shots left (a fractional discount on top
+        // would leave charge between bars: the display and the real charge would drift apart). Only percent-drain
+        // guns settle the extra shots as a cheaper drain: desired cost / native cost.
         var gun = battery.GetComponent<ItemGun>();
         if (gun == null) return 1f;
         var state = _states.GetOrCreateValue(battery);
         if ((int)state.Category == -1) state.Category = category;
         if (level >= 0) state.Level = level;
         SyncUpgradeBars(battery, state);
+        if (SpendsWholeBars(gun)) return 1f;
         int baseBars = BaseBars(battery, state);
         float baseShots = BaseShots(gun, baseBars);
         float desiredCost = 100f / (baseShots + ExtraShots(state.Level, baseShots));

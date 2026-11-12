@@ -221,15 +221,14 @@ internal static class GearItems
         var gun = go.GetComponent<ItemGun>();
         gun.numberOfBullets = 1;
         gun.gunRandomSpread = 0f;
-        if (kind == GearKind.Net)
+        OneBarPerShot(gun, go.GetComponent<ItemBattery>(), name, kind switch
         {
-            // One battery bar per net.
-            gun.batteryDrainFullBar = true;
-            gun.batteryDrainFullBars = 1;
-            var battery = go.GetComponent<ItemBattery>();
-            if (battery != null) battery.batteryBars = Mathf.Max(1, ModConfig.NetShots.Value);
+            GearKind.Net => Mathf.Max(1, ModConfig.NetShots.Value),
+            GearKind.Poison => -2, // a third fewer shots than the donor
+            _ => -1,               // as many shots as the donor
+        });
+        if (kind == GearKind.Net)
             gun.gunRecoilForce *= .6f;
-        }
         if (kind == GearKind.Sticky)
         {
             gun.gunRecoilForce = 0f;
@@ -282,20 +281,28 @@ internal static class GearItems
             gun.bulletPrefab = bullet;
         }
 
-        if (kind == GearKind.Poison)
-        {
-            // A third fewer shots from the same battery = each shot costs 1.5x as much.
-            if (gun.batteryDrainFullBar)
-                gun.batteryDrainFullBars = Mathf.Max(1, Mathf.RoundToInt(gun.batteryDrainFullBars * 1.5f));
-            else
-                gun.batteryDrain *= 1.5f;
-        }
-
         var marker = go.AddComponent<GearGun>();
         marker.kind = kind;
         ItemArt.Weapon(go, kind.ToString().ToLowerInvariant());
         ItemAudio.Attach(go, kind.ToString().ToLowerInvariant());
         Register(attributes, name);
+    }
+
+    /// <summary>
+    /// Every mod gun spends exactly one battery bar per shot and shows one bar per shot left. A donor that drains a
+    /// percentage per shot (the handgun) showed bars that did not match the charge, and stopped firing with up to half a
+    /// bar of charge left. shots: a fixed count, -1 = the donor's own shots per charge, -2 = a third fewer (Poison).
+    /// </summary>
+    private static void OneBarPerShot(ItemGun gun, ItemBattery battery, string name, int shots)
+    {
+        if (gun == null || battery == null) return;
+        float donor = UtilityGearRules.ShotsPerCharge(gun.hasOneShot, gun.batteryDrainFullBar, gun.batteryDrainFullBars,
+            battery.batteryBars, gun.batteryDrain);
+        int count = shots > 0 ? shots : shots == -2 ? UtilityGearRules.PoisonShots(donor) : UtilityGearRules.WholeShots(donor);
+        gun.batteryDrainFullBar = true;
+        gun.batteryDrainFullBars = 1;
+        battery.batteryBars = Mathf.Max(1, count);
+        Plugin.Log.LogInfo($"[Gear] {name}: {battery.batteryBars} shot(s) per charge, one battery bar each (donor {donor:0.##}).");
     }
 
     /// <summary>
