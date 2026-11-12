@@ -188,7 +188,8 @@ internal static class WingCosmetics
         asset.rarity = definition.Rarity;
         asset.status = CosmeticAsset.Status.Finalized;
         asset.customTypeList = new List<CosmeticCustomCondition.Type>();
-        asset.tintable = definition.Tintable;
+        // A part of fixed fabrics only still opens the colour page when one of them is an optional channel.
+        asset.tintable = definition.Tintable || CostumeChannels.Channels(definition.Key).Count > 0;
         var icon = UpgradeIcons.LoadTexture("cosmetic_" + definition.Key + "_icon.png");
         if (icon != null)
         {
@@ -301,6 +302,14 @@ internal sealed class WingCosmeticVisual : MonoBehaviour
             playerMaterial.tintable = model.materials[data.material].tint;   // takes the slot colour picked in the menu
             var art = model.materials[data.material];
             playerMaterial.tintType = art.tintEmission ? PlayerMaterial.TintType.Both : PlayerMaterial.TintType.Albedo;   // glowing stars and gems take the tint too
+            // Second and accent fabrics take the player's colour for that channel (CostumeChannels) instead of the slot colour.
+            // Fixed fabrics on a channel (hair, lining, leather) keep their own colour until the player sets that channel.
+            if (art.channel > 0)
+            {
+                var tag = part.AddComponent<CostumeChannelTag>();
+                tag.channel = Mathf.Min(art.channel, CostumeChannels.Extra);
+                tag.optional = !art.tint; tag.natural = art.color; tag.emission = art.emission;
+            }
         }
         if (pivots.Count > 0)
         {
@@ -339,16 +348,16 @@ internal sealed class WingCosmeticVisual : MonoBehaviour
         return null;
     }
 
-    private static readonly string[] TiledPrefixes = { "starlight_", "legate_", "fairy_", "gilded_", "seer_", "jester_", "bride_", "angel_", "mascot_", "adventure_", "cosmetic_wear" };
 
     private static Material MakeMaterial(ValuableArtMaterial data)
     {
         var template = Template();
         var loaded = string.IsNullOrEmpty(data.texture) ? null : UpgradeIcons.LoadTexture(data.texture);
-        bool tiled = data.texture != null && System.Array.Exists(TiledPrefixes, prefix => data.texture.StartsWith(prefix, StringComparison.Ordinal));   // fabrics and trims repeat
-        if (loaded != null) { loaded.wrapMode = tiled ? TextureWrapMode.Repeat : TextureWrapMode.Clamp; loaded.filterMode = FilterMode.Bilinear; }
+        // Always Repeat: the game's materials keep the Hurtable shader's UV offset of 1 (a whole tile, harmless on a
+        // repeating texture). A clamped texture would be read at its corner texel instead: a baked atlas turns black.
+        if (loaded != null) { loaded.wrapMode = TextureWrapMode.Repeat; loaded.filterMode = FilterMode.Bilinear; }
         var glow = string.IsNullOrEmpty(data.emissionTexture) ? null : UpgradeIcons.LoadTexture(data.emissionTexture);
-        if (glow != null) { glow.wrapMode = tiled ? TextureWrapMode.Repeat : TextureWrapMode.Clamp; glow.filterMode = FilterMode.Bilinear; }
+        if (glow != null) { glow.wrapMode = TextureWrapMode.Repeat; glow.filterMode = FilterMode.Bilinear; }
         var texture = loaded != null ? loaded : Texture2D.whiteTexture;
         // Tintable textures are grey and take their colour from the material (the slot tint replaces it in game).
         Color colour = string.IsNullOrEmpty(data.texture) || data.tint || data.multiply ? data.color : Color.white;

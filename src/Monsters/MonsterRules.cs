@@ -70,11 +70,13 @@ internal static class MonsterRules
 
     // ---------------------------------------------------------------- witch
 
-    internal const float FireballPrepare = 1.2f, FireballCooldown = 5f, FireballSpeed = 9f;
-    internal const int FireballDamage = 22;
+    // Balance pass: a slower, clearly telegraphed caster (longer windups, slower dodgeable fireball, longer cooldowns).
+    internal const float FireballPrepare = 1.8f, FireballCooldown = 9f, FireballSpeed = 6f;
+    internal const int FireballDamage = 14;
+    internal const float WitchPatrolSpeed = 1.6f, WitchMoveSpeed = 2.2f, WitchRetreatSpeed = 2.6f, WitchRepositionSeconds = 2.5f, LevitatePrepare = 1.6f;
     /// <summary>Burning: 4 HP/s for 3 s (12 total) and, separately, +50% damage taken for 5 s.</summary>
-    internal const float BurnDotPerSecond = 4f, BurnDotSeconds = 3f, BurnVulnerableSeconds = 5f, BurnVulnerability = 1.5f;
-    internal const float LevitateSeconds = 3f, LevitatePerSecond = 5f, LevitateCooldown = 12f, LevitateHeight = 1.4f;
+    internal const float BurnDotPerSecond = 2f, BurnDotSeconds = 3f, BurnVulnerableSeconds = 4f, BurnVulnerability = 1.25f;
+    internal const float LevitateSeconds = 2.5f, LevitatePerSecond = 3f, LevitateCooldown = 22f, LevitateHeight = 1.4f;
     internal const float WitchKeepMin = 6f, WitchKeepMax = 10f, WitchHover = 2.5f;
 
     /// <summary>Incoming damage while burning: x1.5 once, however many fireballs hit (no stacking).</summary>
@@ -84,6 +86,7 @@ internal static class MonsterRules
     // ---------------------------------------------------------------- basilisk
 
     internal const float ConstrictMax = 5f, ConstrictPerSecond = 5f, ConstrictEscapeSeconds = 2.4f;
+    internal const float BasiliskGrabCooldown = 8f, BasiliskBiteCooldown = 10f, BasiliskMissCooldown = 5f;
     internal const int VenomBiteDamage = 16;
     internal const float VenomPerSecond = 4f, VenomSeconds = 6f;
 
@@ -93,15 +96,20 @@ internal static class MonsterRules
     // ---------------------------------------------------------------- gorgon
 
     internal const float RoarSeconds = 1f, ChargeSpeed = 7.5f, ChargeMaxSeconds = 2.4f, GorgonStunSeconds = 3f;
+    /// <summary>Time between two charges (and head tosses) of one gorgon.</summary>
+    internal const float ChargeCooldown = 8f, HeadTossCooldown = 4f;
     internal const int RamDamage = 45, WallImpactDamage = 10, TrampleDamage = 15;
-    internal const float StareSeconds = 2f, StareCooldown = 20f, StareSlowSeconds = 2f, StareSlowFactor = .35f;
-    internal const int StareDamage = 25;
+    /// <summary>Speed factor of the Slowed affliction (kept for compatibility; the gorgon stare that caused it is gone).</summary>
+    internal const float StareSlowFactor = .35f;
 
     // ---------------------------------------------------------------- naga
 
-    internal const int ComboHitDamage = 22, BleedHitDamage = 16;
-    internal const float BleedPerSecond = 4f, BleedSeconds = 5f;
-    internal const float PetrifyPrepare = 1.5f, PetrifySeconds = 2.5f, ComboVulnerableSeconds = 1.8f, SpecialRecovery = 4f;
+    internal const int ComboHitDamage = 22, BleedHitDamage = 10;
+    internal const float BleedPerSecond = 2f, BleedSeconds = 4f;
+    internal const float PetrifyPrepare = 1.5f, PetrifySeconds = 2.5f, ComboVulnerableSeconds = 2.5f, SpecialRecovery = 7f;
+    // Balance pass: slower naga with slower swings and shorter sight, so players can see the blows coming and hide.
+    internal const float NagaChaseSpeed = 3.4f, NagaPatrolSpeed = 1.8f, NagaSight = 10f, NagaLoseSight = 2.5f;
+    internal const float ComboFirstWindup = .7f, ComboSecondWindup = .85f, BleedWindup = 1f, ComboCooldown = 4f;
     internal const float ComboFirstRange = 2.3f, ComboFirstAngle = 70f, ComboSecondRange = 3.2f, ComboSecondAngle = 170f;
 
     /// <summary>A naga special (petrify or bleed) is allowed only after the recovery since the last special.</summary>
@@ -137,14 +145,67 @@ internal static class MonsterRules
 
     // ---------------------------------------------------------------- hansel and gretel
 
-    internal const int TwinsHealth = 230, TwinsThrowDamage = 18;
+    internal const int TwinsHealth = 150, TwinsThrowDamage = 10, TwinsWallDamage = 25;
+    /// <summary>The throw lands this far short of a pit's edge so the player can still save themselves.</summary>
+    internal const float TwinsPitMargin = .7f, TwinsForcePerMeter = 3f, TwinsMinForce = 6f, TwinsMaxForce = 20f, TwinsThrowSearch = 8f;
     /// <summary>They stare (lure), rush, reach out, hold the player between them and throw.</summary>
-    internal const float TwinsLureSeconds = 1f, TwinsRushSpeed = 5.2f, TwinsRushMax = 2.5f, TwinsReachSeconds = .7f, TwinsReach = 1.8f;
-    internal const float TwinsHoldSeconds = 1.2f, TwinsThrowForce = 16f, TwinsCooldown = 7f, TwinsMissCooldown = 3f;
+    internal const float TwinsLureSeconds = 1.6f, TwinsRushSpeed = 3.8f, TwinsRushMax = 2f, TwinsReachSeconds = 1f, TwinsReach = 1.5f;
+    internal const float TwinsHoldSeconds = 1.2f, TwinsThrowForce = 16f, TwinsCooldown = 12f, TwinsMissCooldown = 6f;
+
+    internal enum ThrowAim : byte { Pit, Monster, Wall, Forward }
+
+    /// <summary>Where the twins throw (in the current room and the rooms next to it): a pit edge first, else a
+    /// monster, else the nearest wall (25 damage), else straight ahead.</summary>
+    internal static ThrowAim ChooseThrow(bool pit, bool monster, bool wall) =>
+        pit ? ThrowAim.Pit : monster ? ThrowAim.Monster : wall ? ThrowAim.Wall : ThrowAim.Forward;
+
+    /// <summary>Throw strength for a flight of <paramref name="meters"/>.</summary>
+    internal static float ThrowForce(float meters) => Math.Max(TwinsMinForce, Math.Min(TwinsMaxForce, meters * TwinsForcePerMeter));
+
+    internal static int ThrowDamage(ThrowAim aim) => aim == ThrowAim.Wall ? TwinsWallDamage : TwinsThrowDamage;
 
     /// <summary>The grab lands only on a visible player still within reach when the windup ends.</summary>
     internal static bool TwinsGrabLands(float distance, bool sees, bool mayAttack, bool canControl) =>
         distance <= TwinsReach && sees && mayAttack && canControl;
+
+    // ---------------------------------------------------------------- reach and impacts
+
+    /// <summary>
+    /// Melee/grab reach window per monster, relative to its feet: horizontal range and how far below / above its
+    /// feet a player's feet may be. A low snake cannot reach someone on a table; a tall naga reaches up a step.
+    /// </summary>
+    internal static void Reach(MonsterKind kind, out float range, out float below, out float above)
+    {
+        switch (kind)
+        {
+            case MonsterKind.Basilisk: range = 1.5f; below = .5f; above = 1.1f; break;
+            case MonsterKind.Gorgon: range = 1.6f; below = .6f; above = 1.5f; break;
+            case MonsterKind.Naga: range = ComboSecondRange; below = .8f; above = 2f; break;
+            case MonsterKind.Twins: range = 1.6f; below = .5f; above = 1.3f; break;
+            default: range = 1.5f; below = .6f; above = 1.6f; break;
+        }
+    }
+
+    /// <summary>Whether a player whose feet are (dx, dy, dz) from the monster's feet is inside its reach.</summary>
+    internal static bool InReach(MonsterKind kind, float dx, float dy, float dz, float range)
+    {
+        Reach(kind, out _, out float below, out float above);
+        return dx * dx + dz * dz <= range * range && dy >= -below && dy <= above;
+    }
+
+    /// <summary>
+    /// Damage a monster takes from a light / medium / heavy impact (thrown against the floor or a wall, slammed while
+    /// grabbed): 2.5% / 7% / 14% of its health, at least 3 / 6 / 10. Only while stunned or held (native rule).
+    /// </summary>
+    internal static int ImpactDamage(int health, int level) => level switch
+    {
+        0 => Math.Max(3, (int)Math.Round(health * .025f)),
+        1 => Math.Max(6, (int)Math.Round(health * .07f)),
+        _ => Math.Max(10, (int)Math.Round(health * .14f)),
+    };
+
+    /// <summary>After a player lets go, impacts keep hurting this long (the throw and its landing).</summary>
+    internal const float ThrownHurtSeconds = 1.5f;
 
     // ---------------------------------------------------------------- perks
 
@@ -155,7 +216,6 @@ internal static class MonsterRules
     /// <summary>Antidote: poison/venom duration -20/40/60%.</summary>
     internal static float AntidoteSeconds(float seconds, int level) => seconds * (1f - Level(level, .20f, .40f, .60f));
     /// <summary>Stone Resilience: petrification -20/35/50%.</summary>
-    internal static float StoneSeconds(float seconds, int level) => seconds * (1f - Level(level, .20f, .35f, .50f));
     /// <summary>Dodge Roll cooldown 22/18/14 s (0 = not learned).</summary>
     internal static float DodgeCooldown(int level) => level <= 0 ? 0f : level == 1 ? 22f : level == 2 ? 18f : 14f;
     /// <summary>Golden Nose: the pig is highlighted within 8/15/25 m.</summary>
@@ -234,6 +294,46 @@ internal static class MonsterRules
     }
 
     private static int Clamp(int v, int lo, int hi) => v < lo ? lo : v > hi ? hi : v;
+}
+
+/// <summary>How a monster gets around: decides which movement animation its body plays.</summary>
+internal enum MonsterGait : byte { Walk, Crawl, Fly }
+
+/// <summary>
+/// Engine-free rules of the monsters' animation states (checked by
+/// tests/MonsterTests). View only: nothing here changes damage, timers or the AI.
+/// </summary>
+internal static class MonsterAnimRules
+{
+    /// <summary>Snakes crawl, the witch and the fairy fly, the pig flies until it has landed; the rest walk.</summary>
+    internal static MonsterGait Gait(MonsterKind kind, bool pigLanded) => kind switch
+    {
+        MonsterKind.Basilisk or MonsterKind.Naga => MonsterGait.Crawl,
+        MonsterKind.Witch or MonsterKind.Fairy => MonsterGait.Fly,
+        MonsterKind.Pig => pigLanded ? MonsterGait.Walk : MonsterGait.Fly,
+        _ => MonsterGait.Walk,
+    };
+
+    /// <summary>
+    /// How hard a monster struggles in a player's grip, 0..1: fully when it is awake, weakly while stunned (the
+    /// stun pose stays readable), not at all when dead or not held.
+    /// </summary>
+    internal static float Struggle(bool dead, bool stunned, bool held) => dead || !held ? 0f : stunned ? .4f : 1f;
+
+    /// <summary>A monster in a grip or stunned does not play its attack animation (the reaction reads instead).</summary>
+    internal static bool AttackAnimShown(bool dead, bool stunned, bool held) => !dead && !stunned && !held;
+
+    /// <summary>The hurt flinch lasts this long; it peaks almost at once and settles.</summary>
+    internal const float FlinchSeconds = .4f, FlinchPeak = .06f;
+
+    /// <summary>Flinch strength 0..1 this long after a hit: a fast snap to 1, then an eased return to 0.</summary>
+    internal static float Flinch(float sinceHit)
+    {
+        if (sinceHit < 0f || sinceHit >= FlinchSeconds) return 0f;
+        if (sinceHit < FlinchPeak) return sinceHit / FlinchPeak;
+        float u = 1f - (sinceHit - FlinchPeak) / (FlinchSeconds - FlinchPeak);
+        return u * u;
+    }
 }
 
 /// <summary>

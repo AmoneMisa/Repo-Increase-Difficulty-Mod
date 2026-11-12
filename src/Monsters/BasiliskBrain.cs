@@ -63,20 +63,20 @@ internal sealed class BasiliskBrain : MonsterBrain
         {
             // A teammate's hit frees the victim at once.
             Release();
-            SetState(Retreat);
+            Announce(Retreat);
             return;
         }
         Provoke();
     }
 
-    protected override void OnStunned() { if (_victim != null) { Release(); SetState(Retreat); } }
+    protected override void OnStunned() { if (_victim != null) { Release(); Announce(Retreat); } }
     protected override void OnDied() => Release();
 
     private void Release()
     {
         if (_victim != null) MonsterAfflictions.End(_victim, Affliction.Constricted);
         _victim = null;
-        _grabReady = Time.time + Economy.ExtendedMoons.Cooldown(4f);
+        _grabReady = Time.time + Economy.ExtendedMoons.Cooldown(MonsterRules.BasiliskGrabCooldown);
     }
 
     private void Provoke()
@@ -88,10 +88,26 @@ internal sealed class BasiliskBrain : MonsterBrain
 
     protected override void PlayStateCue(byte state)
     {
-        if (state == Rattle) { MonsterAudio.Play(MonsterAudio.Cue.Rustle, BodyPosition); MonsterAudio.Play(MonsterAudio.Cue.Hiss, BodyPosition); }
-        else if (state == BitePrep) MonsterAudio.Play(MonsterAudio.Cue.Hiss, BodyPosition, 1.2f);
-        else if (state == Lunge) MonsterAudio.Play(MonsterAudio.Cue.Rustle, BodyPosition, 1.2f);
-        else if (state == Constrict) MonsterAudio.Play(MonsterAudio.Cue.Bite, BodyPosition, .6f);
+        // Ambush wind-up (0.8 s): the tail rattle, then a whip-fast lunge and the squeeze of the coils.
+        if (state == Rattle) { MonsterAudio.Play(MonsterAudio.Cue.Rattle, BodyPosition, 1.1f); MonsterAudio.Play(MonsterAudio.Cue.Hiss, BodyPosition, .7f); }
+        else if (state == Lunge) { MonsterAudio.Play(MonsterAudio.Cue.Whoosh, BodyPosition, 1f, 1.6f); MonsterAudio.Play(MonsterAudio.Cue.Rustle, BodyPosition, 1.1f); }
+        else if (state == Constrict) { MonsterAudio.Play(MonsterAudio.Cue.Bite, BodyPosition, .6f); MonsterAudio.Play(MonsterAudio.Cue.Squeeze, BodyPosition, 1f); }
+        // Provoked (loud noise, grabbed, hit): a startled rattle and the venom hiss before it strikes.
+        else if (state == BitePrep) { MonsterAudio.Play(MonsterAudio.Cue.Rattle, BodyPosition, 1f, 1.35f); MonsterAudio.Play(MonsterAudio.Cue.Spit, BodyPosition, .9f, .85f); }
+        // Backing off (after a strike, or scared off by a hit or a stun): a short nervous rattle.
+        else if (state == Retreat) MonsterAudio.Play(MonsterAudio.Cue.Rattle, BodyPosition, .6f, 1.5f);
+    }
+
+    private float _squeezeAt;
+
+    // Every client: the coils keep creaking while someone is held, so teammates hear where to help.
+    protected override void Update()
+    {
+        base.Update();
+        if (State != Constrict || Dead) { _squeezeAt = Time.time + 1.1f; return; }
+        if (Time.time < _squeezeAt) return;
+        _squeezeAt = Time.time + 1.1f;
+        MonsterAudio.Play(MonsterAudio.Cue.Squeeze, BodyPosition, .7f, Random.Range(.92f, 1.08f));
     }
 
     protected override void HostTick(float dt)
@@ -117,18 +133,18 @@ internal sealed class BasiliskBrain : MonsterBrain
                 if (StateTime >= .8f) Announce(Lunge);
                 break;
             case Lunge:
-                if (Target == null) { SetState(Retreat); break; }
+                if (Target == null) { Announce(Retreat); break; }
                 Move(Target.transform.position, 9f, 40f);
-                if (DistanceTo(Target) <= 1.3f)
+                if (InReach(Target, 1.3f)) // horizontal reach and the snake's low height window
                 {
                     if (MayAttack(Target) && MonsterAfflictions.Apply(Target, Affliction.Constricted, MonsterRules.ConstrictMax, E))
                     { _victim = Target; Announce(Constrict); }
-                    else { _grabReady = Time.time + Economy.ExtendedMoons.Cooldown(3f); SetState(Retreat); }
+                    else { _grabReady = Time.time + Economy.ExtendedMoons.Cooldown(MonsterRules.BasiliskMissCooldown); Announce(Retreat); }
                 }
-                else if (StateTime > .7f) { _grabReady = Time.time + Economy.ExtendedMoons.Cooldown(3f); SetState(Retreat); } // missed
+                else if (StateTime > .7f) { _grabReady = Time.time + Economy.ExtendedMoons.Cooldown(MonsterRules.BasiliskMissCooldown); Announce(Retreat); } // missed
                 break;
             case Constrict:
-                if (_victim == null || !MonsterAfflictions.Has(_victim, Affliction.Constricted)) { Release(); SetState(Retreat); break; }
+                if (_victim == null || !MonsterAfflictions.Has(_victim, Affliction.Constricted)) { Release(); Announce(Retreat); break; }
                 Move(_victim.transform.position, 6f, 30f);
                 break;
             case BitePrep:
@@ -136,14 +152,14 @@ internal sealed class BasiliskBrain : MonsterBrain
                 if (Target == null) { SetState(Hide); break; }
                 Face(Target.transform.position, 14f);
                 if (StateTime < .35f) break;
-                _biteReady = Time.time + Economy.ExtendedMoons.Cooldown(6f);
-                if (DistanceTo(Target) <= 2.1f && Sees(Target, 3f) && MayAttack(Target))
+                _biteReady = Time.time + Economy.ExtendedMoons.Cooldown(MonsterRules.BasiliskBiteCooldown);
+                if (InReach(Target, 2.1f) && MayAttack(Target))
                 {
-                    MonsterAudio.Play(MonsterAudio.Cue.Bite, BodyPosition);
+                    Fx(MonsterFx.Bite, BodyPosition, Vector3.zero);
                     MonsterAfflictions.Damage(Target, MonsterRules.VenomBiteDamage, E);
                     MonsterAfflictions.Apply(Target, Affliction.Venom, MonsterRules.VenomSeconds, E);
                 }
-                SetState(Retreat);
+                Announce(Retreat);
                 break;
             case Retreat:
                 if (Target != null) Move(AwayFrom(Target.transform.position, 7f), 3.5f); else Roam(2f);

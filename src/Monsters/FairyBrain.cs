@@ -49,22 +49,41 @@ internal sealed class FairyBrain : MonsterBrain
 
     protected override void OnSpawned() { Release(false); _nextTheft = Time.time + 6f; }
     protected override void OnDied() => Release(false);
-    protected override void OnStunned() { if (_item != null) { Release(false); SetState(Flee); } }
+    protected override void OnStunned() { if (_item != null) { Release(false); Announce(Flee); } }
     protected override void OnHurt() => Startle();
     protected override void OnGrabbed(PlayerAvatar player) => Startle();
 
     private void Startle()
     {
-        MonsterAudio.Play(MonsterAudio.Cue.Chime, BodyPosition, 1.2f);
         Release(false);
         _nextTheft = Time.time + MonsterRules.FairyCooldown * .5f;
-        SetState(Flee);
+        Announce(Flee);
     }
 
     protected override void PlayStateCue(byte state)
     {
-        if (state == Lift) MonsterAudio.Play(MonsterAudio.Cue.Chime, BodyPosition);
-        else if (state == Giggle) MonsterAudio.Play(MonsterAudio.Cue.Giggle, BodyPosition);
+        // Warnings before a theft: a sly giggle and rising bells when she picks loot in the cart/extraction and
+        // flies to it, and brighter bells as she starts to lift it - time for players to grab it back.
+        if (state == Approach) { MonsterAudio.Play(MonsterAudio.Cue.Sparkle, BodyPosition, .85f); MonsterAudio.Play(MonsterAudio.Cue.Giggle, BodyPosition, .35f, 1.15f); }
+        else if (state == Lift) MonsterAudio.Play(MonsterAudio.Cue.Sparkle, BodyPosition, 1f, 1.25f);
+        else if (state == Giggle) MonsterAudio.Play(MonsterAudio.Cue.Giggle, BodyPosition, .5f, .95f);
+        // Got away with it: a pleased giggle as she flies off with the loot.
+        else if (state == Carry) MonsterAudio.Play(MonsterAudio.Cue.Giggle, BodyPosition, .45f, 1.1f);
+        // Startled (hit, grabbed, stunned, or someone took the loot back): a sharp bell and fast wing beats.
+        else if (state == Flee) { MonsterAudio.Play(MonsterAudio.Cue.Chime, BodyPosition, .8f, 1.3f); MonsterAudio.Play(MonsterAudio.Cue.Flap, BodyPosition, .6f, 1.5f); }
+    }
+
+    private float _sparkleAt;
+
+    // Every client: soft bells repeat while she flies to the loot and while she carries it off.
+    protected override void Update()
+    {
+        base.Update();
+        if (State is not (Approach or Carry) || Dead) { _sparkleAt = Time.time + 1.6f; return; }
+        if (Time.time < _sparkleAt) return;
+        _sparkleAt = Time.time + (State == Carry ? 2f : 1.6f);
+        // Approach: soft bells; Carry: the bells keep trailing the stolen loot so players can chase it by ear.
+        MonsterAudio.Play(MonsterAudio.Cue.Sparkle, BodyPosition, State == Carry ? .4f : .5f, State == Carry ? .95f : 1.1f);
     }
 
     protected override void HostTick(float dt)
@@ -77,7 +96,7 @@ internal sealed class FairyBrain : MonsterBrain
                 if (Time.time < _nextTheft || Time.time < _scan) break;
                 _scan = Time.time + 1f;
                 _item = FindLoot();
-                if (_item != null) SetState(Approach);
+                if (_item != null) Announce(Approach);
                 break;
             case Approach:
                 if (!IsLoot(_item) || StateTime > 8f) { _item = null; SetState(Flit); break; }
@@ -92,7 +111,7 @@ internal sealed class FairyBrain : MonsterBrain
                 _tookAt = _item.midPoint;
                 _dropAt = PickDropPoint();
                 _carried = 0f; _itemAwayFor = 0f;
-                SetState(Carry);
+                Announce(Carry);
                 break;
             case Carry:
             {
@@ -107,7 +126,7 @@ internal sealed class FairyBrain : MonsterBrain
                     bool startled = held || near != null;
                     Release(!held);
                     _nextTheft = Time.time + MonsterRules.FairyCooldown;
-                    if (startled) SetState(Flee); else Announce(Giggle);
+                    if (startled) Announce(Flee); else Announce(Giggle);
                     break;
                 }
                 Move(_dropAt, 3.2f);

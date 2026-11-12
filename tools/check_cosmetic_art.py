@@ -49,6 +49,13 @@ def validate(key, pet=False):
         # character parts in fixed colours (faces, skin, hair) are registered as not tintable and must stay that way
         check(any(m.get('tint') for m in materials) != (key in fixed), f'{key}: tintable material does not match its registration')
         check((ART / f'cosmetic_{key}_icon.png').exists(), f'{key}: no menu icon')
+        # recolour channels: tintable fabrics use 0..n-1 (0 is the game's own slot colour), then fixed fabrics that keep
+        # their colour until picked continue from 1 or n; anything else stays on 0
+        tinted = sorted({m.get('channel', -1) for m in materials if m.get('tint')})
+        optional = sorted({m.get('channel', -1) for m in materials if not m.get('tint') and m.get('channel', -1) != 0})
+        first = max(len(tinted), 1)
+        check(tinted == list(range(len(tinted))), f'{key}: recolour channels {tinted}')
+        check(optional == list(range(first, first + len(optional))) and first + len(optional) <= 3, f'{key}: optional recolour channels {optional} after {tinted}')
         if key.startswith('wings_'):
             check(pivot_names == {'wing_l', 'wing_r'}, f'{key}: wing roots')
             check(not any(any(word in p['name'].lower() for word in ('membrane', 'web', 'covered feather roots', 'feather bed'))

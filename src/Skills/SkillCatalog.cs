@@ -71,12 +71,18 @@ internal static class SkillCatalog
 
     // Monster resistances, mobility and loot perks for the 0.10.0 monsters. Ids are save keys: never rename.
     public const string Grounding = P + "Grounding", ThermalProtection = P + "ThermalProtection", Antidote = P + "Antidote",
-        StoneResilience = P + "StoneResilience", Evasion = P + "Evasion", DodgeRoll = P + "DodgeRoll",
+        Evasion = P + "Evasion", DodgeRoll = P + "DodgeRoll",
         GoldenNose = P + "GoldenNose", SoulHunter = P + "SoulHunter";
     public const string Hemostasis = P + "Hemostasis", Sapper = P + "Sapper",
         LinkOperator = P + "LinkOperator", LightBasket = P + "LightBasket",
         FlameCartDamage = P + "FlameCartDamage", GhostConvoy = P + "GhostConvoy", LaserGunDamage = P + "LaserGunDamage",
         RapidFire = P + "RapidFire";
+
+    /// <summary>
+    /// Perks taken out of the tree. Their save keys stay registered so old saves load without warnings; they are not
+    /// in the catalogue, so the points spent on them count as unspent again (SkillLoadout.Spent ignores them).
+    /// </summary>
+    internal static readonly string[] Retired = { P + "DeadPlayers", P + "StoneResilience" };
 
     /// <summary>No status from a tree perk lasts longer than this; poison is compressed down to it instead.</summary>
     internal const float StatusCapSeconds = 8f;
@@ -157,7 +163,6 @@ internal static class SkillCatalog
         Add(survival, "Resistances", Grounding, "Grounding", "Заземление", 1, 3, Survivor);
         Add(survival, "Resistances", ThermalProtection, "Thermal Protection", "Термозащита", 1, 3, Survivor);
         Add(survival, "Resistances", Antidote, "Antidote", "Антидот", 1, 3, Survivor);
-        Add(survival, "Resistances", StoneResilience, "Stone Resilience", "Каменная стойкость", 1, 3, Survivor);
         Add(survival, "Mobility", Evasion, "Evasion", "Изворотливость", 1, 3, Survivor);
         Add(survival, "Mobility", DodgeRoll, "Dodge Roll", "Рывок уклонения", 2, 3, Evasion);
 

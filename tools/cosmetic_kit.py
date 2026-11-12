@@ -8,6 +8,9 @@ with previews, renders the whole set on a grey stand-in robot (the game's base m
 import json
 import math
 from pathlib import Path
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).resolve().parent))
+import cosmetic_channels   # recolour channels of tintable materials
 
 import bmesh
 import bpy
@@ -339,6 +342,7 @@ def export(key, parts, pivots):
         records.append({'name': ob.name, 'group': ob.get('group', 'static'), 'phase': 0, 'material': mi, 'vertices': verts, 'normals': normals,
                         'uv': uv, 'triangles': tri, 'color': mats_out[mi]['color'], 'texture': mats_out[mi]['texture'],
                         'rest': {'position': vec(C @ center), 'rotation': {'x': 0, 'y': 0, 'z': 0, 'w': 1}, 'scale': {'x': 1, 'y': 1, 'z': 1}}, 'samples': []})
+    cosmetic_channels.assign(mats_out, records)
     data = {'version': 1, 'fps': 24, 'frames': 1, 'materials': mats_out, 'parts': records,
             'pivots': [{'group': g, 'position': vec(C @ p)} for g, p in pivots.items()]}
     (SRC / ('v11_' + key + '.mesh.json')).write_text(json.dumps(data, separators=(',', ':')))

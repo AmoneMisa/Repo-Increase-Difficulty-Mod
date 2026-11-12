@@ -569,44 +569,72 @@ def twins():
         s = 1 if x > 0 else -1   # outer side
         tag = 'g' if girl else 'h'; P = lambda a, b, c: Vector((x + a, b, c))
         cloth = (.36, .09, .1) if girl else (.1, .2, .12); shirt = (.78, .74, .66)
+        sock = (.5, .48, .46) if not girl else (.75, .72, .7)
         for sx in (-1, 1):
             fg = 'foot_' + tag + ('_l' if sx < 0 else '_r'); pivots[fg] = tuple(P(sx * .065, 0, .52))
-            tube('leg', [P(sx * .065, 0, .5), P(sx * .07, .01, .1)], .045, .036, (.8, .78, .72), fg, segs=8)
-            tube('sock', [P(sx * .068, .005, .3), P(sx * .07, .01, .1)], .041, .04, (.5, .48, .46) if not girl else (.75, .72, .7), fg, segs=8)
-            ball('shoe', P(sx * .07, .04, .05), (.055, .095, .05), dark, fg)
+            # A leg with a knee and a calf, the foot a little turned out: thigh, knee cap, calf in a sock, shoe with a heel.
+            tube('leg', [P(sx * .065, 0, .5), P(sx * .068, .014, .3), P(sx * .072, -.004, .1)], .052, .037, (.8, .78, .72), fg, segs=10, per=3)
+            ball('knee', P(sx * .068, .03, .3), (.044, .04, .046), (.8, .78, .72), fg)
+            tube('sock', [P(sx * .069, .006, .285), P(sx * .071, -.012, .2), P(sx * .072, -.002, .09)], .042, .04, sock, fg, segs=10, per=3,
+                 profile=lambda f: .041 + .012 * math.sin(min(1, f * 1.5) * math.pi))
+            torus('sock cuff', P(sx * .069, .008, .285), .04, .009, sock, fg, False)
+            ball('shoe', P(sx * .078, .05, .05), (.06, .105, .05), dark, fg, rot=(0, 0, -sx * .22))
+            ball('shoe toe', P(sx * .092, .115, .048), (.052, .05, .046), dark, fg)
+            ball('heel', P(sx * .07, -.03, .045), (.05, .05, .045), dark, fg)
+            tube('shoe strap', [P(sx * .025, .04, .075), P(sx * .075, .055, .108), P(sx * .125, .04, .075)], .009, .009, dark, fg, segs=5, per=3)
         if girl:
-            loft('dress', [(P(0, 0, .86), .1, .08), (P(0, 0, .7), .12, .1), (P(0, 0, .52), .2, .18), (P(0, 0, .34), .26, .23), (P(0, 0, .32), .2, .18)], cloth, segs=16,
-                 shape=lambda i, a: 1 + .012 * i * math.sin(a * 8))
-            ball('apron', P(0, .13, .5), (.12, .05, .17), shirt); ball('apron bib', P(0, .085, .74), (.07, .03, .08), shirt)
-            ball('apron stain', P(.03, .176, .46), (.035, .008, .05), (.3, .04, .04))
-            torus('waist tie', P(0, 0, .66), .115, .014, shirt, metal=False)
+            # A bell dress as deep as it is wide, in heavy folds, over a petticoat; the chest and the back are rounded.
+            loft('dress', [(P(0, -.006, .875), .09, .08), (P(0, .012, .79), .125, .118), (P(0, .004, .69), .112, .106), (P(0, 0, .6), .165, .16),
+                           (P(0, -.006, .48), .23, .225), (P(0, -.012, .365), .28, .275), (P(0, -.012, .335), .29, .285), (P(0, -.012, .32), .22, .215)],
+                 cloth, segs=24, shape=lambda i, a: 1 + (0 if i < 3 else .011 * i * math.sin(a * 8)))
+            loft('petticoat', [(P(0, -.012, .34), .25, .245), (P(0, -.012, .3), .272, .267), (P(0, -.012, .292), .2, .2)], shirt, segs=24,
+                 shape=lambda i, a: 1 + .035 * math.sin(a * 12))
+            # The apron bulges over the skirt and wraps round it; its bib sits on the chest; a big bow ties it at the back.
+            ball('apron', P(0, .09, .5), (.135, .155, .175), shirt); ball('apron bib', P(0, .055, .765), (.072, .082, .078), shirt)
+            ball('apron stain', P(.03, .236, .47), (.036, .012, .05), (.3, .04, .04))
+            torus('waist tie', P(0, .004, .685), .112, .016, shirt, metal=False)
+            for b in (-1, 1):
+                ball('apron bow', P(b * .06, -.125, .7), (.065, .028, .04), shirt, rot=(0, -b * .5, 0))
+                tube('bow tail', [P(b * .015, -.13, .68), P(b * .04, -.19, .58), P(b * .055, -.235, .47)], .02, .012, shirt, segs=6, per=3, flatten=.35)
+            ball('bow knot', P(0, -.135, .69), .028, shirt)
         else:
-            loft('shirt', [(P(0, 0, .6), .12, .095), (P(0, 0, .72), .125, .1), (P(0, 0, .86), .11, .085)], shirt, segs=14)
-            loft('lederhosen', [(P(0, 0, .42), .12, .1), (P(0, 0, .5), .135, .11), (P(0, 0, .62), .128, .1), (P(0, 0, .64), .11, .085)], cloth, segs=14)
+            # A round little belly in a shirt, shorts with a seat, braces over the shoulders and crossed on the back.
+            loft('shirt', [(P(0, 0, .58), .125, .115), (P(0, .02, .68), .137, .132), (P(0, .012, .78), .13, .12), (P(0, -.006, .875), .095, .085)], shirt, segs=18)
+            loft('lederhosen', [(P(0, -.012, .4), .125, .122), (P(0, -.016, .48), .148, .145), (P(0, .01, .58), .145, .138),
+                                (P(0, .02, .655), .139, .134), (P(0, .018, .67), .11, .1)], cloth, segs=18)
             for sx in (-1, 1):
-                tube('short leg', [P(sx * .065, 0, .5), P(sx * .07, 0, .36)], .07, .062, cloth, 'foot_h' + ('_l' if sx < 0 else '_r'), segs=10)
-                tube('suspender', [P(sx * .07, .095, .62), P(sx * .06, .085, .86)], .013, .013, (.25, .12, .05), segs=5)
-            tube('chest strap', [P(-.07, .1, .75), P(.07, .1, .75)], .014, .014, (.25, .12, .05), segs=5)
-            ball('strap heart', P(0, .108, .75), (.025, .012, .025), stitch)
-        loft('collar', [(P(0, 0, .85), .11, .09), (P(0, 0, .885), .06, .055)], shirt, segs=12)
-        tube('neck', [P(0, 0, .86), P(0, 0, .95)], .035, .032, porcelain, segs=8)
+                tube('short leg', [P(sx * .067, -.004, .5), P(sx * .074, .006, .345)], .08, .07, cloth, 'foot_h' + ('_l' if sx < 0 else '_r'), segs=12)
+                torus('short cuff', P(sx * .074, .006, .345), .066, .012, (.25, .12, .05), 'foot_h' + ('_l' if sx < 0 else '_r'), False)
+                tube('suspender', [P(sx * .07, .136, .64), P(sx * .07, .145, .72), P(sx * .062, .124, .8), P(sx * .052, .07, .882),
+                                   P(sx * .05, -.06, .88), P(sx * .03, -.118, .77), P(-sx * .045, -.132, .66)], .014, .014, (.25, .12, .05), segs=6, per=3)
+            tube('chest strap', [P(-.072, .132, .75), P(0, .152, .75), P(.072, .132, .75)], .015, .015, (.25, .12, .05), segs=6, per=3)
+            ball('strap heart', P(0, .16, .75), (.027, .014, .027), stitch)
+            ball('front flap', P(0, .105, .545), (.075, .05, .062), (.13, .25, .15))
+            for b in (-1, 1): ball('flap button', P(b * .045, .15, .575), .012, (.75, .62, .3))
+        loft('collar', [(P(0, 0, .85), .115, .105), (P(0, .004, .872), .1, .095), (P(0, 0, .892), .06, .058)], shirt, segs=14,
+             shape=lambda i, a: 1 + (.06 * math.sin(a * 6) if i < 2 else 0))
+        tube('neck', [P(0, 0, .86), P(0, 0, .95)], .04, .037, porcelain, segs=10)
         # Head: an oversized porcelain doll head.
         hg = 'head_' + tag; hc = P(0, 0, 1.08); pivots[hg] = tuple(P(0, 0, .93))
-        ball('head', hc, (.16, .15, .165), porcelain, hg)
+        ball('head', hc, (.16, .158, .165), porcelain, hg)
+        ball('chin', hc + Vector((0, .075, -.105)), (.085, .075, .06), porcelain, hg)
+        for sx in (-1, 1): ball('ear', hc + Vector((sx * .156, -.005, -.015)), (.022, .03, .04), porcelain, hg)
         for sx in (-1, 1):
             e = hc + Vector((sx * .062, .128, .01))
             ball('hollow eye', e, (.04, .02, .05), dark, hg)
             ball('pin pupil', e + Vector((0, .02, 0)), .007, (1.0, .95, .8), hg, glow=6)
             ball('eye shadow', e + Vector((0, -.008, -.01)), (.052, .02, .066), (.5, .42, .45), hg)
             ball('doll cheek', hc + Vector((sx * .108, .095, -.05)), (.03, .016, .026), (.72, .4, .4), hg)
-        ball('nose', hc + Vector((0, .15, -.025)), (.014, .012, .012), porcelain, hg)
+        ball('nose', hc + Vector((0, .158, -.025)), (.02, .024, .018), porcelain, hg)
         tube('stitched smile', [hc + Vector((-.075, .115, -.065)), hc + Vector((-.035, .138, -.088)), hc + Vector((.035, .138, -.088)), hc + Vector((.075, .115, -.065))], .006, .006, stitch, hg, segs=5)
         for k in range(-3, 4):
             m = hc + Vector((k * .022, .14 - abs(k) * .006, -.086 + abs(k) * .005)); tube('stitch', [m + Vector((0, .003, .014)), m + Vector((0, .003, -.014))], .0035, .0035, stitch, hg, segs=4, per=1)
         crack = [hc + Vector((s * .04, .12, .15)), hc + Vector((s * .06, .14, .1)), hc + Vector((s * .045, .145, .07)), hc + Vector((s * .075, .135, .04))]
         tube('crack', crack, .004, .002, dark, hg, segs=4, per=1)
         blond = (.62, .52, .3)
-        ball('hair', hc + Vector((0, -.022, .035)), (.168, .158, .155), blond, hg)
+        ball('hair', hc + Vector((0, -.022, .035)), (.168, .166, .155), blond, hg)
+        ball('hair back', hc + Vector((0, -.07, -.03)), (.15, .125, .15), blond, hg)
+        for sx in (-1, 1): ball('side lock', hc + Vector((sx * .15, .03, -.02)), (.035, .05, .085), blond, hg)
         for k in range(-3, 4): tube('fringe', [hc + Vector((k * .035, .1, .14)), hc + Vector((k * .04, .15, .075))], .022, .008, blond, hg, segs=6)
         if girl:
             for sx in (-1, 1):
@@ -620,12 +648,19 @@ def twins():
             loft('cap feather', [(hc + Vector((s * .1, -.02, .15)), .008, .004), (hc + Vector((s * .14, -.08, .25)), .03, .005), (hc + Vector((s * .15, -.16, .33)), .004, .003)], (.6, .08, .06), hg, segs=6, side=(0, 1, 1))
         # Arms: the inner one reaches for the twin, the outer one carries a treat.
         ia = 'arm_' + tag + '_in'; oa = 'arm_' + tag + '_out'
-        a = P(-s * .12, 0, .82); pivots[ia] = tuple(a); grip = Vector((0, .02, .6))
-        tube('inner arm', [a, a.lerp(grip, .5) + Vector((0, .03, -.03)), grip + Vector((s * .03, 0, 0))], .034, .026, shirt if not girl else cloth, ia, segs=8, per=3)
-        ball('inner hand', grip + Vector((s * .02, 0, 0)), (.036, .04, .04), porcelain, ia)
-        a = P(s * .12, 0, .82); pivots[oa] = tuple(a); h = P(s * .2, .06, .5)
-        tube('outer arm', [a, P(s * .18, .0, .66), h], .034, .026, shirt if not girl else cloth, oa, segs=8, per=3)
-        ball('outer hand', h, (.036, .04, .04), porcelain, oa)
+        sleeve = shirt if not girl else cloth
+        a = P(-s * .12, 0, .82); pivots[ia] = tuple(a); grip = Vector((0, .03, .6))
+        ball('inner shoulder', a + Vector((-s * .005, 0, .005)), (.062, .066, .058), sleeve, ia)
+        tube('inner arm', [a, a.lerp(grip, .5) + Vector((0, .065, -.035)), grip + Vector((s * .03, 0, 0))], .042, .03, sleeve, ia, segs=10, per=3)
+        torus('inner cuff', grip + Vector((s * .05, .004, .012)), .03, .01, shirt, ia, False, rot=(0, math.pi / 2 - s * .6, 0))
+        ball('inner hand', grip + Vector((s * .02, 0, 0)), (.04, .046, .044), porcelain, ia)
+        ball('inner thumb', grip + Vector((s * .02, .04, .02)), (.016, .024, .016), porcelain, ia)
+        a = P(s * .12, 0, .82); pivots[oa] = tuple(a); h = P(s * .2, .07, .5)
+        ball('outer shoulder', a + Vector((s * .005, 0, .005)), (.062, .066, .058), sleeve, oa)
+        tube('outer arm', [a, P(s * .19, -.025, .66), h], .042, .03, sleeve, oa, segs=10, per=3)
+        torus('outer cuff', h + Vector((-s * .004, -.02, .04)), .03, .01, shirt, oa, False, rot=(.5, 0, 0))
+        ball('outer hand', h, (.04, .046, .044), porcelain, oa)
+        ball('outer thumb', h + Vector((-s * .03, .03, .01)), (.016, .024, .016), porcelain, oa)
         if girl:   # a lollipop with a bite taken out
             tube('lolly stick', [h + Vector((0, .02, -.08)), h + Vector((0, .04, .16))], .008, .008, (.9, .88, .8), oa, segs=5)
             loft('lollipop', [(h + Vector((0, .03, .22)), .085, .085), (h + Vector((0, .055, .225)), .085, .085)], (.75, .1, .14), oa, segs=16, side=(1, 0, 0))
@@ -640,7 +675,8 @@ def twins():
             for k in range(2): ball('icing button', c0 + Vector((0, .018, -.075 - k * .035)), .007, (.75, .1, .14), oa)
 
     child(-.3, False); child(.3, True)
-    ball('breadcrumb pouch', (-.42, -.11, .52), (.06, .05, .075), (.45, .3, .16))
+    ball('breadcrumb pouch', (-.44, -.13, .52), (.07, .065, .08), (.45, .3, .16))
+    torus('pouch neck', (-.44, -.13, .59), .03, .012, (.25, .12, .05), metal=False)
     for k in range(9):
         render_only.append(lambda k=k: ball('breadcrumb', (-.5 + .13 * math.sin(k * 2.3), -.25 - k * .12, .012), (.02, .02, .012), (.75, .62, .38), 'fx'))
     pose.update({'head_h': (0, 16, 0), 'head_g': (0, -16, 0)})

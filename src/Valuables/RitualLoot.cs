@@ -7,7 +7,7 @@ namespace IncreaseHardMod.Valuables;
 /// <summary>Original low-poly models for the ritual offerings and reward.</summary>
 internal static class RitualLoot
 {
-    internal const int SkeletonCount = 5;
+    internal const int SkeletonCount = RitualRewardRules.Variants;
     internal const string Cube = "ritual_cube";
     internal static readonly string[] PcParts = { "ritual_monitor", "ritual_tower", "graphics_card", "ram_pair", "rgb_keyboard", "rgb_mouse" };
     internal static readonly string[] ResortParts = { "gold_ingot", "crystal_skull", "bath_gift_set" };
@@ -22,6 +22,8 @@ internal static class RitualLoot
             yield return new("ritual_monitor", LootMap.None, 2f, 2400, 3400);
             yield return new("ritual_tower", LootMap.None, 3f, 3600, 4800);
             yield return new(Cube, LootMap.None, 4f, 250000, 250000, LootFragility.Reinforced);
+            foreach (string reward in RitualRewardRules.Keys)
+                yield return new(reward, LootMap.None, 4f, RitualRewardRules.Value, RitualRewardRules.Value, LootFragility.Reinforced);
             for (int i = 0; i < SkeletonCount; i++)
                 yield return new(SkeletonKey(i), LootMap.None, 2.2f, 4200, 5200, LootFragility.Sturdy);
         }

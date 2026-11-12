@@ -24,10 +24,10 @@ Check(soft.TryApply(Affliction.Burning, 4f, 5f) && soft.Until(Affliction.Burning
 Check(soft.TryApply(Affliction.Slowed, 0f, 2f) && soft.TryApply(Affliction.Electrified, 0f, 3f), "Soft effects never block hard control");
 
 // ---- burning: separate DoT and +50% vulnerability, never multiplied twice
-Check(MonsterRules.BurningDamage(22, true) == 33 && MonsterRules.BurningDamage(22, false) == 22, "Burning makes incoming damage x1.5");
-Check(MonsterRules.BurningDamage(MonsterRules.BurningDamage(10, true), false) == 15, "Vulnerability is applied once, not per stack");
-Check(MonsterRules.DotTotal(MonsterRules.BurnDotPerSecond, MonsterRules.BurnDotSeconds) == 12, "Burn DoT is 4 HP/s for 3 s = 12 (not five ticks)");
-Check(MonsterRules.BurnVulnerableSeconds == 5f && MonsterRules.BurnDotSeconds == 3f, "Vulnerability window (5 s) is separate from the DoT (3 s)");
+Check(MonsterRules.BurningDamage(20, true) == 25 && MonsterRules.BurningDamage(20, false) == 20, "Burning makes incoming damage x1.25 (balance pass)");
+Check(MonsterRules.BurningDamage(MonsterRules.BurningDamage(12, true), false) == 15, "Vulnerability is applied once, not per stack");
+Check(MonsterRules.DotTotal(MonsterRules.BurnDotPerSecond, MonsterRules.BurnDotSeconds) == 6, "Burn DoT is 2 HP/s for 3 s = 6 (not five ticks)");
+Check(MonsterRules.BurnVulnerableSeconds == 4f && MonsterRules.BurnDotSeconds == 3f, "Vulnerability window (4 s) is separate from the DoT (3 s)");
 
 // ---- DoT ticking in whole points
 float carry = 0f; int left = MonsterRules.DotTotal(4f, 6f), dealt = 0;
@@ -40,7 +40,6 @@ Check(first == 5 && left == 0, "A long frame cannot exceed the DoT's remaining t
 Check(Math.Abs(MonsterRules.GroundedSeconds(3f, 3) - 1.5f) < 1e-4, "Grounding III halves the electric hold");
 Check(Math.Abs(MonsterRules.ThermalDot(4f, 2) - 2.6f) < 1e-4, "Thermal Protection II: burn DoT -35%");
 Check(Math.Abs(MonsterRules.AntidoteSeconds(6f, 3) - 2.4f) < 1e-4, "Antidote III: venom -60%");
-Check(Math.Abs(MonsterRules.StoneSeconds(2.5f, 1) - 2f) < 1e-4, "Stone Resilience I: petrification -20%");
 Check(Math.Abs(MonsterRules.EscapeSeconds(3) - MonsterRules.ConstrictEscapeSeconds * .55f) < 1e-4, "Evasion III frees 45% faster");
 Check(MonsterRules.DodgeCooldown(0) == 0f && MonsterRules.DodgeCooldown(1) == 22f && MonsterRules.DodgeCooldown(3) == 14f, "Dodge Roll cooldown 22/18/14 s");
 Check(MonsterRules.GoldenNoseRange(2) == 15f, "Golden Nose II highlights within 15 m");
@@ -68,7 +67,12 @@ MonsterRules.PigRewards(10, .05f, out sv, out up); Check(sv && up, "10% upgrade 
 MonsterRules.PigRewards(10, .5f, out sv, out up); Check(sv && !up, "No upgrade when the roll misses");
 
 // ---- naga / gorgon rules
-Check(!MonsterRules.SpecialReady(5f, 2f) && MonsterRules.SpecialReady(6f, 2f), "Naga specials need 4 s recovery between them");
+Check(!MonsterRules.SpecialReady(8.9f, 2f) && MonsterRules.SpecialReady(9f, 2f), "Naga specials need 7 s recovery between them");
+Check(MonsterRules.DotTotal(MonsterRules.BleedPerSecond, MonsterRules.BleedSeconds) == 8 && MonsterRules.BleedHitDamage == 10, "Weaker bleeding: 10 + 2 HP/s for 4 s");
+Check(MonsterRules.NagaChaseSpeed < 4f && MonsterRules.NagaSight <= 10f && MonsterRules.ComboFirstWindup >= .7f && MonsterRules.ComboCooldown >= 4f,
+    "Naga is slower, sees less far and swings slower");
+Check(MonsterRules.FireballPrepare >= 1.8f && MonsterRules.FireballSpeed <= 6f && MonsterRules.FireballCooldown >= 9f && MonsterRules.LevitateCooldown >= 20f,
+    "Witch casts are telegraphed, dodgeable and rarer");
 Check(MonsterRules.InArc(0, 1, 0, 2, 2f, 2.3f, 70f) && !MonsterRules.InArc(0, 1, 2, 0, 2f, 2.3f, 70f), "Short cut hits ahead, not to the side");
 Check(MonsterRules.InArc(0, 1, 2, .2f, 2f, 3.2f, 170f) && !MonsterRules.InArc(0, 1, 0, -2, 2f, 3.2f, 170f), "Wide sweep reaches the sides but not behind");
 Check(!MonsterRules.InArc(0, 1, 0, 4, 4f, 3.2f, 170f), "Out of range is never hit");
@@ -127,10 +131,17 @@ var grip = new AfflictionTimers();
 Check(grip.TryApply(Affliction.Seized, 0f, MonsterRules.TwinsHoldSeconds) && !grip.TryApply(Affliction.Constricted, .5f, 5f), "A seized player cannot be immobilised by another monster");
 grip.End(Affliction.Seized, 1f);
 Check(!grip.TryApply(Affliction.Seized, 3.9f, 1.2f) && grip.TryApply(Affliction.Seized, 4f, 1.2f), "After the throw the 3 s immunity stops a second grab");
-Check(MonsterRules.TwinsGrabLands(1.8f, true, true, true) && !MonsterRules.TwinsGrabLands(1.81f, true, true, true) && !MonsterRules.TwinsGrabLands(1f, false, true, true) &&
+Check(MonsterRules.TwinsGrabLands(MonsterRules.TwinsReach, true, true, true) && !MonsterRules.TwinsGrabLands(MonsterRules.TwinsReach + .01f, true, true, true) && !MonsterRules.TwinsGrabLands(1f, false, true, true) &&
       !MonsterRules.TwinsGrabLands(1f, true, false, true) && !MonsterRules.TwinsGrabLands(1f, true, true, false),
     "The grab needs reach, sight, the room attack limit and no control immunity");
-Check(MonsterRules.TwinsThrowDamage == 18 && MonsterRules.TwinsHoldSeconds == 1.2f && MonsterRules.TwinsCooldown == 7f, "Twins: 18 damage on the throw, 1.2 s hold, 7 s cooldown");
+Check(MonsterRules.TwinsHoldSeconds == 1.2f && MonsterRules.TwinsCooldown == 12f && MonsterRules.TwinsReach == 1.5f, "Twins: 1.2 s hold, 12 s cooldown, 1.5 m grab");
+Check(MonsterRules.ChooseThrow(true, true, true) == MonsterRules.ThrowAim.Pit, "A pit nearby wins over monsters and walls");
+Check(MonsterRules.ChooseThrow(false, true, true) == MonsterRules.ThrowAim.Monster, "Without a pit, the player is thrown into a monster");
+Check(MonsterRules.ChooseThrow(false, false, true) == MonsterRules.ThrowAim.Wall && MonsterRules.ThrowDamage(MonsterRules.ThrowAim.Wall) == 25,
+    "Without a pit or a monster, into the wall for 25");
+Check(MonsterRules.ChooseThrow(false, false, false) == MonsterRules.ThrowAim.Forward, "Open space: thrown straight ahead");
+Check(MonsterRules.TwinsPitMargin > 0f, "A pit throw lands short of the edge, so the player can survive");
+Check(MonsterRules.ThrowForce(.1f) == MonsterRules.TwinsMinForce && MonsterRules.ThrowForce(100f) == MonsterRules.TwinsMaxForce, "Throw force is bounded");
 
 Check(MoonRules.Damage(100, 4, false) == 100 && MoonRules.Damage(100, 5, false) == 95 && MoonRules.Damage(100, 6, false) == 95 && MoonRules.Damage(100, 7, false) == 90,
     "New moon defence replaces the old step instead of adding 5 and 10 percent");
@@ -148,4 +159,41 @@ for (int i = 0; i < 10000; i++) if (MoonRules.SoulDrops(6, (i + .5f) / 10000f)) 
 Check(drops == 5000 && MoonRules.SoulDrops(5, .9999f), "Random soul chance is 50 percent per life; earlier moons retain guaranteed drops");
 Check(MoonRules.Strength(1) == 3 && MoonRules.Strength(2) == 5 && MoonRules.Strength(3) == 7 &&
       Math.Abs(MoonRules.GrabForce(3) - 9.6f) < .001f, "Moon lift budgets use native forceMax and Strength progression for 3/5/7 upgrades");
+// ---- reach and impacts
+Check(MonsterRules.InReach(MonsterKind.Basilisk, 1f, 0f, 0f, 1.3f) && !MonsterRules.InReach(MonsterKind.Basilisk, 1f, 1.4f, 0f, 1.3f),
+    "The basilisk reaches a player on the floor, not one standing on a table");
+Check(!MonsterRules.InReach(MonsterKind.Basilisk, 1.4f, 0f, 0f, 1.3f), "Out of horizontal reach is never grabbed");
+Check(MonsterRules.InReach(MonsterKind.Naga, 2f, 1.8f, 0f, 3.2f) && !MonsterRules.InReach(MonsterKind.Basilisk, 1f, 1.8f, 0f, 3f),
+    "The tall naga reaches up a step the snake cannot");
+Check(!MonsterRules.InReach(MonsterKind.Gorgon, 0f, -1f, 0f, 1f), "The gorgon's horns miss a player well below its feet");
+Check(MonsterRules.ImpactDamage(600, 0) == 15 && MonsterRules.ImpactDamage(600, 1) == 42 && MonsterRules.ImpactDamage(600, 2) == 84,
+    "Gorgon impact damage 15/42/84 (light/medium/heavy)");
+Check(MonsterRules.ImpactDamage(60, 0) == 3 && MonsterRules.ImpactDamage(60, 2) == 10, "Small monsters still take minimum impact damage");
+// ---- animation states (view only): gait per monster, struggle in a grip, hurt flinch
+Check(MonsterAnimRules.Gait(MonsterKind.Basilisk, false) == MonsterGait.Crawl && MonsterAnimRules.Gait(MonsterKind.Naga, false) == MonsterGait.Crawl,
+    "Snakes crawl");
+Check(MonsterAnimRules.Gait(MonsterKind.Witch, false) == MonsterGait.Fly && MonsterAnimRules.Gait(MonsterKind.Fairy, true) == MonsterGait.Fly,
+    "The witch and the fairy fly (the pig-only landed flag does not ground them)");
+Check(MonsterAnimRules.Gait(MonsterKind.Pig, false) == MonsterGait.Fly && MonsterAnimRules.Gait(MonsterKind.Pig, true) == MonsterGait.Walk,
+    "The pig flies until it lands, then walks");
+Check(MonsterAnimRules.Gait(MonsterKind.Gorgon, false) == MonsterGait.Walk && MonsterAnimRules.Gait(MonsterKind.Twins, false) == MonsterGait.Walk,
+    "The gorgon and the twins walk");
+Check(MonsterAnimRules.Struggle(false, false, true) == 1f && MonsterAnimRules.Struggle(false, false, false) == 0f,
+    "A held monster struggles fully; a free one does not");
+Check(MonsterAnimRules.Struggle(false, true, true) is > 0f and < 1f, "A stunned monster in a grip struggles weakly (the stun pose stays readable)");
+Check(MonsterAnimRules.Struggle(true, false, true) == 0f, "A dead monster does not struggle");
+Check(MonsterAnimRules.AttackAnimShown(false, false, false) && !MonsterAnimRules.AttackAnimShown(false, true, false) &&
+      !MonsterAnimRules.AttackAnimShown(false, false, true) && !MonsterAnimRules.AttackAnimShown(true, false, false),
+    "Attack animations play only while alive, awake and not held");
+Check(MonsterAnimRules.Flinch(-1f) == 0f && MonsterAnimRules.Flinch(0f) == 0f && MonsterAnimRules.Flinch(MonsterAnimRules.FlinchSeconds) == 0f,
+    "No flinch before a hit, at its very start, or after it has settled");
+Check(Math.Abs(MonsterAnimRules.Flinch(MonsterAnimRules.FlinchPeak) - 1f) < 1e-4, "The flinch peaks right after the hit");
+float flinchPrev = 1f; bool flinchFalls = true;
+for (float s = MonsterAnimRules.FlinchPeak + .02f; s < MonsterAnimRules.FlinchSeconds; s += .02f)
+{
+    float f = MonsterAnimRules.Flinch(s);
+    if (f > flinchPrev || f < 0f || f > 1f) flinchFalls = false;
+    flinchPrev = f;
+}
+Check(flinchFalls && flinchPrev < .05f, "After the peak the flinch only eases back to rest, staying within 0..1");
 Console.WriteLine("MONSTER_CHECKS_PASSED: " + checks);

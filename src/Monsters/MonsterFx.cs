@@ -7,7 +7,7 @@ namespace IncreaseHardMod.Monsters;
 /// <summary>One-off monster effects every client draws (the host decides, <see cref="MonsterBrain.Fx"/> sends).</summary>
 internal static class MonsterFx
 {
-    internal const byte FireballLaunch = 0, FireballBurst = 1, WallImpact = 2, Slash = 3, StoneFlash = 4;
+    internal const byte FireballLaunch = 0, FireballBurst = 1, WallImpact = 2, Slash = 3, StoneFlash = 4, Bite = 5, HeadToss = 6;
 
     private static Material _additive;
     private static readonly List<Fireball> Balls = new();
@@ -48,6 +48,14 @@ internal static class MonsterFx
                 break;
             case Slash:
                 SlashArc(a, b);
+                break;
+            case Bite:
+                MonsterAudio.Play(MonsterAudio.Cue.Bite, a);
+                MonsterAudio.Play(MonsterAudio.Cue.Spit, a, .7f, 1.1f); // venom going in
+                break;
+            case HeadToss:
+                MonsterAudio.Play(MonsterAudio.Cue.Thud, a);
+                MonsterAudio.Play(MonsterAudio.Cue.Snort, a, .8f);
                 break;
             case StoneFlash:
                 Flash(a, new Color(.85f, .85f, .75f), 4f, .4f);

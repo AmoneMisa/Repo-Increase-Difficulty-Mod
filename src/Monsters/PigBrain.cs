@@ -99,6 +99,7 @@ internal sealed class PigBrain : MonsterBrain
     {
         if (state == Eat) MonsterAudio.Play(MonsterAudio.Cue.Chomp, BodyPosition);
         else if (state == Land) MonsterAudio.Play(MonsterAudio.Cue.Oink, BodyPosition, 1.4f);
+        else if (state == Flee) MonsterAudio.Play(MonsterAudio.Cue.Oink, BodyPosition, 1.1f, 1.5f); // startled squeal
     }
 
     protected override void HostTick(float dt)
@@ -128,7 +129,7 @@ internal sealed class PigBrain : MonsterBrain
                 break;
             case Land:
                 Halt();
-                if (StateTime > 1.2f) SetState(Flee);
+                if (StateTime > 1.2f) Announce(Flee);
                 break;
             case Flee:
                 var threat = NearestVisible(12f);

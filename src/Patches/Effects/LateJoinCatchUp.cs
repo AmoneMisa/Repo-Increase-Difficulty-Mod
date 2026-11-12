@@ -57,7 +57,12 @@ internal static class LateJoinCatchUp
         if (ev.Code != RequestCode || !ModConfig.LateJoinEnabled.Value) return;
         try
         {
-            if (!PhotonNetwork.IsMasterClient) { LateJoinBattery.Receive(ev); return; }
+            if (!PhotonNetwork.IsMasterClient)
+            {
+                if (ev.CustomData is object[] round && round.Length == 3 && round[0] is byte rop && rop == RoundOp) { ReceiveRound(ev, round); return; }
+                LateJoinBattery.Receive(ev);
+                return;
+            }
             if (ev.CustomData is object[] request && request.Length == 1 && request[0] is byte op && op == 2)
             { LateJoinBattery.OnRequest(ev.Sender); return; }
             if (ev.CustomData != null) return;
@@ -69,6 +74,20 @@ internal static class LateJoinCatchUp
             Send(target);
         }
         catch (System.Exception e) { Plugin.Log.LogWarning($"[LateJoin] Catch-up sync failed harmlessly: {e.Message}"); }
+    }
+
+    private const byte RoundOp = 3;
+
+    // Joiner: how many extraction points are already done (the game only counts them as they happen).
+    private static void ReceiveRound(EventData ev, object[] data)
+    {
+        if (PhotonNetwork.MasterClient == null || ev.Sender != PhotonNetwork.MasterClient.ActorNumber ||
+            data[1] is not int completed || data[2] is not bool allDone || completed < 0 || completed > 64) return;
+        var round = RoundDirector.instance;
+        if (round == null) return;
+        round.extractionPointsCompleted = Mathf.Max(round.extractionPointsCompleted, completed);
+        round.allExtractionPointsCompleted |= allDone;
+        Plugin.Log.LogInfo($"[LateJoin] Extraction progress from the host: {completed} completed{(allDone ? ", all done" : "")}.");
     }
 
     private static void Send(Player target)
@@ -89,7 +108,16 @@ internal static class LateJoinCatchUp
         {
             if (hinge == null || hinge.photon == null || hinge.photon.ViewID == 0) continue;
             if (hinge.dead) { hinge.photon.RPC("DestroyHingeRPC", target); doors++; }
-            else if (hinge.broken) { hinge.photon.RPC("HingeBreakRPC", target); doors++; }
+            else if (hinge.broken)
+            {
+                hinge.photon.RPC("HingeBreakRPC", target);
+                // A broken door is a loose physics object whose transform only syncs while it moves: a resting one
+                // stayed in the doorway on the joiner's screen, blocking a passage everyone else could use.
+                // Teleport it to where it really lies (host-authoritative; same place for everyone else).
+                var pgo = hinge.physGrabObject;
+                if (pgo != null && pgo.rb != null) { pgo.Teleport(pgo.rb.position, pgo.rb.rotation); pgo.rb.WakeUp(); }
+                doors++;
+            }
         }
 
         if (GameDirector.instance != null)
@@ -101,16 +129,38 @@ internal static class LateJoinCatchUp
                 deaths++;
             }
 
+        // Extraction points. Order matters on the joiner:
+        //  1. every point's own goal, the OPEN point's last (HaulGoalSetRPC also sets the shared quota shown on the HUD);
+        //  2. the round director's "a point is open" + which one (ExtractionPointActivateRPC: the HUD quota only shows
+        //     while a point is active, the route to the quota follows extractionPointCurrent, and the other points get
+        //     locked so they no longer look openable);
+        //  3. then each point's real state, which overrides anything the activation did locally;
+        //  4. the completed count, which the game never sends after the fact.
+        var round = RoundDirector.instance;
+        var current = round != null && round.extractionPointActive ? round.extractionPointCurrent : null;
         ExtractionPoint anyPoint = null;
-        foreach (var point in Object.FindObjectsByType<ExtractionPoint>(FindObjectsSortMode.None))
+        var all = Object.FindObjectsByType<ExtractionPoint>(FindObjectsSortMode.None);
+        foreach (var point in all)
         {
             if (point == null || point.photonView == null || point.photonView.ViewID == 0) continue;
             anyPoint ??= point;
-            if (point.haulGoalFetched) point.photonView.RPC("HaulGoalSetRPC", target, point.haulGoal);
+            if (point.haulGoalFetched && point != current) point.photonView.RPC("HaulGoalSetRPC", target, point.haulGoal);
+        }
+        if (current != null && current.photonView != null && current.photonView.ViewID != 0)
+        {
+            if (current.haulGoalFetched) current.photonView.RPC("HaulGoalSetRPC", target, current.haulGoal);
+            if (round.photonView != null) round.photonView.RPC("ExtractionPointActivateRPC", target, current.photonView.ViewID);
+        }
+        foreach (var point in all)
+        {
+            if (point == null || point.photonView == null || point.photonView.ViewID == 0) continue;
             if (point.currentState != ExtractionPoint.State.Idle) { point.photonView.RPC("StateSetRPC", target, point.currentState); points++; }
         }
-        if (anyPoint != null && RoundDirector.instance != null && RoundDirector.instance.extractionPointSurplus > 0)
-            anyPoint.photonView.RPC("ExtractionPointSurplusRPC", target, RoundDirector.instance.extractionPointSurplus);
+        if (anyPoint != null && round != null && round.extractionPointSurplus > 0)
+            anyPoint.photonView.RPC("ExtractionPointSurplusRPC", target, round.extractionPointSurplus);
+        if (round != null)
+            PhotonNetwork.RaiseEvent(RequestCode, new object[] { RoundOp, round.extractionPointsCompleted, round.allExtractionPointsCompleted },
+                new RaiseEventOptions { TargetActors = new[] { target.ActorNumber } }, SendOptions.SendReliable);
 
         PhotonNetwork.SendAllOutgoingCommands();
         Plugin.Log.LogInfo($"[LateJoin] Caught {target.NickName} up: {values} loot value(s), {doors} door(s), {deaths} dead player(s), {points} extraction point state(s).");

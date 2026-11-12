@@ -125,7 +125,10 @@ internal sealed class MapRitual : MonoBehaviour
     {
         _map = MapHere();
         if (_map is LootMap.None or LootMap.Swiftbroom) return;
-        if (InteractiveValuables.RitualPrefab(RitualLoot.Cube) == null) return;
+        if (InteractiveValuables.RitualPrefab(RitualRewardRules.For(_map, 0)) == null) return;
+        if (_map == LootMap.Manor)
+            for (int i = 0; i < RitualRewardRules.Variants; i++)
+                if (InteractiveValuables.RitualPrefab(RitualRewardRules.Coffin(i)) == null) return;
         var spots = new List<Vector3>();
         foreach (var p in SemiFunc.LevelPointsGetAll())
         {
@@ -133,9 +136,10 @@ internal sealed class MapRitual : MonoBehaviour
             if (TryFloor(p.transform.position, out var floor)) spots.Add(floor);
         }
         Shuffle(spots);
-        if (spots.Count == 0) return;
-        _altar = spots[0];
-        if (_map == LootMap.Manor && !PlaceManorAltar(spots))
+        var altarSpots = spots.FindAll(RewardFits);
+        if (altarSpots.Count == 0) return;
+        _altar = altarSpots[0];
+        if (_map == LootMap.Manor && !PlaceManorAltar(altarSpots))
         {
             Plugin.Log.LogWarning("[Ritual] No clear place for the Manor chalk drawing.");
             return;
@@ -318,7 +322,7 @@ internal sealed class MapRitual : MonoBehaviour
             int before = _accepted;
             if (_map == LootMap.Museum) ScanPaintings();
             else ScanOfferings();
-            if (_accepted == (1 << Total) - 1) AwardCube();
+            if (_accepted == (1 << Total) - 1) AwardReward();
             if (before != _accepted) Broadcast();
             if (now >= _nextRecovery)
             {
@@ -395,14 +399,41 @@ internal sealed class MapRitual : MonoBehaviour
         return changed;
     }
 
-    private void AwardCube()
+    private void AwardReward()
     {
-        var reward = REPOLib.Modules.Valuables.SpawnValuable(InteractiveValuables.RitualPrefab(RitualLoot.Cube),
-            _altar + Vector3.up * .55f, Quaternion.identity);
+        string key = RitualRewardRules.For(_map, _variant);
+        var prefab = InteractiveValuables.RitualPrefab(key);
+        if (prefab?.Prefab == null || !RewardFits(_altar)) return;
+        var body = prefab.Prefab.GetComponent<PhysGrabObject>();
+        var reward = REPOLib.Modules.Valuables.SpawnValuable(prefab,
+            OfferingPosition(_altar, Quaternion.identity, body, .55f), Quaternion.identity);
         if (reward == null) return;
         _finished = true;
         Broadcast();
-        Plugin.Log.LogInfo($"[Ritual] {_map} cube awakened.");
+        Plugin.Log.LogInfo($"[Ritual] {_map} reward spawned: {key} (skeleton variant {_variant}).");
+    }
+
+    private bool RewardFits(Vector3 floor)
+    {
+        // All coffin variants use the same outer shell. Reserve the complete reward,
+        // not the old cube's smaller footprint, before placing an altar.
+        var prefab = InteractiveValuables.RitualPrefab(RitualRewardRules.For(_map, 0));
+        var body = prefab?.Prefab != null ? prefab.Prefab.GetComponent<PhysGrabObject>() : null;
+        if (body == null) return false;
+        var rotation = Quaternion.identity;
+        var center = OfferingPosition(floor, rotation, body, .55f) +
+            Vector3.Scale(body.midPointOffset, body.transform.localScale);
+        var extents = body.boundingBox * .5f + Vector3.one * .04f;
+        if (Physics.CheckBox(center, extents, rotation, World, QueryTriggerInteraction.Ignore)) return false;
+        // Avoid a wide display or long coffin overhanging a pit beside a valid nav point.
+        foreach (int x in new[] { -1, 1 })
+        foreach (int z in new[] { -1, 1 })
+        {
+            var corner = floor + new Vector3(x * extents.x, .3f, z * extents.z);
+            if (!Physics.Raycast(corner, Vector3.down, out var hit, .55f, World, QueryTriggerInteraction.Ignore) ||
+                hit.normal.y < .94f || Mathf.Abs(hit.point.y - floor.y) > .18f) return false;
+        }
+        return true;
     }
 
     private void BuildVisuals()
@@ -426,7 +457,8 @@ internal sealed class MapRitual : MonoBehaviour
         if (_finished)
         {
             _clue?.Hide();
-            if (!_announced) HudNotify.Toast(ru ? "Куб пробудился" : "The cube has awakened", HudStyle.Good, 4f, HudKey + ".done");
+            if (!_announced) HudNotify.Toast((ru ? "Награда ритуала: " : "Ritual reward: ") +
+                RitualRewardRules.Name(_map, _variant, ru), HudStyle.Good, 4f, HudKey + ".done");
             _announced = true;
             return;
         }
@@ -446,7 +478,7 @@ internal sealed class MapRitual : MonoBehaviour
     {
         _shownMask = _accepted;
         _shownRussian = ru;
-        _clue.Title = ru ? "ЗАГАДКА КУБА" : "CUBE RIDDLE";
+        _clue.Title = ru ? "ЗАГАДКА РИТУАЛА" : "RITUAL RIDDLE";
         var lines = (_map, ru) switch
         {
             (LootMap.McJannek, true) => new[] { "Шесть частей. Один разум.", "Соберите компьютер у куба." },
@@ -564,7 +596,7 @@ internal sealed class MapRitual : MonoBehaviour
         value.dollarValueSet = true;
     }
 
-    // Fixed cube value matches Swiftbroom. Replacements keep the puzzle solvable without creating extra money.
+    // Preserve the fixed ritual reward economy. Replacement offerings cannot create extra money.
     [HarmonyPatch(typeof(ValuableObject), nameof(ValuableObject.DollarValueSetLogic))]
     private static class RewardValue
     {
@@ -576,12 +608,18 @@ internal sealed class MapRitual : MonoBehaviour
                 data[0] is string marker && marker == BackupMarker)
                 SetBackupValue(__instance);
             else if (__instance.dollarValueOverride != 0) return;
-            else if (__instance.name.StartsWith(CubePrefabName, StringComparison.Ordinal))
-                __instance.dollarValueOverride = 250000;
+            else if (__instance.name.StartsWith(CubePrefabName, StringComparison.Ordinal) || IsRewardName(__instance.name))
+                __instance.dollarValueOverride = RitualRewardRules.Value;
             else if (__instance.name.StartsWith(MousePrefabName, StringComparison.Ordinal))
                 __instance.dollarValueOverride = Random.Range(5, 8) * 100;
             else if (__instance.name.StartsWith(KeyboardPrefabName, StringComparison.Ordinal))
                 __instance.dollarValueOverride = Random.Range(9, 14) * 100;
+        }
+        private static bool IsRewardName(string name)
+        {
+            foreach (string key in RitualRewardRules.Keys)
+                if (name.StartsWith(InteractiveValuables.PrefabName(key), StringComparison.Ordinal)) return true;
+            return false;
         }
     }
 }

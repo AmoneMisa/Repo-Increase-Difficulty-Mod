@@ -149,7 +149,6 @@ internal static class SkillText
             case C.Grounding: return "The witch's electric hold lasts 20 / 35 / 50% shorter (by level).";
             case C.ThermalProtection: return "Burn damage lasts 20 / 35 / 50% less time. Tick damage is unchanged; the +50% damage-taken window still applies.";
             case C.Antidote: return "Poison and venom last 20 / 40 / 60% shorter (by level).";
-            case C.StoneResilience: return "Petrification lasts 20 / 35 / 50% shorter (by level).";
             case C.Evasion: return "Break free from a constriction 15 / 30 / 45% faster (by level).";
             case C.DodgeRoll: return $"Press {Monsters.DodgeRoll.KeyName} with A or D for a short sideways dash. Cooldown 22 / 18 / 14 s (by level). Not while held or petrified.";
             case C.GoldenNose: return "A Golden Pig on the level glows for you within 8 / 15 / 25 m (by level).";
@@ -321,7 +320,6 @@ internal static class SkillText
             case C.Grounding: return "Электрическое удержание ведьмы короче на 20 / 35 / 50% (по уровням).";
             case C.ThermalProtection: return "Урон горения длится на 20 / 35 / 50% меньше. Урон тика не снижается; окно +50% получаемого урона остаётся.";
             case C.Antidote: return "Отравление и змеиный яд короче на 20 / 40 / 60% (по уровням).";
-            case C.StoneResilience: return "Окаменение короче на 20 / 35 / 50% (по уровням).";
             case C.Evasion: return "Освобождение от обвивания быстрее на 15 / 30 / 45% (по уровням).";
             case C.DodgeRoll: return $"{Monsters.DodgeRoll.KeyName} вместе с A или D — короткий рывок вбок. Перезарядка 22 / 18 / 14 с (по уровням). Не работает в захвате и окаменении.";
             case C.GoldenNose: return "Золотая свинка на уровне подсвечивается для вас в радиусе 8 / 15 / 25 м (по уровням).";

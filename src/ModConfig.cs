@@ -232,6 +232,7 @@ public static class ModConfig
     public static ConfigEntry<bool> StaffEnabled, NetLauncherEnabled;
     public static ConfigEntry<bool> WingCosmeticsEnabled, SharkCosmeticsEnabled, StarlightCosmeticsEnabled, LegateCosmeticsEnabled, FairyCosmeticsEnabled, GildedCosmeticsEnabled,
         SeerCosmeticsEnabled, JesterCosmeticsEnabled, BrideCosmeticsEnabled, AngelCosmeticsEnabled, MascotCosmeticsEnabled;
+    public static ConfigEntry<string> CostumeChannelColors;
     public static ConfigEntry<bool> ScreenEffectsEnabled;
     public static ConfigEntry<bool> GuaranteedStrengthEnabled;
     public static ConfigEntry<float> NetSeconds, NetBreakChance;
@@ -515,6 +516,7 @@ public static class ModConfig
         GuaranteedStrengthEnabled = Module(cfg, "Shop", "GuaranteedStrength", true, "GuaranteedStrength", "When MoreStandsForShops is installed, the shop always offers at least one Strength (grab strength) upgrade, while the team can still buy it. Host setting.");
         ScreenEffectsEnabled = Module(cfg, "Screen Effects", "Enabled", true, "ScreenEffects", "When you are frozen, poisoned, sedated (tranquilized) or netted, show a themed frame around the screen edges and a status card at the left with a time bar. Local only.");
         MascotCosmeticsEnabled = Module(cfg, "Cosmetics", "MascotsEnabled", true, "MascotCosmetics", "Add nine modular costume sets: Musketeer Cat, Bomb Bird, Talking Dog, Rabbid Mayhem, Jackal Warden, Panda Dojo, Penguin Captain, Hello Kitty and Chipmunk Hoodie. Tintable in the native cosmetics menu. Everyone needs the same mod version. Takes effect on restart.");
+        CostumeChannelColors = cfg.Bind("Cosmetics", "ChannelColors", "", "Your second and accent colours for the mod's costume parts (set with the MAIN / SECOND / ACCENT buttons on the game's colour page; saved here).");
         WingCosmeticsEnabled = Module(cfg, "Cosmetics", "WingsEnabled", true, "WingCosmetics", "Add three Rare back-wing cosmetics (Astral Night, Solar Seraph, Prism Chime) to the Body Top slot. Everyone in the lobby needs this setting to see them. Takes effect on restart.");
         SharkCosmeticsEnabled = Module(cfg, "Cosmetics", "PlushSharkEnabled", true, "SharkCosmetics", "Add the six-part Plush Shark set: hood (Hat), headphones (Ears), suit with dorsal fin (Body Top), tail (Body Bottom) and two fin sleeves (Arm Right, Arm Left). The blue plush takes the colour you pick in the cosmetics menu. Everyone in the lobby needs this setting to see them. Takes effect on restart.");
         SeerCosmeticsEnabled = Module(cfg, "Cosmetics", "SeerEnabled", true, "SeerCosmetics", "Add the Horned Seer set: a hood with crescent horns, chains, crystals and a blindfold (Hat), a black robe with a tattered green shawl and a deer-skull pauldron (Body Top), a long ragged robe with a green veil and crystal chains (Body Bottom) and bell sleeves (Arm Right, Arm Left). The green takes the colour you pick in the cosmetics menu. Takes effect on restart.");

@@ -58,6 +58,12 @@ internal abstract class MonsterBrain : MonoBehaviour
     internal Vector3 BodyPosition => E != null && E.HasRigidbody ? E.Rigidbody.rb.position : transform.position;
     internal abstract MonsterPose Pose { get; }
     internal virtual MonsterAnim Anim => MonsterAnim.None;
+    /// <summary>
+    /// Whether a player holds the monster right now, on every client: the game itself syncs who grabs a physics
+    /// object (PhysGrabObject.playerGrabbing), so the struggle animation needs no network message of its own.
+    /// </summary>
+    internal bool Held => E != null && E.HasRigidbody && E.Rigidbody.physGrabObject != null &&
+                          E.Rigidbody.physGrabObject.playerGrabbing.Count > 0;
     /// <summary>A point the monster is magically tied to right now (the thing the fairy carries), on every client.</summary>
     internal virtual bool Tether(out Vector3 point) { point = default; return false; }
     /// <summary>This monster's body on this client (set by the visual itself).</summary>
@@ -83,7 +89,26 @@ internal abstract class MonsterBrain : MonoBehaviour
         if (E.HasVision) E.Vision.onVisionTriggered.AddListener(OnVisionEvent);
         if (E.HasStateInvestigate) E.StateInvestigate.onInvestigateTriggered.AddListener(OnInvestigateEvent);
         if (E.HasRigidbody) E.Rigidbody.onGrabbed.AddListener(OnGrabbedEvent);
+        WireImpacts();
         if (E.HasStateDespawn) E.StateDespawn.ChaseDespawn = false; // a long fight must not despawn it mid-attack
+    }
+
+    // In native prefabs the impact detector reaches EnemyRigidbody.Light/Medium/HeavyImpact (camera shake and
+    // EnemyHealth impact damage) only through persistent UnityEvent listeners. MonsterRegistry.Strip replaces
+    // every UnityEvent on the clone, which cut that link: thrown or slammed monsters took no damage at all.
+    // Re-add it at runtime on every client, like the prefab did (EnemyHealth.Hurt itself is host-only).
+    private void WireImpacts()
+    {
+        if (!E.HasRigidbody) return;
+        var body = E.Rigidbody;
+        var detector = body.impactDetector != null ? body.impactDetector : body.GetComponent<PhysGrabObjectImpactDetector>();
+        if (detector == null) return;
+        detector.onImpactLight ??= new UnityEngine.Events.UnityEvent();
+        detector.onImpactMedium ??= new UnityEngine.Events.UnityEvent();
+        detector.onImpactHeavy ??= new UnityEngine.Events.UnityEvent();
+        detector.onImpactLight.AddListener(body.LightImpact);
+        detector.onImpactMedium.AddListener(body.MediumImpact);
+        detector.onImpactHeavy.AddListener(body.HeavyImpact);
     }
 
     private void OnEnable() { if (!All.Contains(this)) All.Add(this); }
@@ -120,9 +145,12 @@ internal abstract class MonsterBrain : MonoBehaviour
         if (IsHost) OnGrabbed(E.Rigidbody.onGrabbedPlayerAvatar);
     }
 
+    // Runs on every client (HurtRPC raises onHurt everywhere): the red flash is drawn by our own visual, because
+    // the native flash needs a _ColorOverlay shader property our painted materials may not have.
     private void OnHurtEvent()
     {
         MonsterAudio.Play(MonsterAudio.Cue.Hurt, BodyPosition, .6f);
+        if (Visual != null) Visual.Flash();
         if (IsHost) OnHurt();
     }
 
@@ -161,6 +189,7 @@ internal abstract class MonsterBrain : MonoBehaviour
         StateTime += Time.deltaTime;
         GuardGrab();
         if (!IsHost || !Parent.Spawned || _dead) return;
+        HoldHurts();
         if (E.CurrentState == EnemyState.Despawn)
         {
             MonsterAfflictions.ReleaseFrom(E);
@@ -177,9 +206,77 @@ internal abstract class MonsterBrain : MonoBehaviour
         if (E.IsStunned()) { OnStunned(); Sync(); return; }
         if (Target != null && (Target.isDisabled || Target.deadSet)) Target = null;
         HostTick(Time.deltaTime);
-        if (E.CurrentState != EnemyState.Stunned)
-            E.CurrentState = Target != null ? EnemyState.Chase : EnemyState.Roaming;
+        UpdateAttackStatus();
         Sync();
+    }
+
+    /// <summary>
+    /// The native enemy state the game and other systems read (chase music, Hunted Warning, monster HUDs, pings):
+    /// ChaseBegin while it winds an attack up, Chase while it attacks or holds someone, ChaseSlow while it hunts a
+    /// target, Roaming otherwise. The current target is published the native way (TargetPlayerAvatar / ViewID).
+    /// </summary>
+    private void UpdateAttackStatus()
+    {
+        if (E.CurrentState is EnemyState.Stunned or EnemyState.Spawn or EnemyState.Despawn) return;
+        var pose = Pose;
+        bool attacking = pose is MonsterPose.Attack or MonsterPose.Special or MonsterPose.Hold;
+        bool winding = pose == MonsterPose.Prepare;
+        if (Target != null && Target.photonView != null)
+        {
+            E.TargetPlayerAvatar = Target;
+            E.TargetPlayerViewID = Target.photonView.ViewID;
+        }
+        E.CurrentState = Target == null && !attacking ? EnemyState.Roaming
+            : winding ? EnemyState.ChaseBegin : attacking ? EnemyState.Chase : EnemyState.ChaseSlow;
+        if (attacking || winding) E.SetChaseTimer();
+    }
+
+    private float _heldHurtUntil;
+
+    // Native rule: impacts hurt a monster only while it is stunned or a "non-stun hurt" window is open. Keep that
+    // window open while players hold it and briefly after they let go, so slamming it into the floor or a wall
+    // and throwing it deal the impact damage set on the prefab (MonsterRules.ImpactDamage).
+    private void HoldHurts()
+    {
+        if (!E.HasRigidbody || !E.HasHealth || E.Rigidbody.physGrabObject == null) return;
+        if (E.Rigidbody.physGrabObject.playerGrabbing.Count > 0) _heldHurtUntil = Time.time + MonsterRules.ThrownHurtSeconds;
+        if (Time.time < _heldHurtUntil) E.Health.NonStunHurtOverride(.25f);
+    }
+
+    /// <summary>
+    /// Host: where a player is looking. The local player uses their own camera; remote players use the camera
+    /// state the game itself syncs to the host (PlayerAvatar.clientCameraPosition / Rotation). Without valid
+    /// data it returns false, which the callers treat as "not looking" (never a reason to hurt the player).
+    /// </summary>
+    protected static bool View(PlayerAvatar p, out Vector3 eye, out Vector3 forward)
+    {
+        eye = default; forward = default;
+        if (p == null) return false;
+        bool local = !SemiFunc.IsMultiplayer() || (p.photonView != null && p.photonView.IsMine);
+        if (local)
+        {
+            var cam = Camera.main != null ? Camera.main.transform : null;
+            if (cam == null) return false;
+            eye = cam.position; forward = cam.forward;
+            return true;
+        }
+        if (!p.clientCameraStateValid) return false;
+        eye = p.clientCameraPosition;
+        forward = p.clientCameraRotation * Vector3.forward;
+        return !float.IsNaN(forward.x) && forward.sqrMagnitude > .5f;
+    }
+
+    /// <summary>
+    /// Host: whether a player is inside this monster's reach - horizontal range and the height window of its
+    /// body (MonsterRules.Reach), measured feet to feet, plus line of sight so nothing is hit through a wall.
+    /// </summary>
+    protected bool InReach(PlayerAvatar p, float range = -1f)
+    {
+        if (p == null || p.isDisabled || p.deadSet) return false;
+        if (range < 0f) MonsterRules.Reach(Kind, out range, out _, out _);
+        var feet = E.transform.position;
+        var d = p.transform.position - feet;
+        return MonsterRules.InReach(Kind, d.x, d.y, d.z, range) && Sees(p, range + 2f);
     }
 
     /// <summary>Whether players may grab the monster right now (checked on every client).</summary>
@@ -201,6 +298,10 @@ internal abstract class MonsterBrain : MonoBehaviour
     protected void SetState(byte state)
     {
         if (state == State) return;
+        // Diagnostics for the witch's attack cycle (a playtest reported she never casts).
+        if (Kind == MonsterKind.Witch)
+            Plugin.Log.LogInfo($"[Monsters] Witch state {State} -> {state}, target {(Target != null ? Target.playerName : "none")}" +
+                               (Target != null ? $" at {DistanceTo(Target):0.0} m, sees={Sees(Target, 18f)}" : ""));
         State = state;
         StateTime = 0f;
         Sync();

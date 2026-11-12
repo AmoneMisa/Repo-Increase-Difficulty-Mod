@@ -38,6 +38,7 @@ internal static class SkillStore
         if (_registered || !ModConfig.PlayerUpgradesEnabled.Value) return;
         _registered = true;
         foreach (var node in SkillCatalog.All) RepoUpgrades.RegisterUpgrade(node.Id, null, null, OnChanged);
+        foreach (string retired in SkillCatalog.Retired) RepoUpgrades.RegisterUpgrade(retired, null, null, null);
         RepoUpgrades.RegisterUpgrade(PointsId, null, null, OnChanged);
         RepoUpgrades.RegisterUpgrade(MigratedId, null, null, null);
         RepoUpgrades.RegisterUpgrade(SkillEffects.BeamColourChoiceId, null, null, null);

@@ -11,9 +11,11 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.10.1`
+- **Version:** `0.10.4`
 
 Mid-level joining also catches up live battery charge, upgraded capacity and native battery indicator colours. New-monster selection now recommends a score of 100.
+
+Version 0.10.2 adds unique ritual reward valuables: a quantum computer, five matching crystal coffins, a living portrait and an eternal sun. Each keeps the previous $250,000 base reward; Swiftbroom is unchanged ([details](release-notes/v0.10.2.md)). In-game validation is pending.
 
 Version 0.10.1 adds two monsters — the Mischief Fairy (Tier I, carries light valuables out of carts and extraction points) and Hansel and Gretel (Tier II, seize and throw a player) — and the Witch's recorded laugh after a successful spell, with a 12-second repeat limit per Witch ([details](release-notes/v0.10.1.md)). The new monsters are not yet validated in a live game.
 
@@ -433,9 +435,11 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.10.1`
+- **Версия:** `0.10.4`
 
 При входе посреди уровня также досылаются фактический заряд, увеличенная ёмкость и восстанавливаются штатные цвета индикатора батареи. Рекомендуемый балл выбора новых монстров — 100.
+
+Версия 0.10.2 добавляет уникальные награды ритуалов: квантовый компьютер, пять вариантов хрустального гроба, живую картину и вечное солнце. Базовая стоимость каждой награды — $250 000; Swiftbroom без изменений ([подробности](release-notes/v0.10.2.md)). Проверка в игре ещё требуется.
 
 Версия 0.10.1 добавляет ведьме записанный смех после успешного заклинания, не чаще раза в 12 секунд у одной ведьмы ([подробности](release-notes/v0.10.1.md)).
 

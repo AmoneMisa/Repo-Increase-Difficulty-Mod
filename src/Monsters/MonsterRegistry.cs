@@ -43,13 +43,13 @@ internal static class MonsterRegistry
         new() { Kind = MonsterKind.Pig, Name = "Golden Pig", NameRu = "Золотая свинка", Difficulty = EnemyParent.Difficulty.Difficulty1,
             Health = MonsterRules.PigHealth(0), Mass = MonsterRules.PigMass(0), Height = .7f, Speed = 2.2f, Hover = 1.3f, GrabForce = 1.4f, Art = "monster_pig" },
         new() { Kind = MonsterKind.Witch, Name = "Witch", NameRu = "Ведьма", Difficulty = EnemyParent.Difficulty.Difficulty2,
-            Health = 240, Mass = 70f, Height = 1.8f, Speed = 3.2f, Hover = MonsterRules.WitchHover, GrabForce = 3f, Art = "monster_witch" },
+            Health = 150, Mass = 70f, Height = 1.8f, Speed = 2.2f, Hover = MonsterRules.WitchHover, GrabForce = 3f, Art = "monster_witch" },
         new() { Kind = MonsterKind.Basilisk, Name = "Basilisk", NameRu = "Василиск", Difficulty = EnemyParent.Difficulty.Difficulty2,
-            Health = 280, Mass = 130f, Height = .45f, Speed = 3.6f, Hover = 0f, GrabForce = 4f, Art = "monster_basilisk" },
+            Health = 170, Mass = 130f, Height = .45f, Speed = 3.6f, Hover = 0f, GrabForce = 4f, Art = "monster_basilisk" },
         new() { Kind = MonsterKind.Gorgon, Name = "Gorgon", NameRu = "Горгона", Difficulty = EnemyParent.Difficulty.Difficulty3,
-            Health = 600, Mass = 450f, Height = 1.5f, Speed = 2.6f, Hover = 0f, GrabForce = 7f, Art = "monster_gorgon" },
+            Health = 360, Mass = 450f, Height = 1.5f, Speed = 2.6f, Hover = 0f, GrabForce = 7f, Art = "monster_gorgon" },
         new() { Kind = MonsterKind.Naga, Name = "Naga Queen", NameRu = "Королева Наг", Difficulty = EnemyParent.Difficulty.Difficulty3,
-            Health = 480, Mass = 210f, Height = 2.1f, Speed = 4.2f, Hover = 0f, GrabForce = 5f, Art = "monster_naga" },
+            Health = 260, Mass = 210f, Height = 2.1f, Speed = 3f, Hover = 0f, GrabForce = 5f, Art = "monster_naga" },
         new() { Kind = MonsterKind.Fairy, Name = "Mischief Fairy", NameRu = "Шкодная фея", Difficulty = EnemyParent.Difficulty.Difficulty1,
             Health = MonsterRules.FairyHealth, Mass = 6f, Height = .55f, Speed = 3f, Hover = MonsterRules.FairyHover, GrabForce = .6f, Art = "monster_fairy" },
         new() { Kind = MonsterKind.Twins, Name = "Hansel and Gretel", NameRu = "Гензель и Гретель", Difficulty = EnemyParent.Difficulty.Difficulty2,
@@ -215,12 +215,25 @@ internal static class MonsterRegistry
         health.spawnValuable = true;
         health.impactHurt = true;
         health.objectHurt = true;
+        // Thrown or slammed against the floor/walls: hurts while stunned or held (MonsterBrain keeps it on while held).
+        health.impactLightDamage = MonsterRules.ImpactDamage(spec.Health, 0);
+        health.impactMediumDamage = MonsterRules.ImpactDamage(spec.Health, 1);
+        health.impactHeavyDamage = MonsterRules.ImpactDamage(spec.Health, 2);
+        health.objectHurtMultiplier = 1f;
         body.grabForceNeeded = ScriptableObject.CreateInstance<GrabForce>();
         body.grabForceNeeded.amount = spec.GrabForce;
         body.gravity = spec.Hover <= 0f;
         var rb = body.GetComponent<Rigidbody>();
         if (rb != null) rb.mass = spec.Mass;
         ScaleBody(body.transform, spec.Height);
+        // The naga is a duellist, not a sentry: shorter native sight so players can hide from her.
+        var vision = enemy.GetComponent<EnemyVision>();
+        if (vision != null && spec.Kind == MonsterKind.Naga)
+        {
+            vision.VisionDistance = Mathf.Min(vision.VisionDistance, MonsterRules.NagaSight);
+            vision.VisionDistanceClose = Mathf.Min(vision.VisionDistanceClose, 2.5f);
+            vision.VisionDistanceCloseCrouch = Mathf.Min(vision.VisionDistanceCloseCrouch, 1.2f);
+        }
         var agent = enemy.GetComponent<UnityEngine.AI.NavMeshAgent>();
         if (agent != null && spec.Kind == MonsterKind.Basilisk)
         {

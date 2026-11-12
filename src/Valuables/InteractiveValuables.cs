@@ -146,14 +146,14 @@ internal static class InteractiveValuables
                     }
                 }
                 bool manekiCollision=key=="maneki_neko"&&ManekiPhysics.Attach(go,art);
-                if (RitualLoot.IsProcedural(key))
+                if (RitualLoot.IsProcedural(key) || RitualRewardRules.IsReward(key))
                 {
                     var bounds = ValuableLayout.MeshBounds(go.transform, art.visualRoot);
                     BoxCollider(go, "Ritual loot collider", bounds.center, bounds.size);
                 }
                 foreach(var binding in art.bindings)
                 {
-                    if(manekiCollision || RitualLoot.IsProcedural(key))continue;
+                    if(manekiCollision || RitualLoot.IsProcedural(key) || RitualRewardRules.IsReward(key))continue;
                     if(key=="centrifuge"&&binding.group.StartsWith("tube_",StringComparison.Ordinal))continue;
                     if(key=="centrifuge")
                     {
@@ -193,6 +193,7 @@ internal static class InteractiveValuables
                 if(key=="maneki_neko")go.AddComponent<ManekiMotion>();
             }
             go.AddComponent<ValuableFoley>();
+            if (RitualRewardRules.IsReward(key)) go.AddComponent<RitualRewardMotion>();
             if(key=="bomb"){go.AddComponent<ParticleScriptExplosion>();go.AddComponent<BombDestruction>();}
             var actual=ValuableLayout.Apply(go,art);
             value.volumeType=VolumeFor(value,actual.size*ValuableLayout.Scale(key));

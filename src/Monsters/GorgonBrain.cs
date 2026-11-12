@@ -11,8 +11,9 @@ namespace IncreaseHardMod.Monsters;
 /// wall deals 45 (ram) + 10 (impact) once. Others in the way take 15 and are knocked aside with the native
 /// tumble; loose items take normal physics damage from the heavy body. Missing and hitting a wall stuns it for
 /// 3 s - the team's window. Each player is hurt at most once per charge.
-/// Death Stare (not while charging): its eyes glow and a rising tone plays; a player who stays in its line of
-/// sight for 2 s takes 25 and is slowed for 2 s. Breaking sight cancels it. Cooldown 20 s.
+/// Balance pass: the Death Stare is removed (it is a bull, not a Medusa); 8 s between charges, 4 s between head tosses.
+/// Every attack respects its height window: it never hits a player on a ledge above or below it, and it does not
+/// charge at one.
 /// It can only be grabbed while stunned (a grab in progress is released when the stun ends).
 /// </summary>
 internal sealed class GorgonBrain : MonsterBrain
@@ -21,7 +22,7 @@ internal sealed class GorgonBrain : MonsterBrain
     private readonly HashSet<PlayerAvatar> _hit = new();
     private PlayerAvatar _victim;
     private Vector3 _dir;
-    private float _stareReady, _lostSight, _tramplReady;
+    private float _lostSight, _tramplReady, _chargeReady;
 
     internal override MonsterPose Pose => State switch
     {
@@ -44,7 +45,7 @@ internal sealed class GorgonBrain : MonsterBrain
 
     protected override bool GrabAllowed() => E.IsStunned();
 
-    protected override void OnSpawned() { _victim = null; _hit.Clear(); _stareReady = Time.time + 8f; }
+    protected override void OnSpawned() { _victim = null; _hit.Clear(); _chargeReady = Time.time + 3f; }
 
     protected override void OnSeePlayer(PlayerAvatar player)
     {
@@ -56,7 +57,7 @@ internal sealed class GorgonBrain : MonsterBrain
         if (State == Patrol) Destination = position;
     }
 
-    protected override void OnStunned() { DropVictim(); if (State is Charge or Roar or Acquire or Stare) SetState(Recover); }
+    protected override void OnStunned() { DropVictim(); if (State is Charge or Roar or Acquire or Stare) Announce(Recover); }
     protected override void OnDied() => DropVictim();
 
     private void DropVictim()
@@ -67,9 +68,11 @@ internal sealed class GorgonBrain : MonsterBrain
 
     protected override void PlayStateCue(byte state)
     {
-        if (state == Roar) MonsterAudio.Play(MonsterAudio.Cue.Roar, BodyPosition, 1.4f);
-        else if (state == Stare) MonsterAudio.Play(MonsterAudio.Cue.Stare, BodyPosition, 1.2f);
-        else if (state == Charge) MonsterAudio.Play(MonsterAudio.Cue.Charge, BodyPosition, .8f);
+        if (state == Acquire) MonsterAudio.Play(MonsterAudio.Cue.Growl, BodyPosition, 1f);
+        else if (state == Roar) MonsterAudio.Play(MonsterAudio.Cue.Roar, BodyPosition, 1.4f);
+        // Dazed after hitting a wall or being stunned: a heavy, slow snort and a low groan.
+        else if (state == Recover) { MonsterAudio.Play(MonsterAudio.Cue.Snort, BodyPosition, .9f, .7f); MonsterAudio.Play(MonsterAudio.Cue.Growl, BodyPosition, .5f, .8f); }
+        else if (state == Charge) { MonsterAudio.Play(MonsterAudio.Cue.Snort, BodyPosition, 1.2f); MonsterAudio.Play(MonsterAudio.Cue.Stomp, BodyPosition, 1f, .8f); }
     }
 
     protected override void HostTick(float dt)
@@ -107,25 +110,6 @@ internal sealed class GorgonBrain : MonsterBrain
                 Halt();
                 if (StateTime > Economy.ExtendedMoons.Cooldown(1.5f)) SetState(Target != null ? Hunt : Patrol);
                 break;
-            case Stare:
-                Halt();
-                if (Target == null || !Sees(Target, 18f))
-                {
-                    // Sight broken: no damage, shorter cooldown.
-                    _stareReady = Time.time + Economy.ExtendedMoons.Cooldown(6f);
-                    SetState(Target != null ? Hunt : Patrol);
-                    break;
-                }
-                Face(Target.transform.position, 5f);
-                if (StateTime < MonsterRules.StareSeconds) break;
-                if (MayAttack(Target))
-                {
-                    MonsterAfflictions.Damage(Target, MonsterRules.StareDamage, E);
-                    MonsterAfflictions.Apply(Target, Affliction.Slowed, MonsterRules.StareSlowSeconds, E);
-                }
-                _stareReady = Time.time + Economy.ExtendedMoons.Cooldown(MonsterRules.StareCooldown);
-                SetState(Hunt);
-                break;
         }
     }
 
@@ -136,19 +120,21 @@ internal sealed class GorgonBrain : MonsterBrain
         if (sees) _lostSight = 0f;
         else if ((_lostSight += dt) > 5f) { Target = null; SetState(Patrol); return; }
         float d = DistanceTo(Target);
-        if (d < 2.2f && Time.time >= _tramplReady && MayAttack(Target))
+        if (d < 2.2f && Time.time >= _tramplReady && InReach(Target, 2.2f) && MayAttack(Target))
         {
             // Too close to charge: a head toss.
-            _tramplReady = Time.time + Economy.ExtendedMoons.Cooldown(2.5f);
+            _tramplReady = Time.time + Economy.ExtendedMoons.Cooldown(MonsterRules.HeadTossCooldown);
             MonsterAfflictions.Damage(Target, MonsterRules.TrampleDamage, E);
             Knock(Target, Flat(Target.transform.position - BodyPosition) + Vector3.up * .4f, 9f);
-            MonsterAudio.Play(MonsterAudio.Cue.Thud, BodyPosition);
+            Fx(MonsterFx.HeadToss, BodyPosition, Vector3.zero);
             return;
         }
         if (sees && MayAttack(Target))
         {
-            if (d >= 3.5f && d <= 14f && ClearRun(Target)) { Announce(Acquire); return; }
-            if (d >= 4f && d <= 16f && Time.time >= _stareReady) { Announce(Stare); return; }
+            var dy = Target.transform.position.y - E.transform.position.y;
+            bool sameFloor = MonsterRules.InReach(Kind, 0f, dy, 0f, 1f); // no charge at someone on a ledge
+            if (sameFloor && d >= 3.5f && d <= 14f && Time.time >= _chargeReady && ClearRun(Target))
+            { _chargeReady = Time.time + Economy.ExtendedMoons.Cooldown(MonsterRules.ChargeCooldown); Announce(Acquire); return; }
         }
         Move(Target.transform.position, 2.6f);
     }
@@ -165,7 +151,7 @@ internal sealed class GorgonBrain : MonsterBrain
 
     private void ChargeTick(float dt)
     {
-        if (!E.HasRigidbody) { SetState(Recover); return; }
+        if (!E.HasRigidbody) { Announce(Recover); return; }
         var rb = E.Rigidbody.rb;
         // Almost straight: a little steering toward the target until someone is on the horns.
         if (_victim == null && Target != null)
@@ -182,7 +168,9 @@ internal sealed class GorgonBrain : MonsterBrain
         foreach (var p in SemiFunc.PlayerGetList())
         {
             if (p == null || p.isDisabled || p.deadSet || p == _victim || _hit.Contains(p)) continue;
-            if (Vector3.Distance(Flat(p.transform.position), Flat(front)) > 1.2f || Mathf.Abs(p.transform.position.y - rb.position.y) > 2f) continue;
+            // Horns at body height: the player's feet must be inside the bull's height window (not on a shelf above it).
+            var dFeet = p.transform.position - E.transform.position;
+            if (Vector3.Distance(Flat(p.transform.position), Flat(front)) > 1.2f || !MonsterRules.InReach(Kind, 0f, dFeet.y, 0f, 1f)) continue;
             _hit.Add(p);
             if (!MayAttack(p)) continue;
             if (_victim == null && MonsterAfflictions.Apply(p, Affliction.Dragged, MonsterRules.ChargeMaxSeconds, E)) _victim = p;
@@ -211,7 +199,7 @@ internal sealed class GorgonBrain : MonsterBrain
             else
             {
                 if (E.HasStateStunned) Economy.ExtendedMoons.SelfStun(E.StateStunned, MonsterRules.GorgonStunSeconds);
-                SetState(Recover);
+                Announce(Recover);
             }
             return;
         }
@@ -220,7 +208,7 @@ internal sealed class GorgonBrain : MonsterBrain
             rb.velocity = new Vector3(rb.velocity.x * .3f, rb.velocity.y, rb.velocity.z * .3f);
             E.NavMeshAgent.Warp(rb.position);
             if (_victim != null) { MonsterAfflictions.Damage(_victim, MonsterRules.TrampleDamage, E); DropVictim(); }
-            SetState(Recover);
+            Announce(Recover);
         }
     }
 }

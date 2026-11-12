@@ -14,7 +14,7 @@ public static class PluginInfo
     // Keep the identity stable across the rename: existing config and integrations use it.
     public const string PLUGIN_GUID = "com.kubai.increasehardmod";
     public const string PLUGIN_NAME = "IncreaseDifficultyMod";
-    public const string PLUGIN_VERSION = "0.10.1";
+    public const string PLUGIN_VERSION = "0.10.4";
 }
 
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -100,6 +100,7 @@ public class Plugin : BaseUnityPlugin
 
         var netObject = new GameObject("IncreaseHardMod_Runtime");
         netObject.AddComponent<ModNetwork>();
+        netObject.AddComponent<Cosmetics.CostumeChannels.Sync>();
         netObject.AddComponent<InventorySlotsUpgrade.Controller>();
         netObject.AddComponent<VoiceRecoveryController>();
         // Host-side auto Loot Cash-In for the "Loot Cash-In" truck upgrade (sells leftovers on quota close).

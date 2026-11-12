@@ -18,7 +18,7 @@ internal sealed class ValuableFoley : MonoBehaviour
         _view=GetComponent<PhotonView>();string key=GetComponent<ValuableArtInstance>().assetKey;
         _impact=Impact(key);
     }
-    internal static int Impact(string key)=>key=="plush_corgi"?Plush:key=="maneki_neko"?Porcelain:key=="crystal_skull"||key=="water_timer"||key=="whiskey_bottle"?Glass:key=="skeleton"?Bone:key=="bath_gift_set"?Paper:key=="robot_vacuum"||key=="ram_pair"?Plastic:Metal;
+    internal static int Impact(string key)=>key=="plush_corgi"?Plush:key=="maneki_neko"?Porcelain:key==RitualRewardRules.Sun||key.StartsWith("ritual_reward_coffin_",StringComparison.Ordinal)||key=="crystal_skull"||key=="water_timer"||key=="whiskey_bottle"?Glass:key=="skeleton"?Bone:key=="bath_gift_set"?Paper:key=="robot_vacuum"||key=="ram_pair"?Plastic:Metal;
     internal static PhysAudio Preset(string key,PhysAudio donor)
     {
         var preset=UnityEngine.Object.Instantiate(donor);string cue="valuable_"+Names[Impact(key)];

@@ -121,4 +121,24 @@ Assert(IncreaseHardMod.Challenges.ChallengeRules.DeathFails(IncreaseHardMod.Chal
 Assert(!IncreaseHardMod.Challenges.ChallengeRules.Expired(0,44.9f,IncreaseHardMod.Challenges.ChallengeKind.Targets)&&IncreaseHardMod.Challenges.ChallengeRules.Expired(0,45f,IncreaseHardMod.Challenges.ChallengeKind.Targets),"Target Practice lasts 45 s");
 Assert(IncreaseHardMod.Challenges.ChallengeRules.Status(IncreaseHardMod.Challenges.ChallengeKind.Targets,4,8,30.2f,false)=="TARGET PRACTICE  4/8  0:31"&&IncreaseHardMod.Challenges.ChallengeRules.Status(IncreaseHardMod.Challenges.ChallengeKind.Escort,0,1,90f,false)=="WISP ESCORT  1:30","HUD line text");
 Assert(IncreaseHardMod.Challenges.ChallengeRules.Name(IncreaseHardMod.Challenges.ChallengeKind.Smash,true)=="Разгром","Russian names");
+var rewardKeys=RitualRewardRules.Keys.ToArray();
+Assert(rewardKeys.Length==8&&rewardKeys.Distinct().Count()==8,"Eight distinct ritual rewards");
+Assert(RitualRewardRules.Value==250000,"Keep previous ritual base economy");
+Assert(RitualRewardRules.For(LootMap.McJannek,0)==RitualRewardRules.Quantum,"Station awards computer");
+Assert(RitualRewardRules.For(LootMap.Museum,0)==RitualRewardRules.Painting,"Museum awards living portrait");
+Assert(RitualRewardRules.For(LootMap.Sunstone,0)==RitualRewardRules.Sun,"Resort awards eternal sun");
+foreach(var map in new[]{LootMap.None,LootMap.Swiftbroom,LootMap.Manor|LootMap.Museum})
+    Assert(RitualRewardRules.For(map,0)==null,"No rewards on native or unsupported map "+map);
+for(int variant=0;variant<5;variant++)
+    Assert(RitualRewardRules.For(LootMap.Manor,variant)=="ritual_reward_coffin_"+variant,"Coffin matches the accepted skeleton variant "+variant);
+Assert(RitualRewardRules.Coffin(-1)==RitualRewardRules.Coffin(0)&&RitualRewardRules.Coffin(9)==RitualRewardRules.Coffin(4),"Bound variant selection");
+foreach(var key in rewardKeys)
+{
+    Assert(RitualRewardRules.IsReward(key),"Recognize reward "+key);
+    Assert(!CollectionCatalog.Entries.Any(e=>e.Key==key),"Reward excluded from ambient loot "+key);
+}
+foreach(var key in new[]{null,"ritual_cube","ritual_reward_coffin_5","ritual_reward_sun_fake"})
+    Assert(!RitualRewardRules.IsReward(key),"Reject non-reward keys");
+foreach(bool ru in new[]{false,true})
+    Assert(Enumerable.Range(0,5).Select(i=>RitualRewardRules.Name(LootMap.Manor,i,ru)).Distinct().Count()==5,"Five localized character names");
 Console.WriteLine($"PASS: {checks} collection, sample loss, liquid orientation and late join policy checks.");

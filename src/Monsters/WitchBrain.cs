@@ -24,7 +24,7 @@ internal sealed class WitchBrain : MonsterBrain
     private PlayerAvatar _zapTarget;
     private float _grabCheck;
     private bool _nearFloor;
-    private float _laughReady;
+    private float _laughReady, _spotCheck;
 
     internal const float GrabHeight = 1f;
 
@@ -78,7 +78,7 @@ internal sealed class WitchBrain : MonsterBrain
         return _hover > 0f ? _hover : Hover;
     }
 
-    protected override void OnSpawned() { _balls.Clear(); _zapTarget = null; _laughReady = 0f; }
+    protected override void OnSpawned() { _balls.Clear(); _zapTarget = null; _laughReady = 0f; _fireReady = Time.time + 4f; _zapReady = Time.time + 8f; }
 
     protected override void OnSeePlayer(PlayerAvatar player)
     {
@@ -94,9 +94,9 @@ internal sealed class WitchBrain : MonsterBrain
     {
         if (State is FirePrep or ZapPrep)
         {
-            _fireReady = Mathf.Max(_fireReady, Time.time + Economy.ExtendedMoons.Cooldown(1.5f));
-            _zapReady = Mathf.Max(_zapReady, Time.time + Economy.ExtendedMoons.Cooldown(3f));
-            SetState(Reposition);
+            _fireReady = Mathf.Max(_fireReady, Time.time + Economy.ExtendedMoons.Cooldown(4f));
+            _zapReady = Mathf.Max(_zapReady, Time.time + Economy.ExtendedMoons.Cooldown(6f));
+            Announce(Reposition);
         }
     }
 
@@ -118,11 +118,33 @@ internal sealed class WitchBrain : MonsterBrain
     {
         if (state == FirePrep) MonsterAudio.Play(MonsterAudio.Cue.Charge, BodyPosition);
         else if (state == ZapPrep) MonsterAudio.Play(MonsterAudio.Cue.Zap, BodyPosition);
-        else if ((state == FireCast || state == Zap) && Time.time >= _laughReady)
-        {
-            _laughReady = Time.time + 12f;
-            MonsterAudio.Play(MonsterAudio.Cue.WitchLaugh, BodyPosition);
-        }
+        else if (state == FireCast || state == Zap) TryLaugh(1f);
+        // Darting off on the broom (after a cast, or knocked out of a wind-up by a hit).
+        else if (state == Reposition) MonsterAudio.Play(MonsterAudio.Cue.Whoosh, BodyPosition, .9f, 1.35f);
+    }
+
+    /// <summary>
+    /// Every laugh (attack or hunting call) shares one cooldown: the 2.7 s recording repeated every few seconds
+    /// drowned out her attack warnings.
+    /// </summary>
+    internal bool TryLaugh(float volume)
+    {
+        if (Time.time < _laughReady) return false;
+        _laughReady = Time.time + 12f;
+        MonsterAudio.Play(MonsterAudio.Cue.WitchLaugh, BodyPosition, volume);
+        return true;
+    }
+
+    private float _humAt;
+
+    // Every client: an electric hum for as long as she holds someone up, so the zap is audible, not only its wind-up.
+    protected override void Update()
+    {
+        base.Update();
+        if (State != Zap || Dead) { _humAt = 0f; return; }
+        if (Time.time < _humAt) return;
+        _humAt = Time.time + .9f;
+        MonsterAudio.Play(MonsterAudio.Cue.Hum, BodyPosition, .7f);
     }
 
     protected override void HostTick(float dt)
@@ -131,10 +153,18 @@ internal sealed class WitchBrain : MonsterBrain
         switch (State)
         {
             case Patrol:
-                Roam(2.4f);
+                Roam(MonsterRules.WitchPatrolSpeed);
+                // Native vision looks from the donor's vision point, not from her flying body, and may never fire
+                // for her: she also checks her own line of sight a few times a second.
+                if (Time.time >= _spotCheck)
+                {
+                    _spotCheck = Time.time + .3f;
+                    var spotted = NearestVisible(14f);
+                    if (spotted != null) { Target = spotted; SetState(Hunt); }
+                }
                 break;
             case Search:
-                Move(Destination, 3f);
+                Move(Destination, MonsterRules.WitchMoveSpeed);
                 if (StateTime > 8f || Vector3.Distance(Flat(E.transform.position), Flat(Destination)) < 1.2f) SetState(Patrol);
                 var seen = NearestVisible(14f);
                 if (seen != null) { Target = seen; SetState(Hunt); }
@@ -152,13 +182,13 @@ internal sealed class WitchBrain : MonsterBrain
                 else SetState(Hunt);
                 break;
             case FireCast:
-                if (StateTime > .4f) SetState(Reposition);
+                if (StateTime > .4f) Announce(Reposition);
                 break;
             case ZapPrep:
                 Halt();
                 if (Target == null) { SetState(Search); break; }
                 Face(Target.transform.position);
-                if (StateTime < .8f) break;
+                if (StateTime < MonsterRules.LevitatePrepare) break;
                 if (Sees(Target, 13f) && MayAttack(Target) && MonsterAfflictions.Apply(Target, Affliction.Electrified, MonsterRules.LevitateSeconds, E))
                 { _zapTarget = Target; Announce(Zap); }
                 else { _zapReady = Time.time + Economy.ExtendedMoons.Cooldown(3f); SetState(Hunt); }
@@ -176,12 +206,13 @@ internal sealed class WitchBrain : MonsterBrain
                 {
                     _zapTarget = null;
                     _zapReady = Time.time + Economy.ExtendedMoons.Cooldown(MonsterRules.LevitateCooldown);
-                    SetState(Reposition);
+                    Announce(Reposition);
                 }
                 break;
             case Reposition:
-                if (Target != null) Move(AwayFrom(Target.transform.position, 5f), 3.8f);
-                if (StateTime > 1.5f) SetState(Target != null ? Hunt : Patrol);
+                if (Target != null) Move(AwayFrom(Target.transform.position, 5f), MonsterRules.WitchRetreatSpeed);
+                // After every spell she drifts away for a while: no back-to-back casts.
+                if (StateTime > MonsterRules.WitchRepositionSeconds) SetState(Target != null ? Hunt : Patrol);
                 break;
         }
     }
@@ -193,12 +224,16 @@ internal sealed class WitchBrain : MonsterBrain
         if (sees) { _lastSeen = Target.transform.position; _lostSight = 0f; }
         else if ((_lostSight += dt) > 4f) { Destination = _lastSeen; Target = null; SetState(Search); return; }
         float d = DistanceTo(Target);
-        if (d < MonsterRules.WitchKeepMin) Move(AwayFrom(Target.transform.position, 4f), 3.6f);
-        else if (d > MonsterRules.WitchKeepMax || !sees) Move(Target.transform.position, 3.2f);
+        if (d < MonsterRules.WitchKeepMin) Move(AwayFrom(Target.transform.position, 4f), MonsterRules.WitchRetreatSpeed);
+        else if (d > MonsterRules.WitchKeepMax || !sees) Move(Target.transform.position, MonsterRules.WitchMoveSpeed);
         else { Halt(); Face(Target.transform.position); }
         if (!sees || !MayAttack(Target)) return;
-        if (Time.time >= _zapReady && d <= 12f && MonsterAfflictions.CanControl(Target)) Announce(ZapPrep);
-        else if (Time.time >= _fireReady && d <= 16f) Announce(FirePrep);
+        // She only casts after looking at you for a moment (predictable), and one spell pushes the other back.
+        if (StateTime < 1.2f) return;
+        if (Time.time >= _zapReady && d <= 12f && MonsterAfflictions.CanControl(Target))
+        { _fireReady = Mathf.Max(_fireReady, Time.time + 4f); Announce(ZapPrep); }
+        else if (Time.time >= _fireReady && d <= 16f)
+        { _zapReady = Mathf.Max(_zapReady, Time.time + 4f); Announce(FirePrep); }
     }
 
     private void Launch(PlayerAvatar target)

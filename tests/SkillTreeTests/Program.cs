@@ -7,7 +7,7 @@ void Check(bool ok, string name) { if (!ok) throw new Exception("FAIL " + name);
 
 // ---------------------------------------------------------------- catalogue
 Check(C.NormalPageCost(SkillPage.Recon) == 40 && C.NormalPageCost(SkillPage.Combat) == 73 &&
-      C.NormalPageCost(SkillPage.Survival) == 70 && C.NormalPageCost(SkillPage.Utility) == 55 && C.NormalPageCost(SkillPage.Arsenal) == 54, "Normal page costs include weapon rate and convoy perks");
+      C.NormalPageCost(SkillPage.Survival) == 67 && C.NormalPageCost(SkillPage.Utility) == 55 && C.NormalPageCost(SkillPage.Arsenal) == 54, "Normal page costs include weapon rate and convoy perks");
 Check(C.Find(C.LightBasket).MaxLevel == 5 && C.Find(C.LightBasket).Cost == 1, "Light Basket has five affordable ranks");
 Check(C.Find(C.Hemostasis).Requires.SequenceEqual(new[]{C.Survivor}) && C.Find(C.LinkOperator).Requires.SequenceEqual(new[]{C.Technician}), "New perks have the intended prerequisite");
 Check(PerkRules.BasketLift(0)==1f && PerkRules.BasketLift(5)==1.5f && PerkRules.BasketLift(50)==1.5f, "Cart lifting is capped at +50%, zero without a perk");
@@ -24,13 +24,16 @@ Check(PerkRules.ActualHitDamage(100,100)==0 && PerkRules.ActualHitDamage(100,80)
       PerkRules.ActualHitDamage(30,-100)==30 && PerkRules.ActualHitDamage(30,40)==0, "Vampirism uses actual damage, allows killing blows and rejects blocked hits and healing");
 // 0.10.0 monster perks: stable save ids, three levels each, on existing pages (no new currency).
 foreach (var (id, page, cost) in new[] { (C.Grounding, SkillPage.Survival, 1), (C.ThermalProtection, SkillPage.Survival, 1), (C.Antidote, SkillPage.Survival, 1),
-    (C.StoneResilience, SkillPage.Survival, 1), (C.Evasion, SkillPage.Survival, 1), (C.DodgeRoll, SkillPage.Survival, 2),
+    (C.Evasion, SkillPage.Survival, 1), (C.DodgeRoll, SkillPage.Survival, 2),
     (C.GoldenNose, SkillPage.Utility, 1), (C.SoulHunter, SkillPage.Utility, 2) })
     Check(C.Find(id) != null && C.Find(id).Page == page && C.Find(id).MaxLevel == 3 && C.Find(id).Cost == cost && id.StartsWith("IHM_ST_"), "Monster perk " + id + " is in the tree with 3 levels");
 Check(System.Array.IndexOf(C.Find(C.DodgeRoll).Requires, C.Evasion) >= 0, "Dodge Roll requires Evasion");
-Check(C.PageCost(SkillPage.Recon) == 46 && C.PageCost(SkillPage.Combat) == 79 && C.PageCost(SkillPage.Survival) == 76 &&
+Check(C.PageCost(SkillPage.Recon) == 46 && C.PageCost(SkillPage.Combat) == 79 && C.PageCost(SkillPage.Survival) == 73 &&
       C.PageCost(SkillPage.Utility) == 61 && C.PageCost(SkillPage.Arsenal) == 60, "Each page adds one trade-off per tier (1+2+3 points)");
-Check(C.TotalCost() == 369, "Whole tree includes the new firing-rate perk");
+Check(C.TotalCost() == 366, "Whole tree includes the new firing-rate perk (Stone Resilience retired)");
+Check(C.Find("IHM_ST_StoneResilience") == null && System.Array.IndexOf(C.Retired, "IHM_ST_StoneResilience") >= 0, "Stone Resilience is retired: not buyable, save key still registered");
+var refund = new SkillLoadout { Earned = 10 }; refund.Bought["IHM_ST_StoneResilience"] = 3;
+Check(refund.Spent == 0 && refund.Available == 10, "Points spent on a retired perk count as unspent again");
 Check(C.Find(C.RapidFire).Cost == 1 && C.Find(C.RapidFire).MaxLevel == 3 && C.Find(C.RapidFire).Requires.SequenceEqual(new[]{C.Marksman}), "Rapid Fire has three ranks after Marksman");
 Check(PerkRules.CappedWeaponBonus(.4f, PerkRules.FlameDamageCap) == .3f &&
       PerkRules.CappedWeaponBonus(2f, PerkRules.LaserDamageCap) == .35f &&

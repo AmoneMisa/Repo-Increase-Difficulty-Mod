@@ -121,7 +121,7 @@ internal static class ValuableVisuals
 [Serializable] internal sealed class ValuableArtLiquid { public float halfWidth,bottom,top,fill,power; }
 [Serializable] internal sealed class ValuableArtPhysics { public Vector3 centerOfMass,motionMin,motionMax;public ValuableArtCollider[] colliders; }
 [Serializable] internal sealed class ValuableArtCollider { public string name;public bool moving;public Vector3[] vertices;public int[] triangles; }
-[Serializable] internal sealed class ValuableArtMaterial { public string name, texture;public Color color;public float transmission, emission, roughness,metallic;public bool tint, tintEmission, multiply;public string emissionTexture; }
+[Serializable] internal sealed class ValuableArtMaterial { public string name, texture;public Color color;public float transmission, emission, roughness,metallic;public bool tint, tintEmission, multiply;public string emissionTexture;public int channel; }
 [Serializable] internal sealed class ValuableArtPart
 {
     public string name, group;public float phase;public int material;

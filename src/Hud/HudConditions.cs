@@ -42,15 +42,15 @@ internal static class HudConditions
             Lines = new[] { "50% SLOWER", "STAMINA RECOVERS HALF AS FAST" }, LinesRu = new[] { "НА 50% МЕДЛЕННЕЕ", "ВЫНОСЛИВОСТЬ ВОССТАНАВЛИВАЕТСЯ ВДВОЕ МЕДЛЕННЕЕ" } },
         // Monster afflictions (0.10.0). Warning colours: fire orange, electric violet, coils green, stone grey, blood red.
         [PlayerCondition.Burning] = new Look { Title = "BURNING", TitleRu = "ГОРЕНИЕ", Color = new Color(1f, .55f, .15f),
-            Lines = new[] { "+50% DAMAGE TAKEN", "4 HP/S; RESISTANCE SHORTENS DURATION" }, LinesRu = new[] { "+50% ПОЛУЧАЕМОГО УРОНА", "4 HP/С; СОПРОТИВЛЕНИЕ СОКРАЩАЕТ ВРЕМЯ" } },
+            Lines = new[] { "+25% DAMAGE TAKEN", "2 HP/S; RESISTANCE SHORTENS DURATION" }, LinesRu = new[] { "+25% ПОЛУЧАЕМОГО УРОНА", "2 HP/С; СОПРОТИВЛЕНИЕ СОКРАЩАЕТ ВРЕМЯ" } },
         [PlayerCondition.Electrified] = new Look { Title = "ELECTRIC HOLD", TitleRu = "ЭЛЕКТРОЗАХВАТ", Color = new Color(.72f, .6f, 1f),
-            Lines = new[] { "LIFTED: CAN'T MOVE", "5 HP/S", "BREAK HER LINE OF SIGHT" }, LinesRu = new[] { "ВЫ В ВОЗДУХЕ: НЕЛЬЗЯ ДВИГАТЬСЯ", "5 HP/С", "РАЗОРВИТЕ ЛИНИЮ ЗРЕНИЯ ВЕДЬМЫ" } },
+            Lines = new[] { "LIFTED: CAN'T MOVE", "3 HP/S", "BREAK HER LINE OF SIGHT" }, LinesRu = new[] { "ВЫ В ВОЗДУХЕ: НЕЛЬЗЯ ДВИГАТЬСЯ", "3 HP/С", "РАЗОРВИТЕ ЛИНИЮ ЗРЕНИЯ ВЕДЬМЫ" } },
         [PlayerCondition.Constricted] = new Look { Title = "CONSTRICTED", TitleRu = "УДУШЕНИЕ", Color = new Color(.5f, .85f, .3f),
             Lines = new[] { "CAN'T MOVE - 5 HP/S", "STRUGGLE: WASD / SPACE", "A TEAMMATE CAN HIT THE SNAKE" }, LinesRu = new[] { "НЕЛЬЗЯ ДВИГАТЬСЯ - 5 HP/С", "ВЫРЫВАЙТЕСЬ: WASD / ПРОБЕЛ", "ТОВАРИЩ МОЖЕТ УДАРИТЬ ЗМЕЮ" } },
         [PlayerCondition.Petrified] = new Look { Title = "PETRIFIED", TitleRu = "ОКАМЕНЕНИЕ", Color = new Color(.78f, .76f, .7f),
             Lines = new[] { "CAN'T MOVE OR USE ITEMS" }, LinesRu = new[] { "НЕЛЬЗЯ ДВИГАТЬСЯ И ИСПОЛЬЗОВАТЬ ПРЕДМЕТЫ" } },
         [PlayerCondition.Bleeding] = new Look { Title = "BLEEDING", TitleRu = "КРОВОТЕЧЕНИЕ", Color = new Color(1f, .25f, .25f),
-            Lines = new[] { "4 HP/S" }, LinesRu = new[] { "4 HP/С" } },
+            Lines = new[] { "2 HP/S" }, LinesRu = new[] { "2 HP/С" } },
         [PlayerCondition.Venom] = new Look { Title = "VENOM", TitleRu = "ЗМЕИНЫЙ ЯД", Color = new Color(.66f, 1f, .16f),
             Lines = new[] { "BASILISK BITE", "4 HP/S" }, LinesRu = new[] { "УКУС ВАСИЛИСКА", "4 HP/С" } },
         [PlayerCondition.Slowed] = new Look { Title = "DEATH STARE", TitleRu = "СМЕРТЕЛЬНЫЙ ВЗГЛЯД", Color = new Color(1f, .78f, .35f),
@@ -58,7 +58,7 @@ internal static class HudConditions
         [PlayerCondition.Dragged] = new Look { Title = "ON THE HORNS", TitleRu = "НА РОГАХ", Color = new Color(1f, .45f, .3f),
             Lines = new[] { "DRAGGED BY THE GORGON", "A WALL HURTS: 55" }, LinesRu = new[] { "ГОРГОНА ТАЩИТ ВАС", "УДАР О СТЕНУ: 55" } },
         [PlayerCondition.Seized] = new Look { Title = "SEIZED", TitleRu = "СХВАЧЕН", Color = new Color(1f, .62f, .7f),
-            Lines = new[] { "THE TWINS HOLD YOU", "THROW: 18 DAMAGE", "A TEAMMATE'S HIT FREES YOU" }, LinesRu = new[] { "БЛИЗНЕЦЫ ДЕРЖАТ ВАС", "БРОСОК: 18 УРОНА", "УДАР ТОВАРИЩА ОСВОБОДИТ" } },
+            Lines = new[] { "THE TWINS HOLD YOU", "THROWN: PIT EDGE, MONSTER OR WALL", "A TEAMMATE'S HIT FREES YOU" }, LinesRu = new[] { "БЛИЗНЕЦЫ ДЕРЖАТ ВАС", "БРОСОК: К ЯМЕ, В МОНСТРА ИЛИ В СТЕНУ", "УДАР ТОВАРИЩА ОСВОБОДИТ" } },
     };
 
     private sealed class View
@@ -156,7 +156,7 @@ internal static class HudConditions
             _ => 1f,
         };
         view.Frame.gameObject.SetActive(true);
-        view.FrameImage.color = new Color(1f, 1f, 1f, alpha * pulse);
+        view.FrameImage.color = new Color(1f, 1f, 1f, (alpha * pulse) * FrameStrength(condition));
         // The frame itself moves for three of them: flames flicker upwards, the coils tighten, the drag rattles.
         var frameRect = view.FrameImage.rectTransform;
         switch (condition)
@@ -191,6 +191,16 @@ internal static class HudConditions
         view.Backplate.color = new Color(.02f, .03f, .05f, .5f * alpha);
         HudStack.Place(view.Card, HudCorner.TopLeft, CardId(condition), 10 + order);
     }
+
+    // Monster afflictions keep only a faint edge: the native red hurt flash and the health number must stay readable,
+    // so players can see how much damage they just took. The card at the left still says what is going on.
+    private static float FrameStrength(PlayerCondition condition) => condition switch
+    {
+        PlayerCondition.Bleeding or PlayerCondition.Burning or PlayerCondition.Venom => .3f,
+        PlayerCondition.Electrified or PlayerCondition.Constricted or PlayerCondition.Petrified or
+            PlayerCondition.Slowed or PlayerCondition.Dragged or PlayerCondition.Seized => .4f,
+        _ => 1f,
+    };
 
     private static Color WithAlpha(Color color, float alpha) { color.a = alpha; return color; }
 

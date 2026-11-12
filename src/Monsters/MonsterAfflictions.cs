@@ -69,7 +69,6 @@ internal static class MonsterAfflictions
         switch (kind)
         {
             case Affliction.Electrified: seconds = MonsterRules.GroundedSeconds(seconds, Perk(player, C.Grounding)); break;
-            case Affliction.Petrified: seconds = MonsterRules.StoneSeconds(seconds, Perk(player, C.StoneResilience)); break;
             case Affliction.Venom: seconds = MonsterRules.AntidoteSeconds(seconds, Perk(player, C.Antidote)); break;
             case Affliction.Bleeding: seconds *= 1f - Skills.PerkRules.DurationResistance(Perk(player, C.Hemostasis)); break;
         }
@@ -289,6 +288,31 @@ internal static class MonsterAfflictions
         DotDamage = bypassBurning ? damage : 0;
         try { player.playerHealth.Hurt(damage, false, enemyIndex); }
         finally { _bypass = previous; DotDamage = previousDot; }
+    }
+
+    // Damage-over-time ticks (burn, bleed, venom, holds) are silent: no hurt glitch or hurt sound every second on the
+    // victim's screen, and no hurt sound for teammates. The health bar still drops; direct hits keep their effects.
+    [HarmonyPatch(typeof(CameraGlitch), nameof(CameraGlitch.PlayShortHurt))]
+    private static class QuietDotShort
+    {
+        [HarmonyPrefix] private static bool Prefix() => DotDamage <= 0;
+    }
+
+    [HarmonyPatch(typeof(CameraGlitch), nameof(CameraGlitch.PlayLongHurt))]
+    private static class QuietDotLong
+    {
+        [HarmonyPrefix] private static bool Prefix() => DotDamage <= 0;
+    }
+
+    [HarmonyPatch(typeof(PhotonView), nameof(PhotonView.RPC), new[] { typeof(string), typeof(RpcTarget), typeof(object[]) })]
+    private static class QuietDotForOthers
+    {
+        [HarmonyPrefix]
+        private static void Prefix(string methodName, object[] parameters)
+        {
+            if (DotDamage > 0 && methodName == "UpdateHealthRPC" && parameters != null && parameters.Length >= 3 && parameters[2] is bool)
+                parameters[2] = false; // effect: no hurt sound on the other clients
+        }
     }
 
     /// <summary>+50% damage taken while burning, once (not per fireball); the burn DoT itself is exempt.</summary>
