@@ -4,11 +4,11 @@ using UnityEngine;
 
 namespace IncreaseHardMod.Gear;
 
-/// <summary>Give the local driver a higher first-person view while holding a cart by its handle.</summary>
+/// <summary>Give the local driver a higher first-person view while pushing the flame cart by its handle.</summary>
 [HarmonyPatch(typeof(CameraPosition), nameof(CameraPosition.Update))]
 internal static class CartDrivingView
 {
-    private const float WideLift = .45f, FlameLift = .6f, LiftSpeed = 2f;
+    private const float FlameLift = .6f, LiftSpeed = 2f;
     private const float CameraRadius = .12f, CeilingMargin = .04f;
     private static readonly int Obstructions = LayerMask.GetMask(
         "Default", "PhysGrabObject", "PhysGrabObjectCart", "PhysGrabObjectHinge", "StaticGrabObject");
@@ -67,11 +67,8 @@ internal static class CartDrivingView
     {
         if (grabber == null || !grabber.grabbed || grabber.grabbedPhysGrabObject == null) return 0f;
         var held = grabber.grabbedPhysGrabObject;
+        // Only the flame cart lifts the view; the Wide cart keeps the native camera height.
         if (held.TryGetComponent<FlameCartHandle>(out var flame) && flame.IsPushing(grabber)) return FlameLift;
-        if (held.TryGetComponent<ModCart>(out var modCart) && modCart.kind == CartKind.Wide &&
-            held.TryGetComponent<PhysGrabCart>(out var cart) && cart.currentState == PhysGrabCart.State.Handled &&
-            cart.physGrabObjectGrabArea != null && cart.physGrabObjectGrabArea.listOfAllGrabbers.Contains(grabber))
-            return WideLift;
         return 0f;
     }
 

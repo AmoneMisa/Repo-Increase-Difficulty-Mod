@@ -9,7 +9,7 @@ namespace IncreaseHardMod.Patches.Effects;
 internal static class LateJoinController
 {
     private static int _lastPlayerCount = -1;
-    private static float _nextCheck;
+    private static float _nextCheck, _nextOwnerCheck;
     private const float CheckInterval = 2f;
 
     // Snapshots for the client-side enemy-registration safety net (see EnsureEnemyRegistrations).
@@ -49,6 +49,12 @@ internal static class LateJoinController
         if (!PhotonNetwork.InRoom || !SemiFunc.IsMasterClient())
         {
             _lastPlayerCount = -1;
+            if (PhotonNetwork.InRoom && Time.realtimeSinceStartup >= _nextOwnerCheck)
+            {
+                _nextOwnerCheck = Time.realtimeSinceStartup + 5f;
+                try { LateJoinSession.ReturnLobbyOwnership(); }
+                catch (System.Exception e) { Plugin.Log.LogWarning($"[LateJoin] Lobby handback failed harmlessly: {e.Message}"); }
+            }
             return;
         }
 

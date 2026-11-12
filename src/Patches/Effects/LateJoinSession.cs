@@ -50,6 +50,11 @@ internal static class LateJoinSession
 
             if (!wasOpen || routingChanged)
                 Plugin.Log.LogInfo($"[LateJoin] Steam lobby {steam.currentLobby.Id}: room={room.Name}, region={region}, version={version}, public={openLobby} ({reason}).");
+            _lastSteamProblem = null;
+        }
+        else
+        {
+            ReportSteamProblem(steam);
         }
 
         // Use the game's wrapper: it also clears the persistent-object close handshake.
@@ -58,6 +63,64 @@ internal static class LateJoinSession
         if (openLobby && !room.IsVisible) room.IsVisible = true;
         if (!wasOpen)
             Plugin.Log.LogInfo($"[LateJoin] Re-opened Photon room ({reason}).");
+    }
+
+    private static string _lastSteamProblem;
+
+    /// <summary>
+    /// The host could not manage its Steam lobby, so Steam keeps refusing joiners ("lobby unavailable"). Logged once
+    /// per distinct state: it tells whether the host dropped out of the lobby or another player became its owner.
+    /// </summary>
+    private static void ReportSteamProblem(SteamLobbyManager steam)
+    {
+        if (GameManager.instance.localTest) return;
+        string problem;
+        if (steam == null) problem = "no Steam lobby manager";
+        else if (!SteamClient.IsValid) problem = "Steam client offline";
+        else if (!steam.currentLobby.Id.IsValid) problem = "the host has no Steam lobby";
+        else
+        {
+            var lobby = steam.currentLobby;
+            ulong owner = lobby.Owner.Id;
+            bool member = false;
+            int count = 0;
+            foreach (var m in lobby.Members) { count++; if (m.Id == SteamClient.SteamId) member = true; }
+            problem = owner == 0
+                ? $"the host is no longer in Steam lobby {lobby.Id} (members seen: {count})"
+                : $"Steam lobby {lobby.Id} is owned by {owner}, not the host (host member={member}, members={count})";
+        }
+        if (problem == _lastSteamProblem) return;
+        _lastSteamProblem = problem;
+        Plugin.Log.LogWarning($"[LateJoin] Cannot reopen the Steam lobby: {problem}. New players will see 'lobby unavailable' until the owner is the host again.");
+    }
+
+    /// <summary>
+    /// Guest-side: Steam hands lobby ownership to another member when the host's Steam connection hiccups. Only the
+    /// owner can make the lobby joinable again, so a modded guest that finds itself owner passes it back to the host.
+    /// </summary>
+    internal static void ReturnLobbyOwnership()
+    {
+        if (!ModConfig.LateJoinEnabled.Value || !PhotonNetwork.InRoom || PhotonNetwork.IsMasterClient ||
+            GameManager.instance == null || GameManager.instance.localTest)
+            return;
+        var steam = SteamLobbyManager.instance;
+        if (steam == null || !SteamClient.IsValid || !steam.currentLobby.Id.IsValid ||
+            !steam.currentLobby.IsOwnedBy(SteamClient.SteamId))
+            return;
+        var master = PhotonNetwork.MasterClient;
+        ulong hostId = 0;
+        foreach (var avatar in SemiFunc.PlayerGetList())
+            if (avatar != null && avatar.photonView != null && avatar.photonView.Owner == master &&
+                ulong.TryParse(avatar.steamID, out hostId))
+                break;
+        if (hostId == 0) return;
+        foreach (var m in steam.currentLobby.Members)
+        {
+            if (m.Id != hostId) continue;
+            steam.currentLobby.Owner = m;
+            Plugin.Log.LogInfo($"[LateJoin] This client had become owner of Steam lobby {steam.currentLobby.Id}; handed it back to the host {hostId}.");
+            return;
+        }
     }
 
     /// <summary>

@@ -7,7 +7,8 @@ namespace IncreaseHardMod.Courier;
 /// <summary>
 /// The pet senses danger: while a monster is within <see cref="CourierRules.DangerRadius"/> of it (through walls
 /// too, a little wider than the range at which monsters notice a courier), a glowing red "!" floats over its head and
-/// it gives a short alarm chirp when the danger starts (again every few seconds while it lasts). Worked out on every
+/// it gives a short alarm chirp once per monster: when several pets sense the same monster only the first one
+/// chirps, and nobody chirps about it again that level (the "!" still shows). Worked out on every
 /// client from the pet's and the monsters' synced positions; only players hear the chirp (no monster investigates
 /// it), and the neutral Golden Pig does not count.
 /// </summary>
@@ -19,7 +20,7 @@ internal sealed class CourierDanger : MonoBehaviour
 
     private Transform _visual;
     private Light _light;
-    private float _nextScan, _shown, _nextChirp, _since;
+    private float _nextScan, _shown, _since;
     private bool _danger;
 
     /// <summary>Hidden while the pet is knocked out (its model is off).</summary>
@@ -61,11 +62,6 @@ internal sealed class CourierDanger : MonoBehaviour
         _shown = Mathf.MoveTowards(_shown, show ? 1f : 0f, Time.deltaTime * (show ? 6f : 3f));
         bool visible = _shown > .01f;
         if (_visual.gameObject.activeSelf != visible) _visual.gameObject.SetActive(visible);
-        if (show && Time.time >= _nextChirp)
-        {
-            _nextChirp = Time.time + CourierRules.DangerChirpEvery;
-            try { _alarm.Play(transform.position); } catch { }
-        }
         if (!visible) return;
         float t = Time.time - _since;
         float pop = Mathf.Clamp01(t / .2f);
@@ -78,7 +74,7 @@ internal sealed class CourierDanger : MonoBehaviour
 
     private void Scan()
     {
-        bool danger = false;
+        bool danger = false, newMonster = false;
         var director = EnemyDirector.instance;
         if (director != null && director.enemiesSpawned != null && SemiFunc.RunIsLevel())
         {
@@ -90,12 +86,19 @@ internal sealed class CourierDanger : MonoBehaviour
                 var pos = parent.Enemy.CenterTransform != null ? parent.Enemy.CenterTransform.position : parent.Enemy.transform.position;
                 if (Mathf.Abs(pos.y - at.y) > 5f) continue; // another floor
                 if (new Vector2(pos.x - at.x, pos.z - at.z).sqrMagnitude > CourierRules.DangerRadius * CourierRules.DangerRadius) continue;
-                danger = true; break;
+                danger = true;
+                // One chirp per monster, shared by every pet: the first pet (not knocked out) to sense it claims it.
+                if (!Suppressed && Announced.Add(parent)) newMonster = true;
             }
         }
-        if (danger && !_danger) { _since = Time.time; _nextChirp = Mathf.Min(_nextChirp, Time.time); }
+        else Announced.Clear(); // out of a level: the next level's monsters are new
+        if (danger && !_danger) _since = Time.time;
         _danger = danger;
+        if (newMonster) { try { _alarm.Play(transform.position); } catch { } }
     }
+
+    /// <summary>Monsters some pet on this client has already chirped about (cleared between levels).</summary>
+    private static readonly HashSet<EnemyParent> Announced = new();
 
     private static void EnsureAssets()
     {
@@ -120,28 +123,30 @@ internal sealed class CourierDanger : MonoBehaviour
         _halo.SetVertices(hv); _halo.SetColors(hc); _halo.SetTriangles(ht, 0); _halo.RecalculateBounds();
         _alarm = new Sound
         {
-            Sounds = new[] { AlarmClip() }, Volume = .4f, VolumeRandom = .03f, Pitch = 1f, PitchRandom = .02f,
+            Sounds = new[] { AlarmClip() }, Volume = .25f, VolumeRandom = .03f, Pitch = 1f, PitchRandom = .02f,
             SpatialBlend = .85f, Doppler = 0f, Type = AudioManager.AudioType.Default,
         };
     }
 
-    // "Danger!": three quick rising two-tone chirps, bright and short, unlike any monster cue.
+    // "Hey, look": two soft rising bell-like notes (a gentle ding-ding), pure tones with a quick fade, unlike any
+    // monster cue and not shrill.
     private static AudioClip AlarmClip()
     {
-        const int rate = 44100; const float length = .62f;
+        const int rate = 44100; const float length = .5f, gap = .13f;
         int n = (int)(rate * length);
         var data = new float[n];
-        float phase = 0f;
         for (int i = 0; i < n; i++)
         {
-            float t = i / (float)rate;
-            int pulse = Mathf.Min(2, (int)(t / .2f));
-            float local = t - pulse * .2f;
-            bool on = local < .14f;
-            float f = (local < .07f ? 880f : 1320f) * (1f + pulse * .06f);
-            phase += 2f * Mathf.PI * f / rate;
-            float env = on ? Mathf.Clamp01(local / .005f) * Mathf.Clamp01((.14f - local) / .02f) : 0f;
-            data[i] = (Mathf.Sin(phase) * .5f + Mathf.Sin(phase * 2f) * .12f) * env * .8f;
+            float t = i / (float)rate, s = 0f;
+            for (int note = 0; note < 2; note++)
+            {
+                float local = t - note * gap;
+                if (local < 0f) continue;
+                float f = note == 0 ? 660f : 880f;
+                float env = Mathf.Clamp01(local / .012f) * Mathf.Exp(-local * 9f);
+                s += (Mathf.Sin(2f * Mathf.PI * f * local) * .8f + Mathf.Sin(2f * Mathf.PI * f * 2f * local) * .06f) * env;
+            }
+            data[i] = s * .45f;
         }
         var clip = AudioClip.Create("IHM courier danger", n, 1, rate, false);
         clip.SetData(data, 0);

@@ -13,8 +13,8 @@ public static class CourierRules
     public const float BaseLoad = 3f, LoadPerLevel = 2.5f;
     // Health
     public const float MaxHealth = 100f, HealthPerLevel = .2f, ArmorPerLevel = .1f, RespawnSeconds = 45f, RecoveryPerLevel = 10f;
-    /// <summary>The pet warns of a monster this close (m, flat; a little beyond NoticeRadius), chirping every few seconds.</summary>
-    public const float DangerRadius = 16f, DangerChirpEvery = 6f;
+    /// <summary>The pet warns of a monster this close (m, flat; a little beyond NoticeRadius), chirping once per monster.</summary>
+    public const float DangerRadius = 16f;
 
     // Monsters: they notice a courier nearby, come to look and hit it when close. Low Profile calms them.
     public const float NoticeRadius = 14f, NoticeChance = .35f, NoticeEvery = 18f, HitRange = 1.7f, HitDamage = 30f, HitCooldown = 1.6f,
