@@ -198,7 +198,7 @@ for (float s = MonsterAnimRules.FlinchPeak + .02f; s < MonsterAnimRules.FlinchSe
 Check(flinchFalls && flinchPrev < .05f, "After the peak the flinch only eases back to rest, staying within 0..1");
 // Holding a monster still is not an attack; swinging or throwing it is.
 Check(!MonsterRules.HoldImpactArms(true, 0f, 5.5f), "Holding a monster still or carrying it at a sprint does not arm impact damage");
-Check(MonsterRules.HoldImpactArms(true, 0f, 9f), "Swinging a held monster fast arms impact damage");
+Check(!MonsterRules.HoldImpactArms(true, 0f, 9f), "Even fast movement in a player's hands does not arm impact damage while held");
 Check(MonsterRules.HoldImpactArms(false, .1f, 8f), "A fast release (a throw) arms impact damage");
 Check(!MonsterRules.HoldImpactArms(false, .1f, 1f), "Gently letting go does not arm impact damage");
 Check(!MonsterRules.HoldImpactArms(false, 2f, 8f), "A monster nobody touched recently is not hurt by its own fast movement");
@@ -210,4 +210,12 @@ Check(MonsterRules.GorgonCloseNotice > MonsterRules.HeadTossReach, "Gorgon notic
 Check(Math.Abs(MonsterRules.WitchHoverFor(3.2f) - 2.2f) < .01f, "Witch: in a 3.2 m room she flies 1 m below the ceiling");
 Check(MonsterRules.WitchHoverFor(12f) == MonsterRules.WitchHoverMax, "Witch: in a tall hall she stops at her highest hover");
 Check(MonsterRules.WitchHoverFor(1.5f) == 1f, "Witch: under a very low ceiling she still keeps 1 m");
+// Native vision rules for noticing a player.
+Check(MonsterRules.SpotsPlayer(3f, -1f, false, false, -1f), "A standing player right next to a monster is noticed even behind it");
+Check(!MonsterRules.SpotsPlayer(3f, -1f, true, false, -1f), "A crouching player 3 m behind a monster is not noticed");
+Check(MonsterRules.SpotsPlayer(1.5f, -1f, true, false, -1f), "A crouching player within 2 m is noticed");
+Check(MonsterRules.SpotsPlayer(8f, .5f, false, false, 0f), "A standing player inside the view cone is noticed at once");
+Check(!MonsterRules.SpotsPlayer(8f, .5f, true, false, 5f), "A crouching player at the edge of the cone stays hidden");
+Check(!MonsterRules.SpotsPlayer(8f, .8f, true, false, .2f) && MonsterRules.SpotsPlayer(8f, .8f, true, false, .6f), "A crouching player in front is noticed only after half a second");
+Check(!MonsterRules.SpotsPlayer(8f, .8f, false, true, 3f) && MonsterRules.SpotsPlayer(8f, .95f, false, true, 1.1f), "A crawling player needs to be almost straight ahead for a second");
 Console.WriteLine("MONSTER_CHECKS_PASSED: " + checks);

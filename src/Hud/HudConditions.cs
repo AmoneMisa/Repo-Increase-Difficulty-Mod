@@ -76,7 +76,10 @@ internal static class HudConditions
 
     private static readonly Dictionary<PlayerCondition, View> Views = new();
     private const int SegmentCount = 10;
-    private const float CardWidth = 380f;
+    // Compact cards (playtest: the status screens were far too intrusive): about two thirds of the old size.
+    private const float CardWidth = 290f;
+    // Overall opacity of every status card and edge frame.
+    private const float Opacity = .7f;
 
     private static View For(PlayerCondition condition)
     {
@@ -109,7 +112,7 @@ internal static class HudConditions
         foreach (var pair in Views)
         {
             var view = pair.Value;
-            float alpha = blocked ? 0f : view.Timer.Alpha(now);
+            float alpha = (blocked ? 0f : view.Timer.Alpha(now)) * Opacity;
             if (alpha <= 0f) { Hide(pair.Key, view); continue; }
             if (!Ensure(pair.Key, view)) continue;
             Draw(pair.Key, view, alpha, now, order++);
@@ -188,7 +191,7 @@ internal static class HudConditions
         view.Seconds.alpha = alpha;
         foreach (var line in view.Lines) line.alpha = alpha * .9f;
         view.Icon.color = view.Accent.color = WithAlpha(look.Color, alpha);
-        view.Backplate.color = new Color(.02f, .03f, .05f, .5f * alpha);
+        view.Backplate.color = new Color(.02f, .03f, .05f, .3f * alpha);
         HudStack.Place(view.Card, HudCorner.TopLeft, CardId(condition), 10 + order);
     }
 
@@ -196,13 +199,15 @@ internal static class HudConditions
     // so players can see how much damage they just took. The card at the left still says what is going on.
     private static float FrameStrength(PlayerCondition condition) => condition switch
     {
-        PlayerCondition.Bleeding or PlayerCondition.Burning or PlayerCondition.Venom => .3f,
+        PlayerCondition.Bleeding or PlayerCondition.Burning or PlayerCondition.Venom => .14f,
         PlayerCondition.Electrified or PlayerCondition.Constricted or PlayerCondition.Petrified or
-            PlayerCondition.Slowed or PlayerCondition.Dragged or PlayerCondition.Seized => .4f,
-        _ => 1f,
+            PlayerCondition.Slowed or PlayerCondition.Dragged or PlayerCondition.Seized => .18f,
+        _ => .45f,
     };
 
     private static Color WithAlpha(Color color, float alpha) { color.a = alpha; return color; }
+
+    private static readonly Vector2 FrameOverhang = new(230f, 140f);
 
     private static bool Ensure(PlayerCondition condition, View view)
     {
@@ -220,7 +225,9 @@ internal static class HudConditions
             var imageObject = new GameObject("Edge", typeof(RectTransform), typeof(RawImage));
             imageObject.transform.SetParent(panel, false);
             var rect = (RectTransform)imageObject.transform;
-            rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one; rect.offsetMin = rect.offsetMax = Vector2.zero;
+            // Overhang the screen so only the outer part of the border shows: a much thinner edge.
+            rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
+            rect.offsetMin = new Vector2(-FrameOverhang.x, -FrameOverhang.y); rect.offsetMax = FrameOverhang;
             view.FrameImage = imageObject.GetComponent<RawImage>();
             view.FrameImage.texture = HudScreenArt.Frame(condition);
             view.FrameImage.raycastTarget = false;
@@ -245,32 +252,32 @@ internal static class HudConditions
         if (view.Card == null)
         {
             int lines = look.Lines.Length;
-            float height = 96f + lines * 28f + 12f;
+            float height = 62f + lines * 22f + 8f;
             var card = NativeHudPanel.Create("IHM_ConditionCard_" + condition, new Vector2(CardWidth, height), new Vector2(0f, 1f), Vector2.zero, .5f);
             if (card == null) return false;
             card.Panel.name = "Panel";
             view.Backplate = card.Panel.GetComponent<Image>();
-            view.Accent = AddImage(card.Panel, "Accent", null, new Vector2(0f, 0f), new Vector2(5f, height), stretchHeight: true);
-            view.Icon = AddImage(card.Panel, "Icon", HudScreenArt.Icon(condition), new Vector2(16f, -14f), new Vector2(70f, 70f));
+            view.Accent = AddImage(card.Panel, "Accent", null, new Vector2(0f, 0f), new Vector2(3f, height), stretchHeight: true);
+            view.Icon = AddImage(card.Panel, "Icon", HudScreenArt.Icon(condition), new Vector2(10f, -8f), new Vector2(44f, 44f));
             view.ShownTenths = -1;
-            view.Title = card.Label("Title", HudStyle.Heading * 1.35f, TextAlignmentOptions.TopLeft);
+            view.Title = card.Label("Title", HudStyle.Heading, TextAlignmentOptions.TopLeft);
             bool ru = Localization.GameLanguage.Russian;
             view.Title.text = ru ? look.TitleRu : look.Title;
             view.Title.color = look.Color;
-            Place(view.Title, 100f, 10f, 250f, 44f);
+            Place(view.Title, 62f, 4f, CardWidth - 70f, 32f);
             view.Seconds = card.Label("Seconds", HudStyle.Small, TextAlignmentOptions.TopLeft);
             view.Seconds.color = Color.white;
-            Place(view.Seconds, 100f + SegmentCount * 24f + 6f, 54f, 70f, 24f);
+            Place(view.Seconds, 62f + SegmentCount * 15f + 4f, 34f, 60f, 22f);
             view.Segments.Clear();
             for (int i = 0; i < SegmentCount; i++)
-                view.Segments.Add(AddImage(card.Panel, "Segment", null, new Vector2(100f + i * 24f, -60f), new Vector2(20f, 11f)));
+                view.Segments.Add(AddImage(card.Panel, "Segment", null, new Vector2(62f + i * 15f, -40f), new Vector2(12f, 7f)));
             view.Lines.Clear();
             for (int i = 0; i < lines; i++)
             {
-                var line = card.Label("Line", HudStyle.Small, TextAlignmentOptions.TopLeft);
+                var line = card.Label("Line", HudStyle.Small * .85f, TextAlignmentOptions.TopLeft);
                 line.text = ru && look.LinesRu != null && i < look.LinesRu.Length ? look.LinesRu[i] : look.Lines[i];
                 line.color = new Color(.9f, .92f, .95f);
-                Place(line, 22f, 96f + i * 28f, CardWidth - 36f, 26f);
+                Place(line, 12f, 62f + i * 22f, CardWidth - 20f, 22f);
                 view.Lines.Add(line);
             }
             view.Card = card;

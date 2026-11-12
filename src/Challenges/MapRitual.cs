@@ -313,9 +313,27 @@ internal sealed class MapRitual : MonoBehaviour
         return position - rotation * center;
     }
 
+    private float _nextGuard;
+
+    // Anything set down on the ritual cube (or dropped onto it) cannot break there: offerings are fragile valuables
+    // and a careless drop used to smash the very thing the ritual asks for.
+    private void GuardAltar(float now)
+    {
+        if (now < _nextGuard || _map == LootMap.Museum) return;
+        _nextGuard = now + .1f;
+        var surface = _altar + Vector3.up * .24f;
+        foreach (var collider in Physics.OverlapBox(surface + Vector3.up * .6f, new Vector3(1.35f, 1f, 1.35f),
+            Quaternion.identity, SemiFunc.LayerMaskGetPhysGrabObject(), QueryTriggerInteraction.Ignore))
+        {
+            var grab = collider.GetComponentInParent<PhysGrabObject>();
+            if (grab != null && !grab.dead) grab.OverrideIndestructible(.6f);
+        }
+    }
+
     private void TickHost()
     {
         float now = Time.time;
+        if (!_finished) GuardAltar(now);
         if (now >= _nextScan && !_finished)
         {
             _nextScan = now + ScanSeconds;

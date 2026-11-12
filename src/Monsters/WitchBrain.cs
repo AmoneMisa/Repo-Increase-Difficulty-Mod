@@ -11,8 +11,8 @@ namespace IncreaseHardMod.Monsters;
 /// collides (walls block it): 22 damage and Burning (4 HP/s for 3 s, +50% damage taken for 5 s). Cooldown 5 s.
 /// Electric Levitation: a 0.8 s crackling warning, then the target is lifted and held 3 s at 5 HP/s while the
 /// witch keeps sight; cover, a stun or her death ends it. Cooldown 12 s; the 3 s control immunity applies.
-/// Hitting her while she prepares a spell interrupts it. She can only be grabbed once she is down near the floor
-/// (body within 1 m of it: a low ceiling, or falling after a stun).
+/// Hitting her while she prepares a spell interrupts it. She can be grabbed and pulled down; overpowered, she is
+/// stunned while held and falls.
 /// </summary>
 internal sealed class WitchBrain : MonsterBrain
 {
@@ -20,31 +20,17 @@ internal sealed class WitchBrain : MonsterBrain
 
     private sealed class Ball { public Vector3 Position, Velocity; public float Life; }
     private readonly List<Ball> _balls = new();
-    private float _fireReady, _zapReady, _lostSight, _ceilingCheck, _hover, _losCheck;
+    private float _fireReady, _zapReady, _ceilingCheck, _hover, _losCheck;
     private PlayerAvatar _zapTarget;
-    private float _grabCheck;
-    private bool _nearFloor;
     private float _laughReady, _spotCheck;
 
     internal const float GrabHeight = 1f;
 
-    // Every client measures her own height above the floor (the synced body), a few times a second.
-    protected override bool GrabAllowed()
+    // Grabbing her (she can be pulled down from the ceiling), bumping into her or hitting her: she hunts that player.
+    protected override void OnProvoked(PlayerAvatar player)
     {
-        if (Time.time >= _grabCheck)
-        {
-            _grabCheck = Time.time + .15f;
-            var body = BodyPosition;
-            float bottom = body.y;
-            foreach (var c in E.Rigidbody.GetComponentsInChildren<Collider>())
-                if (c != null && c.enabled && !c.isTrigger) bottom = Mathf.Min(bottom, c.bounds.min.y);
-            _nearFloor = false;
-            foreach (var hit in Physics.RaycastAll(new Vector3(body.x, bottom + .05f, body.z), Vector3.down, GrabHeight + .05f,
-                         SemiFunc.LayerMaskGetVisionObstruct(), QueryTriggerInteraction.Ignore))
-                if (!hit.collider.transform.IsChildOf(Parent.transform) && hit.collider.GetComponentInParent<PlayerAvatar>() == null)
-                { _nearFloor = true; break; }
-        }
-        return _nearFloor;
+        if (player == null || State is not (Patrol or Search)) return;
+        Target = player; SetState(Hunt);
     }
     private Vector3 _lastSeen;
 
@@ -166,14 +152,14 @@ internal sealed class WitchBrain : MonsterBrain
                 if (Time.time >= _spotCheck)
                 {
                     _spotCheck = Time.time + .3f;
-                    var spotted = NearestVisible(14f);
+                    var spotted = NearestSpotted(14f);
                     if (spotted != null) { Target = spotted; SetState(Hunt); }
                 }
                 break;
             case Search:
                 Move(Destination, MonsterRules.WitchMoveSpeed);
                 if (StateTime > 8f || Vector3.Distance(Flat(E.transform.position), Flat(Destination)) < 1.2f) SetState(Patrol);
-                var seen = NearestVisible(14f);
+                var seen = NearestSpotted(14f);
                 if (seen != null) { Target = seen; SetState(Hunt); }
                 break;
             case Hunt:
@@ -228,8 +214,8 @@ internal sealed class WitchBrain : MonsterBrain
     {
         if (Target == null) { Destination = _lastSeen; SetState(Search); return; }
         bool sees = Sees(Target, 16f);
-        if (sees) { _lastSeen = Target.transform.position; _lostSight = 0f; }
-        else if ((_lostSight += dt) > 4f) { Destination = _lastSeen; Target = null; SetState(Search); return; }
+        if (sees) { _lastSeen = Target.transform.position; LostSight = 0f; }
+        else if ((LostSight += dt) > 4f) { Destination = _lastSeen; Target = null; SetState(Search); return; }
         float d = DistanceTo(Target);
         if (d < MonsterRules.WitchKeepMin) Move(AwayFrom(Target.transform.position, 4f), MonsterRules.WitchRetreatSpeed);
         else if (d > MonsterRules.WitchKeepMax || !sees) Move(Target.transform.position, MonsterRules.WitchMoveSpeed);

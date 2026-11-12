@@ -15,7 +15,7 @@ internal sealed class TwinsBrain : MonsterBrain
 {
     private const byte Wander = 0, Stalk = 1, Lure = 2, Rush = 3, Reach = 4, Swing = 5, Throw = 6, Skip = 7;
     private PlayerAvatar _victim;
-    private float _grabReady, _lostSight;
+    private float _grabReady;
 
     internal override MonsterPose Pose => State switch
     {
@@ -49,6 +49,12 @@ internal sealed class TwinsBrain : MonsterBrain
         if (State == Wander) Destination = position;
     }
 
+    protected override void OnProvoked(PlayerAvatar player)
+    {
+        if (player == null || State != Wander) return;
+        Target = player; SetState(Stalk);
+    }
+
     protected override void OnHurt()
     {
         // A teammate's hit breaks the reach or the hold.
@@ -72,7 +78,7 @@ internal sealed class TwinsBrain : MonsterBrain
         if (state == Lure) MonsterAudio.Play(MonsterAudio.Cue.Giggle, BodyPosition, 1.1f);
         else if (state == Rush) { MonsterAudio.Play(MonsterAudio.Cue.Giggle, BodyPosition, .9f, 1.3f); MonsterAudio.Play(MonsterAudio.Cue.Whoosh, BodyPosition, .6f, 1.3f); }
         else if (state == Reach) { MonsterAudio.Play(MonsterAudio.Cue.Giggle, BodyPosition, .7f); MonsterAudio.Play(MonsterAudio.Cue.Whoosh, BodyPosition, .7f, 1.6f); }
-        else if (state == Swing) MonsterAudio.Play(MonsterAudio.Cue.Shriek, BodyPosition, 1.1f);
+        else if (state == Swing) MonsterAudio.Play(MonsterAudio.Cue.TwinsLaugh, BodyPosition, 1.2f); // seized: they laugh as they haul you off
         else if (state == Throw) MonsterAudio.Play(MonsterAudio.Cue.SwingWide, BodyPosition, 1.2f);
         // Skipping off (after a throw, a miss or a teammate's hit): quick, high giggles running away.
         else if (state == Skip) MonsterAudio.Play(MonsterAudio.Cue.Giggle, BodyPosition, .6f, 1.35f);
@@ -146,8 +152,8 @@ internal sealed class TwinsBrain : MonsterBrain
     private bool KeepTarget(float dt, float range)
     {
         if (Target == null) { SetState(Wander); return false; }
-        if (Sees(Target, range)) _lostSight = 0f;
-        else if ((_lostSight += dt) > 5f) { Target = null; SetState(Wander); return false; }
+        if (Sees(Target, range)) LostSight = 0f;
+        else if ((LostSight += dt) > 5f) { Target = null; SetState(Wander); return false; }
         return true;
     }
 

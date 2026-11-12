@@ -9,22 +9,26 @@ using L = IncreaseHardMod.Courier.CourierManager;
 namespace IncreaseHardMod.Courier;
 
 /// <summary>
-/// The courier command menu (toolkit list panel, native HUD text). The menu key opens and closes it; Up/Down move,
-/// Enter or Right picks (Left/Right change a colour or animal), Left/Backspace goes back.
+/// The courier command menu (CourierMenuView: a plated panel at the top right with the pet's portrait, a grid of
+/// command tiles, sub-page rows and the gacha's pet cards; native HUD text). The menu key opens and closes it; the
+/// arrows move through the grid, Enter picks (Left/Right change a colour or animal on the look page), Backspace -
+/// or Left at the edge of a list - goes back.
 /// </summary>
 internal sealed class CourierMenu
 {
-    private enum Page { Main, Truck, Ally, Look, Gacha }
+    private enum Page { Main, Truck, Ally, Look, Gacha, More, Backpack }
 
     private sealed class Entry
     {
         public string Text, Note;
-        public bool Enabled = true;
+        public bool Enabled = true, Locked, Active;
+        public CourierItemKind Kind = CourierItemKind.Row;
+        public Sprite Icon;
         public Action Pick;
         public Action<int> Step; // Left/Right on appearance rows
     }
 
-    private HudListPanel _panel;
+    private readonly CourierMenuView _view = new();
     private Page _page;
     private int _cursor;
     private PhysGrabObject _aimedChargeItem;
@@ -33,7 +37,7 @@ internal sealed class CourierMenu
     internal void Close()
     {
         Open = false;
-        _panel?.Hide();
+        _view.Hide();
     }
 
     internal void Tick(CourierManager manager)
@@ -42,7 +46,7 @@ internal sealed class CourierMenu
         if (!chat && Input.GetKeyDown(ModConfig.CourierMenuKey.Value))
         {
             Open = !Open; _page = Page.Main; _cursor = 0;
-            if (!Open) { _panel?.Hide(); return; }
+            if (!Open) { _view.Hide(); return; }
         }
         if (!Open) return;
         if (PlayerAvatar.instance == null || PlayerAvatar.instance.isDisabled) { Close(); return; }
@@ -50,63 +54,121 @@ internal sealed class CourierMenu
         _aimedChargeItem = _page == Page.Main && CourierGacha.HasCourier && SemiFunc.RunIsLevel() && Held() == null
             ? AimedChargeItem() : null;
         var entries = Build(manager);
-        if (!chat)
-        {
-            if (Input.GetKeyDown(KeyCode.DownArrow)) _cursor++;
-            if (Input.GetKeyDown(KeyCode.UpArrow)) _cursor--;
-        }
-        _cursor = entries.Count == 0 ? 0 : (_cursor % entries.Count + entries.Count) % entries.Count;
+        _cursor = entries.Count == 0 ? 0 : Mathf.Clamp(_cursor, 0, entries.Count - 1);
+        var rows = Rows(entries);
+        Locate(rows, _cursor, out int row, out int col);
         var current = entries.Count > 0 ? entries[_cursor] : null;
-        if (!chat && current != null)
+        bool back = false;
+        if (!chat && entries.Count > 0)
         {
-            if (current.Step != null)
+            if (Input.GetKeyDown(KeyCode.DownArrow)) _cursor = Pick(rows, row + 1, col, rows.Count);
+            else if (Input.GetKeyDown(KeyCode.UpArrow)) _cursor = Pick(rows, row - 1, col, rows.Count);
+            else if (current?.Step != null && (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.LeftArrow)))
+                current.Step(Input.GetKeyDown(KeyCode.RightArrow) ? 1 : -1);
+            else if (Input.GetKeyDown(KeyCode.RightArrow) && col + 1 < rows[row].Count) _cursor = rows[row][col + 1];
+            else if (Input.GetKeyDown(KeyCode.LeftArrow))
             {
-                if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.Return)) current.Step(1);
-                if (Input.GetKeyDown(KeyCode.LeftArrow)) current.Step(-1);
+                if (col > 0) _cursor = rows[row][col - 1];
+                else back = _page != Page.Main;
             }
-            else if ((Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.RightArrow)) && current.Enabled) current.Pick?.Invoke();
+            else if (Input.GetKeyDown(KeyCode.Return))
+            {
+                if (current?.Step != null) current.Step(1);
+                else if (current != null && current.Enabled) current.Pick?.Invoke();
+            }
         }
-        if (!chat && _page != Page.Main && (Input.GetKeyDown(KeyCode.Backspace) || (Input.GetKeyDown(KeyCode.LeftArrow) && current?.Step == null)))
+        if (!chat && (back || (_page != Page.Main && Input.GetKeyDown(KeyCode.Backspace))))
         {
-            _page = Page.Main; _cursor = 0;
+            _page = _page is Page.Look or Page.Gacha ? Page.More : Page.Main; _cursor = 0;
         }
+        if (!Open) return;
         Render(manager, Build(manager));
     }
 
     private void Go(Page page) { _page = page; _cursor = 0; }
 
+    // Rows of the page as the view lays them out: tiles two to a row, pet cards four to a row, links share one row,
+    // every plain row on its own.
+    private static List<List<int>> Rows(List<Entry> entries)
+    {
+        var rows = new List<List<int>>();
+        List<int> open = null; CourierItemKind? kind = null;
+        for (int i = 0; i < entries.Count; i++)
+        {
+            var k = entries[i].Kind;
+            int width = k switch { CourierItemKind.Tile => 2, CourierItemKind.Card => 4, CourierItemKind.Link => 8, _ => 1 };
+            if (open == null || kind != k || open.Count >= width) { open = new List<int>(); rows.Add(open); kind = k; }
+            open.Add(i);
+        }
+        return rows;
+    }
+
+    private static void Locate(List<List<int>> rows, int index, out int row, out int col)
+    {
+        for (row = 0; row < rows.Count; row++) { col = rows[row].IndexOf(index); if (col >= 0) return; }
+        row = 0; col = 0;
+    }
+
+    private static int Pick(List<List<int>> rows, int row, int col, int count)
+    {
+        row = (row % count + count) % count;
+        var r = rows[row];
+        return r[Mathf.Clamp(col, 0, r.Count - 1)];
+    }
+
     private void Render(CourierManager manager, List<Entry> entries)
     {
-        _panel ??= new HudListPanel("courier", HudCorner.TopRight, order: 50) { RowsPerPage = 14 };
-        string pet = CourierLook.Name(CourierLook.Local & 15).ToUpperInvariant();
-        _panel.Title = _page switch
+        var info = manager.Infos.TryGetValue(L.LocalActor, out var i2) ? i2 : default;
+        int animal = CourierLook.Local & 15;
+        string pet = CourierLook.Name(animal).ToUpperInvariant();
+        bool has = CourierGacha.HasCourier;
+        var header = new CourierMenuView.Header
         {
-            Page.Truck => L.L("FETCH FROM THE TRUCK", "ПРИНЕСТИ ИЗ МАШИНЫ"),
-            Page.Ally => L.L("DELIVER TO A TEAMMATE", "ДОСТАВИТЬ СОЮЗНИКУ"),
-            Page.Look => L.L("COURIER LOOK", "ВНЕШНИЙ ВИД"),
-            Page.Gacha => L.L("COURIER GACHA", "ГАЧА КУРЬЕРОВ"),
-            _ => CourierGacha.HasCourier ? L.L($"COURIER · {pet}", $"КУРЬЕР · {pet}") : L.L("COURIER", "КУРЬЕР"),
+            Title = _page switch
+            {
+                Page.Truck => L.L("FROM THE TRUCK", "ИЗ МАШИНЫ"),
+                Page.Ally => L.L("TO A TEAMMATE", "СОЮЗНИКУ"),
+                Page.Look => L.L("APPEARANCE", "ВНЕШНИЙ ВИД"),
+                Page.Gacha => L.L("COURIER GACHA", "ГАЧА КУРЬЕРОВ"),
+                Page.More => L.L("MORE", "ДОПОЛНИТЕЛЬНО"),
+                Page.Backpack => L.L("BACKPACK", "РЮКЗАК"),
+                _ => has ? L.L($"COURIER · {pet}", $"КУРЬЕР · {pet}") : L.L("COURIER", "КУРЬЕР"),
+            },
+            Portrait = has ? CourierPortraits.Get(animal) : null,
+            Status = !has ? L.L("NO COURIER YET", "КУРЬЕРА ЕЩЁ НЕТ") : info.Down
+                ? L.L($"KNOCKED OUT · {Mathf.CeilToInt(info.DownLeft)} S", $"ВЫБИТ · {Mathf.CeilToInt(info.DownLeft)} С")
+                : JobText(info.Job),
+            StatusColor = info.Down ? HudStyle.Bad : HudStyle.Info,
+            Health = has ? $"{Mathf.CeilToInt(info.Hp)}/{Mathf.CeilToInt(info.MaxHp)}" : null,
+            Pack = has ? $"{(info.Stash ?? new string[0]).Length}/{Mathf.Max(1, info.Slots)}" : null,
+            Coins = _page == Page.Gacha || !has
+                ? L.L($"COINS {CourierGacha.Coins}   HALVES {CourierGacha.Halves}/2", $"МОНЕТЫ {CourierGacha.Coins}   ПОЛОВИНКИ {CourierGacha.Halves}/2")
+                : null,
+            Hint = Hint(_page != Page.Main),
         };
-        var rows = new List<HudListRow>();
+        var items = new List<CourierMenuView.Item>();
         for (int i = 0; i < entries.Count; i++)
         {
             var e = entries[i];
-            bool on = i == _cursor;
-            var color = !e.Enabled ? new Color(.55f, .55f, .55f) : on ? HudStyle.Title : HudStyle.Text;
-            rows.Add(new HudListRow((on ? "> " : "  ") + e.Text, e.Note ?? "", color));
+            items.Add(new CourierMenuView.Item
+            {
+                Kind = e.Kind, Text = e.Text, Note = e.Note, Icon = e.Icon, Enabled = e.Enabled, Locked = e.Locked,
+                Active = e.Active, Selected = i == _cursor,
+            });
         }
-        if (rows.Count == 0) rows.Add(new HudListRow(L.L("  NOTHING HERE", "  ЗДЕСЬ ПУСТО"), "", new Color(.55f, .55f, .55f)));
-        _panel.SetRows(rows);
-        _panel.ShowPageContainingRow(_cursor);
-        var info = manager.Infos.TryGetValue(L.LocalActor, out var i2) ? i2 : default;
-        _panel.Footer = !CourierGacha.HasCourier || _page == Page.Gacha
-            ? L.L($"COINS {CourierGacha.Coins}   HALVES {CourierGacha.Halves}/2   [↑↓] MOVE  [ENTER] PICK  [←] BACK",
-                  $"МОНЕТЫ {CourierGacha.Coins}   ПОЛОВИНКИ {CourierGacha.Halves}/2   [↑↓] ВЫБОР  [ENTER] ОК  [←] НАЗАД")
-            : info.Down
-            ? L.L($"KNOCKED OUT · BACK IN {Mathf.CeilToInt(info.DownLeft)} S", $"ВЫБИТ · ВЕРНЁТСЯ ЧЕРЕЗ {Mathf.CeilToInt(info.DownLeft)} С")
-            : $"HP {Mathf.CeilToInt(info.Hp)}/{Mathf.CeilToInt(info.MaxHp)}   {JobText(info.Job)}   " + L.L("[↑↓] MOVE  [ENTER] PICK  [←] BACK", "[↑↓] ВЫБОР  [ENTER] ОК  [←] НАЗАД");
-        _panel.FooterColor = info.Down ? HudStyle.Bad : HudStyle.Info;
-        _panel.Show();
+        if (items.Count == 0) items.Add(new CourierMenuView.Item { Text = L.L("NOTHING HERE", "ЗДЕСЬ ПУСТО"), Enabled = false });
+        // Long lists scroll so the cursor stays in view.
+        int first = items.Count > 11 && items.TrueForAll(x => x.Kind == CourierItemKind.Row) ? Mathf.Clamp(_cursor - 5, 0, items.Count - 11) : 0;
+        _view.Show(header, items, first);
+    }
+
+    private static string Hint(bool back)
+    {
+        string key = ModConfig.CourierMenuKey.Value.ToString().ToUpperInvariant();
+        string gold = HudStyle.Hex(HudStyle.Title);
+        return Localization.GameLanguage.Russian
+            ? $"<color={gold}>{key}</color> — закрыть   <color={gold}>↑↓←→</color> — выбрать   <color={gold}>ENTER</color> — команда" + (back ? $"   <color={gold}>BACKSPACE</color> — назад" : "")
+            : $"<color={gold}>{key}</color> close   <color={gold}>↑↓←→</color> select   <color={gold}>ENTER</color> command" + (back ? $"   <color={gold}>BACKSPACE</color> back" : "");
     }
 
     private static string JobText(CourierJob job) => job switch
@@ -128,6 +190,8 @@ internal sealed class CourierMenu
         Page.Ally => AllyPage(m),
         Page.Look => LookPage(m),
         Page.Gacha => GachaPage(m),
+        Page.More => MorePage(m),
+        Page.Backpack => BackpackPage(m),
         _ => MainPage(m),
     };
 
@@ -154,12 +218,12 @@ internal sealed class CourierMenu
         var list = new List<Entry>();
         if (!CourierGacha.HasCourier)
         {
-            list.Add(new Entry { Text = L.L("NO COURIER YET: PULL THE GACHA", "КУРЬЕРА ЕЩЁ НЕТ: КРУТИТЕ ГАЧУ"), Enabled = false });
-            list.Add(new Entry { Text = L.L("GACHA", "ГАЧА") + " >", Note = L.L($"{CourierGacha.Coins} COINS", $"МОНЕТ: {CourierGacha.Coins}"), Pick = () => Go(Page.Gacha) });
+            list.Add(new Entry { Text = L.L("PULL THE GACHA TO GET A COURIER", "КРУТИТЕ ГАЧУ, ЧТОБЫ ПОЛУЧИТЬ КУРЬЕРА"), Enabled = false });
+            list.Add(new Entry { Text = L.L("GACHA", "ГАЧА") + " ›", Note = L.L($"{CourierGacha.Coins} COINS", $"МОНЕТ: {CourierGacha.Coins}"), Pick = () => Go(Page.Gacha) });
             return list;
         }
-        var info = m.Infos.TryGetValue(L.LocalActor, out var i) ? i : default;
         bool level = SemiFunc.RunIsLevel();
+        string levelsOnly = L.L("LEVELS ONLY", "ТОЛЬКО НА УРОВНЕ");
         var held = Held();
         var chargeItem = held != null ? held : _aimedChargeItem;
         var battery = chargeItem != null ? chargeItem.GetComponent<ItemBattery>() : null;
@@ -167,64 +231,89 @@ internal sealed class CourierMenu
         bool pickUp = held == null;
         list.Add(new Entry
         {
-            Text = L.L("CHARGE IN THE TRUCK", "ЗАРЯДИТЬ В МАШИНЕ"),
-            Note = !level ? L.L("LEVELS ONLY", "ТОЛЬКО НА УРОВНЕ") : battery == null
-                ? L.L("AIM AT A BATTERY ITEM", "НАВЕДИТЕСЬ НА ПРЕДМЕТ С БАТАРЕЕЙ")
-                : $"{Mathf.RoundToInt(battery.batteryLife)}%",
+            Kind = CourierItemKind.Tile, Icon = CourierIcons.Bolt, Text = L.L("CHARGE", "ЗАРЯДИТЬ"),
+            Note = !level ? levelsOnly : battery == null ? L.L("AIM AT A BATTERY", "НАВЕДИТЕСЬ НА БАТАРЕЮ") : $"{Mathf.RoundToInt(battery.batteryLife)}%",
             Enabled = level && chargeView != 0 && battery.batteryLife < 100f,
             Pick = () => { m.Request(CourierManager.Op.Charge, chargeView, pickUp ? 1 : 0); Close(); },
         });
-        list.Add(new Entry { Text = L.L("FETCH FROM THE TRUCK", "ПРИНЕСТИ ИЗ МАШИНЫ") + " >", Note = level ? "" : L.L("LEVELS ONLY", "ТОЛЬКО НА УРОВНЕ"), Enabled = level, Pick = () => Go(Page.Truck) });
+        list.Add(new Entry { Kind = CourierItemKind.Tile, Icon = CourierIcons.Crate, Text = L.L("FROM TRUCK", "ИЗ МАШИНЫ"), Note = level ? "" : levelsOnly, Enabled = level, Pick = () => Go(Page.Truck) });
         int heldView = held != null && held.photonView != null ? held.photonView.ViewID : 0;
         list.Add(new Entry
         {
-            Text = L.L("LEAVE MY ITEM IN THE TRUCK", "ОТНЕСТИ ВЕЩЬ В МАШИНУ"),
-            Note = !level ? L.L("LEVELS ONLY", "ТОЛЬКО НА УРОВНЕ") : heldView == 0 ? L.L("HOLD AN ITEM", "ВОЗЬМИТЕ ВЕЩЬ") : "",
+            Kind = CourierItemKind.Tile, Icon = CourierIcons.Store, Text = L.L("TO TRUCK", "В МАШИНУ"),
+            Note = !level ? levelsOnly : heldView == 0 ? L.L("HOLD AN ITEM", "ВОЗЬМИТЕ ВЕЩЬ") : "",
             Enabled = level && heldView != 0,
             Pick = () => { m.Request(CourierManager.Op.Store, heldView, 0); Close(); },
         });
-        AddHeadCommand(C.CourierHeadTrail, CourierManager.Op.HeadTrail, L.L("SHOW THE PATH TO A HEAD", "ПОКАЗАТЬ ПУТЬ К ГОЛОВЕ"));
-        AddHeadCommand(C.CourierHeadFetch, CourierManager.Op.HeadFetch, L.L("BRING A HEAD", "ПРИНЕСТИ ГОЛОВУ"));
-        void AddHeadCommand(string perk, CourierManager.Op op, string text)
+        bool ally = Lv(C.CourierAlly) > 0;
+        list.Add(new Entry
+        {
+            Kind = CourierItemKind.Tile, Icon = CourierIcons.People, Text = L.L("TEAMMATE", "СОЮЗНИКУ"), Locked = !ally,
+            Note = !ally ? L.L("PERK", "ПЕРК") : held == null ? L.L("HOLD AN ITEM", "ВОЗЬМИТЕ ВЕЩЬ") : "",
+            Enabled = ally && level && held != null, Pick = () => Go(Page.Ally),
+        });
+        bool cart = Lv(C.CourierCart) > 0;
+        list.Add(new Entry
+        {
+            Kind = CourierItemKind.Tile, Icon = CourierIcons.Cart, Text = L.L("C.A.R.T.", "ТЕЛЕЖКА"), Locked = !cart,
+            Note = cart ? (level ? "" : levelsOnly) : L.L("PERK", "ПЕРК"), Enabled = cart && level,
+            Pick = () => { m.Request(CourierManager.Op.Cart, 0, 0); Close(); },
+        });
+        list.Add(new Entry { Kind = CourierItemKind.Tile, Icon = CourierIcons.Backpack, Text = L.L("BACKPACK", "РЮКЗАК"), Pick = () => Go(Page.Backpack) });
+        list.Add(new Entry { Kind = CourierItemKind.Link, Text = L.L("MORE", "ДОПОЛНИТЕЛЬНО"), Pick = () => Go(Page.More) });
+        list.Add(new Entry { Kind = CourierItemKind.Link, Text = L.L("FOLLOW ME", "КО МНЕ"), Pick = () => { m.Request(CourierManager.Op.Follow, 0, 0); Close(); } });
+        return list;
+    }
+
+    // Everything that does not fit the six tiles: heads, dash, flight, the gacha and the look.
+    private List<Entry> MorePage(CourierManager m)
+    {
+        var list = new List<Entry>();
+        var info = m.Infos.TryGetValue(L.LocalActor, out var i) ? i : default;
+        bool level = SemiFunc.RunIsLevel();
+        void Head(string perk, CourierManager.Op op, string text)
         {
             bool unlocked = Lv(perk) > 0;
             list.Add(new Entry
             {
-                Text = text,
+                Text = text, Locked = !unlocked,
                 Note = !unlocked ? L.L("PERK", "ПЕРК") : !level ? L.L("LEVELS ONLY", "ТОЛЬКО НА УРОВНЕ") : "",
-                Enabled = unlocked && level,
-                Pick = () => { m.Request(op, 0, 0); Close(); },
+                Enabled = unlocked && level, Pick = () => { m.Request(op, 0, 0); Close(); },
             });
         }
-        bool ally = Lv(C.CourierAlly) > 0;
-        list.Add(new Entry
-        {
-            Text = L.L("DELIVER MY ITEM TO A TEAMMATE", "ОТНЕСТИ ПРЕДМЕТ СОЮЗНИКУ") + " >",
-            Note = !ally ? L.L("PERK", "ПЕРК") : held == null ? L.L("HOLD AN ITEM", "ВОЗЬМИТЕ ПРЕДМЕТ") : "",
-            Enabled = ally && level && held != null, Pick = () => Go(Page.Ally),
-        });
-        bool cart = Lv(C.CourierCart) > 0;
-        list.Add(new Entry { Text = L.L("BRING A C.A.R.T.", "ПРИГНАТЬ ТЕЛЕЖКУ"), Note = cart ? "" : L.L("PERK", "ПЕРК"), Enabled = cart && level, Pick = () => { m.Request(CourierManager.Op.Cart, 0, 0); Close(); } });
+        Head(C.CourierHeadTrail, CourierManager.Op.HeadTrail, L.L("SHOW THE PATH TO A HEAD", "ПОКАЗАТЬ ПУТЬ К ГОЛОВЕ"));
+        Head(C.CourierHeadFetch, CourierManager.Op.HeadFetch, L.L("BRING A HEAD", "ПРИНЕСТИ ГОЛОВУ"));
         bool dash = Lv(C.CourierDash) > 0;
         list.Add(new Entry
         {
-            Text = L.L("DASH", "РЫВОК"),
+            Text = L.L("DASH", "РЫВОК"), Locked = !dash,
             Note = !dash ? L.L("PERK", "ПЕРК") : info.DashLeft > 0f ? $"{Mathf.CeilToInt(info.DashLeft)} S" : L.L("READY", "ГОТОВ"),
             Enabled = dash && info.DashLeft <= 0f, Pick = () => m.Request(CourierManager.Op.Dash, 0, 0),
         });
         bool fly = Lv(C.CourierFlight) > 0;
         list.Add(new Entry
         {
-            Text = L.L("FLIGHT", "ПОЛЁТ"),
+            Text = L.L("FLIGHT", "ПОЛЁТ"), Locked = !fly,
             Note = !fly ? L.L("PERK", "ПЕРК") : info.Flying ? L.L("ON", "ВКЛ") : L.L("OFF", "ВЫКЛ"),
             Enabled = fly, Pick = () => m.Request(CourierManager.Op.Fly, info.Flying ? 0 : 1, 0),
         });
-        // Backpack: stash what you hold, take things back out.
+        list.Add(new Entry { Text = L.L("GACHA", "ГАЧА") + " ›", Note = L.L($"{CourierGacha.Coins} COINS", $"МОНЕТ: {CourierGacha.Coins}"), Pick = () => Go(Page.Gacha) });
+        list.Add(new Entry { Text = L.L("APPEARANCE", "ВНЕШНИЙ ВИД") + " ›", Pick = () => Go(Page.Look) });
+        return list;
+    }
+
+    // Backpack: stash what you hold, take things back out.
+    private List<Entry> BackpackPage(CourierManager m)
+    {
+        var list = new List<Entry>();
+        var info = m.Infos.TryGetValue(L.LocalActor, out var i) ? i : default;
+        bool level = SemiFunc.RunIsLevel();
+        var held = Held();
         var stash = info.Stash ?? new string[0];
         int slots = Mathf.Max(1, info.Slots);
         list.Add(new Entry
         {
-            Text = L.L("PUT MY ITEM IN THE BACKPACK", "УБРАТЬ ПРЕДМЕТ В РЮКЗАК"),
+            Text = L.L("PUT MY ITEM IN", "УБРАТЬ ПРЕДМЕТ"),
             Note = held == null ? L.L($"HOLD AN ITEM · {stash.Length}/{slots}", $"ВОЗЬМИТЕ ПРЕДМЕТ · {stash.Length}/{slots}") : $"{stash.Length}/{slots}",
             Enabled = level && held != null && stash.Length < slots,
             Pick = () => m.Request(CourierManager.Op.Stash, held.photonView.ViewID, 0),
@@ -232,11 +321,8 @@ internal sealed class CourierMenu
         for (int s = 0; s < stash.Length; s++)
         {
             int index = s;
-            list.Add(new Entry { Text = L.L("  TAKE OUT: ", "  ДОСТАТЬ: ") + stash[s].ToUpperInvariant(), Pick = () => m.Request(CourierManager.Op.Unstash, index, 0) });
+            list.Add(new Entry { Text = L.L("TAKE OUT: ", "ДОСТАТЬ: ") + stash[s].ToUpperInvariant(), Pick = () => m.Request(CourierManager.Op.Unstash, index, 0) });
         }
-        list.Add(new Entry { Text = L.L("DROP IT AND FOLLOW ME", "БРОСЬ ВСЁ И ЗА МНОЙ"), Pick = () => { m.Request(CourierManager.Op.Follow, 0, 0); Close(); } });
-        list.Add(new Entry { Text = L.L("GACHA", "ГАЧА") + " >", Note = L.L($"{CourierGacha.Coins} COINS", $"МОНЕТ: {CourierGacha.Coins}"), Pick = () => Go(Page.Gacha) });
-        list.Add(new Entry { Text = L.L("APPEARANCE", "ВНЕШНИЙ ВИД") + " >", Pick = () => Go(Page.Look) });
         return list;
     }
 
@@ -311,25 +397,28 @@ internal sealed class CourierMenu
             new()
             {
                 Text = L.L("PULL (1 COIN)", "КРУТИТЬ (1 МОНЕТА)"),
-                Note = CourierGacha.Coins > 0 ? L.L($"{CourierGacha.Coins} COINS", $"МОНЕТ: {CourierGacha.Coins}") : L.L("NO COINS: FIND THEM ON LEVELS", "НЕТ МОНЕТ: ИЩИТЕ НА УРОВНЯХ"),
+                Note = CourierGacha.Coins > 0 ? L.L($"{CourierGacha.Coins} COINS", $"МОНЕТ: {CourierGacha.Coins}") : L.L("FIND COINS ON LEVELS", "МОНЕТЫ НАХОДЯТСЯ НА УРОВНЯХ"),
                 Enabled = CourierGacha.Coins > 0,
                 Pick = Pull,
             },
         };
         int total = 0; foreach (int w in CourierRules.GachaWeights) total += w;
+        // Every pet as a card with its portrait, like the game's cosmetics list: owned ones in colour (pick one to
+        // use it), the rest dark with a lock and their pull chance.
         for (int a = 0; a < CourierRules.Animals; a++)
         {
             int chance = Mathf.RoundToInt(100f * CourierRules.GachaWeights[a] / total);
             bool owned = CourierGacha.Owns(a);
-            bool active = owned && (CourierLook.Local & 15) == a;
+            bool active = owned && CourierGacha.HasCourier && (CourierLook.Local & 15) == a;
             int animal = a;
             list.Add(new Entry
             {
-                Text = "  " + CourierLook.Name(a).ToUpperInvariant(),
-                Note = owned ? (active ? L.L("ACTIVE", "АКТИВЕН") : L.L("OWNED · PICK TO USE", "ЕСТЬ · ВЫБРАТЬ")) : L.L($"LOCKED · {chance}%", $"ЗАКРЫТ · {chance}%"),
-                Enabled = owned && !active,
+                Kind = CourierItemKind.Card, Icon = CourierPortraits.Get(a), Text = CourierLook.Name(a).ToUpperInvariant(),
+                Note = owned ? (active ? L.L("ACTIVE", "АКТИВЕН") : L.L("OWNED", "ЕСТЬ")) : $"{chance}%",
+                Locked = !owned, Active = active, Enabled = owned,
                 Pick = () =>
                 {
+                    if (active) return;
                     CourierRules.UnpackLook(CourierLook.Local, out _, out int x, out int y, out int z);
                     CourierLook.Local = CourierRules.PackLook(animal, x, y, z);
                 },

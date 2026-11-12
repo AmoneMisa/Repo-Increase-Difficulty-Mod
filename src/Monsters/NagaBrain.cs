@@ -17,7 +17,7 @@ namespace IncreaseHardMod.Monsters;
 internal sealed class NagaBrain : MonsterBrain
 {
     private const byte Guard = 0, Hunt = 1, Combo1 = 2, Combo2 = 3, Vulnerable = 4, Petrify = 5, Bleed = 6, Reposition = 7;
-    private float _lastSpecialEnd = -99f, _lostSight;
+    private float _lastSpecialEnd = -99f;
     private bool _bleedNext;
     private float _comboReady;
 
@@ -48,6 +48,12 @@ internal sealed class NagaBrain : MonsterBrain
     protected override void OnNoise(Vector3 position)
     {
         if (State == Guard) Destination = position;
+    }
+
+    protected override void OnProvoked(PlayerAvatar player)
+    {
+        if (player == null || State != Guard) return;
+        Target = player; SetState(Hunt);
     }
 
     // Hit while guarding: she turns on the nearest player she can see.
@@ -126,8 +132,8 @@ internal sealed class NagaBrain : MonsterBrain
         if (Target == null) { SetState(Guard); return; }
         // Short sight and a quick give-up: breaking line of sight or getting out of 10 m hides you from her.
         bool sees = Sees(Target, MonsterRules.NagaSight);
-        if (sees) _lostSight = 0f;
-        else if ((_lostSight += dt) > MonsterRules.NagaLoseSight) { Target = null; SetState(Guard); return; }
+        if (sees) LostSight = 0f;
+        else if ((LostSight += dt) > MonsterRules.NagaLoseSight) { Target = null; SetState(Guard); return; }
         float d = DistanceTo(Target);
         if (d <= 2.2f && MayAttack(Target))
         {

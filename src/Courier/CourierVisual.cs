@@ -42,6 +42,7 @@ internal sealed class CourierVisual : MonoBehaviour
     private float _tailAngle, _tailVelocity;
     private readonly List<(Transform t, float born)> _hearts = new();
 
+    private CourierDanger _danger;
     internal int Look => _look;
 
     /// <summary>Where a player aims to pet it (the middle of the body, up in the air when flying).</summary>
@@ -51,6 +52,7 @@ internal sealed class CourierVisual : MonoBehaviour
     {
         var go = new GameObject("IHM Courier");
         var visual = go.AddComponent<CourierVisual>();
+        visual._danger = go.AddComponent<CourierDanger>();
         visual.SetLook(look);
         return visual;
     }
@@ -232,6 +234,7 @@ internal sealed class CourierVisual : MonoBehaviour
         float dt = Mathf.Min(Time.deltaTime, .1f);
         bool down = (_flags & CourierFlags.Down) != 0;
         _model.gameObject.SetActive(!down);
+        if (_danger != null) { _danger.Suppressed = down; _danger.Height = .72f + _fly * .45f; }
         if (down) { TickHearts(dt); return; }
 
         transform.position = Vector3.Lerp(transform.position, _target, 1f - Mathf.Exp(-12f * dt));

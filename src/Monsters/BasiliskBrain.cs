@@ -16,7 +16,7 @@ internal sealed class BasiliskBrain : MonsterBrain
 {
     private const byte Hide = 0, Stalk = 1, Rattle = 2, Lunge = 3, Constrict = 4, Retreat = 5, BitePrep = 6;
     private PlayerAvatar _victim;
-    private float _biteReady, _lostSight, _grabReady;
+    private float _biteReady, _grabReady;
 
     internal override MonsterPose Pose => State switch
     {
@@ -48,6 +48,13 @@ internal sealed class BasiliskBrain : MonsterBrain
         if (State is Constrict or Lunge or BitePrep) return;
         if (Vector3.Distance(position, BodyPosition) <= 4f) Provoke();
         else if (State == Hide) Destination = position;
+    }
+
+    protected override void OnProvoked(PlayerAvatar player)
+    {
+        if (State is Constrict or Lunge or BitePrep) return;
+        if (player != null) Target = player;
+        Provoke();
     }
 
     protected override void OnGrabbed(PlayerAvatar player)
@@ -119,8 +126,8 @@ internal sealed class BasiliskBrain : MonsterBrain
                 break;
             case Stalk:
                 if (Target == null) { SetState(Hide); break; }
-                if (Sees(Target, 14f)) _lostSight = 0f;
-                else if ((_lostSight += dt) > 4f) { Target = null; SetState(Hide); break; }
+                if (Sees(Target, 14f)) LostSight = 0f;
+                else if ((LostSight += dt) > 4f) { Target = null; SetState(Hide); break; }
                 Move(Target.transform.position, 2.2f);
                 float d = DistanceTo(Target);
                 if (d <= 2.6f && Time.time >= _grabReady && MayAttack(Target) && MonsterAfflictions.CanControl(Target)) Announce(Rattle);

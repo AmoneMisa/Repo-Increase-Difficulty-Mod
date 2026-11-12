@@ -326,6 +326,10 @@ internal static class FlameCartItem
         obj.transform.localScale = Vector3.one * scale;
         var box = obj.GetComponent<ItemValuableBox>();
         if (cap > 0) box.valueLimit = cap;
+        // The Hauler's hatch leaves and railing stood up above the cart rim like a lid: hide them (the doors still
+        // swing and the intake works the same; only their meshes are not drawn).
+        foreach (var r in obj.GetComponentsInChildren<MeshRenderer>(true))
+            if (r.name.Contains("Item Valuable Box Door") || r.name == "Railing") r.enabled = false;
         MakeBoxGrabbable(box);
         return box;
     }

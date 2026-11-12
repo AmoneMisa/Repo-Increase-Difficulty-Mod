@@ -17,7 +17,8 @@ internal enum CartKind : byte { Soul = 1, Wide = 2, Double = 3 }
 ///  - Soul C.A.R.T.: the little Pocket C.A.R.T. with a Hauler hatch for up to $65K in monster souls.
 ///  - Wide C.A.R.T.: 1.25x the big C.A.R.T.'s width by default (ModConfig.WideCartWidth) and at least 1.4x its
 ///    length to fit the Museum Tray, with slightly higher walls; 20% dearer.
-///  - Double-Decker C.A.R.T.: the big C.A.R.T. 15% shorter, with walls twice as tall and 40% more mass; 25% dearer.
+///  - Double-Decker C.A.R.T.: the big C.A.R.T. 15% shorter, with walls twice as tall (the upper half clear glass)
+///    and 40% more mass; 25% dearer.
 /// Reshaping moves and scales the cart's own parts (walls, floor, the in-cart volume the haul screen reads), so
 /// the game's logic sees a bigger or taller cart.
 /// </summary>
@@ -107,7 +108,8 @@ internal static class CustomCarts
         if (kind == CartKind.Double)
         {
             Reshape(go, new Vector3(1f, DoubleHeight, DoubleLength));
-            RaiseWalls(go, DoubleHeight);
+            // The body keeps the normal walls; the extra height is clear glass on top (the wall colliders are tall).
+            AddGlassWalls(go);
             mass = StandardMass * DoubleMassFactor;
             var rb = go.GetComponent<Rigidbody>();
             if (rb != null) rb.mass = mass;
@@ -243,6 +245,64 @@ internal static class CustomCarts
         }
         Plugin.Log.LogInfo($"[Carts] {go.name} walls x{factor:0.##}: {raised} mesh(es) raised" +
                            (stretched > 0 ? $", {stretched} unreadable: body stretched instead" : "") + ".");
+    }
+
+    /// <summary>
+    /// Clear glass panels from the normal rim up to the top of the (already raised) wall colliders, one per wall,
+    /// with a thin dark frame along their top edge. Visual only: the wall colliders keep the cargo in.
+    /// </summary>
+    private static void AddGlassWalls(GameObject go)
+    {
+        var cart = go.transform;
+        var glass = Challenges.ChallengeProps.Glass(new Color(.78f, .9f, 1f, .16f), new Color(.02f, .03f, .04f));
+        glass.name = "IHM Cart Glass";
+        var frame = new Material(Shader.Find("Standard")) { name = "IHM Cart Glass Frame", color = new Color(.2f, .18f, .15f) };
+        frame.SetFloat("_Glossiness", .45f);
+        frame.SetFloat("_Metallic", .6f);
+        var root = new GameObject("IHM Glass Walls").transform;
+        root.SetParent(cart, false);
+        int panels = 0;
+        var walls = new List<Transform>();
+        foreach (Transform t in cart) if (t.name.Contains("Cart Wall Collider") && t.localPosition.y <= .3f) walls.Add(t);
+        foreach (var t in walls)
+        {
+            var filter = t.GetComponent<MeshFilter>();
+            if (filter == null || filter.sharedMesh == null) continue;
+            var b = filter.sharedMesh.bounds;
+            Vector3 min = Vector3.positiveInfinity, max = Vector3.negativeInfinity;
+            for (int i = 0; i < 8; i++)
+            {
+                var corner = b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                var p = cart.InverseTransformPoint(t.TransformPoint(corner));
+                min = Vector3.Min(min, p); max = Vector3.Max(max, p);
+            }
+            float height = max.y - WallTop;
+            if (height < .05f) continue;
+            var size = max - min;
+            if (Mathf.Max(size.x, size.z) < .5f) continue; // the small bump under the screen, not a wall
+            // A thin pane in the middle of the wall's thickness.
+            bool alongX = size.x >= size.z;
+            var pane = new Vector3(alongX ? size.x : .02f, height, alongX ? .02f : size.z);
+            var centre = new Vector3((min.x + max.x) / 2f, WallTop + height / 2f, (min.z + max.z) / 2f);
+            Block(root, "Glass", centre, pane, glass);
+            Block(root, "Glass Frame", new Vector3(centre.x, max.y - .012f, centre.z),
+                new Vector3(pane.x + (alongX ? .01f : .03f), .024f, pane.z + (alongX ? .03f : .01f)), frame);
+            panels++;
+        }
+        Plugin.Log.LogInfo($"[Carts] {go.name}: {panels} glass wall panel(s) above the rim.");
+    }
+
+    private static void Block(Transform parent, string name, Vector3 centre, Vector3 size, Material material)
+    {
+        var block = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        block.name = name;
+        Object.DestroyImmediate(block.GetComponent<Collider>());
+        block.transform.SetParent(parent, false);
+        block.transform.localPosition = centre;
+        block.transform.localScale = size;
+        var r = block.GetComponent<MeshRenderer>();
+        r.sharedMaterial = material;
+        r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
     }
 
     private static void Tint(GameObject go, Color color)

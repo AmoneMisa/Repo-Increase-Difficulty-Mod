@@ -88,7 +88,14 @@ internal abstract class MonsterBrain : MonoBehaviour
         if (E.HasStateSpawn) E.StateSpawn.OnSpawn.AddListener(OnSpawnEvent);
         if (E.HasVision) E.Vision.onVisionTriggered.AddListener(OnVisionEvent);
         if (E.HasStateInvestigate) E.StateInvestigate.onInvestigateTriggered.AddListener(OnInvestigateEvent);
-        if (E.HasRigidbody) E.Rigidbody.onGrabbed.AddListener(OnGrabbedEvent);
+        if (E.HasRigidbody)
+        {
+            E.Rigidbody.onGrabbed.AddListener(OnGrabbedEvent);
+            // Like native monsters (Hunter, Runner, Shadow): bumping into it, or hitting it with a held object,
+            // turns it on that player.
+            E.Rigidbody.onTouchPlayer?.AddListener(OnTouchEvent);
+            E.Rigidbody.onTouchPlayerGrabbedObject?.AddListener(OnTouchObjectEvent);
+        }
         WireImpacts();
         if (E.HasStateDespawn) E.StateDespawn.ChaseDespawn = false; // a long fight must not despawn it mid-attack
     }
@@ -130,7 +137,7 @@ internal abstract class MonsterBrain : MonoBehaviour
 
     private void OnVisionEvent()
     {
-        if (!IsHost || E.IsStunned()) return;
+        if (!IsHost || E.IsStunned() || _leaving) return;
         var seen = E.Vision.onVisionTriggeredPlayer;
         if (seen != null && !seen.isDisabled) OnSeePlayer(seen);
     }
@@ -142,8 +149,30 @@ internal abstract class MonsterBrain : MonoBehaviour
 
     private void OnGrabbedEvent()
     {
-        if (IsHost) OnGrabbed(E.Rigidbody.onGrabbedPlayerAvatar);
+        if (!IsHost) return;
+        _leaving = false;
+        OnGrabbed(E.Rigidbody.onGrabbedPlayerAvatar);
     }
+
+    private void OnTouchEvent()
+    {
+        if (IsHost && Settled) { _leaving = false; OnProvoked(E.Rigidbody.onTouchPlayerAvatar); }
+    }
+
+    private void OnTouchObjectEvent()
+    {
+        if (IsHost && Settled) { _leaving = false; OnProvoked(E.Rigidbody.onTouchPlayerGrabbedObjectAvatar); }
+    }
+
+    /// <summary>The native guard: no reactions in the 1.5 s after a stun ends (it is still getting up).</summary>
+    protected bool Settled => !E.IsStunned() && E.HasRigidbody && E.Rigidbody.timeSinceStun > 1.5f;
+
+    /// <summary>
+    /// Host: a player grabbed it, bumped into it or hit it with something they hold. Monsters turn on that player
+    /// (the native Loom / Hunter behaviour); each brain says what "turning on" means for it. Called every frame
+    /// while the grab lasts, so it must be idempotent.
+    /// </summary>
+    protected virtual void OnProvoked(PlayerAvatar player) { }
 
     // Runs on every client (HurtRPC raises onHurt everywhere): the red flash is drawn by our own visual, because
     // the native flash needs a _ColorOverlay shader property our painted materials may not have.
@@ -151,7 +180,12 @@ internal abstract class MonsterBrain : MonoBehaviour
     {
         MonsterAudio.Play(MonsterAudio.Cue.Hurt, BodyPosition, .6f);
         if (Visual != null) Visual.Flash();
-        if (IsHost) OnHurt();
+        if (!IsHost) return;
+        _leaving = false;
+        OnHurt();
+        // Shot or hit while it had nobody to chase: it turns on the nearest player it can see (the attacker is not
+        // known; the nearest one in sight is the usual culprit).
+        if (Target == null && !_dead) OnProvoked(Notice(20f, force: true));
     }
 
     private void OnDeathEvent()
@@ -174,7 +208,7 @@ internal abstract class MonsterBrain : MonoBehaviour
     protected virtual void OnSpawned() { }
     protected virtual void OnSeePlayer(PlayerAvatar player) { }
     protected virtual void OnNoise(Vector3 position) { }
-    protected virtual void OnGrabbed(PlayerAvatar player) { }
+    protected virtual void OnGrabbed(PlayerAvatar player) { if (Settled || E.IsStunned()) OnProvoked(player); }
     protected virtual void OnHurt() { }
     protected virtual void OnDied() { }
     protected virtual void OnStunned() { }
@@ -205,6 +239,7 @@ internal abstract class MonsterBrain : MonoBehaviour
         }
         if (E.IsStunned()) { OnStunned(); Sync(); return; }
         if (Target != null && (Target.isDisabled || Target.deadSet)) Target = null;
+        if (TickLeave(Time.deltaTime)) { UpdateAttackStatus(); Sync(); return; }
         HostTick(Time.deltaTime);
         UpdateAttackStatus();
         Sync();
@@ -231,7 +266,7 @@ internal abstract class MonsterBrain : MonoBehaviour
         if (attacking || winding) E.SetChaseTimer();
     }
 
-    private float _heldHurtUntil, _lastHeldAt = -100f;
+    private float _heldHurtUntil, _lastHeldAt = -100f, _heldSpeed;
 
     // Native rule: impacts hurt a monster only while it is stunned or a "non-stun hurt" window is open. Keep that
     // window open while players hold it and briefly after they let go, so slamming it into the floor or a wall
@@ -242,9 +277,11 @@ internal abstract class MonsterBrain : MonoBehaviour
         // Impacts hurt only while it is swung or thrown (fast), not while it simply hangs in someone's grip.
         var pgo = E.Rigidbody.physGrabObject;
         bool held = pgo.playerGrabbing.Count > 0;
-        if (held) _lastHeldAt = Time.time;
         float speed = pgo.rb != null ? pgo.rb.velocity.magnitude : 0f;
-        if (MonsterRules.HoldImpactArms(held, Time.time - _lastHeldAt, speed)) _heldHurtUntil = Time.time + MonsterRules.ThrownHurtSeconds;
+        // Smoothed speed in the hands (one-frame physics spikes from the body fighting the grab do not count).
+        if (held) { _lastHeldAt = Time.time; _heldSpeed = Mathf.Lerp(_heldSpeed, speed, Mathf.Clamp01(Time.deltaTime / .12f)); }
+        if (MonsterRules.HoldImpactArms(held, Time.time - _lastHeldAt, Mathf.Min(speed, _heldSpeed + 1f))) _heldHurtUntil = Time.time + MonsterRules.ThrownHurtSeconds;
+        if (held) { _heldHurtUntil = 0f; return; } // never while it is simply in someone's hands
         if (Time.time < _heldHurtUntil) E.Health.NonStunHurtOverride(.25f);
     }
 
@@ -300,9 +337,16 @@ internal abstract class MonsterBrain : MonoBehaviour
     /// <summary>Flying height above the agent; 0 = on the ground (falls when stunned).</summary>
     protected virtual float HoverHeight() => Hover;
 
+    /// <summary>
+    /// Seconds the current target has been out of sight. Reset on every state change: a stale value from an earlier
+    /// hunt made the witch drop a player the moment she spotted them again.
+    /// </summary>
+    protected float LostSight;
+
     protected void SetState(byte state)
     {
         if (state == State) return;
+        LostSight = 0f;
         // Diagnostics for the witch's attack cycle (a playtest reported she never casts).
         if (Kind == MonsterKind.Witch)
             Plugin.Log.LogInfo($"[Monsters] Witch state {State} -> {state}, target {(Target != null ? Target.playerName : "none")}" +
@@ -377,6 +421,9 @@ internal abstract class MonsterBrain : MonoBehaviour
         if (to.magnitude > range) return false;
         foreach (var hit in Physics.RaycastAll(from, to.normalized, to.magnitude, SemiFunc.LayerMaskGetVisionObstruct(), QueryTriggerInteraction.Ignore))
         {
+            // The last stretch of the ray is inside the player's own body: the local player's collision capsule
+            // lives on PlayerController, not under PlayerAvatar, and used to hide the host from every monster.
+            if (hit.distance >= to.magnitude - .6f) continue;
             if (hit.collider.GetComponentInParent<PlayerAvatar>() == p || hit.collider.GetComponentInParent<PlayerTumble>() != null) continue;
             if (hit.collider.transform.IsChildOf(Parent.transform)) continue;
             if (hit.collider.GetComponentInParent<PhysGrabObject>() != null && hit.collider.attachedRigidbody != null &&
@@ -394,9 +441,76 @@ internal abstract class MonsterBrain : MonoBehaviour
     /// </summary>
     protected PlayerAvatar Notice(float range, bool force = false)
     {
-        if (!force && Time.time < _noticeAt) return null;
+        if (force) return NearestVisible(range); // it was hit: whoever it can see, wherever it faces
+        if (_leaving || Time.time < _noticeAt) return null;
         _noticeAt = Time.time + .4f;
-        return NearestVisible(range);
+        return NearestSpotted(range);
+    }
+
+    private readonly Dictionary<PlayerAvatar, float> _watchedSince = new();
+
+    /// <summary>
+    /// Host: the nearest player it actually notices, by the native vision rules (EnemyVision): anyone right next to it
+    /// (3.5 m standing, 2 m crouched or crawling), otherwise only inside its view cone - narrower for a crouching
+    /// player and narrower still for a crawling one - and a crouching / crawling player only after it has watched them
+    /// for 0.5 / 1 s. Line of sight as Sees. Used to pick up a target; keeping one uses Sees.
+    /// </summary>
+    protected PlayerAvatar NearestSpotted(float range)
+    {
+        if (_leaving) return null;
+        PlayerAvatar best = null; float bestD = float.MaxValue;
+        var forward = Flat(E.transform.forward).normalized;
+        foreach (var p in SemiFunc.PlayerGetList())
+        {
+            if (p == null) continue;
+            if (p.isDisabled || p.deadSet || !Sees(p, range)) { _watchedSince.Remove(p); continue; }
+            var to = Chest(p) - Eye;
+            var flatTo = Flat(to);
+            float dot = forward.sqrMagnitude > .01f && flatTo.sqrMagnitude > .0001f ? Vector3.Dot(forward, flatTo.normalized) : 1f;
+            bool crawling = p.isCrawling && !p.isTumbling, crouching = (p.isCrouching || p.isTumbling) && !crawling;
+            if (MonsterRules.InViewCone(dot, crouching, crawling)) { if (!_watchedSince.ContainsKey(p)) _watchedSince[p] = Time.time; }
+            else _watchedSince.Remove(p);
+            float watched = _watchedSince.TryGetValue(p, out var since) ? Time.time - since : -1f;
+            if (!MonsterRules.SpotsPlayer(to.magnitude, dot, crouching, crawling, watched)) continue;
+            float d = Vector3.Distance(p.transform.position, BodyPosition);
+            if (d < bestD) { best = p; bestD = d; }
+        }
+        return best;
+    }
+
+    // ------------------------------------------------------------------ leaving (native forceLeave)
+
+    private bool _leaving;
+    private Vector3 _leaveTo;
+    private float _leaveUntil, _leaveStuck;
+
+    /// <summary>
+    /// Host: the game's director tells every monster to leave once monsters have pressed the players' rooms for
+    /// long enough (EnemyParent.forceLeave, which Hunter and Runner obey). Out of an attack, ours drop their target
+    /// and walk 25-50 m away from the players, ignoring them on the way unless they are hit, grabbed or touched.
+    /// True while it is leaving (the brain's own logic is paused).
+    /// </summary>
+    private bool TickLeave(float dt)
+    {
+        if (!_leaving)
+        {
+            if (Kind == MonsterKind.Pig || Pose != MonsterPose.Move || !SemiFunc.EnemyForceLeave(E)) return false;
+            if (!Parent.playerClose) return false; // nobody near: nothing to leave
+            var point = SemiFunc.LevelPointGetPlayerDistance(BodyPosition, 25f, 50f) ?? SemiFunc.LevelPointGetFurthestFromPlayer(BodyPosition, 5f);
+            if (point == null || !NavMesh.SamplePosition(point.transform.position, out var hit, 5f, NavMesh.AllAreas)) return false;
+            _leaveTo = hit.position;
+            _leaving = true;
+            _leaveUntil = Time.time + MonsterRules.LeaveMaxSeconds;
+            _leaveStuck = 0f;
+            Target = null;
+            SetState(0);
+            Plugin.Log.LogInfo($"[Monsters] {Kind} leaves the players' area ({Vector3.Distance(BodyPosition, _leaveTo):0} m).");
+        }
+        Move(_leaveTo, MonsterRegistry.Of(Kind).Speed * 1.15f);
+        if (E.HasRigidbody && E.Rigidbody.notMovingTimer > 2f) _leaveStuck += dt;
+        if (Vector3.Distance(Flat(E.transform.position), Flat(_leaveTo)) < 1.5f || _leaveStuck > 5f || Time.time > _leaveUntil)
+            _leaving = false;
+        return true;
     }
 
     protected PlayerAvatar NearestVisible(float range)

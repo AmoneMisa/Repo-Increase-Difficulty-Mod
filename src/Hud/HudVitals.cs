@@ -58,6 +58,7 @@ internal static class HudVitals
         public Vector3 MaxBase;
         public string ShownValue, ShownMax;
         public int Slot = -1;
+        public Vector3 Offset;
     }
 
     private static readonly List<Row> Rows = new();
@@ -89,6 +90,7 @@ internal static class HudVitals
             if (row.Clone == null) continue;
             if (!row.Clone.activeSelf) row.Clone.SetActive(true);
             if (row.Slot != slot) Place(row, energy, slot);
+            Steady(row, energy);
             Write(row, reading);
         }
     }
@@ -173,8 +175,24 @@ internal static class HudVitals
         float step = health != null && health.transform.parent == source.parent
             ? Mathf.Abs(health.transform.localPosition.y - source.localPosition.y) : 0f;
         if (step < 1f) step = source.GetComponent<RectTransform>() is RectTransform rt && rt.rect.height > 1f ? rt.rect.height : 50f;
-        row.Clone.transform.localPosition = new Vector3(0f, -step * slot, 0f);
+        row.Offset = new Vector3(0f, -step * slot, 0f);
+        row.Clone.transform.localPosition = row.Offset;
         row.Slot = slot;
+    }
+
+    /// <summary>
+    /// The energy row bounces bigger and shakes when energy runs low (SemiUI spring scale and shake). Our rows are
+    /// its children, so they used to grow and jitter with it and ran into it. Undo exactly that part every frame,
+    /// after SemiUI has moved it; its show/hide slide, scoot and shrink-to-hide still carry the rows along.
+    /// </summary>
+    private static void Steady(Row row, EnergyUI energy)
+    {
+        var rest = energy.originalScale.x;
+        float s = rest > .01f ? energy.transform.localScale.x / rest : 1f;
+        if (s < .5f || s > 3f) s = 1f; // shrinking to hide (or not set up yet): let the rows follow
+        var shake = new Vector3(energy.SpringShakeX, energy.SpringShakeY, 0f);
+        row.Clone.transform.localScale = Vector3.one / s;
+        row.Clone.transform.localPosition = (row.Offset - shake) / s;
     }
 
     private static void Write(Row row, VitalsReading reading)

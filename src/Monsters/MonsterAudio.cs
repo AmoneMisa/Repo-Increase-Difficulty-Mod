@@ -6,11 +6,11 @@ namespace IncreaseHardMod.Monsters;
 
 /// <summary>
 /// Monster cues through the native Sound path (mixer, distance, occlusion).
-/// Warnings are procedural; the witch laugh, the gorgon's hoofsteps and bellow, and the fairy's wings use user-supplied embedded recordings.
+/// Warnings are procedural; the witch laugh, the gorgon's hoofsteps and bellow, the fairy's wings and the twins' laugh and footsteps use user-supplied embedded recordings.
 /// </summary>
 internal static class MonsterAudio
 {
-    internal enum Cue { Oink, Chomp, Charge, Fireball, Zap, Hiss, Rustle, Bite, Roar, Thud, Stare, Swing, SwingWide, Petrify, Slash, Hurt, Death, WitchLaugh, Giggle, Chime, Step, Stomp, Slither, Flap, Whoosh, BladeDraw, Growl, Snort, Shriek, Hum, Sparkle, Rattle, Spit, Squeeze, Chitter, Hoof, HoofRun, FairyFlight, Moo, Gait }
+    internal enum Cue { Oink, Chomp, Charge, Fireball, Zap, Hiss, Rustle, Bite, Roar, Thud, Stare, Swing, SwingWide, Petrify, Slash, Hurt, Death, WitchLaugh, Giggle, Chime, Step, Stomp, Slither, Flap, Whoosh, BladeDraw, Growl, Snort, Shriek, Hum, Sparkle, Rattle, Spit, Squeeze, Chitter, Hoof, HoofRun, FairyFlight, Moo, Gait, TwinsLaugh, TwinsStep }
 
     private static readonly Dictionary<Cue, Sound> Sounds = new();
 
@@ -24,11 +24,14 @@ internal static class MonsterAudio
                     : cue == Cue.FairyFlight ? Visuals.ItemAudio.Cue("monster_fairy_flight", .5f)
                     // The bull's bellow: a user-supplied recording, pitched down for the roar before the charge.
                     : cue == Cue.Moo ? Visuals.ItemAudio.Cue("monster_gorgon_moo", .5f)
+                    // Hansel and Gretel's mischievous laugh as they seize a player: a user-supplied recording.
+                    : cue == Cue.TwinsLaugh ? Visuals.ItemAudio.Cue("monster_twins_laugh", .5f)
                     : new Sound
                 {
                     // Hoofsteps: four steps cut from a user-supplied recording of a large animal; the game picks one at random.
                     Sounds = cue is Cue.Hoof or Cue.HoofRun ? HoofClips("monster_gorgon_hoof", 4) :
-                             cue == Cue.Gait ? HoofClips("monster_gorgon_gait", 2) : new[] { Make(cue) }, Volume = .5f, VolumeRandom = .05f, Pitch = 1f, PitchRandom = .06f,
+                             cue == Cue.Gait ? HoofClips("monster_gorgon_gait", 2) :
+                             cue == Cue.TwinsStep ? HoofClips("monster_twins_step", 5) : new[] { Make(cue) }, Volume = .5f, VolumeRandom = .05f, Pitch = 1f, PitchRandom = .06f,
                     SpatialBlend = 1f, Doppler = 0f, Type = AudioManager.AudioType.Default,
                 };
             sound.Volume = (cue == Cue.WitchLaugh ? .32f : .5f) * volume;
@@ -48,8 +51,8 @@ internal static class MonsterAudio
         }
         catch (Exception e)
         {
-            Plugin.Log.LogWarning($"[Monsters] Hoof recording missing ({e.Message}); using the synthesized step.");
-            return new[] { Make(Cue.Hoof) };
+            Plugin.Log.LogWarning($"[Monsters] Recording {key} missing ({e.Message}); using a synthesized step.");
+            return new[] { Make(key.Contains("twins") ? Cue.Step : Cue.Hoof) };
         }
     }
 

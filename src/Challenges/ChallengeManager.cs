@@ -143,7 +143,7 @@ internal sealed class ChallengeManager : MonoBehaviour
         _waveEnemies.Clear(); _waveDead.Clear(); _shownProgress = -1;
         foreach (var v in _propVisuals) if (v != null) Destroy(v.gameObject);
         _propVisuals.Clear();
-        _props.Clear(); _propDone.Clear(); _propDrift.Clear(); _path.Clear();
+        _props.Clear(); _propDone.Clear(); _propDrift.Clear(); _path.Clear(); _pathRadius.Clear();
         _has = false; _key = ""; _phase = ChallengePhase.Ready; _shownPhase = ChallengePhase.Ready; _finishedAt = -1f;
         _progress = _total = _huntView = 0; _reward = ChallengeReward.None; _huntTarget = null; _sent = null;
         Localization.HudStatus.Clear(StatusKey);
@@ -223,27 +223,21 @@ internal sealed class ChallengeManager : MonoBehaviour
         Plugin.Log.LogInfo($"[Challenge] Shrine placed at {_shrine}: {_kind}.");
     }
 
-    // The wisp's home: a level point 25-55 m of walking away; the path is the navmesh route there.
+    // The wisp's home: a level point 25-55 m of walking away, by a route through the level's own obstacles
+    // (EscortRoute: jumps, climbs, drops and crawl spaces the wisp floats straight across).
+    private static readonly List<float> _pathRadius = new();
+
     private static bool PlanEscort(List<LevelPoint> points)
     {
         if (!NavMesh.SamplePosition(_shrine, out var start, 2f, NavMesh.AllAreas)) return false;
-        var shuffled = new List<LevelPoint>(points);
-        for (int i = shuffled.Count - 1; i > 0; i--) { int j = Random.Range(0, i + 1); (shuffled[i], shuffled[j]) = (shuffled[j], shuffled[i]); }
-        var path = new NavMeshPath();
-        foreach (var p in shuffled)
-        {
-            if (p == null || p.Truck || p.inStartRoom) continue;
-            if (!NavMesh.SamplePosition(p.transform.position, out var end, 2f, NavMesh.AllAreas)) continue;
-            if (!NavMesh.CalculatePath(start.position, end.position, NavMesh.AllAreas, path) || path.status != NavMeshPathStatus.PathComplete) continue;
-            float length = 0f;
-            for (int i = 1; i < path.corners.Length; i++) length += Vector3.Distance(path.corners[i - 1], path.corners[i]);
-            if (length < ChallengeRules.EscortMinPath || length > ChallengeRules.EscortMaxPath) continue;
-            _path.Clear();
-            foreach (var c in path.corners) _path.Add(c + Vector3.up * 1.2f);
-            _home = end.position;
-            return true;
-        }
-        return false;
+        var route = new List<EscortRoute.Point>();
+        if (!EscortRoute.Plan(start.position, points, ChallengeRules.EscortMinPath, ChallengeRules.EscortMaxPath,
+                ChallengeRules.EscortFollowRadius, route, out var home, out int features)) return false;
+        _path.Clear(); _pathRadius.Clear();
+        foreach (var p in route) { _path.Add(p.Position); _pathRadius.Add(p.Radius); }
+        _home = home;
+        Plugin.Log.LogInfo($"[Challenge] Wisp route: {_path.Count} points, obstacle score {features}.");
+        return true;
     }
 
     // ================================================================ host: running
@@ -445,8 +439,10 @@ internal sealed class ChallengeManager : MonoBehaviour
     private static void EscortStep()
     {
         bool near = false;
+        // Over a jump or a crawl space it only moves on with someone close behind it (no walking round).
+        float radius = _pathIndex < _pathRadius.Count ? _pathRadius[_pathIndex] : ChallengeRules.EscortFollowRadius;
         foreach (var p in Living())
-            if ((p.transform.position - _wisp).sqrMagnitude <= ChallengeRules.EscortFollowRadius * ChallengeRules.EscortFollowRadius) { near = true; break; }
+            if ((p.transform.position + Vector3.up * .6f - _wisp).sqrMagnitude <= radius * radius) { near = true; break; }
         _wispWaiting = !near;
         if (!near || _pathIndex >= _path.Count) { if (_pathIndex >= _path.Count) Finish(true, "home"); return; }
         _wisp = Vector3.MoveTowards(_wisp, _path[_pathIndex], ChallengeRules.EscortSpeed * Time.deltaTime);

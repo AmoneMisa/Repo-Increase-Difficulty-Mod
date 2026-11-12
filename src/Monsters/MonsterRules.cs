@@ -217,15 +217,36 @@ internal static class MonsterRules
     /// <summary>After a player lets go, impacts keep hurting this long (the throw and its landing).</summary>
     internal const float ThrownHurtSeconds = 1.5f;
 
+    // ---------------------------------------------------------------- native-style noticing and leaving
+
+    /// <summary>Longest walk away when the director sends monsters off (EnemyParent.forceLeave).</summary>
+    internal const float LeaveMaxSeconds = 20f;
+
+    /// <summary>The native view cone (EnemyVision dot): 0.4 standing, 0.6 crouching, 0.9 crawling.</summary>
+    internal static bool InViewCone(float dot, bool crouching, bool crawling) =>
+        dot >= (crawling ? .9f : crouching ? .6f : .4f);
+
+    /// <summary>
+    /// Whether a monster notices a player it has line of sight to (native EnemyVision rules): always within 3.5 m
+    /// standing or 2 m crouched / crawling; beyond that only inside the view cone, and a crouching / crawling
+    /// player only once watched for 0.5 / 1 s (watchedSeconds below 0: not being watched).
+    /// </summary>
+    internal static bool SpotsPlayer(float distance, float dot, bool crouching, bool crawling, float watchedSeconds)
+    {
+        if (distance <= (crouching || crawling ? 2f : 3.5f)) return true;
+        if (!InViewCone(dot, crouching, crawling)) return false;
+        return watchedSeconds >= (crawling ? 1f : crouching ? .5f : 0f);
+    }
+
     /// <summary>
     /// Speed (m/s) at which a held or just-released monster counts as swung or thrown (above a sprint). Simply holding it is not
     /// an attack: the body twitches against the grab (its own walking pull) and those small knocks must not hurt.
     /// </summary>
     internal const float SwingHurtSpeed = 6.5f, ReleaseGraceSeconds = .3f;
 
-    /// <summary>Whether this frame starts or extends the impact-damage window for a monster in a player's hands.</summary>
+    /// <summary>Whether this frame opens the impact-damage window: only a fast release (a throw), never while held.</summary>
     internal static bool HoldImpactArms(bool held, float sinceRelease, float speed) =>
-        (held || sinceRelease <= ReleaseGraceSeconds) && speed >= SwingHurtSpeed;
+        !held && sinceRelease <= ReleaseGraceSeconds && speed >= SwingHurtSpeed;
 
     // ---------------------------------------------------------------- perks
 

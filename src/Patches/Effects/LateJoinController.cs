@@ -127,6 +127,8 @@ internal static class LateJoinController
             int enemies = enemyDir.enemiesSpawned.Count;
             if (players == _lastRegPlayers && enemies == _lastRegEnemies)
                 return;
+            if (_lastRegPlayers >= 0 && players > _lastRegPlayers)
+                ResendOwnHealth();
 
             foreach (var player in director.PlayerList)
             {
@@ -149,6 +151,19 @@ internal static class LateJoinController
         {
             Plugin.Log.LogWarning($"[LateJoin] Enemy registration failed harmlessly: {e.Message}");
         }
+    }
+
+    /// <summary>
+    /// Every client, when someone joins mid-level: re-send this client's own health. The game sends a player's
+    /// health to the others (<c>UpdateHealthRPC</c>, not buffered) only when it changes, so a joiner saw every
+    /// teammate at the 100/100 default until each of them was next hurt or healed.
+    /// </summary>
+    private static void ResendOwnHealth()
+    {
+        var avatar = SemiFunc.PlayerAvatarLocal();
+        var ph = avatar != null ? avatar.playerHealth : null;
+        if (ph == null || !ph.healthSet || !GameManager.Multiplayer() || ph.photonView == null || !ph.photonView.IsMine) return;
+        ph.photonView.RPC("UpdateHealthRPC", RpcTarget.Others, ph.health, ph.maxHealth, false, false);
     }
 
     /// <summary>

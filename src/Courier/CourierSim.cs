@@ -24,8 +24,10 @@ internal enum CourierReason : byte
 /// <summary>
 /// One courier, simulated by the host: walks the level's NavMesh after its owner, runs one job at a time and carries
 /// items with the game's own grab overrides (no gravity, nobody else can grab it, it cannot break while carried).
-/// Hazards (monster attacks, explosions, traps: any active hurt collider that would hurt a player) knock it out; it
-/// comes back at the truck.
+/// It can only be hurt while it is out on a job (fetching, delivering, storing, charging, a head): then a monster
+/// attacking it (a monster's hurt collider or a monster right next to it) can knock it out, and it comes back at the
+/// truck with its backpack still full. Tagging along beside its owner it is safe and silent: no damage of any kind,
+/// and it never draws monsters to them.
 /// </summary>
 internal sealed class CourierSim
 {
@@ -125,6 +127,9 @@ internal sealed class CourierSim
         item.Teleport(at, item.transform.rotation);
         if (item.rb != null) item.rb.velocity = Vector3.up * .5f;
     }
+
+    /// <summary>Out on a job (not just tagging along): the only time it can be hurt or draw monsters.</summary>
+    internal bool OnDelivery => Job != CourierJob.None;
 
     internal bool Carrying => _item != null && _phase is Phase.ToCharger or Phase.AtCharger or Phase.Deliver;
 
@@ -310,14 +315,15 @@ internal sealed class CourierSim
     internal (CourierNotice, string)? Tick(float dt, Vector3 truck)
     {
         if (Owner == null) return null;
+        // The backpack stays hidden on the pet the whole time, knocked out or not (it keeps its loot).
+        foreach (var stashed in _stash) if (stashed != null) stashed.OverrideDeactivate(.5f);
         if (Down)
         {
             if (Time.time < DownUntil) return null;
             Down = false; Hp = MaxHp; Pos = Ground(truck); _happyUntil = Time.time + 1.5f;
             return (CourierNotice.Back, null);
         }
-        foreach (var stashed in _stash) if (stashed != null) stashed.OverrideDeactivate(.5f);
-        var notice = Hazards() ?? Monsters();
+        var notice = OnDelivery ? Hazards() ?? Monsters() : null;
         if (notice != null) return notice;
         if (Time.time - _lastHit > 8f) Hp = Mathf.Min(MaxHp, Hp + 2f * dt);
 
@@ -504,6 +510,8 @@ internal sealed class CourierSim
             var hc = c != null ? c.GetComponent<HurtCollider>() : null;
             if (hc == null || !hc.isActiveAndEnabled || !hc.playerLogic || (!hc.playerKill && hc.playerDamage <= 0)) continue;
             if (hc.GetComponentInParent<ItemMelee>() != null || hc.GetComponentInParent<PlayerTumble>() != null || hc.GetComponentInParent<PlayerAvatar>() != null) continue;
+            // Only a monster's own attack: traps, explosions, pits and other hazards leave it alone.
+            if (hc.GetComponentInParent<EnemyParent>() == null && hc.GetComponentInParent<Enemy>() == null) continue;
             if (_hitCooldown.TryGetValue(hc, out float until) && Time.time < until) continue;
             _hitCooldown[hc] = Time.time + .75f;
             float damage = hc.playerKill ? 999f : hc.playerDamage;
@@ -523,8 +531,7 @@ internal sealed class CourierSim
         if (away.sqrMagnitude < .01f) away = -Fwd();
         Pos = Ground(Pos + away.normalized * 1.2f); // knocked back
         if (Hp > 0f) return null;
-        Cancel();
-        UnstashAll();
+        Cancel(); // the thing it was carrying drops where it fell; the backpack stays with it
         Down = true; Hp = 0f;
         float wait = CourierRules.Respawn(Level(C.CourierRecovery));
         DownUntil = Time.time + wait;

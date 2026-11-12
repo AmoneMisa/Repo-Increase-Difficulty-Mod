@@ -14,7 +14,7 @@ namespace IncreaseHardMod.Monsters;
 /// Balance pass: the Death Stare is removed (it is a bull, not a Medusa); 8 s between charges, 4 s between head tosses.
 /// Every attack respects its height window: it never hits a player on a ledge above or below it, and it does not
 /// charge at one.
-/// It can only be grabbed while stunned (a grab in progress is released when the stun ends).
+/// Grabbing, bumping or hitting it turns it on that player; overpowered by enough hands it is stunned while held.
 /// </summary>
 internal sealed class GorgonBrain : MonsterBrain
 {
@@ -22,7 +22,7 @@ internal sealed class GorgonBrain : MonsterBrain
     private readonly HashSet<PlayerAvatar> _hit = new();
     private PlayerAvatar _victim;
     private Vector3 _dir;
-    private float _lostSight, _tramplReady, _chargeReady;
+    private float _tramplReady, _chargeReady;
 
     internal override MonsterPose Pose => State switch
     {
@@ -43,7 +43,12 @@ internal sealed class GorgonBrain : MonsterBrain
         _ => MonsterAnim.None,
     };
 
-    protected override bool GrabAllowed() => E.IsStunned();
+    // Grabbing it is how a player picks a fight (the native Loom way): it is far too heavy to lift alone.
+    protected override void OnProvoked(PlayerAvatar player)
+    {
+        if (player == null || State != Patrol) return;
+        Target = player; SetState(Hunt);
+    }
 
     protected override void OnSpawned() { _victim = null; _hit.Clear(); _chargeReady = Time.time + 3f; }
 
@@ -131,8 +136,8 @@ internal sealed class GorgonBrain : MonsterBrain
     {
         if (Target == null) { SetState(Patrol); return; }
         bool sees = Sees(Target, 20f);
-        if (sees) _lostSight = 0f;
-        else if ((_lostSight += dt) > 5f) { Target = null; SetState(Patrol); return; }
+        if (sees) LostSight = 0f;
+        else if ((LostSight += dt) > 5f) { Target = null; SetState(Patrol); return; }
         float d = DistanceTo(Target);
         // Distances are from the middle of a long body: the horns reach about 3 m. Up close it turns to face the
         // player (no more milling about flank-on) and tosses them whenever the toss is ready.

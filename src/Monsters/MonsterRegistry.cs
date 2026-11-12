@@ -222,6 +222,9 @@ internal static class MonsterRegistry
         health.objectHurtMultiplier = 1f;
         body.grabForceNeeded = ScriptableObject.CreateInstance<GrabForce>();
         body.grabForceNeeded.amount = spec.GrabForce;
+        // Native rule for big monsters (Reaper, Hunter): once a player overpowers it, it is stunned while held, so
+        // slamming it into walls and the floor hurts it and its AI stops fighting the grip. The neutral pig floats.
+        body.grabStun = spec.Kind != MonsterKind.Pig;
         body.gravity = spec.Hover <= 0f;
         var rb = body.GetComponent<Rigidbody>();
         if (rb != null) rb.mass = spec.Mass;

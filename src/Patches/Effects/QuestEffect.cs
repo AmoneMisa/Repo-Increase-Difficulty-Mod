@@ -205,18 +205,23 @@ internal static class QuestEffect
         }
     }
 
-    // Local player took real damage: fail our personal no-damage quest.
+    // Local player took real damage: fail our personal no-damage quest. Judged by the health actually dropping,
+    // not by the call: Hurt is also called while the game ignores it (invincibility after a revive, god mode,
+    // the level not running, the testing FullInvulnerability), and those must not fail the quest.
     [HarmonyPatch(typeof(PlayerHealth), "Hurt")]
     private static class OnLocalDamage
     {
         [HarmonyPrefix]
-        private static void Prefix(PlayerHealth __instance, int damage, bool hurtByHeal)
+        [HarmonyPriority(Priority.Last)]
+        private static void Prefix(PlayerHealth __instance, out int __state) => __state = __instance != null ? __instance.health : 0;
+
+        [HarmonyPostfix]
+        private static void Postfix(PlayerHealth __instance, int damage, bool hurtByHeal, int __state)
         {
-            if (hurtByHeal || damage <= 0 || __instance == null)
+            if (hurtByHeal || damage <= 0 || __instance == null || __instance.playerAvatar != PlayerAvatar.instance)
                 return;
-            if (__instance.playerAvatar != PlayerAvatar.instance)
-                return;
-            QuestManager.OnLocalPlayerDamaged();
+            if (__instance.health < __state)
+                QuestManager.OnLocalPlayerDamaged();
         }
     }
 

@@ -60,6 +60,7 @@ internal static class LateJoinCatchUp
             if (!PhotonNetwork.IsMasterClient)
             {
                 if (ev.CustomData is object[] round && round.Length == 3 && round[0] is byte rop && rop == RoundOp) { ReceiveRound(ev, round); return; }
+                if (ev.CustomData is object[] door && door.Length == 4 && door[0] is byte dop && dop == DoorOp) { ReceiveDoor(ev, door); return; }
                 LateJoinBattery.Receive(ev);
                 return;
             }
@@ -76,7 +77,26 @@ internal static class LateJoinCatchUp
         catch (System.Exception e) { Plugin.Log.LogWarning($"[LateJoin] Catch-up sync failed harmlessly: {e.Message}"); }
     }
 
-    private const byte RoundOp = 3;
+    private const byte RoundOp = 3, DoorOp = 4;
+
+    // Joiner: put a broken door where it really lies on the host, as a loose object (the same state HingeBreakRPC
+    // sets: grab layer, no hinge), so it no longer stands in the doorway and can be picked up.
+    private static void ReceiveDoor(EventData ev, object[] data)
+    {
+        if (PhotonNetwork.MasterClient == null || ev.Sender != PhotonNetwork.MasterClient.ActorNumber ||
+            data.Length != 4 || data[1] is not int id || data[2] is not Vector3 position || data[3] is not Quaternion rotation) return;
+        var view = PhotonView.Find(id);
+        var hinge = view != null ? view.GetComponent<PhysGrabHinge>() : null;
+        if (hinge == null) return;
+        if (hinge.joint != null) { Object.Destroy(hinge.joint); hinge.joint = null; }
+        int layer = LayerMask.NameToLayer("PhysGrabObject");
+        hinge.gameObject.layer = layer;
+        foreach (Transform child in hinge.transform) child.gameObject.layer = layer;
+        var pgo = hinge.physGrabObject;
+        hinge.transform.SetPositionAndRotation(position, rotation);
+        if (pgo != null && pgo.rb != null) { pgo.rb.position = position; pgo.rb.rotation = rotation; }
+        Plugin.Log.LogInfo($"[LateJoin] Broken door {id} placed where it lies on the host.");
+    }
 
     // Joiner: how many extraction points are already done (the game only counts them as they happen).
     private static void ReceiveRound(EventData ev, object[] data)
@@ -115,7 +135,15 @@ internal static class LateJoinCatchUp
                 // stayed in the doorway on the joiner's screen, blocking a passage everyone else could use.
                 // Teleport it to where it really lies (host-authoritative; same place for everyone else).
                 var pgo = hinge.physGrabObject;
-                if (pgo != null && pgo.rb != null) { pgo.Teleport(pgo.rb.position, pgo.rb.rotation); pgo.rb.WakeUp(); }
+                if (pgo != null && pgo.rb != null)
+                {
+                    pgo.Teleport(pgo.rb.position, pgo.rb.rotation);
+                    pgo.rb.WakeUp();
+                    // A resting body may never be serialized again, so the joiner kept the door upright in its
+                    // frame (blocking the way, and its hinge layer made it look unusable). Send the pose itself.
+                    PhotonNetwork.RaiseEvent(RequestCode, new object[] { DoorOp, hinge.photon.ViewID, pgo.rb.position, pgo.rb.rotation },
+                        new RaiseEventOptions { TargetActors = new[] { target.ActorNumber } }, SendOptions.SendReliable);
+                }
                 doors++;
             }
         }
