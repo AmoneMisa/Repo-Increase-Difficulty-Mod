@@ -1,4 +1,4 @@
-"""Courier pets: twelve original chibi animals and spirits with a delivery backpack.
+"""Courier pets: sixteen original chibi animals and spirits with a delivery backpack.
 
 Run:
   blender --background --factory-startup --python tools/build_courier.py -- --root . [--only cat,owl] [--no-render]
@@ -276,18 +276,18 @@ def frame(main, head=(.2, .18, .172), body=(.165, .15, .165), cheek=.10, pear=.1
     return h, b
 
 
-def eyes(x, z, r=.055, iris=None, on=None):
+def eyes(x, z, r=.055, iris=None, on=None, sclera=None):
     """Big glossy eyes and every expression set. The game shows one set at a time:
     eyes_open (neutral), eyes_happy (^ ^), eyes_wide (surprised: tiny pupils), eyes_sleepy (closed lines),
     plus brows_sad and brows_focus drawn over the open eyes."""
-    iris = iris or (.36, .2, .09)
+    iris = iris or (.36, .2, .09); sclera = sclera or WHITE
     y = front(x, z, on) - r * .34
     lid = (.19, .11, .07)
     for s, side in ((1, 'l'), (-1, 'r')):
         ex = s * x
         # Open: a glossy dome in a rim, a big coloured iris with a lighter lower crescent, pupil and two shines
         ring('eyes_open', 'fixed', lid, 'eyelid_' + side, (ex, y - r * .08, z), r * 1.02, r * .06, rot=(math.pi / 2, 0, 0))
-        ellipsoid('eyes_open', 'fixed', WHITE, 'sclera_' + side, (ex, y, z), (r * 1.06, r * .6, r * 1.14), segs=20, rings=12)
+        ellipsoid('eyes_open', 'fixed', sclera, 'sclera_' + side, (ex, y, z), (r * 1.06, r * .6, r * 1.14), segs=20, rings=12)
         ellipsoid('eyes_open', 'fixed', iris, 'iris_' + side, (ex, y + r * .50, z - r * .06), (r * .62, r * .20, r * .68))
         ellipsoid('eyes_open', 'fixed', tuple(min(1, c * 1.5 + .12) for c in iris), 'iris_glow_' + side,
                   (ex, y + r * .535, z - r * .3), (r * .44, r * .185, r * .36), segs=14, rings=8)
@@ -299,7 +299,7 @@ def eyes(x, z, r=.055, iris=None, on=None):
         ellipsoid('body', 'fixed', (1.0, .5, .56), 'blush_' + side, (bx, front(bx, bz, on, y) - r * .04, bz), (r * .5, r * .1, r * .28), segs=12, rings=8)
         # Surprised: wider white, small pupils
         ring('eyes_wide', 'fixed', lid, 'eyelid_' + side, (ex, y - r * .08, z + r * .06), r * 1.18, r * .06, rot=(math.pi / 2, 0, 0))
-        ellipsoid('eyes_wide', 'fixed', WHITE, 'sclera_' + side, (ex, y + .002, z + r * .06), (r * 1.18, r * .6, r * 1.28), segs=20, rings=12)
+        ellipsoid('eyes_wide', 'fixed', sclera, 'sclera_' + side, (ex, y + .002, z + r * .06), (r * 1.18, r * .6, r * 1.28), segs=20, rings=12)
         ellipsoid('eyes_wide', 'fixed', iris, 'iris_' + side, (ex, y + r * .50, z), (r * .36, r * .2, r * .4))
         ellipsoid('eyes_wide', 'fixed', BLACK, 'pupil_' + side, (ex, y + r * .54, z), (r * .22, r * .2, r * .26))
         ellipsoid('eyes_wide', 'fixed', (1, 1, 1), 'shine_' + side, (ex + s * r * .1, y + r * .62, z + r * .12), (r * .09, r * .06, r * .09), segs=10, rings=6)
@@ -442,7 +442,7 @@ def cap(accent):
     box('body', 'fixed', (1.0, .7, .15), 'cap_badge', (0, .088, top - .015), (.05, .02, .022), bevel=.004, rot=(-.6, 0, 0))
 
 
-def scarf(accent):
+def scarf(accent, channel='accent'):
     """A neckerchief that follows the chest: a curved band with its point hanging in front, and a parcel badge."""
     solid = body_parts(); cols = 11; half = .135; z0 = .292
     verts = []
@@ -461,16 +461,16 @@ def scarf(accent):
     rim = list(range(cols)) + list(range(2 * cols - 1, cols - 1, -1))
     for k, i in enumerate(rim):
         j = rim[(k + 1) % len(rim)]; faces.append((i, j, j + stride, i + stride))
-    add(mesh_obj('scarf', verts, faces), 'scarf', 'accent', accent, 'neckerchief', 'cloth')
+    add(mesh_obj('scarf', verts, faces), 'scarf', channel, accent, 'neckerchief', 'cloth')
     by = front(0, .238, solid, .1)
     box('scarf', 'fixed', (.99, .9, .62), 'parcel badge', (0, by + .012, .238), (.036, .012, .036), bevel=.002, rot=(0, math.pi / 4, 0))
     PIV['scarf'] = (0, front(0, z0, solid, .1), z0)
 
 
-def gear(accent=(.95, .46, .08), with_cap=True):
+def gear(accent=(.95, .46, .08), with_cap=True, scarf_color=None, scarf_channel='accent'):
     harness(); backpack(accent)
     if with_cap: cap(accent)
-    scarf(accent)
+    scarf(scarf_color or accent, scarf_channel)
     sx = -right(.07, .115, [F['body']], F['bx']) + .012
     box('body', 'fixed', (.34, .17, .07), 'satchel', (sx, .075, .115), (.09, .075, .09), bevel=.009, pat='leather')
     box('body', 'fixed', (.58, .31, .12), 'satchel flap', (sx, .119, .139), (.10, .012, .05), bevel=.006, pat='leather')
@@ -629,8 +629,12 @@ ANIMALS = {'penguin': penguin, 'chicken': chicken, 'cat': cat, 'owl': owl, 'beav
 DEFAULT_PAT = {'penguin': ('pfeather', 'pbelly'), 'chicken': ('cfeather', 'comb'), 'cat': ('tabby', 'fur'),
                'owl': ('ofeather', 'obelly'), 'beaver': ('bfur', 'fur')}
 
+EXTRA_PAT = {}   # more named surfaces: name -> fn(p, pat); 'name:args' reaches the same fn
+
 from courier_species import install
 install(globals())
+from courier_fables import install as install_fables
+install_fables(globals())
 
 
 # ------------------------------------------------------------------ bake: colour patterns x occlusion
@@ -723,6 +727,8 @@ def pattern(p, pat):
         soft = p.vor(scale, stretch)                    # and a soft shade away from its centre
         return p.mul(p.mix(p.rng(d, .0, .13), edge, inner), p.mix(p.m('MULTIPLY', p.rng(soft, .25, .75), .45), W, edge), barbs())
 
+    extra = EXTRA_PAT.get(pat.split(':')[0])
+    if extra: return extra(p, pat)
     if pat == 'fur': return fur()
     if pat == 'tabby':   # ginger tabby: dark rings round the body, limbs and tail, forehead stripes running back
         body = p.rng(p.wave(8.5, 'Z', 4.0, 1.4), .6, .78)
@@ -818,15 +824,15 @@ def merge_parts(parts):
     buckets = {}
     for o in parts:
         group, channel, _ = o.name.split('|', 2)
-        key = (group, channel, tuple(round(v, 5) for v in o['ihm_color']), o['ihm_pat'])
+        key = (group, channel, tuple(round(v, 5) for v in o['ihm_color']), o['ihm_pat'], bool(o.get('ihm_glow')))
         buckets.setdefault(key, []).append(o)
     out = []
-    for (group, channel, color, pat), obs in buckets.items():
+    for (group, channel, color, pat, glow), obs in buckets.items():
         bpy.ops.object.select_all(action='DESELECT')
         for o in obs: o.select_set(True)
         bpy.context.view_layer.objects.active = obs[0]
         if len(obs) > 1: bpy.ops.object.join()
-        o = bpy.context.object; o.name = f'{group}|{channel}|surface_{len(out)}'
+        o = bpy.context.object; o.name = f'{group}|{channel}|{"glow" if glow else "surface"}_{len(out)}'   # glow: lit from within in game
         out.append(o)
     return out
 

@@ -150,6 +150,7 @@ def extra_voices():
         'sheep': (bleat, .3, 420), 'cow': (moo, .46, 230), 'dog': (yip, .13, 490),
         'fairy': (peep, .14, 1330), 'devil': (chuckle, .17, 550), 'angel': (coo, .24, 710),
         'dragon': (chirr, .21, 360),
+        'mermaid': (coo, .2, 930), 'skeleton': (chirr, .1, 560), 'elemental': (coo, .32, 250), 'phoenix': (yip, .17, 840),
     }
     for name, (animal, length, f) in profiles.items():
         write(name + '_call', animal(length, f, 11), .53)

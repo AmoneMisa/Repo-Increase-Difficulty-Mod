@@ -31,7 +31,7 @@ internal static class WingCosmetics
         public readonly SemiFunc.CosmeticType Type;
         public readonly SemiFunc.Rarity Rarity;
         public readonly bool Tintable;
-        public readonly string Set;   // "wings", "shark", "starlight", "legate", "fairy", "gilded", "seer", "jester", "bride", "angel": each set has its own config switch
+        public readonly string Set;   // "wings", "shark", "starlight", "legate", "fairy", "gilded", "seer", "jester", "bride", "angel", "mermaid", "druid", "vampire", "diver", "clockwork": each set has its own config switch
         public Definition(string key, string title, SemiFunc.CosmeticType type = SemiFunc.CosmeticType.BodyTop, string slot = "Body Top",
             SemiFunc.Rarity rarity = SemiFunc.Rarity.Rare, bool tintable = false, string set = "wings")
         { Key = key; Title = title; Type = type; Slot = slot; Rarity = rarity; Tintable = tintable; Set = set; }
@@ -105,6 +105,42 @@ internal static class WingCosmetics
         new("angel_skirt", "Stone Angel Robe Skirt", SemiFunc.CosmeticType.BodyBottom, "Body Bottom", SemiFunc.Rarity.Rare, true, "angel"),
         new("angel_sleeve_r", "Stone Angel Sleeve Right", SemiFunc.CosmeticType.ArmRight, "Arm Right", SemiFunc.Rarity.Uncommon, true, "angel"),
         new("angel_sleeve_l", "Stone Angel Sleeve Left", SemiFunc.CosmeticType.ArmLeft, "Arm Left", SemiFunc.Rarity.Uncommon, true, "angel"),
+        // Five sets after the concept sheets (tools/build_fable_costumes.py): seven parts each.
+        new("mermaid_crown", "Pearl Mermaid Shell Crown", SemiFunc.CosmeticType.Hat, "Hat", SemiFunc.Rarity.Rare, true, "mermaid"),
+        new("mermaid_top", "Pearl Mermaid Shell Top", SemiFunc.CosmeticType.BodyTop, "Body Top", SemiFunc.Rarity.Rare, true, "mermaid"),
+        new("mermaid_skirt", "Pearl Mermaid Scale Skirt", SemiFunc.CosmeticType.BodyBottom, "Body Bottom", SemiFunc.Rarity.UltraRare, true, "mermaid"),
+        new("mermaid_sleeve_r", "Pearl Mermaid Fin Cuff Right", SemiFunc.CosmeticType.ArmRight, "Arm Right", SemiFunc.Rarity.Uncommon, true, "mermaid"),
+        new("mermaid_sleeve_l", "Pearl Mermaid Fin Cuff Left", SemiFunc.CosmeticType.ArmLeft, "Arm Left", SemiFunc.Rarity.Uncommon, true, "mermaid"),
+        new("mermaid_boot_r", "Pearl Mermaid Shell Boot Right", SemiFunc.CosmeticType.LegRight, "Leg Right", SemiFunc.Rarity.Uncommon, true, "mermaid"),
+        new("mermaid_boot_l", "Pearl Mermaid Shell Boot Left", SemiFunc.CosmeticType.LegLeft, "Leg Left", SemiFunc.Rarity.Uncommon, true, "mermaid"),
+        new("druid_hood", "Grove Druid Antler Hood", SemiFunc.CosmeticType.Hat, "Hat", SemiFunc.Rarity.UltraRare, true, "druid"),
+        new("druid_robe", "Grove Druid Leaf Mantle Robe", SemiFunc.CosmeticType.BodyTop, "Body Top", SemiFunc.Rarity.Rare, true, "druid"),
+        new("druid_skirt", "Grove Druid Leaf Skirt", SemiFunc.CosmeticType.BodyBottom, "Body Bottom", SemiFunc.Rarity.Rare, true, "druid"),
+        new("druid_glove_r", "Grove Druid Bark Bracer Right", SemiFunc.CosmeticType.ArmRight, "Arm Right", SemiFunc.Rarity.Uncommon, true, "druid"),
+        new("druid_glove_l", "Grove Druid Bark Bracer Left", SemiFunc.CosmeticType.ArmLeft, "Arm Left", SemiFunc.Rarity.Uncommon, true, "druid"),
+        new("druid_boot_r", "Grove Druid Root Boot Right", SemiFunc.CosmeticType.LegRight, "Leg Right", SemiFunc.Rarity.Uncommon, true, "druid"),
+        new("druid_boot_l", "Grove Druid Root Boot Left", SemiFunc.CosmeticType.LegLeft, "Leg Left", SemiFunc.Rarity.Uncommon, true, "druid"),
+        new("vampire_hair", "Night Count Swept Hair", SemiFunc.CosmeticType.Hat, "Hat", SemiFunc.Rarity.Rare, true, "vampire"),
+        new("vampire_coat", "Night Count Coat and Cape", SemiFunc.CosmeticType.BodyTop, "Body Top", SemiFunc.Rarity.UltraRare, true, "vampire"),
+        new("vampire_breeches", "Night Count Striped Breeches", SemiFunc.CosmeticType.BodyBottom, "Body Bottom", SemiFunc.Rarity.Rare, true, "vampire"),
+        new("vampire_sleeve_r", "Night Count Ruffled Sleeve Right", SemiFunc.CosmeticType.ArmRight, "Arm Right", SemiFunc.Rarity.Uncommon, true, "vampire"),
+        new("vampire_sleeve_l", "Night Count Ruffled Sleeve Left", SemiFunc.CosmeticType.ArmLeft, "Arm Left", SemiFunc.Rarity.Uncommon, true, "vampire"),
+        new("vampire_boot_r", "Night Count Buckled Boot Right", SemiFunc.CosmeticType.LegRight, "Leg Right", SemiFunc.Rarity.Uncommon, true, "vampire"),
+        new("vampire_boot_l", "Night Count Buckled Boot Left", SemiFunc.CosmeticType.LegLeft, "Leg Left", SemiFunc.Rarity.Uncommon, true, "vampire"),
+        new("diver_helmet", "Deep Diver Brass Helmet", SemiFunc.CosmeticType.Hat, "Hat", SemiFunc.Rarity.UltraRare, true, "diver"),
+        new("diver_suit", "Deep Diver Suit and Air Tank", SemiFunc.CosmeticType.BodyTop, "Body Top", SemiFunc.Rarity.Rare, true, "diver"),
+        new("diver_breeches", "Deep Diver Breeches and Lantern", SemiFunc.CosmeticType.BodyBottom, "Body Bottom", SemiFunc.Rarity.Rare, true, "diver"),
+        new("diver_glove_r", "Deep Diver Sealed Glove Right", SemiFunc.CosmeticType.ArmRight, "Arm Right", SemiFunc.Rarity.Uncommon, true, "diver"),
+        new("diver_glove_l", "Deep Diver Sealed Glove Left", SemiFunc.CosmeticType.ArmLeft, "Arm Left", SemiFunc.Rarity.Uncommon, true, "diver"),
+        new("diver_boot_r", "Deep Diver Weighted Boot Right", SemiFunc.CosmeticType.LegRight, "Leg Right", SemiFunc.Rarity.Uncommon, true, "diver"),
+        new("diver_boot_l", "Deep Diver Weighted Boot Left", SemiFunc.CosmeticType.LegLeft, "Leg Left", SemiFunc.Rarity.Uncommon, true, "diver"),
+        new("clockwork_hat", "Clockwork Toy Inventor Top Hat", SemiFunc.CosmeticType.Hat, "Hat", SemiFunc.Rarity.UltraRare, true, "clockwork"),
+        new("clockwork_coat", "Clockwork Toy Uniform and Wind-up Key", SemiFunc.CosmeticType.BodyTop, "Body Top", SemiFunc.Rarity.Rare, true, "clockwork"),
+        new("clockwork_breeches", "Clockwork Toy Breeches and Coat Tails", SemiFunc.CosmeticType.BodyBottom, "Body Bottom", SemiFunc.Rarity.Rare, true, "clockwork"),
+        new("clockwork_sleeve_r", "Clockwork Toy Banded Sleeve Right", SemiFunc.CosmeticType.ArmRight, "Arm Right", SemiFunc.Rarity.Uncommon, true, "clockwork"),
+        new("clockwork_sleeve_l", "Clockwork Toy Banded Sleeve Left", SemiFunc.CosmeticType.ArmLeft, "Arm Left", SemiFunc.Rarity.Uncommon, true, "clockwork"),
+        new("clockwork_boot_r", "Clockwork Toy Piston Boot Right", SemiFunc.CosmeticType.LegRight, "Leg Right", SemiFunc.Rarity.Uncommon, true, "clockwork"),
+        new("clockwork_boot_l", "Clockwork Toy Piston Boot Left", SemiFunc.CosmeticType.LegLeft, "Leg Left", SemiFunc.Rarity.Uncommon, true, "clockwork"),
     };
 
     private static GameObject _templates;
@@ -129,7 +165,8 @@ internal static class WingCosmetics
     internal static void Register()
     {
         if (_registered || !ModConfig.WingCosmeticsEnabled.Value && !ModConfig.SharkCosmeticsEnabled.Value && !ModConfig.StarlightCosmeticsEnabled.Value && !ModConfig.LegateCosmeticsEnabled.Value && !ModConfig.FairyCosmeticsEnabled.Value && !ModConfig.GildedCosmeticsEnabled.Value && !ModConfig.SeerCosmeticsEnabled.Value && !ModConfig.JesterCosmeticsEnabled.Value
-            && !ModConfig.BrideCosmeticsEnabled.Value && !ModConfig.AngelCosmeticsEnabled.Value && !ModConfig.MascotCosmeticsEnabled.Value) return;
+            && !ModConfig.BrideCosmeticsEnabled.Value && !ModConfig.AngelCosmeticsEnabled.Value && !ModConfig.MascotCosmeticsEnabled.Value
+            && !ModConfig.MermaidCosmeticsEnabled.Value && !ModConfig.DruidCosmeticsEnabled.Value && !ModConfig.VampireCosmeticsEnabled.Value && !ModConfig.DiverCosmeticsEnabled.Value && !ModConfig.ClockworkCosmeticsEnabled.Value) return;
         _registered = true;
         // Templates live under an inactive holder: Unity never runs their Awake, while instances made by
         // PlayerCosmetics (parented to the player) are active and build their meshes.
@@ -150,6 +187,11 @@ internal static class WingCosmetics
                 "jester" => ModConfig.JesterCosmeticsEnabled.Value,
                 "bride" => ModConfig.BrideCosmeticsEnabled.Value,
                 "angel" => ModConfig.AngelCosmeticsEnabled.Value,
+                "mermaid" => ModConfig.MermaidCosmeticsEnabled.Value,
+                "druid" => ModConfig.DruidCosmeticsEnabled.Value,
+                "vampire" => ModConfig.VampireCosmeticsEnabled.Value,
+                "diver" => ModConfig.DiverCosmeticsEnabled.Value,
+                "clockwork" => ModConfig.ClockworkCosmeticsEnabled.Value,
                 "mascots" => ModConfig.MascotCosmeticsEnabled.Value,
                 _ => ModConfig.WingCosmeticsEnabled.Value,
             };

@@ -11,7 +11,7 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.10.6`
+- **Version:** `0.10.7`
 
 Mid-level joining also catches up live battery charge, upgraded capacity and native battery indicator colours. New-monster selection now recommends a score of 100.
 
@@ -222,8 +222,9 @@ Each drone, orb and gun has its own on/off switch in the `Modules` section of th
 ### Courier pet
 
 A courier is a small walking helper with a delivery backpack that follows you all run. **Unlock one from the gacha**:
-open the courier menu (`G`) and pull with a gacha coin. Every pull unlocks one of five animals: penguin and chicken
-(25% each), cat and beaver (20%), owl (rare, 10%). A duplicate gives half a coin back. Everyone starts with one free
+open the courier menu (`G`) and pull with a gacha coin. Every pull unlocks one of sixteen pets: penguin, chicken, cat, owl,
+beaver, sheep, cow, dog, fairy, little devil, little angel, dragon, little mermaid, skeleton cat, stone elemental
+and phoenix (common ones about 11% each, the rarest - dragon, elemental and phoenix - about 2%). A duplicate gives half a coin back. Everyone starts with one free
 coin; more are **found rarely on levels** (a glowing, chiming gold token, about one level in five, first come first
 served). Recolour its body, second colour and cap/backpack (12 swatches) in the lobby, the shop or next to the truck.
 Couriers idle, run, fly, get petted and change mood (happy, focused, surprised, sad, sleepy).
@@ -435,7 +436,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.10.6`
+- **Версия:** `0.10.7`
 
 При входе посреди уровня также досылаются фактический заряд, увеличенная ёмкость и восстанавливаются штатные цвета индикатора батареи. Рекомендуемый балл выбора новых монстров — 100.
 

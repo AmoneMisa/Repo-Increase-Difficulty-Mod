@@ -78,8 +78,8 @@ foreach (string id in new[] { C.ExplosiveGrenade, C.ClusterGrenade, C.StunGrenad
           "Low Profile: 20% less monster aggression per level");
     var pulls = new int[IncreaseHardMod.Courier.CourierRules.Animals]; var rng = new Random(7);
     for (int k = 0; k < 20000; k++) pulls[IncreaseHardMod.Courier.CourierRules.Pull(rng.NextDouble())]++;
-    Check(pulls.All(n => n > 0) && pulls[0] > pulls[3] && pulls[3] > pulls[11] && IncreaseHardMod.Courier.CourierRules.Pull(.999999) == 11,
-          "Gacha: all twelve animals drop; owl rarer than penguin, dragon rarer than owl");
+    Check(pulls.All(n => n > 0) && pulls[0] > pulls[3] && pulls[3] > pulls[11] && IncreaseHardMod.Courier.CourierRules.Pull(.999999) == 15,
+          "Gacha: all sixteen animals drop; owl rarer than penguin, dragon rarer than owl");
     for (int animal = 0; animal < pulls.Length; animal++)
         for (int colour = 0; colour < 12; colour++)
         {

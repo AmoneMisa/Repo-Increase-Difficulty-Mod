@@ -5,9 +5,9 @@ namespace IncreaseHardMod.Courier;
 /// <summary>Append-only courier catalogue, recolour swatches and the local player's saved look.</summary>
 internal static class CourierLook
 {
-    internal static readonly string[] Keys = { "penguin", "chicken", "cat", "owl", "beaver", "sheep", "cow", "dog", "fairy", "devil", "angel", "dragon" };
-    private static readonly string[] NamesEn = { "Penguin", "Chicken", "Cat", "Owl", "Beaver", "Sheep", "Cow", "Dog", "Fairy", "Little Devil", "Little Angel", "Dragon" };
-    private static readonly string[] NamesRu = { "Пингвин", "Курочка", "Котик", "Сова", "Бобёр", "Овечка", "Коровка", "Собачка", "Фея", "Чертёнок", "Ангелочек", "Дракончик" };
+    internal static readonly string[] Keys = { "penguin", "chicken", "cat", "owl", "beaver", "sheep", "cow", "dog", "fairy", "devil", "angel", "dragon", "mermaid", "skeleton", "elemental", "phoenix" };
+    private static readonly string[] NamesEn = { "Penguin", "Chicken", "Cat", "Owl", "Beaver", "Sheep", "Cow", "Dog", "Fairy", "Little Devil", "Little Angel", "Dragon", "Little Mermaid", "Skeleton", "Elemental", "Phoenix" };
+    private static readonly string[] NamesRu = { "Пингвин", "Курочка", "Котик", "Сова", "Бобёр", "Овечка", "Коровка", "Собачка", "Фея", "Чертёнок", "Ангелочек", "Дракончик", "Русалочка", "Скелет", "Элементаль", "Феникс" };
 
     internal static string Voice(int animal) => Keys[Mathf.Clamp(animal, 0, Keys.Length - 1)];
 

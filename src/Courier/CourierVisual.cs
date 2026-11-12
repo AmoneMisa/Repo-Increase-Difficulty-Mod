@@ -29,7 +29,7 @@ internal sealed class CourierVisual : MonoBehaviour
     private readonly Dictionary<string, Material> _channels = new();
     private readonly List<Mesh> _meshes = new();
     private readonly List<Material> _materials = new();
-    private readonly List<(Material material, int slot, Color natural)> _tints = new();
+    private readonly List<(Material material, int slot, Color natural, bool glow)> _tints = new();
 
     // Smoothed state
     private Vector3 _target, _last;
@@ -133,7 +133,9 @@ internal sealed class CourierVisual : MonoBehaviour
             obj.AddComponent<MeshFilter>().sharedMesh = mesh;
             int slot = channel == "main" ? 0 : channel == "second" ? 1 : channel == "accent" ? 2 : -1;
             bool eyes = group.StartsWith("eyes_", System.StringComparison.Ordinal);
-            string materialKey = channel + ":" + ColorUtility.ToHtmlStringRGB(part.color) + ":" + part.texture + (eyes ? ":eye" : "");
+            // "glow" surfaces (an elemental's eyes and runes, a phoenix's flames) are lit from within.
+            bool glow = bits.Length > 2 && bits[2].StartsWith("glow", System.StringComparison.Ordinal);
+            string materialKey = channel + ":" + ColorUtility.ToHtmlStringRGB(part.color) + ":" + part.texture + (eyes ? ":eye" : "") + (glow ? ":glow" : "");
             if (!_channels.TryGetValue(materialKey, out var material))
             {
                 material = ItemArt.Paint(_template, string.IsNullOrEmpty(part.texture) ? null : part.texture, part.color, "IHM Courier " + materialKey);
@@ -145,7 +147,8 @@ internal sealed class CourierVisual : MonoBehaviour
                 CourierSurface.Apply(material, key, eyes, !string.IsNullOrEmpty(part.texture));
                 _materials.Add(material);
                 _channels[materialKey] = material;
-                if (slot >= 0) _tints.Add((material, slot, part.color));
+                if (glow) Glow(material, part.color);
+                if (slot >= 0) _tints.Add((material, slot, part.color, glow));
             }
             var renderer = obj.AddComponent<MeshRenderer>();
             renderer.sharedMaterial = material;
@@ -185,7 +188,15 @@ internal sealed class CourierVisual : MonoBehaviour
                 if (m.HasProperty("_Color")) m.SetColor("_Color", c);
                 if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", c);
                 if (m.HasProperty("_AlbedoColor")) m.SetColor("_AlbedoColor", c);
+                if (tint.glow) Glow(m, c);
             }
+    }
+
+    private static void Glow(Material material, Color color)
+    {
+        if (!material.HasProperty("_EmissionColor")) return;
+        material.EnableKeyword("_EMISSION");
+        material.SetColor("_EmissionColor", color * 1.6f);
     }
 
     // ------------------------------------------------------------------ state from the host
@@ -263,11 +274,13 @@ internal sealed class CourierVisual : MonoBehaviour
         float bounce = Mathf.Abs(Mathf.Sin(_phase)) * .035f * run;
         float hover = _fly * (.45f + Mathf.Sin(t * 3f) * .05f);
         float squash = _happy * Mathf.Sin(_petBounce * Mathf.PI * 4f) * .06f;
-        _model.localPosition = new Vector3(0f, hover, 0f);
+        // The stone elemental has no legs: it always floats a little off the floor.
+        float levitate = (_look & 15) == 14 ? .1f + Mathf.Sin(t * 1.7f) * .025f : 0f;
+        _model.localPosition = new Vector3(0f, hover + levitate, 0f);
         _body.localPosition = new Vector3(0f, bounce + _happy * .02f, 0f);
         _body.localScale = new Vector3(1f + squash * .5f, 1f + breathe - squash, 1f + squash * .5f);
         int animal = _look & 15;
-        bool bird = animal is 0 or 1 or 3;
+        bool bird = animal is 0 or 1 or 3 or 15;
         float roll = Mathf.Sin(_phase) * (bird ? 7f : 3.5f) * run + _happy * Mathf.Sin(t * 9f) * 4f;
         float lean = run * 10f + _fly * 14f - _carry * 4f;
         // Knocked back by a monster: a quick tumble.
@@ -279,6 +292,8 @@ internal sealed class CourierVisual : MonoBehaviour
         float flap = _fly * Mathf.Sin(t * 22f) * 55f;
         float wave = _happy * (25f + Mathf.Sin(t * 14f) * 25f);
         float lift = _carry * 150f;
+        // The skeleton cat walks on all fours: its "arms" are front legs, so they stride but never lift a parcel or wave.
+        if (animal == 13) { lift = 0f; flap *= .3f; wave *= .35f; }
         _armL.localRotation = Quaternion.Euler(-swing - lift, 0f, -(flap + wave) - _fly * 25f);
         _armR.localRotation = Quaternion.Euler(swing - lift, 0f, flap + wave + _fly * 25f);
 

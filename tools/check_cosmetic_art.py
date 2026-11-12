@@ -116,7 +116,8 @@ for kind in sets:
 look = (ROOT/'src/Courier/CourierLook.cs').read_text(encoding='utf-8')
 animals = re.findall(r'"([a-z]+)"', re.search(r'Keys = \{([^}]+)', look).group(1))
 check(animals[:5] == ['penguin','chicken','cat','owl','beaver'], 'Existing save IDs must remain unchanged')
-check(len(animals) == 12, 'Twelve courier species')
+check(animals[:12] == ['penguin','chicken','cat','owl','beaver','sheep','cow','dog','fairy','devil','angel','dragon'], 'Existing save IDs must remain unchanged')
+check(len(animals) == 16, 'Sixteen courier species (all four bits of the look)')
 for key in animals: validate('courier_' + key, True)
 if failures:
     raise SystemExit('\n'.join(failures))
