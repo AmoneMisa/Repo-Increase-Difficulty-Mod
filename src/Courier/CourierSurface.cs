@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using UnityEngine;
 
 namespace IncreaseHardMod.Courier;
@@ -18,21 +16,8 @@ internal static class CourierSurface
         if (property == null) return;
         if (!Normals.TryGetValue(key, out var texture))
         {
-            var assembly = Assembly.GetExecutingAssembly();
-            string suffix = "." + key + "_normal.png";
-            foreach (string resource in assembly.GetManifestResourceNames())
-            {
-                if (!resource.EndsWith(suffix, System.StringComparison.Ordinal)) continue;
-                using var input = assembly.GetManifestResourceStream(resource);
-                using var bytes = new MemoryStream();
-                input.CopyTo(bytes);
-                // Normal vectors must be sampled in linear space, independently of albedo caching.
-                texture = new Texture2D(2, 2, TextureFormat.RGBA32, true, true) { name = key + " normals",
-                    wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Trilinear,
-                    hideFlags = HideFlags.DontUnloadUnusedAsset };
-                if (!texture.LoadImage(bytes.ToArray())) { Object.Destroy(texture); texture = null; }
-                break;
-            }
+            try { texture = Relief(key); }
+            catch (System.Exception e) { Plugin.Log.LogWarning($"[Courier] Surface relief of {key} failed: {e.Message}"); texture = null; }
             Normals[key] = texture;
         }
         if (texture == null) return;
@@ -40,5 +25,39 @@ internal static class CourierSurface
         material.EnableKeyword("_NORMALMAP");
         if (material.HasProperty("_BumpScale")) material.SetFloat("_BumpScale", .55f);
         if (material.HasProperty("_NormalStrength")) material.SetFloat("_NormalStrength", .55f);
+    }
+
+    /// <summary>
+    /// The pet's surface-normal map, made once from its atlas instead of being shipped as a second texture: a small
+    /// relief from the pattern's brightness (scales, feathers, cracks), flat where there is no detail. Same formula
+    /// the art build used to bake (tools/build_courier.py), so the look is unchanged.
+    /// </summary>
+    private static Texture2D Relief(string key)
+    {
+        var atlas = Upgrades.UpgradeIcons.LoadTexture(key + "_atlas.png");
+        if (atlas == null || !atlas.isReadable) return null;
+        int w = atlas.width, h = atlas.height;
+        var source = atlas.GetPixels32();
+        var light = new float[source.Length];
+        for (int i = 0; i < source.Length; i++) light[i] = (source[i].r + source[i].g + source[i].b) / 765f;
+        var pixels = new Color32[source.Length];
+        for (int y = 0; y < h; y++)
+        {
+            int up = (y + 1) % h * w, down = (y + h - 1) % h * w, row = y * w;
+            for (int x = 0; x < w; x++)
+            {
+                float dx = Mathf.Clamp((light[row + (x + 1) % w] - light[row + (x + w - 1) % w]) * 1.2f, -.2f, .2f);
+                float dy = Mathf.Clamp((light[up + x] - light[down + x]) * 1.2f, -.2f, .2f);
+                float nz = Mathf.Sqrt(Mathf.Max(0f, 1f - 4f * dx * dx - 4f * dy * dy)) * .5f + .5f;
+                pixels[row + x] = new Color32((byte)Mathf.RoundToInt((.5f - dx) * 255f), (byte)Mathf.RoundToInt((.5f - dy) * 255f),
+                    (byte)Mathf.RoundToInt(nz * 255f), 255);
+            }
+        }
+        // Normal vectors must be sampled in linear space, independently of albedo caching.
+        var texture = new Texture2D(w, h, TextureFormat.RGBA32, true, true) { name = key + " normals",
+            wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Trilinear, hideFlags = HideFlags.DontUnloadUnusedAsset };
+        texture.SetPixels32(pixels);
+        texture.Apply(true, true);
+        return texture;
     }
 }

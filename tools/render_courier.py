@@ -1,4 +1,4 @@
-"""Render the shipped courier pets exactly as exported: src/Art/courier_<key>.mesh.json + its atlas and normal map.
+"""Render the shipped courier pets exactly as exported: src/Art/courier_<key>.mesh.json + its atlas (and its normal map, when a local one exists; the game derives it from the atlas).
 
 Run:  blender --background --factory-startup --python tools/render_courier.py -- --root . [--only cat,owl] [--out art/courier]
 

@@ -3,7 +3,7 @@
 Run:
   blender --background --factory-startup --python tools/build_courier.py -- --root . [--only cat,owl] [--no-render]
 
-Writes, per pet, src/Art/courier_<key>.mesh.json, courier_<key>_atlas.png and courier_<key>_normal.png, then renders
+Writes, per pet, src/Art/courier_<key>.mesh.json and courier_<key>_atlas.png (run tools/shrink_art.py afterwards), then renders
 art/courier/<key>.png and art/courier/courier_lineup.png from those shipped files (tools/render_courier.py).
 
 Every part is named "group|channel|label":
@@ -887,17 +887,9 @@ def bake_atlas(key, animal, parts, size=ATLAS):
     scene.render.bake.margin = 6; scene.render.bake.use_clear = True
     bpy.ops.object.bake(type='EMIT')
     img.filepath_raw = str(OUT / f'{key}_atlas.png'); img.file_format = 'PNG'; save_image(img)
-    # Small surface-normal relief from the pattern's brightness; flat where there is no detail.
-    pixels = np.array(img.pixels[:], dtype=np.float32).reshape(size, size, 4)[..., :3].mean(axis=2)
-    dx = np.clip((np.roll(pixels, -1, 1) - np.roll(pixels, 1, 1)) * 1.2, -.20, .20)
-    dy = np.clip((np.roll(pixels, -1, 0) - np.roll(pixels, 1, 0)) * 1.2, -.20, .20)
-    normal = np.ones((size, size, 4), dtype=np.float32)
-    normal[..., 0] = .5 - dx; normal[..., 1] = .5 - dy; normal[..., 2] = np.sqrt(np.maximum(0, 1 - 4 * dx * dx - 4 * dy * dy)) * .5 + .5
-    ni = bpy.data.images.new(key + '_normal', size, size, alpha=False)
-    ni.colorspace_settings.name = 'Non-Color'; ni.pixels.foreach_set(normal.ravel())
-    ni.filepath_raw = str(OUT / f'{key}_normal.png'); ni.file_format = 'PNG'; save_image(ni)
+    # The surface-normal relief is not shipped: the game derives it from this atlas (CourierSurface.Relief).
     for m in mats.values(): bpy.data.materials.remove(m)
-    bpy.data.images.remove(img); bpy.data.images.remove(ni)
+    bpy.data.images.remove(img)
 
 
 # ------------------------------------------------------------------ export

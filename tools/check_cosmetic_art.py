@@ -83,7 +83,7 @@ def validate(key, pet=False):
     if pet:
         check({'main','second','accent'} <= channels, f'{key}: missing recolour channel')
         check(expressions == {'eyes_open','eyes_happy','eyes_wide','eyes_sleepy'}, f'{key}: missing expression')
-        check((ART / f'{key}_normal.png').exists(), f'{key}: missing surface normals')
+        check((ART / f'{key}_atlas.png').exists(), f'{key}: missing atlas (the game derives the surface normals from it)')
 
 
 wings_source = (ROOT/'src/Cosmetics/WingCosmetics.cs').read_text(encoding='utf-8')
