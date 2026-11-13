@@ -68,7 +68,8 @@ internal static class SkillCatalog
         CourierHeadTrail = P + "CourierHeadTrail", CourierHeadFetch = P + "CourierHeadFetch",
         CourierSpeed = P + "CourierSpeed", CourierDash = P + "CourierDash", CourierFlight = P + "CourierFlight",
         CourierArmor = P + "CourierArmor", CourierRecovery = P + "CourierRecovery", CourierLuck = P + "CourierLuck",
-        CourierHealth = P + "CourierHealth", CourierStealth = P + "CourierStealth", CourierPack = P + "CourierPack";
+        CourierHealth = P + "CourierHealth", CourierStealth = P + "CourierStealth", CourierPack = P + "CourierPack",
+        CourierSouls = P + "CourierSouls";
 
     // Monster resistances, mobility and loot perks for the 0.10.0 monsters. Ids are save keys: never rename.
     public const string Grounding = P + "Grounding", ThermalProtection = P + "ThermalProtection", Antidote = P + "Antidote",
@@ -210,6 +211,7 @@ internal static class SkillCatalog
         Add(courier, "Logistics", CourierHeadFetch, "Head Rescue", "Доставка головы", 5, 1, CourierHeadTrail);
         Add(courier, "Logistics", CourierLoad, "Carry Weight", "Грузоподъёмность", 1, 3, root: true);
         Add(courier, "Logistics", CourierPack, "Bigger Backpack", "Большой рюкзак", 2, 2, root: true);
+        Add(courier, "Logistics", CourierSouls, "Soul Collector", "Сборщик душ", 2, 1, root: true);
         Add(courier, "Mobility", CourierSpeed, "Courier Speed", "Скорость курьера", 1, 3, root: true);
         Add(courier, "Mobility", CourierDash, "Dash", "Рывок", 2, 1, CourierSpeed);
         Add(courier, "Mobility", CourierFlight, "Flight", "Полёт", 3, 1, CourierDash);

@@ -30,7 +30,7 @@ foreach (var (id, page, cost) in new[] { (C.Grounding, SkillPage.Survival, 1), (
 Check(System.Array.IndexOf(C.Find(C.DodgeRoll).Requires, C.Evasion) >= 0, "Dodge Roll requires Evasion");
 Check(C.PageCost(SkillPage.Recon) == 49 && C.PageCost(SkillPage.Combat) == 79 && C.PageCost(SkillPage.Survival) == 73 &&
       C.PageCost(SkillPage.Utility) == 61 && C.PageCost(SkillPage.Arsenal) == 60, "Each page adds one trade-off per tier (1+2+3 points)");
-Check(C.TotalCost() == 369, "Whole tree includes the firing-rate and Wide View perks (Stone Resilience retired)");
+Check(C.TotalCost() == 371, "Whole tree includes the firing-rate and Wide View perks (Stone Resilience retired)");
 Check(C.Find(C.WideView) is { Page: SkillPage.Recon, Branch: "Vision", Cost: 1, MaxLevel: 3, Root: true, Tier: 0, QuestOnly: false } &&
       C.Find(C.WideView).Requires.Length == 0 && C.Find(C.WideView).NameRu.Length > 0, "Wide View is a 3-rank root perk on the first page");
 Check(PerkRules.FovBonus(0) == 0f && PerkRules.FovBonus(1) == 5f && PerkRules.FovBonus(3) == 15f && PerkRules.FovBonus(99) == 15f &&
@@ -71,7 +71,24 @@ foreach (string id in new[] { C.ExplosiveGrenade, C.ClusterGrenade, C.StunGrenad
           "Courier respawn: 45 s, 10 s sooner per Quick Recovery level, never under 10 s");
     Check(Math.Abs(IncreaseHardMod.Courier.CourierRules.MaxLoad(3) - 10.5f) < 1e-4 && Math.Abs(IncreaseHardMod.Courier.CourierRules.FindChance(3) - .08f) < 1e-4 && Math.Abs(IncreaseHardMod.Courier.CourierRules.DamageTaken(100f, 3) - 70f) < 1e-3,
           "Courier load, find chance and armor scale per level");
-    Check(C.PageCost(SkillPage.Courier) == 47, "Courier page costs 47 points");
+    Check(C.PageCost(SkillPage.Courier) == 49, "Courier page costs 49 points");
+    Check(IncreaseHardMod.Courier.CourierRules.SoulFits(60000f, 0f, 5000f, 65000f) && !IncreaseHardMod.Courier.CourierRules.SoulFits(60000f, 1f, 5000f, 65000f) &&
+          !IncreaseHardMod.Courier.CourierRules.SoulFits(61000f, 0f, 5000f, 65000f) && !IncreaseHardMod.Courier.CourierRules.SoulFits(0f, 0f, 0f, 65000f),
+          "Soul Collector takes a soul only if its whole value fits, counting souls already on the way");
+    Check(C.Find(C.CourierSouls) is { Cost: 2, MaxLevel: 1, Root: true, Page: SkillPage.Courier }, "Soul Collector is a 2-point courier perk");
+    {
+        Check(IncreaseHardMod.Economy.BlackMarketRules.Multiplier(-3) == 0f && IncreaseHardMod.Economy.BlackMarketRules.Multiplier(-1) == .5f &&
+              IncreaseHardMod.Economy.BlackMarketRules.Multiplier(0) == 1f && IncreaseHardMod.Economy.BlackMarketRules.Multiplier(3) == 2.5f &&
+              IncreaseHardMod.Economy.BlackMarketRules.Multiplier(9) == 2.5f && IncreaseHardMod.Economy.BlackMarketRules.Multiplier(-9) == 0f,
+              "Black Market odds: x0.5, x0.25, never down; x1.5 to x2.5 up; clamped");
+        Check(IncreaseHardMod.Economy.BlackMarketRules.StepIsPaid(0, true) && !IncreaseHardMod.Economy.BlackMarketRules.StepIsPaid(2, true) &&
+              !IncreaseHardMod.Economy.BlackMarketRules.StepIsPaid(-1, false) && !IncreaseHardMod.Economy.BlackMarketRules.CanStep(-3, true) &&
+              !IncreaseHardMod.Economy.BlackMarketRules.CanStep(3, false),
+              "Black Market: steps away from normal are paid, steps back are free, both ends stop");
+        Check(IncreaseHardMod.Economy.BlackMarketRules.StepFactor(4, true) > IncreaseHardMod.Economy.BlackMarketRules.StepFactor(0, true) &&
+              IncreaseHardMod.Economy.BlackMarketRules.StepFactor(0, false) > IncreaseHardMod.Economy.BlackMarketRules.StepFactor(4, false),
+              "Black Market: making a nasty modifier rarer or a good one commoner costs most");
+    }
     Check(C.Find(C.CourierHeadTrail) is { Cost: 2, MaxLevel: 1, Root: true } &&
           C.Find(C.CourierHeadFetch) is { Cost: 5, MaxLevel: 1 } rescue && rescue.Requires.SequenceEqual(new[] { C.CourierHeadTrail }),
           "Courier Head Search costs 2 and unlocks the 5-point Head Rescue");
@@ -302,8 +319,8 @@ Check(!IncreaseHardMod.Modifiers.RetryCrystalRules.IsRetry(step, IncreaseHardMod
       "A new level, another save, or a shop/lobby in between is not a retry");
 var crystalCounts = new HashSet<int>();
 for (int i = 0; i < 100; i++) crystalCounts.Add(IncreaseHardMod.Modifiers.RetryCrystalRules.Count((i + 0.5) / 100, 3, 8));
-Check(crystalCounts.SetEquals(new[] { 3, 4, 5, 6, 7, 8 }) && IncreaseHardMod.Modifiers.RetryCrystalRules.Count(0.99, 3, 20) == 8,
-      "A retried level gets 3 to 8 crystals, never more than 8");
+Check(crystalCounts.SetEquals(new[] { 3, 4, 5, 6, 7, 8 }) && IncreaseHardMod.Modifiers.RetryCrystalRules.Count(0.99, 3, 20) == 20 && IncreaseHardMod.Modifiers.RetryCrystalRules.Count(0.99, 3, 50) == 30,
+      "A retried level gets 3 to 8 crystals by default, never more than 30");
 Check(IncreaseHardMod.Modifiers.RetryCrystalRules.Emptiest(new[] { 80f, 20f, 100f }) == 1 &&
       IncreaseHardMod.Modifiers.RetryCrystalRules.Emptiest(new[] { 100f, 100f }) == -1 &&
       IncreaseHardMod.Modifiers.RetryCrystalRules.Emptiest(new float[0]) == -1, "A crystal picks the emptiest battery, none when all are full");

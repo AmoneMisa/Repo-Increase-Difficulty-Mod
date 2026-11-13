@@ -12,6 +12,7 @@ namespace IncreaseHardMod.Courier;
 /// client from the pet's and the monsters' synced positions; only players hear the chirp (no monster investigates
 /// it), and the neutral Golden Pig does not count. The "!" and the chirp can each be turned off for yourself
 /// (Courier/DangerIcon, Courier/DangerSound, or the MORE page of the courier menu).
+/// The host's simulation also has the pet run to the doorway toward the monster and point it out (CourierSim.TryWarn).
 /// </summary>
 internal sealed class CourierDanger : MonoBehaviour
 {

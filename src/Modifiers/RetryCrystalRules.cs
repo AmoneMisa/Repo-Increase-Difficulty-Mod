@@ -5,7 +5,7 @@ namespace IncreaseHardMod.Modifiers;
 /// <summary>Pure rules for battery crystals on retried levels (no Unity), shared by the game and the tests.</summary>
 public static class RetryCrystalRules
 {
-    public const int MaxCrystals = 8;
+    public const int MaxCrystals = 30;
 
     /// <summary>A run level is a retry when the previous generated level was a run level of the same save at
     /// the same number of completed levels (the game keeps HP and battery charge between the attempts).</summary>
@@ -14,7 +14,7 @@ public static class RetryCrystalRules
 
     public static string RunStep(string saveFile, int levelsCompleted) => (saveFile ?? "") + ":" + levelsCompleted;
 
-    /// <summary>How many crystals a retried level gets for a roll in [0, 1), between min and max (clamped to 0..8).</summary>
+    /// <summary>How many crystals a retried level gets for a roll in [0, 1), between min and max (clamped to 0..MaxCrystals).</summary>
     public static int Count(double roll, int min, int max)
     {
         min = Math.Min(Math.Max(min, 0), MaxCrystals);

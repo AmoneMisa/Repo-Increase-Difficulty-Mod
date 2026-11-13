@@ -7,7 +7,9 @@ namespace IncreaseHardMod.Courier;
 [System.Flags]
 internal enum CourierFlags : byte
 {
-    None = 0, Happy = 1, Carrying = 2, Flying = 4, Down = 8, Dashing = 16, Waiting = 32, Hit = 64,
+    None = 0, Happy = 1, Carrying = 2, Flying = 4, Down = 8, Dashing = 16, Pointing = 32, Hit = 64,
+    /// <summary>With Carrying: held out in front in both hands (a soul), not overhead.</summary>
+    InFront = 128,
 }
 
 /// <summary>The face the host wants shown; the pet also blinks and dozes off on its own when idle.</summary>
@@ -33,7 +35,8 @@ internal sealed class CourierVisual : MonoBehaviour
 
     // Smoothed state
     private Vector3 _target, _last;
-    private float _yawTarget, _yaw, _speed, _phase, _fly, _carry, _happy, _petBounce, _nextStep, _nextHeart;
+    private const float SoulArmLift = 105f; // arms reaching forward and up, under the soul
+    private float _yawTarget, _yaw, _speed, _phase, _fly, _carry, _front, _point, _happy, _petBounce, _nextStep, _nextHeart;
     private CourierFlags _flags;
     private CourierMood _mood;
     private float _idleFor, _nextBlink, _blinkUntil, _hit;
@@ -261,6 +264,8 @@ internal sealed class CourierVisual : MonoBehaviour
         bool happy = (_flags & CourierFlags.Happy) != 0 || _petBounce > 0f;
         _fly = Mathf.MoveTowards(_fly, flying ? 1f : 0f, dt * 2.5f);
         _carry = Mathf.MoveTowards(_carry, carrying ? 1f : 0f, dt * 4f);
+        _point = Mathf.MoveTowards(_point, (_flags & CourierFlags.Pointing) != 0 ? 1f : 0f, dt * 5f);
+        _front = Mathf.MoveTowards(_front, (_flags & CourierFlags.InFront) != 0 ? 1f : 0f, dt * 4f);
         _happy = Mathf.MoveTowards(_happy, happy ? 1f : 0f, dt * 5f);
         _petBounce = Mathf.Max(0f, _petBounce - dt / 1.6f);
 
@@ -282,20 +287,22 @@ internal sealed class CourierVisual : MonoBehaviour
         int animal = _look & 15;
         bool bird = animal is 0 or 1 or 3 or 15;
         float roll = Mathf.Sin(_phase) * (bird ? 7f : 3.5f) * run + _happy * Mathf.Sin(t * 9f) * 4f;
-        float lean = run * 10f + _fly * 14f - _carry * 4f;
+        float lean = run * 10f + _fly * 14f - _carry * Mathf.Lerp(4f, -3f, _front) + _point * 6f; // a soul out in front tips it forward a little
         // Knocked back by a monster: a quick tumble.
         _hit = (_flags & CourierFlags.Hit) != 0 ? Mathf.Min(1f, _hit + dt * 6f) : Mathf.Max(0f, _hit - dt * 3f);
         _body.localRotation = Quaternion.Euler(lean - _hit * 35f, _hit * Mathf.Sin(t * 30f) * 25f, roll + _hit * 20f);
 
-        // Arms: swing when running, flap when flying, raised to hold a parcel overhead, waving when petted.
+        // Arms: swing when running, flap when flying, raised to hold a parcel overhead (or reaching forward to hold a
+        // soul out in front), waving when petted; pointing out a monster, the right arm reaches straight out ahead.
         float swing = Mathf.Sin(_phase) * 35f * run;
         float flap = _fly * Mathf.Sin(t * 22f) * 55f;
         float wave = _happy * (25f + Mathf.Sin(t * 14f) * 25f);
-        float lift = _carry * 150f;
+        float lift = _carry * Mathf.Lerp(150f, SoulArmLift, _front);
         // The skeleton cat walks on all fours: its "arms" are front legs, so they stride but never lift a parcel or wave.
         if (animal == 13) { lift = 0f; flap *= .3f; wave *= .35f; }
         _armL.localRotation = Quaternion.Euler(-swing - lift, 0f, -(flap + wave) - _fly * 25f);
-        _armR.localRotation = Quaternion.Euler(swing - lift, 0f, flap + wave + _fly * 25f);
+        float point = _point * (95f + Mathf.Sin(t * 10f) * 6f); // held out, with a little urgent jab
+        _armR.localRotation = Quaternion.Euler(swing * (1f - _point) - lift - point, 0f, flap + wave + _fly * 25f);
 
         // Feet: alternate steps; tucked while flying.
         float stepL = Mathf.Max(0f, Mathf.Sin(_phase)) * .05f * run, stepR = Mathf.Max(0f, -Mathf.Sin(_phase)) * .05f * run;

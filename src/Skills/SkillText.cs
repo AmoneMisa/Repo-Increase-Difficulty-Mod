@@ -110,6 +110,7 @@ internal static class SkillText
             case C.CourierHealth: return $"Your courier has {Pct(Courier.CourierRules.HealthPerLevel)} more health per level (double at max).";
             case C.CourierStealth: return $"Monsters notice and go for your courier {Pct(Courier.CourierRules.AggressionPerLevel)} less per level.";
             case C.CourierPack: return $"+1 backpack slot per level: your courier carries up to {Courier.CourierRules.MaxSlots} stashed items (base {Courier.CourierRules.BaseSlots}).";
+            case C.CourierSouls: return $"Your courier carries monster souls lying nearby into a Soul C.A.R.T. within {Courier.CourierRules.SoulCartRange:0} m, but only a soul whose whole value still fits under the cart's limit. If monsters knock it out on the way, the soul breaks.";
             case C.CourierRecovery: return $"A knocked-out courier comes back to the truck {Courier.CourierRules.RecoveryPerLevel:0} s sooner per level (base {Courier.CourierRules.RespawnSeconds:0} s).";
             case C.CourierLuck: return $"+{Pct(Courier.CourierRules.LuckPerLevel)} chance per level that your courier finds a random upgrade on a level (base {Pct(Courier.CourierRules.BaseFindChance)}).";
             case C.MeleeDamage: return $"+{Pct(PerLevel(ModConfig.MeleeDamagePercentPerLevel.Value, ModConfig.MeleeDamageMaxLevel.Value, id))} melee damage per level.";
@@ -282,6 +283,7 @@ internal static class SkillText
             case C.CourierHealth: return $"У курьера на {Pct(Courier.CourierRules.HealthPerLevel)} больше здоровья за уровень (вдвое больше на максимуме).";
             case C.CourierStealth: return $"Монстры замечают курьера и бросаются на него на {Pct(Courier.CourierRules.AggressionPerLevel)} реже за уровень.";
             case C.CourierPack: return $"+1 слот рюкзака за уровень: курьер носит до {Courier.CourierRules.MaxSlots} спрятанных предметов (база {Courier.CourierRules.BaseSlots}).";
+            case C.CourierSouls: return $"Курьер сам относит лежащие рядом души монстров в Soul C.A.R.T. в пределах {Courier.CourierRules.SoulCartRange:0} м, но только если душа целиком влезает в лимит тележки. Если монстры выбьют курьера по дороге, душа разобьётся.";
             case C.CourierRecovery: return $"Выбитый курьер возвращается к машине на {Courier.CourierRules.RecoveryPerLevel:0} с раньше за уровень (база {Courier.CourierRules.RespawnSeconds:0} с).";
             case C.CourierLuck: return $"+{Pct(Courier.CourierRules.LuckPerLevel)} к шансу за уровень, что курьер найдёт на уровне случайное улучшение (база {Pct(Courier.CourierRules.BaseFindChance)}).";
             case C.MeleeDamage: return $"+{Pct(PerLevel(ModConfig.MeleeDamagePercentPerLevel.Value, ModConfig.MeleeDamageMaxLevel.Value, id))} к урону в ближнем бою за уровень.";

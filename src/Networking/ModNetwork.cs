@@ -32,7 +32,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     // 159 = LateJoinProgress.RequestCode (request saved health and upgrades from the host).
     // 160 = Skills.FlashStun.EventCode (a guest's Flash Stun beam; host only).
     // 161 = LateJoinCatchUp: guest requests level/battery state; typed battery responses are host-only.
-    // 180 is retired (old cart-upgrade state). 170-171 = HostRunControls (failed-level vote). 169 = loot safety net notice.
+    // 180 is retired (old cart-upgrade state). 170-171 = HostRunControls (failed-level vote), 152 = HostRunControls.CallVoteEventCode (player-called restart vote). 169 = loot safety net notice.
     // 168 = Challenges.ChallengeManager.EventCode (challenge shrine state). 167 = Skills.BuffPerks.EventCode (instinct buff start).
     // 163 = Courier.CourierManager.StateCode (courier state/notices, host), 162 = Courier.CourierManager.RequestCode (courier command to host).
     // 165 = Upgrades.RespawnList.EventCode (respawning monster list for the map). 164 = Cosmetics.CostumeRewards.EventCode (costume piece for everyone).
@@ -337,12 +337,15 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
             new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
     }
 
-    /// <summary>A client asks the host to buy a Black Market block.</summary>
-    public void RequestBan(byte kind, string id)
+    /// <summary>Black Market request operations: block an economy, or move / switch a modifier's odds.</summary>
+    public const byte MarketBlock = 0, MarketStepDown = 1, MarketStepUp = 2, MarketToggle = 3;
+
+    /// <summary>A client asks the host for a Black Market purchase (see the Market* operations).</summary>
+    public void RequestBan(byte kind, string id, byte op = MarketBlock)
     {
         if (!PhotonNetwork.InRoom)
             return;
-        PhotonNetwork.RaiseEvent(BanRequestEventCode, new object[] { kind, id },
+        PhotonNetwork.RaiseEvent(BanRequestEventCode, new object[] { kind, id, op },
             new RaiseEventOptions { Receivers = ReceiverGroup.MasterClient }, SendOptions.SendReliable);
     }
 
@@ -703,9 +706,16 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
 
         if (photonEvent.Code == BanRequestEventCode)
         {
-            if (PhotonNetwork.IsMasterClient && photonEvent.CustomData is object[] bd && bd.Length == 2 &&
+            if (PhotonNetwork.IsMasterClient && photonEvent.CustomData is object[] bd && bd.Length is 2 or 3 &&
                 bd[0] is byte bk && bk <= 2 && bd[1] is string bid && bid.Length < 48)
-                Economy.BlackMarket.TryBuy((Economy.BlackMarket.Kind)bk, bid);
+            {
+                byte op = bd.Length == 3 && bd[2] is byte bop ? bop : MarketBlock;
+                if (op == MarketBlock) Economy.BlackMarket.TryBuy((Economy.BlackMarket.Kind)bk, bid);
+                else if (bk == (byte)Economy.BlackMarket.Kind.Modifier && op is MarketStepDown or MarketStepUp)
+                    Economy.BlackMarket.TryStep(bid, op == MarketStepDown);
+                else if (bk == (byte)Economy.BlackMarket.Kind.Modifier && op == MarketToggle)
+                    Economy.BlackMarket.TryToggle(bid);
+            }
             return;
         }
 

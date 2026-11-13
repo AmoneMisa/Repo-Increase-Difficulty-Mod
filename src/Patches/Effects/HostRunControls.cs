@@ -14,16 +14,28 @@ namespace IncreaseHardMod.Patches.Effects;
 /// <list type="bullet">
 /// <item><b>Esc menu (host only)</b>: RESTART LEVEL (run levels; asks to click again to confirm) reloads the
 /// current level with the same run progress; RETURN TO LOBBY takes everyone back to the lobby menu (saving
-/// first when in the shop) without anyone having to rejoin.</item>
+/// first when in the shop) without anyone having to rejoin, and the run later resumes where it was: the truck,
+/// the shop or the level.</item>
 /// <item><b>Failed-level vote</b>: when everyone dies on a run level, instead of going straight to the death
 /// arena, all players get 15 seconds to vote [1] RESTART LEVEL or [2] RANDOM MAP. The vote closes as soon
 /// as everyone has voted; a tie or no votes restarts the level. The host counts the ballots.</item>
+/// <item><b>Restart vote (any player)</b>: VOTE TO RESTART in the Esc menu on a run level asks the host to open a
+/// 20-second vote for everyone: [1] restart this map, [2] a random map, [3] keep playing. The level is restarted only
+/// if more than half of all players vote for one of the restarts (then the one with more votes wins, a tie keeps the
+/// map); otherwise play goes on. While the vote is open keys 1-3 vote instead of switching inventory slots. A new
+/// vote can be called a minute after the last one ended.</item>
 /// </list>
 /// </summary>
 internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
 {
     internal const byte BallotEventCode = 170, VoteStateEventCode = 171;
-    private const float VoteSeconds = 15f;
+    /// <summary>Guest -> host: please open a restart vote. Host -> that guest: why not (int, see Refusal).</summary>
+    internal const byte CallVoteEventCode = 152;
+    private const float VoteSeconds = 15f, CalledVoteSeconds = 20f, CallCooldown = 60f;
+    private const int FailedVote = 0, CalledVote = 1;
+    private const int Refused_Off = 1, Refused_NotLevel = 2, Refused_Busy = 3, Refused_Cooldown = 4;
+    // Outcomes of a called vote, sent with the closing state.
+    private const int Outcome_None = 0, Outcome_Restart = 1, Outcome_Random = 2, Outcome_Stay = 3;
 
     private static HostRunControls _instance;
     private static bool _bypass;           // our own ChangeLevel calls must not start another vote
@@ -31,12 +43,19 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
     // Host-side tally.
     private bool _voting;
     private double _deadline;
-    private readonly Dictionary<int, int> _ballots = new(); // actor -> 1 restart, 2 random
+    private readonly Dictionary<int, int> _ballots = new(); // actor -> 1 restart, 2 random, 3 keep playing
+    private int _kind;
+    private string _caller = "";
+    private double _nextCallAt;
 
     // Every client's view of the vote (from the host's state broadcast).
     private bool _shown;
     private double _shownDeadline;
-    private int _restartVotes, _randomVotes, _voted, _players, _myVote;
+    private int _restartVotes, _randomVotes, _stayVotes, _voted, _players, _myVote, _shownKind;
+    private string _shownCaller = "";
+
+    /// <summary>A player-called restart vote is on screen here: keys 1-3 vote instead of switching inventory slots.</summary>
+    internal static bool CalledVoteShown => _instance != null && _instance._shown && _instance._shownKind == CalledVote;
     private NativeHudPanel _panel;
     private TextMeshProUGUI _label;
 
@@ -70,7 +89,31 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
         try { if (SemiFunc.RunIsShop()) SemiFunc.SaveFileSave(); }
         catch (System.Exception e) { Plugin.Log.LogWarning($"[Run] Save before returning to the lobby failed: {e.Message}"); }
         Plugin.Log.LogInfo("[Run] Host returns everyone to the lobby.");
-        Change(RunManager.ChangeLevelType.LobbyMenu);
+        // Remember where the run stands (0 run level, 1 shop, 2 truck). The game's lobby-menu Start resumes from
+        // loadLevel, and ChangeLevel(LobbyMenu) would save 0 ("run level") since the lobby menu is none of the
+        // three - so a crew that left from the truck came back to a level that had already started. The game's own
+        // "/level lobby menu" command sets loadLevel the same way.
+        var run = RunManager.instance;
+        int stage = run.saveLevel;
+        run.loadLevel = stage;
+        _keepSaveLevel = stage;
+        try { Change(RunManager.ChangeLevelType.LobbyMenu); }
+        finally { _keepSaveLevel = -1; }
+    }
+
+    private static int _keepSaveLevel = -1;
+
+    /// <summary>While returning to the lobby, the saved stage stays where the run was (also in the save file).</summary>
+    [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.StatSetSaveLevel))]
+    private static class KeepSaveLevel
+    {
+        [HarmonyPrefix]
+        private static void Prefix(ref int value)
+        {
+            if (_keepSaveLevel < 0) return;
+            value = _keepSaveLevel;
+            if (RunManager.instance != null) RunManager.instance.saveLevel = _keepSaveLevel;
+        }
     }
 
     private static void Change(RunManager.ChangeLevelType type)
@@ -104,19 +147,101 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
             bool runLevel;
             try { runLevel = SemiFunc.RunIsLevel(); } catch { runLevel = false; }
             if (!runLevel) return true; // arena, shop, truck: vanilla behaviour
-            if (!_instance._voting) _instance.StartVote();
+            // Everyone died during a player-called vote: it becomes the failed-level vote.
+            if (!_instance._voting || _instance._kind != FailedVote) _instance.StartVote(FailedVote, "");
             HoldingChange = true;
             return false;
         }
     }
 
-    private void StartVote()
+    private void StartVote(int kind, string caller)
     {
         _voting = true;
+        _kind = kind;
+        _caller = caller ?? "";
         _ballots.Clear();
-        _deadline = Now + VoteSeconds;
-        Plugin.Log.LogInfo("[Run] Level failed: voting restart vs random map.");
+        _deadline = Now + (kind == CalledVote ? CalledVoteSeconds : VoteSeconds);
+        Plugin.Log.LogInfo(kind == CalledVote ? $"[Run] {_caller} called a restart vote." : "[Run] Level failed: voting restart vs random map.");
         Broadcast();
+    }
+
+    // ------------------------------------------------------------------ the player-called restart vote
+
+    /// <summary>Esc menu, any player on a run level: ask the host to open a restart vote.</summary>
+    internal static void CallRestartVote()
+    {
+        MenuManager.instance?.PageCloseAll();
+        if (!PhotonNetwork.InRoom || Host)
+        {
+            int actor = PhotonNetwork.InRoom ? PhotonNetwork.LocalPlayer.ActorNumber : 0;
+            int refusal = _instance != null ? _instance.TryCallVote(actor) : Refused_Off;
+            if (refusal != 0) ShowRefusal(refusal, _instance != null ? _instance.CooldownLeft : 0);
+            return;
+        }
+        PhotonNetwork.RaiseEvent(CallVoteEventCode, 0, new RaiseEventOptions { Receivers = ReceiverGroup.MasterClient },
+            SendOptions.SendReliable);
+    }
+
+    private int CooldownLeft => Mathf.Max(1, Mathf.CeilToInt((float)(_nextCallAt - Now)));
+
+    /// <summary>Host: open a restart vote for <paramref name="actor"/>, or say why not (0 = opened).</summary>
+    private int TryCallVote(int actor)
+    {
+        if (!ModConfig.PlayerRestartVoteEnabled.Value) return Refused_Off;
+        bool runLevel;
+        try { runLevel = SemiFunc.RunIsLevel(); } catch { runLevel = false; }
+        if (!runLevel) return Refused_NotLevel;
+        if (_voting) return Refused_Busy;
+        if (Now < _nextCallAt) return Refused_Cooldown;
+        StartVote(CalledVote, PlayerName(actor));
+        return 0;
+    }
+
+    private static string PlayerName(int actor)
+    {
+        string name = PhotonNetwork.InRoom ? PhotonNetwork.CurrentRoom.GetPlayer(actor)?.NickName : null;
+        if (string.IsNullOrEmpty(name)) name = PlayerAvatar.instance != null ? SemiFunc.PlayerGetName(PlayerAvatar.instance) : "";
+        name = (name ?? "").Replace("<", "").Replace(">", "");
+        return name.Length > 24 ? name.Substring(0, 24) : name;
+    }
+
+    private static void ShowRefusal(int reason, int cooldown)
+    {
+        bool ru = Localization.GameLanguage.Russian;
+        string text = reason switch
+        {
+            Refused_NotLevel => ru ? "ГОЛОСОВАНИЕ ЗА РЕСТАРТ — ТОЛЬКО НА УРОВНЕ" : "RESTART VOTES ARE FOR LEVELS ONLY",
+            Refused_Busy => ru ? "ГОЛОСОВАНИЕ УЖЕ ИДЁТ" : "A VOTE IS ALREADY RUNNING",
+            Refused_Cooldown => ru ? $"НОВОЕ ГОЛОСОВАНИЕ ЧЕРЕЗ {cooldown} С" : $"NEXT VOTE IN {cooldown}S",
+            _ => ru ? "ХОСТ ОТКЛЮЧИЛ ГОЛОСОВАНИЕ ЗА РЕСТАРТ" : "THE HOST TURNED RESTART VOTES OFF",
+        };
+        Hud.HudNotify.Toast(text, Hud.HudStyle.Bad, 3f, "restart_vote");
+    }
+
+    private static void ShowOutcome(int outcome)
+    {
+        if (outcome == Outcome_None) return;
+        bool ru = Localization.GameLanguage.Russian;
+        string text = outcome switch
+        {
+            Outcome_Restart => ru ? "ГОЛОСОВАНИЕ: ПЕРЕЗАПУСК ЭТОЙ КАРТЫ" : "VOTE: RESTARTING THIS MAP",
+            Outcome_Random => ru ? "ГОЛОСОВАНИЕ: СЛУЧАЙНАЯ КАРТА" : "VOTE: A RANDOM MAP",
+            _ => ru ? "ГОЛОСОВАНИЕ: ИГРАЕМ ДАЛЬШЕ" : "VOTE: KEEP PLAYING",
+        };
+        Hud.HudNotify.Toast(text, outcome == Outcome_Stay ? Hud.HudStyle.Info : Hud.HudStyle.Title, 3f, "restart_vote");
+    }
+
+    /// <summary>While a player-called vote is on screen, the inventory keys (1-3) cast votes instead.</summary>
+    [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.InputDown))]
+    private static class VoteKeysNotInventory
+    {
+        [HarmonyPrefix]
+        private static bool Prefix(InputKey key, ref bool __result)
+        {
+            if (key is not (InputKey.Inventory1 or InputKey.Inventory2 or InputKey.Inventory3) || !CalledVoteShown) return true;
+            __result = false;
+            return false;
+        }
     }
 
     private void Update()
@@ -129,6 +254,12 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
 
     private void HostTick()
     {
+        if (_kind == CalledVote)
+        {
+            bool runLevel;
+            try { runLevel = SemiFunc.RunIsLevel(); } catch { runLevel = false; }
+            if (!runLevel) { _voting = false; _nextCallAt = Now + CallCooldown; BroadcastClose(Outcome_None); return; } // the level ended meanwhile
+        }
         int players = PhotonNetwork.InRoom ? PhotonNetwork.CurrentRoom.PlayerCount : 1;
         // Forget ballots from players who left.
         if (PhotonNetwork.InRoom)
@@ -140,14 +271,25 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
         int restart = 0, random = 0;
         foreach (int vote in _ballots.Values) { if (vote == 1) restart++; else if (vote == 2) random++; }
         _voting = false;
-        BroadcastClose();
+        if (_kind == CalledVote)
+        {
+            _nextCallAt = Now + CallCooldown;
+            // A called vote restarts only with more than half of everyone in the room behind a restart.
+            int outcome = (restart + random) * 2 > players ? (random > restart ? Outcome_Random : Outcome_Restart) : Outcome_Stay;
+            Plugin.Log.LogInfo($"[Run] Restart vote: same map {restart}, random {random}, of {players} players -> {outcome}.");
+            BroadcastClose(outcome);
+            if (outcome == Outcome_Random) RandomMap();
+            else if (outcome == Outcome_Restart) RestartLevel();
+            return;
+        }
+        BroadcastClose(Outcome_None);
         if (random > restart) RandomMap();
         else RestartLevel(); // tie or nobody voted: replay the same level
     }
 
     private void Ballot(int actor, int vote)
     {
-        if (!_voting || vote < 1 || vote > 2) return;
+        if (!_voting || vote < 1 || vote > (_kind == CalledVote ? 3 : 2)) return;
         _ballots[actor] = vote;
         Broadcast();
     }
@@ -156,7 +298,8 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
     {
         if (!_shown || !SemiFunc.NoTextInputsActive()) return;
         int vote = Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1) ? 1 :
-                   Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2) ? 2 : 0;
+                   Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2) ? 2 :
+                   _shownKind == CalledVote && (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3)) ? 3 : 0;
         if (vote == 0) return;
         _myVote = vote;
         if (!PhotonNetwork.InRoom || Host) Ballot(PhotonNetwork.InRoom ? PhotonNetwork.LocalPlayer.ActorNumber : 0, vote);
@@ -167,30 +310,31 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
 
     private void Broadcast()
     {
-        int restart = 0, random = 0;
-        foreach (int vote in _ballots.Values) { if (vote == 1) restart++; else if (vote == 2) random++; }
+        int restart = 0, random = 0, stay = 0;
+        foreach (int vote in _ballots.Values) { if (vote == 1) restart++; else if (vote == 2) random++; else if (vote == 3) stay++; }
         int players = PhotonNetwork.InRoom ? PhotonNetwork.CurrentRoom.PlayerCount : 1;
-        Apply(true, _deadline, restart, random, _ballots.Count, players);
+        Apply(true, _deadline, restart, random, stay, _ballots.Count, players, _kind, _caller, Outcome_None);
         if (PhotonNetwork.InRoom && PhotonNetwork.IsMasterClient)
-            PhotonNetwork.RaiseEvent(VoteStateEventCode, new object[] { true, _deadline, restart, random, _ballots.Count, players },
+            PhotonNetwork.RaiseEvent(VoteStateEventCode, new object[] { true, _deadline, restart, random, _ballots.Count, players, _kind, stay, _caller, Outcome_None },
                 new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
     }
 
-    private void BroadcastClose()
+    private void BroadcastClose(int outcome)
     {
-        Apply(false, 0, 0, 0, 0, 0);
+        Apply(false, 0, 0, 0, 0, 0, 0, _kind, "", outcome);
         if (PhotonNetwork.InRoom && PhotonNetwork.IsMasterClient)
-            PhotonNetwork.RaiseEvent(VoteStateEventCode, new object[] { false, 0d, 0, 0, 0, 0 },
+            PhotonNetwork.RaiseEvent(VoteStateEventCode, new object[] { false, 0d, 0, 0, 0, 0, _kind, 0, "", outcome },
                 new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
     }
 
-    private void Apply(bool open, double deadline, int restart, int random, int voted, int players)
+    private void Apply(bool open, double deadline, int restart, int random, int stay, int voted, int players, int kind, string caller, int outcome)
     {
-        if (open && !_shown) _myVote = 0;
+        if (open && (!_shown || _shownKind != kind)) _myVote = 0;
         _shown = open;
         _shownDeadline = deadline;
-        _restartVotes = restart; _randomVotes = random; _voted = voted; _players = players;
-        if (!open) ClosePanel();
+        _shownKind = kind; _shownCaller = caller ?? "";
+        _restartVotes = restart; _randomVotes = random; _stayVotes = stay; _voted = voted; _players = players;
+        if (!open) { ClosePanel(); ShowOutcome(outcome); }
     }
 
     public void OnEvent(EventData ev)
@@ -200,10 +344,27 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
             if (PhotonNetwork.IsMasterClient && ev.CustomData is int vote) Ballot(ev.Sender, vote);
             return;
         }
+        if (ev.Code == CallVoteEventCode)
+        {
+            if (PhotonNetwork.IsMasterClient)
+            {
+                int refusal = TryCallVote(ev.Sender);
+                if (refusal != 0)
+                    PhotonNetwork.RaiseEvent(CallVoteEventCode, new[] { refusal, CooldownLeft },
+                        new RaiseEventOptions { TargetActors = new[] { ev.Sender } }, SendOptions.SendReliable);
+            }
+            else if (PhotonNetwork.MasterClient != null && ev.Sender == PhotonNetwork.MasterClient.ActorNumber &&
+                     ev.CustomData is int[] answer && answer.Length == 2)
+                ShowRefusal(answer[0], Mathf.Clamp(answer[1], 1, 600));
+            return;
+        }
         if (ev.Code != VoteStateEventCode || PhotonNetwork.MasterClient == null || ev.Sender != PhotonNetwork.MasterClient.ActorNumber) return;
-        if (ev.CustomData is not object[] d || d.Length != 6 || d[0] is not bool open || d[1] is not double deadline ||
-            d[2] is not int restart || d[3] is not int random || d[4] is not int voted || d[5] is not int players) return;
-        Apply(open, deadline, Mathf.Clamp(restart, 0, 64), Mathf.Clamp(random, 0, 64), Mathf.Clamp(voted, 0, 64), Mathf.Clamp(players, 0, 64));
+        if (ev.CustomData is not object[] d || d.Length != 10 || d[0] is not bool open || d[1] is not double deadline ||
+            d[2] is not int restart || d[3] is not int random || d[4] is not int voted || d[5] is not int players ||
+            d[6] is not int kind || d[7] is not int stay || d[8] is not string caller || d[9] is not int outcome) return;
+        if (kind is not (FailedVote or CalledVote) || caller.Length > 32 || outcome < Outcome_None || outcome > Outcome_Stay) return;
+        Apply(open, deadline, Mathf.Clamp(restart, 0, 64), Mathf.Clamp(random, 0, 64), Mathf.Clamp(stay, 0, 64),
+            Mathf.Clamp(voted, 0, 64), Mathf.Clamp(players, 0, 64), kind, caller.Replace("<", "").Replace(">", ""), outcome);
     }
 
     private void DrawPanel()
@@ -225,6 +386,23 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
         float left = Mathf.Max(0f, (float)(_shownDeadline - Now));
         string Pick(int option) => _myVote == option ? "<color=#ffd24d>>" : "<color=#ffffff>";
         bool ru = Localization.GameLanguage.Russian;
+        if (_shownKind == CalledVote)
+        {
+            string who = _shownCaller.Length > 0 ? _shownCaller.ToUpperInvariant() : (ru ? "ИГРОК" : "A PLAYER");
+            _label.text = ru
+                ? $"<color=#ffd24d>{who}</color> ПРЕДЛАГАЕТ РЕСТАРТ  {left:0} с\n" +
+                  $"{Pick(1)}[1] ЭТА ЖЕ КАРТА  ({_restartVotes})</color>\n" +
+                  $"{Pick(2)}[2] СЛУЧАЙНАЯ КАРТА  ({_randomVotes})</color>\n" +
+                  $"{Pick(3)}[3] ИГРАТЬ ДАЛЬШЕ  ({_stayVotes})</color>\n" +
+                  $"<size=70%>ПРОГОЛОСОВАЛИ {_voted}/{_players} · НУЖНО БОЛЬШЕ ПОЛОВИНЫ ЗА РЕСТАРТ</size>"
+                : $"<color=#ffd24d>{who}</color> WANTS A RESTART  {left:0}s\n" +
+                  $"{Pick(1)}[1] SAME MAP  ({_restartVotes})</color>\n" +
+                  $"{Pick(2)}[2] RANDOM MAP  ({_randomVotes})</color>\n" +
+                  $"{Pick(3)}[3] KEEP PLAYING  ({_stayVotes})</color>\n" +
+                  $"<size=70%>{_voted}/{_players} VOTED · A RESTART NEEDS MORE THAN HALF</size>";
+            _panel.Fit();
+            return;
+        }
         _label.text = ru
             ? $"<color=#ff5a4d>УРОВЕНЬ ПРОВАЛЕН</color>  ГОЛОСОВАНИЕ  {left:0} с\n" +
               $"{Pick(1)}[1] ПЕРЕЗАПУСТИТЬ УРОВЕНЬ  ({_restartVotes})</color>\n" +
@@ -271,7 +449,9 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
             try { runLevel = SemiFunc.RunIsLevel(); inRun = runLevel || SemiFunc.RunIsShop() || SemiFunc.RunIsLobby(); } catch { }
             bool hostButtons = ModConfig.HostRunControlsEnabled.Value && Host;
             bool skillTree = ModConfig.PlayerUpgradesEnabled.Value; // every player, not only the host
-            if ((!hostButtons && !skillTree) || __instance.quitButton == null || !inRun)
+            // Any player on a run level (the host decides whether the vote opens; it says so if not).
+            bool restartVote = runLevel && SemiFunc.IsMultiplayer() && ModConfig.PlayerRestartVoteEnabled.Value;
+            if ((!hostButtons && !skillTree && !restartVote) || __instance.quitButton == null || !inRun)
             {
                 if (!_loggedSkip)
                     Plugin.Log.LogInfo($"[Esc] No mod buttons: enabled={ModConfig.HostRunControlsEnabled.Value}, host={Host}, " +
@@ -284,6 +464,7 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
             var actions = new List<(string text, System.Action action, bool confirm)>();
             bool ru = Localization.GameLanguage.Russian;
             if (skillTree) actions.Add((ru ? "ДЕРЕВО НАВЫКОВ" : "SKILL TREE", OpenSkillTree, false));
+            if (restartVote) actions.Add((ru ? "ГОЛОСОВАТЬ ЗА РЕСТАРТ" : "VOTE TO RESTART", CallRestartVote, true));
             if (hostButtons && runLevel) actions.Add((ru ? "ПЕРЕЗАПУСК УРОВНЯ" : "RESTART LEVEL", RestartLevel, true));
             if (hostButtons) actions.Add((ru ? "ВЕРНУТЬСЯ В ЛОББИ" : "RETURN TO LOBBY", ReturnToLobby, true));
 

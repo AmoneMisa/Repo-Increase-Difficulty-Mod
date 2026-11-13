@@ -51,7 +51,7 @@ public static class RetryCrystalEffect {public const byte EventCode=176;public s
 namespace IncreaseHardMod.Economy {
  public static class ShopEconomy {public static void Set(int id){}}
  public static class EconomyEvents {public static void Set(int id){}}
- public static class BlackMarket {public enum Kind {Modifier,Economy,ShopEconomy}public static void TryBuy(Kind kind,string id){}public static void SetFromNetwork(string[] keys){}}
+ public static class BlackMarket {public enum Kind {Modifier,Economy,ShopEconomy}public static void TryBuy(Kind kind,string id){}public static void TryStep(string id,bool down){}public static void TryToggle(string id){}public static void SetFromNetwork(string[] keys){}}
 }
 namespace IncreaseHardMod.Drones {public static class LinkManager {public static void Tick(float dt){}}}
 namespace IncreaseHardMod.Gear {

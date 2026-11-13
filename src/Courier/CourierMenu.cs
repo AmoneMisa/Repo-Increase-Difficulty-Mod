@@ -179,6 +179,7 @@ internal sealed class CourierMenu
         CourierJob.Cart => L.L("TOWING A C.A.R.T.", "ТАЩИТ ТЕЛЕЖКУ"),
         CourierJob.Store => L.L("HEADING TO THE TRUCK", "НЕСЁТ В МАШИНУ"),
         CourierJob.Head => L.L("RETRIEVING A HEAD", "ЗАБИРАЕТ ГОЛОВУ"),
+        CourierJob.Soul => L.L("COLLECTING A SOUL", "НЕСЁТ ДУШУ В ТЕЛЕЖКУ"),
         _ => L.L("FOLLOWING", "СЛЕДУЕТ"),
     };
 

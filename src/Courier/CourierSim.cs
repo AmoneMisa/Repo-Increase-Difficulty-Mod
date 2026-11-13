@@ -7,7 +7,7 @@ using C = IncreaseHardMod.Skills.SkillCatalog;
 
 namespace IncreaseHardMod.Courier;
 
-internal enum CourierJob : byte { None = 0, Charge = 1, Fetch = 2, Ally = 3, Cart = 4, Store = 5, Head = 6 }
+internal enum CourierJob : byte { None = 0, Charge = 1, Fetch = 2, Ally = 3, Cart = 4, Store = 5, Head = 6, Soul = 7 }
 
 internal enum CourierNotice : byte
 {
@@ -31,7 +31,7 @@ internal enum CourierReason : byte
 /// </summary>
 internal sealed class CourierSim
 {
-    private enum Phase : byte { Follow, ToItem, ToCharger, AtCharger, Towing, Deliver }
+    private enum Phase : byte { Follow, ToItem, ToCharger, AtCharger, Towing, Deliver, Warn }
 
     internal readonly int Actor;
     internal PlayerAvatar Owner;
@@ -147,7 +147,7 @@ internal sealed class CourierSim
     internal CourierFlags Flags =>
         (Time.time < _happyUntil ? CourierFlags.Happy : 0) | (Carrying || _phase == Phase.Towing ? CourierFlags.Carrying : 0) |
         (Flying ? CourierFlags.Flying : 0) | (Down ? CourierFlags.Down : 0) | (Time.time < DashUntil ? CourierFlags.Dashing : 0) |
-        (Time.time < HitUntil ? CourierFlags.Hit : 0);
+        (Time.time < HitUntil ? CourierFlags.Hit : 0) | (_phase == Phase.Warn && _warnArrived ? CourierFlags.Pointing : 0) | (Job == CourierJob.Soul && Carrying ? CourierFlags.InFront : 0);
 
     internal void Petted() { _happyUntil = Time.time + 1.8f; _sadUntil = 0f; }
 
@@ -271,6 +271,7 @@ internal sealed class CourierSim
 
     internal void Cancel()
     {
+        if (Job == CourierJob.Soul) ReleaseSoulClaim();
         if (Carrying) Drop(Owner != null ? Owner.transform.forward : Vector3.forward);
         _item = null; _chargeFailure = null; _itemAwayFor = 0f;
         Job = CourierJob.None; _phase = Phase.Follow; _ally = null; _cart = null; _head = null;
@@ -342,6 +343,20 @@ internal sealed class CourierSim
         float speed = CourierRules.Speed(Level(C.CourierSpeed), Time.time < DashUntil, Flying);
         var ownerPos = Owner.transform.position;
         bool ownerGone = Owner.isDisabled;
+
+        // Soul Collector: on its own, while just tagging along, take a nearby soul to a nearby Soul C.A.R.T.
+        // Danger: run to the doorway toward a monster close by and point it out, then come back.
+        if (Job == CourierJob.None && _phase == Phase.Follow && !ownerGone && Time.time >= _nextWarnScan)
+        {
+            _nextWarnScan = Time.time + .3f;
+            TryWarn();
+        }
+        if (Job == CourierJob.None && _phase == Phase.Follow && !ownerGone && Time.time >= _nextSoulScan)
+        {
+            _nextSoulScan = Time.time + .5f;
+            TryCollectSoul();
+        }
+        if (Job == CourierJob.Soul) return SoulTick(speed, dt);
 
         if (Job is CourierJob.Charge or CourierJob.Fetch or CourierJob.Ally or CourierJob.Store or CourierJob.Head && (_item == null || _item.dead))
             return Refuse(CourierReason.Gone);
@@ -427,6 +442,23 @@ internal sealed class CourierSim
                 }
                 return null;
             }
+            case Phase.Warn:
+            {
+                if (ownerGone || _warnMonster == null || !_warnMonster.Spawned) { EndWarn(); return null; }
+                if (!_warnArrived)
+                {
+                    // Point from wherever it got to if the run takes too long.
+                    if (MoveTo(_warnSpot, speed * 1.25f, .35f) || Time.time - _warnStarted > CourierRules.WarnRunSeconds)
+                    {
+                        _warnArrived = true;
+                        _warnUntil = Time.time + CourierRules.WarnPointSeconds;
+                    }
+                    return null;
+                }
+                FaceTowards(Pos + _warnLook, dt);
+                if (Time.time >= _warnUntil) EndWarn();
+                return null;
+            }
             case Phase.Towing:
             {
                 if (_cart == null || _cart.rb == null) { Cancel(); return null; }
@@ -472,7 +504,9 @@ internal sealed class CourierSim
     }
 
     private Vector3 Fwd() => Quaternion.Euler(0f, Yaw, 0f) * Vector3.forward;
-    private Vector3 HoldPoint() => Pos + Vector3.up * (Flying ? 1.25f : .8f) + Fwd() * .05f;
+    private Vector3 HoldPoint() => Job == CourierJob.Soul
+        ? Pos + Vector3.up * (Flying ? 1.0f : .55f) + Fwd() * .42f // a soul: in both hands, out in front at head height
+        : Pos + Vector3.up * (Flying ? 1.25f : .8f) + Fwd() * .05f;
 
     // ------------------------------------------------------------------ carrying
 
@@ -497,6 +531,190 @@ internal sealed class CourierSim
             _item.rb.linearVelocity = push + Vector3.up * .5f;
         }
         _item = null;
+    }
+
+    // ------------------------------------------------------------------ pointing out monsters
+
+    /// <summary>Host: when each monster may be pointed out again (shared by every pet; cleared between levels).</summary>
+    private static readonly Dictionary<EnemyParent, float> WarnedUntil = new();
+    private static Object _warnLevel;
+    private EnemyParent _warnMonster;
+    private Vector3 _warnSpot, _warnLook;
+    private float _warnStarted, _warnUntil, _nextWarnScan;
+    private bool _warnArrived;
+
+    private static Vector3 MonsterAt(EnemyParent parent) =>
+        parent.Enemy.CenterTransform != null ? parent.Enemy.CenterTransform.position : parent.Enemy.transform.position;
+
+    /// <summary>
+    /// Host: the nearest monster within <see cref="CourierRules.DangerRadius"/> on this floor (not the neutral Golden
+    /// Pig) that no pet has pointed out lately. The pet runs to the first doorway on the way to it, stopping short if
+    /// the monster is right behind it, and points through; in the same room as the monster it points from where it is.
+    /// It is only tagging along meanwhile (no job), so it stays safe and draws no monster.
+    /// </summary>
+    private void TryWarn()
+    {
+        var director = EnemyDirector.instance;
+        if (director == null || director.enemiesSpawned == null || !SemiFunc.RunIsLevel()) return;
+        var level = (Object)LevelGenerator.Instance;
+        if (level != _warnLevel) { _warnLevel = level; WarnedUntil.Clear(); }
+
+        EnemyParent best = null; Vector3 bestAt = default; float bestD = CourierRules.DangerRadius;
+        foreach (var parent in director.enemiesSpawned)
+        {
+            if (parent == null || !parent.Spawned || parent.Enemy == null) continue;
+            if (parent.GetComponentInChildren<Monsters.PigBrain>() != null) continue; // neutral
+            if (WarnedUntil.TryGetValue(parent, out float until) && Time.time < until) continue;
+            var at = MonsterAt(parent);
+            if (Mathf.Abs(at.y - Pos.y) > 5f) continue; // another floor
+            float d = Flat(at - Pos).magnitude;
+            if (d < bestD) { bestD = d; best = parent; bestAt = at; }
+        }
+        if (best == null) return;
+        WarnedUntil[best] = Time.time + CourierRules.WarnRepeatSeconds;
+
+        var path = CourierHeadRoute.Path(Pos, bestAt);
+        _warnSpot = Pos;
+        _warnLook = path != null && path.Length > 1 ? Flat(path[1] - path[0]) : Flat(bestAt - Pos);
+        if (CourierHeadRoute.FirstDoorway(path, out var door, out var heading, out float along) && along <= CourierRules.WarnMaxRun)
+        {
+            heading.Normalize();
+            var spot = door - heading * .5f; // in the doorway, on our side
+            float gap = Flat(bestAt - spot).magnitude;
+            if (gap < CourierRules.WarnKeepAway) spot -= heading * (CourierRules.WarnKeepAway - gap);
+            _warnSpot = Ground(spot);
+            _warnLook = heading;
+        }
+        if (_warnLook.sqrMagnitude < .0001f) _warnLook = Fwd();
+
+        _warnMonster = best; _warnArrived = false; _warnStarted = Time.time;
+        _phase = Phase.Warn;
+        _surprisedUntil = Time.time + .6f;
+    }
+
+    private void EndWarn()
+    {
+        _warnMonster = null; _warnArrived = false;
+        if (_phase == Phase.Warn) _phase = Phase.Follow;
+    }
+
+    // ------------------------------------------------------------------ Soul Collector
+
+    /// <summary>Souls some courier is taking to a Soul C.A.R.T. hatch, so two pets never fill it past its limit.</summary>
+    private static readonly Dictionary<PhysGrabObject, (ItemValuableBox box, float value)> SoulsOnTheWay = new();
+    private ItemValuableBox _soulBox;
+    private float _soulValue, _nextSoulScan, _atHatchSince = -1f;
+
+    private static bool HatchTakesSouls(ItemValuableBox box) =>
+        box != null && box.isActiveAndEnabled && box.currentState is ItemValuableBox.State.Idle or ItemValuableBox.State.Open
+            or ItemValuableBox.State.Absorbing or ItemValuableBox.State.Close;
+
+    private static float OnTheWay(ItemValuableBox box, PhysGrabObject except)
+    {
+        float sum = 0f;
+        foreach (var pair in SoulsOnTheWay)
+            if (pair.Key != null && pair.Key != except && pair.Value.box == box) sum += pair.Value.value;
+        return sum;
+    }
+
+    private static bool Fits(ItemValuableBox box, ValuableObject soul, PhysGrabObject except) =>
+        HatchTakesSouls(box) && soul.volumeType <= box.typeLimit &&
+        CourierRules.SoulFits(box.CurrentValue, OnTheWay(box, except), soul.dollarValueCurrent, box.valueLimit);
+
+    /// <summary>Host: start carrying the nearest free soul to the nearest Soul C.A.R.T. hatch it fits in, if any.</summary>
+    private void TryCollectSoul()
+    {
+        if (Level(C.CourierSouls) <= 0 || !SemiFunc.RunIsLevel()) return;
+        var stale = new List<PhysGrabObject>();
+        foreach (var key in SoulsOnTheWay.Keys) if (key == null || key.dead) stale.Add(key);
+        foreach (var key in stale) SoulsOnTheWay.Remove(key);
+
+        var boxes = new List<ItemValuableBox>();
+        foreach (var hatch in Object.FindObjectsByType<Gear.SoulCartHatch>(FindObjectsSortMode.None))
+        {
+            var box = hatch != null ? hatch.GetComponent<ItemValuableBox>() : null;
+            if (!HatchTakesSouls(box) || box.boxChecker == null) continue;
+            var at = box.boxChecker.transform.position;
+            if (Flat(at - Pos).magnitude <= CourierRules.SoulCartRange && Mathf.Abs(at.y - Pos.y) < 3f) boxes.Add(box);
+        }
+        if (boxes.Count == 0) return;
+
+        PhysGrabObject bestSoul = null; ItemValuableBox bestBox = null; ValuableObject bestValue = null;
+        float bestD = CourierRules.SoulPickupRange;
+        foreach (var orb in Object.FindObjectsByType<EnemyValuable>(FindObjectsSortMode.None))
+        {
+            var soul = orb != null ? orb.GetComponent<PhysGrabObject>() : null;
+            if (soul == null || SoulsOnTheWay.ContainsKey(soul) || !CanPickUp(soul)) continue;
+            var value = Gear.SoulCartHatch.SoulValue(soul);
+            if (value == null) continue;
+            float d = Flat(soul.midPoint - Pos).magnitude;
+            if (d >= bestD || Mathf.Abs(soul.midPoint.y - Pos.y) > 2.5f) continue;
+            ItemValuableBox target = null; float targetD = float.MaxValue; bool atHatch = false;
+            foreach (var box in boxes)
+            {
+                float toBox = (box.boxChecker.transform.position - soul.midPoint).magnitude;
+                if (toBox < 1.2f) { atHatch = true; break; } // already at a hatch: the cart takes it by itself
+                if (toBox < targetD && Fits(box, value, null)) { target = box; targetD = toBox; }
+            }
+            if (atHatch || target == null) continue;
+            bestD = d; bestSoul = soul; bestBox = target; bestValue = value;
+        }
+        if (bestSoul == null) return;
+
+        Start(CourierJob.Soul, bestSoul);
+        _phase = Phase.ToItem;
+        _soulBox = bestBox; _soulValue = bestValue.dollarValueCurrent; _atHatchSince = -1f;
+        SoulsOnTheWay[bestSoul] = (bestBox, _soulValue);
+    }
+
+    private void ReleaseSoulClaim()
+    {
+        if ((object)_item != null) SoulsOnTheWay.Remove(_item); // also once the soul is destroyed
+        _soulBox = null; _atHatchSince = -1f;
+    }
+
+    /// <summary>
+    /// Host: one frame of a soul run. The pet walks to the soul, carries it to the cart and holds it in the hatch;
+    /// the cart's own intake then absorbs it (the soul object is destroyed), which counts as delivered. A soul someone
+    /// grabs first, a cart that leaves, fills up or stops taking souls, or a run that takes too long all end it quietly.
+    /// </summary>
+    private (CourierNotice, string)? SoulTick(float speed, float dt)
+    {
+        if (_item == null || _item.dead)
+        {
+            bool absorbed = _atHatchSince >= 0f;
+            float value = _soulValue;
+            Cancel();
+            if (!absorbed) return null;
+            _happyUntil = Time.time + 1.5f;
+            return (CourierNotice.Done, (byte)CourierJob.Soul + "|$" + SemiFunc.DollarGetString(Mathf.RoundToInt(value)));
+        }
+        var soul = Gear.SoulCartHatch.SoulValue(_item);
+        if (soul == null || _soulBox == null || _soulBox.boxChecker == null || !Fits(_soulBox, soul, _item) ||
+            Time.time - _jobStarted > CourierRules.SoulJobSeconds) { Cancel(); return null; }
+        _soulValue = soul.dollarValueCurrent;
+        SoulsOnTheWay[_item] = (_soulBox, _soulValue);
+
+        var hatch = _soulBox.boxChecker.transform.position;
+        if (_phase == Phase.ToItem)
+        {
+            if (!CanPickUp(_item)) { Cancel(); return null; }
+            if (MoveTo(_item.midPoint, speed, .7f)) { _phase = Phase.Deliver; Hold(_item, HoldPoint(), dt); }
+            return null;
+        }
+        if (_atHatchSince < 0f)
+        {
+            if (Flat(hatch - Pos).magnitude > CourierRules.SoulCartRange + 5f) { Cancel(); return null; } // the cart left
+            Hold(_item, HoldPoint(), dt);
+            if (MoveTo(hatch, speed * .85f, 1.0f)) _atHatchSince = Time.time;
+            return null;
+        }
+        // At the cart: hold the soul inside the hatch until the cart takes it.
+        Hold(_item, hatch, dt);
+        FaceTowards(hatch, dt);
+        if (Flat(hatch - Pos).magnitude > 1.8f) MoveTo(hatch, speed, 1.0f); // the cart is being pushed: keep up
+        if (Time.time - _atHatchSince > CourierRules.SoulHatchSeconds) Cancel();
+        return null;
     }
 
     // ------------------------------------------------------------------ hazards
@@ -531,7 +749,10 @@ internal sealed class CourierSim
         if (away.sqrMagnitude < .01f) away = -Fwd();
         Pos = Ground(Pos + away.normalized * 1.2f); // knocked back
         if (Hp > 0f) return null;
-        Cancel(); // the thing it was carrying drops where it fell; the backpack stays with it
+        // A soul it was carrying breaks (the game's own destruction, with its effects); anything else drops where it fell.
+        if (Job == CourierJob.Soul && Carrying && !_item.dead)
+            _item.GetComponent<PhysGrabObjectImpactDetector>()?.DestroyObject(true, forced: true);
+        Cancel(); // the backpack stays with it
         Down = true; Hp = 0f;
         float wait = CourierRules.Respawn(Level(C.CourierRecovery));
         DownUntil = Time.time + wait;

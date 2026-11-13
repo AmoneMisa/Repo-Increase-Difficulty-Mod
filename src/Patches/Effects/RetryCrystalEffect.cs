@@ -12,7 +12,7 @@ namespace IncreaseHardMod.Patches.Effects;
 /// <summary>
 /// Battery crystals: when a run level is retried (the fail-vote restart or random map, the host's Esc restart, or the
 /// Timed Level running out), the game keeps every player's HP and every item's battery charge from the attempt before.
-/// To help, the host places 3-8 small glowing crystals (config) around the map. A living player who walks into one
+/// To help, the host places 3-8 small glowing crystals (config, up to 30) around the map. A living player who walks into one
 /// tops up the emptiest battery item they hold or carry by 20% (config), once. A player whose batteries are all full
 /// leaves the crystal for someone else.
 ///

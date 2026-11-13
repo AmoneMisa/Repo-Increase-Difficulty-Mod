@@ -53,6 +53,35 @@ internal sealed class CourierHeadRoute : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// Where a path first leaves the room it starts in: the first point in the next room, how far along the path it
+    /// is and which way the path heads there. False if the path never leaves its first room or starts in no room.
+    /// </summary>
+    internal static bool FirstDoorway(Vector3[] path, out Vector3 door, out Vector3 heading, out float along)
+    {
+        door = heading = Vector3.zero; along = 0f;
+        if (path == null || path.Length < 2) return false;
+        int mask = LayerMask.GetMask("RoomVolume");
+        var room = RoomAt(path[0], mask, null);
+        if (room == null) return false;
+        for (int i = 1; i < path.Length; i++)
+        {
+            float segment = Vector3.Distance(path[i - 1], path[i]);
+            int samples = Mathf.Max(1, Mathf.CeilToInt(segment / .35f));
+            for (int s = 1; s <= samples; s++)
+            {
+                var point = Vector3.Lerp(path[i - 1], path[i], (float)s / samples);
+                var next = RoomAt(point, mask, room);
+                if (next == null || next == room) continue;
+                door = point; heading = path[i] - path[i - 1]; heading.y = 0f;
+                along += segment * s / samples;
+                return heading.sqrMagnitude > .0001f;
+            }
+            along += segment;
+        }
+        return false;
+    }
+
     private static RoomVolume RoomAt(Vector3 point, int mask, RoomVolume previous)
     {
         int count = Physics.OverlapSphereNonAlloc(point + Vector3.up * .25f, .06f, RoomHits, mask, QueryTriggerInteraction.Collide);

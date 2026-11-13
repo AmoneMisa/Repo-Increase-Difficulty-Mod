@@ -19,7 +19,7 @@ internal sealed class SoulCartHatch : MonoBehaviour
             scan.checkInterval = Mathf.Min(scan.checkInterval, .08f);
     }
 
-    private static ValuableObject SoulValue(PhysGrabObject target)
+    internal static ValuableObject SoulValue(PhysGrabObject target)
     {
         if (target == null || target.dead || target.GetComponent<EnemyValuable>() == null) return null;
         var value = target.GetComponent<ValuableObject>();

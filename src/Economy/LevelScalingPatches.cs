@@ -165,7 +165,10 @@ internal static class LevelScalingPatches
                 bonus += Depth(0) / Mathf.Max(1, ModConfig.ExtractionBonusInterval.Value);
             if (bonus == 0)
                 return;
-            gen.ExtractionAmount = Mathf.Clamp(gen.ExtractionAmount + bonus, 1, Mathf.Max(ModConfig.ExtractionMax.Value, gen.ExtractionAmount));
+            // ExtractionAmount counts only the extra points: the start room always has one more. ExtractionMax is
+            // the whole number of points (quotas) on the map, so the extras stop one short of it.
+            int extras = Mathf.Max(ModConfig.ExtractionMax.Value - 1, gen.ExtractionAmount);
+            gen.ExtractionAmount = Mathf.Clamp(gen.ExtractionAmount + bonus, 1, extras);
         }
     }
 

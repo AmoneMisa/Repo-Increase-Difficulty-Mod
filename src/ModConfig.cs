@@ -207,7 +207,7 @@ public static class ModConfig
     public static ConfigEntry<bool> CircletEnabled, HeroAuraEnabled, IceBlockEnabled, UpgradesListScaleEnabled;
     // Armor / Overcharge upgrades and the Tumble Launch bonus (SurvivalUpgrades).
     public static ConfigEntry<bool> ArmorEnabled, OverchargeEnabled, TumbleBonusEnabled;
-    public static ConfigEntry<bool> FailVoteEnabled, HostRunControlsEnabled;
+    public static ConfigEntry<bool> FailVoteEnabled, HostRunControlsEnabled, PlayerRestartVoteEnabled;
     public static ConfigEntry<float> ArmorPercentPerLevel, ArmorMaxReduction, OverchargeBuildupPerLevel, OverchargeRecoveryPerLevel;
     public static ConfigEntry<float> TumbleDamagePerLevel, TumbleSelfDamageReductionPerLevel, TumbleSelfDamageMaxReduction;
     public static ConfigEntry<int> ArmorMaxLevel, OverchargeMaxLevel, TumbleMaxLevel;
@@ -436,7 +436,7 @@ public static class ModConfig
         ScaleExtractions = Module(cfg, "Level Scaling", "Extractions", true, "ScaleExtractions", "Deeper levels get extra extraction points.");
         ScaleMoon = Module(cfg, "Level Scaling", "Moon", false, "ScaleMoon", "Override the moon phase interval with MoonLevelsPerPhase. Recommended: every 5 levels, matching native progression.");
         ShopEconomyEnabled = Module(cfg, "Shop Economy", "Enabled", true, "ShopEconomy", "Shop price events: when the run reaches a shop it may get a sale, a tax or an inflation spike that changes item, upgrade, health pack and crystal prices (including this mod's own items and upgrades). Host rolls it.");
-        BlackMarketEnabled = Module(cfg, "Black Market", "Enabled", true, "BlackMarket", "Black Market: in the shop, pay to keep a surprise modifier, level economy or shop economy from ever being rolled again this run. Keyboard driven.");
+        BlackMarketEnabled = Module(cfg, "Black Market", "Enabled", true, "BlackMarket", "Black Market: in the shop, pay to make a surprise modifier rarer (down to never) or more common for the rest of the run, and switch what you bought on or off for free; or block a level economy or shop economy. Keyboard driven.");
         PlayerUpgradesEnabled = Module(cfg, "Player Upgrades", "Enabled", true, "PlayerUpgrades", "Master switch for the mod's custom per-player upgrades that appear in the normal shop. Requires REPOLib. Takes effect on restart.");
         TruckUpgradesEnabled = Module(cfg, "Truck Upgrades", "Enabled", true, "TruckUpgrades", "Enable the team-wide truck upgrades (Heal Power, Charge Efficiency, Loot Cash-In). Bought in the normal shop; effects apply for the whole team.");
         ScaleEnemyHealth = Module(cfg, "Scaling", "EnemyHealth", true, "ScaleEnemyHealth", "Enemies gain max HP as the run goes deeper. Off disables the depth ramp; level surprises remain independent. Host settings apply to the lobby.");
@@ -451,7 +451,7 @@ public static class ModConfig
         RepairEnabled = Module(cfg, "Drones", "RepairEnabled", true, "RepairDrone", "Sell the Repair Drone. Needs Drones/Enabled. Same on every player; applies on game restart.");
         ShopEconomyChance = BindInt(cfg, "Shop Economy", "EventChancePercent", 50, 0, 100, "Chance (percent) that a shop visit gets a price event.");
         BlackMarketKey = cfg.Bind("Black Market", "Key", UnityEngine.KeyCode.B, "Key that opens the Black Market while you are in the shop.");
-        BlackMarketModifierPrice = BindInt(cfg, "Black Market", "ModifierPrice", 35, 1, 5000, "Base price (in the game's K currency) to block a surprise modifier. Scaled by how harmful it is and by depth.");
+        BlackMarketModifierPrice = BindInt(cfg, "Black Market", "ModifierPrice", 35, 1, 5000, "Base price (in the game's K currency) for surprise modifier odds: one step costs 0.2-0.8 of it (more for steps that help the crew: a nasty modifier rarer or a good one more common), scaled by depth. A step back toward normal odds is free.");
         BlackMarketEconomyPrice = BindInt(cfg, "Black Market", "EconomyPrice", 50, 1, 5000, "Base price to block a level economy event.");
         BlackMarketShopEconomyPrice = BindInt(cfg, "Black Market", "ShopEconomyPrice", 65, 1, 5000, "Base price to block a shop economy.");
         BlackMarketPerLevel = BindFloat(cfg, "Black Market", "PricePerLevel", 0.07f, 0f, 1f, "Price growth per level completed (0.07 = +7% per level).");
@@ -469,7 +469,7 @@ public static class ModConfig
         LevelSizePerLevel = BindFloat(cfg, Lvl, "LevelSizePerLevel", 0.03f, 0f, 1f, "Level size growth per level past the start (0.03 = +3% modules and grid).");
         LevelSizeMax = BindFloat(cfg, Lvl, "LevelSizeMax", 1.5f, 1f, 3f, "Cap on the level size multiplier.");
         ExtractionBonusInterval = BindInt(cfg, Lvl, "ExtractionBonusInterval", 10, 1, 50, "One extra extraction point every this many levels.");
-        ExtractionMax = BindInt(cfg, Lvl, "ExtractionMax", 5, 1, 8, "Most extraction points a level can have.");
+        ExtractionMax = BindInt(cfg, Lvl, "ExtractionMax", 5, 1, 8, "Most extraction points (quotas) a level can have, counting the one in the start room. Never fewer than the game itself gives the level.");
         MoonLevelsPerPhase = BindInt(cfg, Lvl, "MoonLevelsPerPhase", 5, 5, 60, "With ScaleMoon on: levels per moon phase. Recommended: 5, matching native progression.");
         GearEnabled = Module(cfg, "Gear", "Enabled", true, "ExtraGear", "Add the extra shop gear (Defence/Protection orbs, Defence drone, poison crossbow, decoy grenade, ice pistol, sticky pistol). EVERY player must run this mod with the same settings. Applies on game restart.");
         DefenceOrbEnabled = Module(cfg, "Gear", "DefenceOrbEnabled", true, "DefenceOrb", "Sell the Defence Orb.");
@@ -489,6 +489,7 @@ public static class ModConfig
         CourierDangerIcon = cfg.Bind("Courier", "DangerIcon", true, "Show the red \"!\" over your pets when a monster is near. Only changes your own screen (also in the courier menu: MORE).");
         CourierDangerSound = cfg.Bind("Courier", "DangerSound", true, "Play the pets' alarm chirp when a monster comes near. Only changes what you hear (also in the courier menu: MORE).");
         CourierCoinChance = BindFloat(cfg, "Courier", "CoinChancePerLevel", Courier.CourierRules.CoinChance, 0f, 1f, "HOST: chance that a gacha coin is hidden somewhere on a level.");
+        if (UnityEngine.Mathf.Approximately(CourierCoinChance.Value, .2f)) CourierCoinChance.Value = Courier.CourierRules.CoinChance; // the old default
         CourierMenuKey = cfg.Bind("Courier", "MenuKey", UnityEngine.KeyCode.C, "Opens the courier command menu. Arrow keys move, Enter/Right picks, Left goes back.");
         if (CourierMenuKey.Value == UnityEngine.KeyCode.G) CourierMenuKey.Value = UnityEngine.KeyCode.C;
         CustomCartsEnabled = Module(cfg, "Gear", "CustomCartsEnabled", true, "CustomCarts", "Sell the Soul C.A.R.T. (small, souls only), the Wide C.A.R.T. and the Double-Decker C.A.R.T.");
@@ -557,6 +558,8 @@ public static class ModConfig
             "When everyone dies on a level, vote for 15 seconds: [1] restart the level or [2] a random map, instead of going to the death arena. Closes early when everyone has voted; a tie or no votes restarts. HOST-SIDE.");
         HostRunControlsEnabled = Module(cfg, "Run", "HostRunControlsEnabled", true, "HostRunControls",
             "Host-only Esc menu buttons: RESTART LEVEL (on levels) and RETURN TO LOBBY (keeps everyone together; saves first in the shop). Both ask for a second click.");
+        PlayerRestartVoteEnabled = cfg.Bind("Run", "PlayerRestartVoteEnabled", true,
+            "Any player can call a 20-second vote from the Esc menu on a level: [1] restart this map, [2] a random map, [3] keep playing. The level restarts only if more than half of all players vote for a restart; one vote a minute. The host's setting decides (a player who turns it off also hides the button for themself).");
         Testing.TestShortcuts.Bind(cfg);
         LateJoinEnabled = Module(cfg, "Late Join", "Enabled", true, "LateJoin", "Host keeps the room/lobby joinable during a run/shop/truck (REPO normally seals it at run start) and re-syncs mod state to anyone who connects mid-game.");
         PingEnabled = Module(cfg, "Ping", "Enabled", true, "Ping", "Enable the ping system: press the ping key to mark what you're looking at for the whole team.");
@@ -851,8 +854,8 @@ public static class ModConfig
         SkillBoxWeight3 = BindInt(cfg, "Skill Boxes", "Chance3Points", 5, 0, 100, "Weight of a 3-point box. Default 5 of 100.");
         RetryCrystalsEnabled = cfg.Bind("Battery Crystals", "Enabled", true,
             "When a level is retried (restart, random map or timer reroll), small battery crystals lie around the map. HP and battery charge carry over between attempts, so walk into a crystal to top up your emptiest battery item. Host setting.");
-        RetryCrystalMin = BindInt(cfg, "Battery Crystals", "MinPerLevel", 3, 0, 8, "Fewest battery crystals on a retried level.");
-        RetryCrystalMax = BindInt(cfg, "Battery Crystals", "MaxPerLevel", 8, 0, 8, "Most battery crystals on a retried level.");
+        RetryCrystalMin = BindInt(cfg, "Battery Crystals", "MinPerLevel", 3, 0, Modifiers.RetryCrystalRules.MaxCrystals, "Fewest battery crystals on a retried level (up to 30).");
+        RetryCrystalMax = BindInt(cfg, "Battery Crystals", "MaxPerLevel", 8, 0, Modifiers.RetryCrystalRules.MaxCrystals, "Most battery crystals on a retried level (up to 30; a small map may have room for fewer, they keep 4.5 m apart).");
         RetryCrystalCharge = BindFloat(cfg, "Battery Crystals", "ChargePercent", 20f, 1f, 100f,
             "Battery charge one crystal adds to the emptiest battery item you hold or carry (20 = about one bar of five).");
         QuestFunnyEnabled = cfg.Bind("Quests", "FunnyQuests", true,

@@ -152,7 +152,7 @@ the result through the game's normal sync.
 | Module | What it does |
 | --- | --- |
 | **Shop economy** | On entering a shop the host may roll a price event (50% by default): 19 of them from *Black Friday* (everything 45% off) and *Medic Sale* to *Inflation*, *Luxury Tax* and *Hyper Inflation* (up to +90%). Each event moves four price channels separately - items, upgrades, health packs, power crystals - and this mod's drones, gear, personal upgrades and truck upgrades follow the same channels automatically. It stacks with the player-count price scaling. Bad events get likelier with depth. The active event is shown in the HUD. |
-| **Black Market** | In the shop press `B`: a keyboard-driven screen (Left/Right tab, Up/Down choose, Enter buys) lists every surprise modifier, level economy event and shop economy. Pay to block one for the rest of the run (it is saved with the run and reset by a new run). Base price 35 / 50 / 65 (modifier / level economy / shop economy), x2 for the nastiest things down to x0.5 for perks, plus 7% per level completed. Guests can buy too; the host checks the price and the balance. |
+| **Black Market** | In the shop press `B`: a keyboard-driven screen (Left/Right tab, Up/Down choose) lists every surprise modifier, level economy event and shop economy. **Surprise modifiers:** `-` makes the chosen one rarer (x0.5, x0.25, never) and `+` more common (x1.5, x2, x2.5), one paid step at a time; a step back toward normal is free. `Space`/`Enter` switches what you bought off and on again for free. A step costs 0.2-0.8 of the base price 35, more for steps that help the crew (a nasty modifier rarer, a generous one more common). **Economies:** `Enter` blocks one (base price 50 / 65, x2 for the nastiest down to x0.5 for perks). Prices rise 7% per level completed; everything is saved with the run and reset by a new run. Guests can buy too; the host checks the price and the balance. |
 
 Level economy events also avoid clashing with the surprise modifiers already on the level (for example no
 pay cut together with *Money Loss on Death*, no heavy quota on a *Timed Level*).
@@ -225,7 +225,7 @@ A courier is a small walking helper with a delivery backpack that follows you al
 open the courier menu (`G`) and pull with a gacha coin. Every pull unlocks one of sixteen pets: penguin, chicken, cat, owl,
 beaver, sheep, cow, dog, fairy, little devil, little angel, dragon, little mermaid, skeleton cat, stone elemental
 and phoenix (common ones about 11% each, the rarest - dragon, elemental and phoenix - about 2%). A duplicate gives half a coin back. Everyone starts with one free
-coin; more are **found rarely on levels** (a glowing, chiming gold token, about one level in five, first come first
+coin; more are **found rarely on levels** (a glowing, chiming gold token, about one level in three, first come first
 served). Recolour its body, second colour and cap/backpack (12 swatches) in the lobby, the shop or next to the truck.
 Couriers idle, run, fly, get petted and change mood (happy, focused, surprised, sad, sleepy).
 
@@ -572,7 +572,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 | Модуль | Что делает |
 | --- | --- |
 | **Экономика магазина** | При входе в магазин хост может бросить событие цен (по умолчанию 50%): 19 штук, от *Black Friday* (всё на 45% дешевле) и *Medic Sale* до *Inflation*, *Luxury Tax* и *Hyper Inflation* (до +90%). Каждое событие отдельно двигает четыре канала цен - предметы, улучшения, аптечки, кристаллы энергии, - и дроны, снаряжение, личные и грузовые улучшения этого мода идут по тем же каналам автоматически. Складывается с масштабированием цен по числу игроков. С глубиной плохие события выпадают чаще. Активное событие видно в HUD. |
-| **Чёрный рынок** | В магазине нажми `B`: экран с управлением клавиатурой (Влево/Вправо - вкладка, Вверх/Вниз - выбор, Enter - купить) показывает все модификаторы-«сюрпризы», события экономики уровня и экономики магазина. Заплати, чтобы заблокировать нужное до конца забега (сохраняется с забегом, новый забег сбрасывает). Базовая цена 35 / 50 / 65 (модификатор / экономика уровня / экономика магазина), от x2 за самое неприятное до x0,5 за бонусы, плюс 7% за каждый пройденный уровень. Покупать могут и гости; хост проверяет цену и баланс. |
+| **Чёрный рынок** | В магазине нажми `B`: экран с управлением клавиатурой (Влево/Вправо - вкладка, Вверх/Вниз - выбор) показывает все модификаторы-«сюрпризы», события экономики уровня и экономики магазина. **Сюрпризы:** `-` делает выбранный реже (x0,5, x0,25, никогда), `+` - чаще (x1,5, x2, x2,5), по одному платному шагу; шаг назад к обычному шансу бесплатный. `Пробел`/`Enter` бесплатно выключает и снова включает купленное. Шаг стоит 0,2-0,8 базовой цены 35, дороже - шаги в пользу команды (неприятный сюрприз реже, щедрый - чаще). **Экономики:** `Enter` блокирует (база 50 / 65, от x2 за самое неприятное до x0,5 за бонусы). Цены растут на 7% за каждый пройденный уровень; всё сохраняется с забегом и сбрасывается новым забегом. Покупать могут и гости; хост проверяет цену и баланс. |
 
 События экономики уровня также избегают конфликтов с уже выпавшими модификаторами (например, нет
 урезанной оплаты вместе с *Money Loss on Death* и тяжёлой квоты на *Timed Level*).
@@ -714,7 +714,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 Курьер — маленький помощник с рюкзаком, который весь забег ходит за вами. **Получите его из гачи**: откройте меню
 курьера (`G`) и крутите за монету. Каждая прокрутка открывает одно из пяти животных: пингвин и курочка (по 25%), котик
 и бобёр (по 20%), сова (редкая, 10%). Повтор возвращает половину монеты. У каждого есть одна бесплатная монета; новые
-**изредка попадаются на уровнях** (светящийся звенящий золотой жетон, примерно на каждом пятом уровне, достаётся
+**изредка попадаются на уровнях** (светящийся звенящий золотой жетон, примерно на каждом третьем уровне, достаётся
 первому). Цвета тела, дополнительный и кепки с рюкзаком (12 цветов) меняются в лобби, магазине или у машины. Курьеры
 стоят, бегают, летают, радуются поглаживанию и меняют настроение (радость, сосредоточенность, удивление, грусть, сон).
 

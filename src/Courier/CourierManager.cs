@@ -403,6 +403,7 @@ internal sealed class CourierManager : MonoBehaviour
                     CourierJob.Cart => L("THE C.A.R.T. IS HERE", "ТЕЛЕЖКА НА МЕСТЕ"),
                     CourierJob.Store => L($"LEFT IN THE TRUCK: {item}", $"В МАШИНЕ: {item}"),
                     CourierJob.Head => L("BROUGHT BACK THE HEAD", "ПРИНЁС ГОЛОВУ"),
+                    CourierJob.Soul => L($"SOUL IN THE C.A.R.T.: {item}", $"ДУША В ТЕЛЕЖКЕ: {item}"),
                     _ => L("DONE", "ГОТОВО"),
                 };
                 HudNotify.Toast($"{pet}: {text}", HudStyle.Good, 3f, "courier");

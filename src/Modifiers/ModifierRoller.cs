@@ -47,19 +47,20 @@ public static class ModifierRoller
         if (Random.Range(0, 100) >= ModConfig.SpecialLevelChancePercent.Value)
             return result;
 
-        // Build the pool of currently-enabled modifiers: the original flag modifiers plus the stat modifiers,
-        // minus anything blocked at the Black Market.
+        // Build the pool of currently-enabled modifiers: the original flag modifiers plus the stat modifiers, each
+        // weighted by the odds bought at the Black Market (bought all the way down = left out).
         var pool = new List<Entry>();
         foreach (var kv in ModConfig.ModifierEnabled)
         {
-            if (kv.Value.Value && !Economy.BlackMarket.IsBanned(Economy.BlackMarket.Kind.Modifier, kv.Key.ToString()))
-                pool.Add(new Entry { Flag = kv.Key, Tier = Economy.BlackMarket.TierOfModifier(kv.Key) });
+            float odds = Economy.BlackMarket.OddsMultiplier(kv.Key.ToString());
+            if (kv.Value.Value && odds > 0f)
+                pool.Add(new Entry { Flag = kv.Key, Tier = Economy.BlackMarket.TierOfModifier(kv.Key), Odds = odds });
         }
         foreach (var s in StatModifiers.All)
         {
-            if (ModConfig.StatModifierEnabled.TryGetValue(s.Id, out var on) && on.Value && EnemyBalance.Allows(s) &&
-                !Economy.BlackMarket.IsBanned(Economy.BlackMarket.Kind.Modifier, "stat:" + s.Id))
-                pool.Add(new Entry { Stat = s, Tier = s.Tier });
+            float odds = Economy.BlackMarket.OddsMultiplier("stat:" + s.Id);
+            if (ModConfig.StatModifierEnabled.TryGetValue(s.Id, out var on) && on.Value && EnemyBalance.Allows(s) && odds > 0f)
+                pool.Add(new Entry { Stat = s, Tier = s.Tier, Odds = odds });
         }
         if (pool.Count == 0)
             return result;
@@ -94,6 +95,7 @@ public static class ModifierRoller
         public ModifierType Flag;
         public StatModifier Stat;
         public Economy.EconomyTier Tier;
+        public float Odds = 1f; // Black Market odds
     }
 
     // Deeper runs lean toward the nasty tiers and away from the generous ones (same tilt as the economy events).
@@ -112,11 +114,11 @@ public static class ModifierRoller
 
         float total = 0f;
         foreach (var e in pool)
-            total += Weight(e.Tier);
+            total += Weight(e.Tier) * e.Odds;
         float roll = Random.value * total;
         foreach (var e in pool)
         {
-            roll -= Weight(e.Tier);
+            roll -= Weight(e.Tier) * e.Odds;
             if (roll <= 0f)
                 return e;
         }

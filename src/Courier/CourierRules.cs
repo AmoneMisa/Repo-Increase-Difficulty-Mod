@@ -15,14 +15,27 @@ public static class CourierRules
     public const float MaxHealth = 100f, HealthPerLevel = .2f, ArmorPerLevel = .1f, RespawnSeconds = 45f, RecoveryPerLevel = 10f;
     /// <summary>The pet warns of a monster this close (m, flat; a little beyond NoticeRadius), chirping once per monster.</summary>
     public const float DangerRadius = 16f;
+    /// <summary>
+    /// Pointing out a monster: the pet runs to the doorway toward it (at most WarnMaxRun metres of path away), keeps at
+    /// least WarnKeepAway metres from the monster, points for WarnPointSeconds and goes back to its owner. One warning
+    /// per monster for all pets, again after WarnRepeatSeconds if it is still or again near.
+    /// </summary>
+    public const float WarnMaxRun = 14f, WarnKeepAway = 4.5f, WarnPointSeconds = 3f, WarnRunSeconds = 8f, WarnRepeatSeconds = 60f;
 
     // Monsters: they notice a courier nearby, come to look and hit it when close. Low Profile calms them.
     public const float NoticeRadius = 14f, NoticeChance = .35f, NoticeEvery = 18f, HitRange = 1.7f, HitDamage = 30f, HitCooldown = 1.6f,
         AggressionPerLevel = .2f;
     // Backpack slots
     public const int BaseSlots = 1, MaxSlots = 3;
+    // Soul Collector: souls this close to the pet are taken to a Soul C.A.R.T. this close to the pet (m).
+    public const float SoulPickupRange = 12f, SoulCartRange = 15f, SoulJobSeconds = 40f, SoulHatchSeconds = 4f;
+
+    /// <summary>Soul Collector takes a soul only if its whole value fits under the cart's limit (with souls already on their way).</summary>
+    public static bool SoulFits(float stored, float onTheWay, float soulValue, float limit) =>
+        soulValue > 0f && stored + Math.Max(0f, onTheWay) + soulValue <= limit;
+
     // Gacha
-    public const float CoinChance = .2f;
+    public const float CoinChance = .3f;
     // Rare find: chance per level, at most one find per level
     public const float BaseFindChance = .02f, LuckPerLevel = .02f;
     // Charging: give up after this long at the station
