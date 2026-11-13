@@ -32,8 +32,33 @@ internal static class LevelUICompact
         catch (System.Exception e) { Plugin.Log.LogWarning($"[LevelInfo] Compact level label failed harmlessly: {e.Message}"); }
     }
 
+    // LevelUI works out its moon with its own CalculateMoonLevel call. That one-line method gets inlined there, so
+    // the ScaleMoon patch is skipped and the label showed the native moon (e.g. moon 5 at level 26 with 7 levels per
+    // phase) while the Esc menu, the moon screen and every mechanic used the run's moon (3). Show the run's moon,
+    // which on guests is also the host's. Checked every frame because a guest's value can arrive after the fetch.
+    private static void SyncMoon(LevelUI ui)
+    {
+        var run = RunManager.instance;
+        if (run == null || ui.fetch || ui.objectMoon == null || ui.textMoon == null) return;
+        int moon = Mathf.Clamp(run.moonLevel, 0, run.moons.Count);
+        if (ui.moonLevel == moon) return;
+        ui.moonLevel = moon;
+        if (moon > 0)
+        {
+            ui.objectMoon.SetActive(true);
+            ui.textMoon.text = run.MoonGetName(moon);
+            if (ui.iconMoon != null) ui.iconMoon.texture = run.MoonGetIcon(moon);
+        }
+        else
+        {
+            if (ui.transformOffset != null) ui.transformOffset.localPosition = new Vector3(0f, -50f, 0f);
+            ui.objectMoon.SetActive(false);
+        }
+    }
+
     private static void Layout(LevelUI ui)
     {
+        SyncMoon(ui);
         var heading = ui.uiText;
         var number = ui.textNumber;
         if (heading == null || number == null) return;

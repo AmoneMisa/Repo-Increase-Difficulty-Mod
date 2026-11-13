@@ -10,7 +10,8 @@ namespace IncreaseHardMod.Courier;
 /// it gives a short alarm chirp once per monster: when several pets sense the same monster only the first one
 /// chirps, and nobody chirps about it again that level (the "!" still shows). Worked out on every
 /// client from the pet's and the monsters' synced positions; only players hear the chirp (no monster investigates
-/// it), and the neutral Golden Pig does not count.
+/// it), and the neutral Golden Pig does not count. The "!" and the chirp can each be turned off for yourself
+/// (Courier/DangerIcon, Courier/DangerSound, or the MORE page of the courier menu).
 /// </summary>
 internal sealed class CourierDanger : MonoBehaviour
 {
@@ -58,7 +59,7 @@ internal sealed class CourierDanger : MonoBehaviour
     private void Update()
     {
         if (Time.time >= _nextScan) { _nextScan = Time.time + .3f; Scan(); }
-        bool show = _danger && !Suppressed;
+        bool show = _danger && !Suppressed && ModConfig.CourierDangerIcon.Value;
         _shown = Mathf.MoveTowards(_shown, show ? 1f : 0f, Time.deltaTime * (show ? 6f : 3f));
         bool visible = _shown > .01f;
         if (_visual.gameObject.activeSelf != visible) _visual.gameObject.SetActive(visible);
@@ -94,7 +95,7 @@ internal sealed class CourierDanger : MonoBehaviour
         else Announced.Clear(); // out of a level: the next level's monsters are new
         if (danger && !_danger) _since = Time.time;
         _danger = danger;
-        if (newMonster) { try { _alarm.Play(transform.position); } catch { } }
+        if (newMonster && ModConfig.CourierDangerSound.Value) { try { _alarm.Play(transform.position); } catch { } }
     }
 
     /// <summary>Monsters some pet on this client has already chirped about (cleared between levels).</summary>

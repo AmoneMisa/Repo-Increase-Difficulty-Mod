@@ -222,6 +222,7 @@ public static class ModConfig
     public static ConfigEntry<bool> CourierEnabled;
     public static ConfigEntry<int> CourierLook, CourierOwned, CourierCoins, CourierFragments;
     public static ConfigEntry<bool> CourierStarterCoinGiven;
+    public static ConfigEntry<bool> CourierDangerIcon, CourierDangerSound;
     public static ConfigEntry<float> CourierCoinChance;
     public static ConfigEntry<UnityEngine.KeyCode> CourierMenuKey;
     public static ConfigEntry<int> SoulCartValueCap;
@@ -485,6 +486,8 @@ public static class ModConfig
         CourierCoins = cfg.Bind("Courier", "GachaCoins", 0, "Your gacha coins (found rarely on levels; one pull each).");
         CourierFragments = cfg.Bind("Courier", "CoinHalves", 0, "Half coins from duplicate pulls; two make a coin.");
         CourierStarterCoinGiven = cfg.Bind("Courier", "StarterCoinGiven", false, "Whether you already got the free starter coin.");
+        CourierDangerIcon = cfg.Bind("Courier", "DangerIcon", true, "Show the red \"!\" over your pets when a monster is near. Only changes your own screen (also in the courier menu: MORE).");
+        CourierDangerSound = cfg.Bind("Courier", "DangerSound", true, "Play the pets' alarm chirp when a monster comes near. Only changes what you hear (also in the courier menu: MORE).");
         CourierCoinChance = BindFloat(cfg, "Courier", "CoinChancePerLevel", Courier.CourierRules.CoinChance, 0f, 1f, "HOST: chance that a gacha coin is hidden somewhere on a level.");
         CourierMenuKey = cfg.Bind("Courier", "MenuKey", UnityEngine.KeyCode.C, "Opens the courier command menu. Arrow keys move, Enter/Right picks, Left goes back.");
         if (CourierMenuKey.Value == UnityEngine.KeyCode.G) CourierMenuKey.Value = UnityEngine.KeyCode.C;

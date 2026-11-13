@@ -297,10 +297,20 @@ internal sealed class CourierMenu
             Note = !fly ? L.L("PERK", "ПЕРК") : info.Flying ? L.L("ON", "ВКЛ") : L.L("OFF", "ВЫКЛ"),
             Enabled = fly, Pick = () => m.Request(CourierManager.Op.Fly, info.Flying ? 0 : 1, 0),
         });
+        Toggle(list, ModConfig.CourierDangerIcon, L.L("DANGER ICON", "ЗНАК ОПАСНОСТИ"));
+        Toggle(list, ModConfig.CourierDangerSound, L.L("DANGER SOUND", "ЗВУК ОПАСНОСТИ"));
         list.Add(new Entry { Text = L.L("GACHA", "ГАЧА") + " ›", Note = L.L($"{CourierGacha.Coins} COINS", $"МОНЕТ: {CourierGacha.Coins}"), Pick = () => Go(Page.Gacha) });
         list.Add(new Entry { Text = L.L("APPEARANCE", "ВНЕШНИЙ ВИД") + " ›", Pick = () => Go(Page.Look) });
         return list;
     }
+
+    // A personal on/off setting, saved to the config (Enter or Left/Right flips it).
+    private static void Toggle(List<Entry> list, BepInEx.Configuration.ConfigEntry<bool> setting, string text) =>
+        list.Add(new Entry
+        {
+            Text = text, Note = setting.Value ? L.L("ON", "ВКЛ") : L.L("OFF", "ВЫКЛ"),
+            Step = _ => setting.Value = !setting.Value,
+        });
 
     // Backpack: stash what you hold, take things back out.
     private List<Entry> BackpackPage(CourierManager m)
