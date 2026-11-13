@@ -59,7 +59,7 @@
   <ItemGroup>
     <UnityModule Include="$(ManagedDir)\UnityEngine.dll;$(ManagedDir)\UnityEngine.*Module.dll" />
     <Reference Include="@(UnityModule->'%(Filename)')">
-      <HintPath>%(UnityModule.FullPath)</HintPath>
+      <HintPath>$(ManagedDir)\%(Identity).dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
