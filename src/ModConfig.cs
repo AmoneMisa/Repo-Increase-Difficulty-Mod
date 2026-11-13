@@ -268,12 +268,6 @@ public static class ModConfig
     public static ConfigEntry<int> MapVoteChoices;
     public static ConfigEntry<float> MapVoteSeconds;
 
-    // --- Photon reachability HUD ---
-    // Small main-menu overlay pinging Photon region name servers so you can see which
-    // regions are reachable / their latency before hosting or joining.
-    public static ConfigEntry<bool> PhotonHudEnabled;
-    public static ConfigEntry<string> PhotonHudRegions;
-
     // --- Auto Backup Saves ---
     // REPO deletes the run save when you wipe / fail a level (DataDirector.SaveDeleteCheck).
     // Automatic deletion is always blocked. This toggle only controls extra snapshots,
@@ -383,12 +377,6 @@ public static class ModConfig
     public static ConfigEntry<UnityEngine.KeyCode> FlashStunKey;
     public static ConfigEntry<float> FlashStunSeconds, FlashStunCooldown;
     public static ConfigEntry<int> ShopExtraItems, ShopExtraUpgrades;
-
-    // --- Diagnostics ---
-    // Temporary kill-switches to isolate whether the mod interferes with the game's
-    // own Photon connection (regions spinner / stuck loading). Both default off.
-    public static ConfigEntry<bool> DiagnosticDisablePatches;
-    public static ConfigEntry<bool> DiagnosticDisableRuntimeObjects;
 
     // REPOConfig (REPOModding) reads this exact string tag on a ConfigEntry to exclude it
     // from the in-game menu. Used for free-form strings it can't render as a slider/list.
@@ -590,7 +578,6 @@ public static class ModConfig
         ShoppingListEnabled = Module(cfg, "Shopping List", "Enabled", false, "ShoppingList", "While in the shop, show a panel listing everything in the cart (yours and your friends'): quantity, name and summed price per item, colour-coded by item type, with a running total vs. your team's currency.");
         LevelInfoEnabled = Module(cfg, "Level Info", "Enabled", true, "LevelInfo", "Show a panel on the right side of the screen that logs each level change (run number + name, plus any rolled surprise modifiers).");
         ServerInfoEnabled = Module(cfg, "Server Info", "Enabled", true, "ServerInfo", "Show a passive overlay in the lobby/menu with the current Photon region, ping, room code and player count. Reads connection state only — never opens sockets, so it's safe on the main menu.");
-        PhotonHudEnabled = Module(cfg, "Photon HUD", "Enabled", false, "PhotonHud", "OPT-IN DIAGNOSTIC (default off). Show a small overlay on the main menu with reachability/latency to Photon region name servers. " + "Leave this OFF for normal play: it TCP-probes the same Photon name servers the game uses, and that connection churn can stall REPO's own 'pick best region' step (regions spin forever / stuck loading online). Only enable it briefly when you're actively diagnosing a connection problem.");
     }
 
     private static ConfigEntry<bool> Module(ConfigFile cfg, string oldSection, string oldKey, bool def, string key, string desc)
@@ -610,13 +597,6 @@ public static class ModConfig
     public static void Init(ConfigFile cfg)
     {
         BindModules(cfg);
-
-        DiagnosticDisablePatches = cfg.Bind(
-            "Diagnostics", "DisablePatches", false,
-            "DIAGNOSTIC (default off). If true, skip ALL Harmony gameplay patches. Used only to isolate whether the mod's patches interfere with Photon connecting. Leave off for normal play.");
-        DiagnosticDisableRuntimeObjects = cfg.Bind(
-            "Diagnostics", "DisableRuntimeObjects", false,
-            "DIAGNOSTIC (default off). If true, skip creating the mod's runtime menu/HUD objects (networking, timer, ping, Photon HUD). Used only to isolate whether they interfere with Photon connecting. Leave off for normal play.");
 
         NetworkDiagnosticsEnabled = cfg.Bind("Voice Recovery", "NetworkDiagnostics", false,
             "Log actual Photon room RTT, jitter and cumulative reliable resends once per minute. Does not change transport or region.");
@@ -962,14 +942,6 @@ public static class ModConfig
         MapVoteSeconds = BindFloat(cfg,
             "Map Vote", "Seconds", 60f, 10f, 300f,
             "How long the vote stays open (host-authoritative). It closes early the moment everyone in the lobby has voted. When it closes, the leading map is locked in and used when the truck departs. If nobody votes, the game's normal random selection is used.");
-
-        // --- Photon reachability HUD ---
-                PhotonHudRegions = cfg.Bind(
-            "Photon HUD", "Regions", "ns=ns.photonengine.io, exitgames=ns.exitgames.com",
-            new ConfigDescription(
-                "Comma-separated 'label=host' (or 'label=host:port') pairs to TCP-probe for the HUD. " +
-                "Default probes the Photon name servers (port 443) — the endpoint the game contacts when connecting with an empty/best region, which is where 'stuck loading online' usually hangs.",
-                null, HideFromRepoConfig));
 
         // --- Level Info panel ---
                 LevelInfoToggleKey = cfg.Bind(

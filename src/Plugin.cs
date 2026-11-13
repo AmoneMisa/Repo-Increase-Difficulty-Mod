@@ -41,19 +41,14 @@ public class Plugin : BaseUnityPlugin
         // Bind config entries first so patches can read them.
         ModConfig.Init(Config);
 
-        if (ModConfig.DiagnosticDisablePatches.Value)
-            Log.LogWarning("[Diagnostics] DisablePatches=true — skipping ALL Harmony patches.");
-        else
+        // Patch class-by-class: one patch broken by a game update must not abort the rest
+        // (a throw out of PatchAll used to kill Awake before the runtime object / upgrades existed).
+        foreach (var type in typeof(Plugin).Assembly.GetTypes())
         {
-            // Patch class-by-class: one patch broken by a game update must not abort the rest
-            // (a throw out of PatchAll used to kill Awake before the runtime object / upgrades existed).
-            foreach (var type in typeof(Plugin).Assembly.GetTypes())
-            {
-                if (!type.IsDefined(typeof(HarmonyPatch), true))
-                    continue;
-                try { _harmony.CreateClassProcessor(type).Patch(); }
-                catch (System.Exception e) { Log.LogError($"Patch {type.FullName} failed: {e.Message}"); }
-            }
+            if (!type.IsDefined(typeof(HarmonyPatch), true))
+                continue;
+            try { _harmony.CreateClassProcessor(type).Patch(); }
+            catch (System.Exception e) { Log.LogError($"Patch {type.FullName} failed: {e.Message}"); }
         }
 
         // Declare custom shop upgrades before the registration patch fires (on RunStartStats).
@@ -73,18 +68,11 @@ public class Plugin : BaseUnityPlugin
         Skills.SkillStore.Register();
         // Wing cosmetics register from MetaManager.Awake (see WingCosmetics), not here.
 
-        if (ModConfig.DiagnosticDisableRuntimeObjects.Value)
-        {
-            Log.LogWarning("[Diagnostics] DisableRuntimeObjects=true — skipping runtime menu/HUD objects.");
-        }
-        else
-        {
-            // Ensure the runtime object exists on every scene load (and try once now in case
-            // a scene is already active). sceneLoaded is a static event, so it keeps firing
-            // even though this plugin MonoBehaviour is destroyed on the boot transition.
-            SceneManager.sceneLoaded += OnSceneLoaded;
-            EnsureRuntimeObject();
-        }
+        // Ensure the runtime object exists on every scene load (and try once now in case
+        // a scene is already active). sceneLoaded is a static event, so it keeps firing
+        // even though this plugin MonoBehaviour is destroyed on the boot transition.
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        EnsureRuntimeObject();
 
         Log.LogInfo($"{PluginInfo.PLUGIN_NAME} v{PluginInfo.PLUGIN_VERSION} loaded.");
     }
@@ -105,8 +93,6 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<VoiceRecoveryController>();
         // Host-side auto Loot Cash-In for the "Loot Cash-In" truck upgrade (sells leftovers on quota close).
         netObject.AddComponent<Upgrades.TruckUpgrades.SellController>();
-        // Main-menu Photon name-server reachability overlay (IMGUI, background TCP probes).
-        netObject.AddComponent<PhotonHud>();
         // Team ping system (input + native ValuableDiscoverGraphic highlights, synced over Photon).
         netObject.AddComponent<PingHud>();
         // Level info overlay (native TMP: top-centre title + top-right modifier list, toggle with LevelInfoToggleKey).

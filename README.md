@@ -305,14 +305,12 @@ only on a successful extraction.
   current view. Use the normal map key or hold Tab; arrows pan, map zoom keys change scale,
   and Home restores follow. Toggle `Modules/SpectatorMap`; key and size are in `Spectator Map`.
 
-#### HUD & diagnostics
+#### HUD
 
 - **Level Info** panel — logs each level change (run number + name, plus rolled surprises) using
   the game's native TMP font.
 - **Server Info** overlay — Photon region, ping, room code and player count (read-only, no sockets).
 - **Level timer** on the native HUD for timed levels.
-- **Photon HUD** — opt-in diagnostic that probes Photon region name servers (leave off for normal play).
-- **Diagnostics** — switches to disable all patches or all runtime objects for troubleshooting.
 
 ### Default keys
 
@@ -401,7 +399,7 @@ each drone and gear item, each difficulty scaling stat, lobby tools, HUDs...), s
 through tuning values to find them; values from the old sections are carried over the first time. Other sections: General, Enemies, Quota, Surprises, Surprise Modifiers, Modifier Tuning,
 Player Upgrades, Truck Upgrades, Ping, Shop, Map Vote, Late Join, Item Unstuck, Loot Safety Net, More Players,
 Spectator Map, Round Results, Auto Backup Saves, and HUD toggles (Level Info,
-Server Info, Shopping List, Photon HUD), plus Voice Recovery and Diagnostics.
+Server Info, Shopping List), plus Voice Recovery.
 
 ### Building
 
@@ -705,13 +703,11 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
   клавиши масштаба меняют приближение, Home возвращает слежение. Переключатель —
   `Modules/SpectatorMap`, клавиша и размер — в секции `Spectator Map`.
 
-#### HUD и диагностика
+#### HUD
 
 - Панель **Level Info** — журнал смены уровней (номер забега + название, выпавшие сюрпризы) родным шрифтом TMP.
 - Оверлей **Server Info** — регион Photon, пинг, код комнаты и число игроков (только чтение, без сокетов).
 - **Таймер уровня** в родном HUD для уровней на время.
-- **Photon HUD** — опциональная диагностика, пробует серверы регионов Photon (в обычной игре держи выключенным).
-- **Diagnostics** — переключатели, отключающие все патчи или все рантайм-объекты для поиска проблем.
 
 ### Курьер-питомец
 
@@ -785,7 +781,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 игре через REPOConfig. **Все переключатели модулей собраны в первой секции `Modules`** (сюрпризы, улучшения, каждый дрон и предмет, каждая характеристика роста сложности, лобби-инструменты, HUD...), чтобы не листать значения настройки; значения из прежних секций переносятся при первом запуске. Остальные секции: General, Enemies, Quota, Surprises, Surprise Modifiers, Modifier
 Tuning, Player Upgrades, Truck Upgrades, Ping, Shop, Map Vote, Late Join, Item Unstuck, Loot Safety Net, More
 Players, Spectator Map, Round Results, Auto Backup Saves, переключатели HUD
-(Level Info, Server Info, Shopping List, Photon HUD), Voice Recovery и Diagnostics.
+(Level Info, Server Info, Shopping List) и Voice Recovery.
 
 ### Сборка
 
