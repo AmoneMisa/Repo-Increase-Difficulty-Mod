@@ -137,7 +137,7 @@ internal sealed class BasiliskBrain : MonsterBrain
                 Halt();
                 if (Target == null) { SetState(Hide); break; }
                 Face(Target.transform.position, 12f);
-                if (StateTime >= .8f) Announce(Lunge);
+                if (StateTime >= MonsterRules.BasiliskRattleSeconds) Announce(Lunge);
                 break;
             case Lunge:
                 if (Target == null) { Announce(Retreat); break; }
@@ -158,7 +158,7 @@ internal sealed class BasiliskBrain : MonsterBrain
                 Halt();
                 if (Target == null) { SetState(Hide); break; }
                 Face(Target.transform.position, 14f);
-                if (StateTime < .35f) break;
+                if (StateTime < MonsterRules.BasiliskBiteWindup) break;
                 _biteReady = Time.time + Economy.ExtendedMoons.Cooldown(MonsterRules.BasiliskBiteCooldown);
                 if (InReach(Target, 2.1f) && MayAttack(Target))
                 {

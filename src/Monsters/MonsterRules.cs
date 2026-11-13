@@ -93,6 +93,8 @@ internal static class MonsterRules
     internal const float ConstrictMax = 5f, ConstrictPerSecond = 5f, ConstrictEscapeSeconds = 2.4f;
     internal const float BasiliskGrabCooldown = 8f, BasiliskBiteCooldown = 10f, BasiliskMissCooldown = 5f;
     internal const int VenomBiteDamage = 16;
+    /// <summary>The rattle before the lunge and the wind-up of the venom bite (the body animates to the same timers).</summary>
+    internal const float BasiliskRattleSeconds = .8f, BasiliskBiteWindup = .35f;
     internal const float VenomPerSecond = 4f, VenomSeconds = 6f;
 
     /// <summary>Seconds of active struggling to break free; Evasion I/II/III makes it 15/30/45% faster.</summary>
@@ -368,12 +370,61 @@ internal static class MonsterAnimRules
     internal const float FlinchSeconds = .4f, FlinchPeak = .06f;
 
     /// <summary>Flinch strength 0..1 this long after a hit: a fast snap to 1, then an eased return to 0.</summary>
-    internal static float Flinch(float sinceHit)
+    internal static float Flinch(float sinceHit) => Impulse(sinceHit, FlinchPeak, FlinchSeconds);
+
+    /// <summary>A one-off jolt 0..1: a fast snap to 1 at <paramref name="peak"/>, then an eased return to 0.</summary>
+    internal static float Impulse(float since, float peak, float seconds)
     {
-        if (sinceHit < 0f || sinceHit >= FlinchSeconds) return 0f;
-        if (sinceHit < FlinchPeak) return sinceHit / FlinchPeak;
-        float u = 1f - (sinceHit - FlinchPeak) / (FlinchSeconds - FlinchPeak);
+        if (since < 0f || since >= seconds) return 0f;
+        if (since < peak) return since / peak;
+        float u = 1f - (since - peak) / (seconds - peak);
         return u * u;
+    }
+
+    // ---- attack timelines. Every attack is wind-up -> strike -> follow-through, as continuous curves of the
+    // state time, so a pose never jumps: the strike lands exactly when the host deals the damage and the
+    // follow-through carries on into the next state.
+
+    /// <summary>Smoothstep of a 0..1 fraction (clamped): no speed at either end.</summary>
+    internal static float Ease(float u)
+    {
+        if (u <= 0f) return 0f;
+        if (u >= 1f) return 1f;
+        return u * u * (3f - 2f * u);
+    }
+
+    /// <summary>
+    /// Wind-up 0..1 over <paramref name="seconds"/>: most of the way in the first third (the weapon comes up
+    /// where players can read it), then a slow draw to the full pose.
+    /// </summary>
+    internal static float Draw(float st, float seconds)
+    {
+        if (seconds <= 0f) return 1f;
+        return .75f * Ease(st / (seconds * .35f)) + .25f * Ease(st / seconds);
+    }
+
+    /// <summary>How far a strike swings past its end pose, and how long it takes to settle back onto it.</summary>
+    internal const float StrikeOvershoot = .1f, StrikeSettle = .24f;
+
+    /// <summary>
+    /// Strike 0..1: nothing until <paramref name="lead"/> seconds before <paramref name="hitAt"/>, then it
+    /// accelerates and is exactly 1 at the hit; after it, it swings a little past (follow-through) and settles on 1.
+    /// </summary>
+    internal static float Strike(float st, float hitAt, float lead)
+    {
+        float s = st - (hitAt - lead);
+        if (s <= 0f) return 0f;
+        if (s < lead) { float u = s / lead; return u * u; }
+        float v = (s - lead) / StrikeSettle;
+        if (v >= 1f) return 1f;
+        return 1f + StrikeOvershoot * (float)Math.Sin(Math.PI * v) * (1f - v);
+    }
+
+    /// <summary>Weight of the previous attack's end pose: held for <paramref name="hold"/>, then eased out.</summary>
+    internal static float Release(float since, float hold, float fade)
+    {
+        if (since <= hold) return 1f;
+        return fade <= 0f ? 0f : 1f - Ease((since - hold) / fade);
     }
 }
 

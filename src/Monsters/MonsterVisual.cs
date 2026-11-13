@@ -75,6 +75,10 @@ internal sealed class MonsterVisual : MonoBehaviour
     // struggle in a player's grip (grab list) and the stun (Enemy.Stunned).
     private float _hitAt = -10f, _hitSide = 1f, _held, _turn, _lastYaw, _move;
     private bool _stunned, _wasStunned;
+    // The attack shown now, the one before it and when it changed: a strike's follow-through plays on into the
+    // next state instead of being cut off by it.
+    private MonsterAnim _anim, _animWas;
+    private float _animAt, _tossAt = -10f;
     private readonly List<(Material material, string property, Color color)> _tints = new();
 
     internal void Configure(MonsterKind kind, string art, float height) { _kind = kind; _art = art; _height = height; }
@@ -296,6 +300,9 @@ internal sealed class MonsterVisual : MonoBehaviour
     }
 
     internal void Burst() => _pop = 0f;
+
+    /// <summary>The bull's close-range head toss (called on every client with its effect).</summary>
+    internal void Toss() => _tossAt = Time.time;
 
     private LineRenderer _ring;
 
@@ -534,6 +541,8 @@ internal sealed class MonsterVisual : MonoBehaviour
     // ------------------------------------------------------------------ animation
 
     private static float Smooth(float u) { u = Mathf.Clamp01(u); return u * u * (3f - 2f * u); }
+    // Unclamped, so a strike's overshoot swings a little past the end pose.
+    private static float Mix(float a, float b, float w) => Mathf.LerpUnclamped(a, b, w);
     private static void Rot(Joint j, float x, float y, float z, float k = 16f) { if (j != null) { j.Target = Quaternion.Euler(x, y, z); j.K = k; } }
     private static void Rot(Joint j, Quaternion target, float k) { if (j != null) { j.Target = target; j.K = k; } }
     private Joint J(string name) => _joints.TryGetValue(name, out var j) ? j : null;
@@ -557,6 +566,8 @@ internal sealed class MonsterVisual : MonoBehaviour
         _held = Mathf.MoveTowards(_held, MonsterAnimRules.Struggle(_brain.Dead, stunned, held), dt * 5f);
         if (stunned && !_wasStunned) { _hitAt = t; _hitSide = Random.value < .5f ? -1f : 1f; } // the stun starts with a jolt
         _wasStunned = stunned;
+        if (anim != _anim) { _animWas = _anim; _anim = anim; _animAt = t; }
+        if (stunned || held || _brain.Dead) _animWas = MonsterAnim.None; // a reaction ends any follow-through
         foreach (var j in _all) { j.Target = Quaternion.identity; j.K = 16f; }
         _tilt = Quaternion.identity; _shift = Vector3.zero; _eye = 0f; _fire = 0f; _volt = 0f; _lightPower = 0f; _tethered = false;
         switch (_kind)
@@ -830,42 +841,57 @@ internal sealed class MonsterVisual : MonoBehaviour
         {
             case MonsterAnim.FirePrep:
             {
-                float u = Mathf.Clamp01(st / MonsterRules.FireballPrepare), wind = Smooth((u - .82f) / .18f);
-                // Rest geometry already has a bent elbow; the old 168-degree rotation
-                // folded the casting hand back through the hat rather than winding up.
-                rightX = Mathf.Lerp(-65f, -88f, wind) + Mathf.Sin(t * 31f) * 2f * u;
-                rightZ = Mathf.Lerp(28f, 12f, wind);
-                head = -6f;
+                // The palm lifts, cradles the growing flame in a slow circle, and in the last moments the arm winds
+                // back behind the shoulder as she leans away. (Rest geometry already has a bent elbow: a larger
+                // rotation folds the casting hand back through the hat.)
+                float prep = MonsterRules.FireballPrepare, u = Mathf.Clamp01(st / prep);
+                float raise = MonsterAnimRules.Ease(st / .4f), wind = MonsterAnimRules.Ease((st - (prep - .42f)) / .36f);
+                rightX = Mathf.Lerp(rightX, -65f + Mathf.Sin(st * 3.2f) * 3f * (1f - wind), raise) - 25f * wind;
+                rightZ = 28f * raise - 16f * wind;
+                head = Mathf.Lerp(head, -6f, raise) - 4f * wind;
                 _fire = Mathf.Lerp(.15f, 1f, u);
-                _tilt = Quaternion.Euler(-6f * u, 0f, 0f);
+                _tilt = Quaternion.Euler(-6f * u * raise - 5f * wind, 0f, sway * 2f * (1f - raise));
+                k = 22f;
                 break;
             }
             case MonsterAnim.FireCast:
             {
-                float u = Mathf.Clamp01(st / .4f);
-                rightX = Mathf.Lerp(-88f, -46f, Smooth(u / .3f)); rightZ = -8f; k = 36f;
-                head = 7f;
-                _fire = Mathf.Max(0f, .3f - u);
-                _tilt = Quaternion.Euler(9f * (1f - u), 0f, 0f);
+                // The throw: the arm whips forward from the wound-up pose, swings a little past and settles while
+                // the body follows it.
+                float hit = MonsterAnimRules.Strike(st, .1f, .1f);
+                rightX = Mix(-90f, -42f, hit); rightZ = Mix(12f, -8f, hit); k = 30f;
+                head = Mix(-10f, 7f, hit);
+                _fire = .3f * (1f - Mathf.Clamp01(st / .2f));
+                _tilt = Quaternion.Euler(Mix(-11f, 9f, hit), 0f, 0f);
                 break;
             }
             case MonsterAnim.ZapPrep:
             {
-                float u = Mathf.Clamp01(st / .8f);
-                leftX = rightX = Mathf.Lerp(-60f, -165f, Smooth(u)) + Mathf.Sin(t * 40f) * 3f;
-                rightZ = 14f; leftZ = -14f;
-                head = -12f * u;
+                // Both arms sweep up overhead (the broom hand lets go a beat later) with sparks gathering, then
+                // spread and pull back just before the thrust.
+                float prep = MonsterRules.LevitatePrepare, u = Mathf.Clamp01(st / prep);
+                float up = MonsterAnimRules.Ease(st / (prep * .6f)), upLeft = MonsterAnimRules.Ease((st - .12f) / (prep * .6f));
+                float coil = MonsterAnimRules.Ease((st - (prep - .3f)) / .3f), tremble = Mathf.Sin(t * 13f) * 1.2f * u;
+                rightX = Mathf.Lerp(rightX, -165f, up) + tremble; leftX = Mathf.Lerp(leftX, -165f, upLeft) - tremble;
+                rightZ = 14f * up + 8f * coil; leftZ = -14f * upLeft - 8f * coil;
+                head = Mathf.Lerp(head, -12f, up);
                 _volt = Mathf.Lerp(.2f, 1f, u);
-                _tilt = Quaternion.Euler(-8f * u, 0f, 0f);
+                _tilt = Quaternion.Euler(-8f * up - 3f * coil, 0f, sway * 2f * (1f - up));
+                k = 22f;
                 break;
             }
             case MonsterAnim.Zap:
-                leftX = rightX = -84f + Mathf.Sin(t * 37f) * 4f;
-                rightZ = -10f; leftZ = 10f;
-                head = 8f;
+            {
+                // Both arms thrust down at the victim and stay there, straining slowly against the hold.
+                float hit = MonsterAnimRules.Strike(st, .14f, .14f), strain = Mathf.Sin(t * 5.5f);
+                leftX = rightX = Mix(-165f, -84f, hit) + strain * 2.5f + Mathf.Sin(t * 17f);
+                rightZ = Mix(22f, -10f, hit); leftZ = -rightZ;
+                head = Mix(-12f, 8f, hit);
                 _volt = .8f + .2f * Mathf.Sin(t * 29f);
-                _tilt = Quaternion.Euler(6f, 0f, Mathf.Sin(t * 23f) * 1.5f);
+                _tilt = Quaternion.Euler(Mix(-11f, 6f, hit), 0f, strain * 1.2f);
+                k = 28f;
                 break;
+            }
         }
         if (stunned) { leftX = rightX = 15f; rightZ = 40f; leftZ = -40f; head = 20f; _shift = Vector3.zero; }
         Rot(_armL, leftX, 0f, leftZ, k);
@@ -880,6 +906,9 @@ internal sealed class MonsterVisual : MonoBehaviour
     // (0-2) level it out again, so the head looks ahead instead of the neck dipping through the floor first.
     private static readonly float[] NeckRise = { -26f, -26f, -20f, 4f, 26f, 28f };
 
+    // Brain timers the body follows: the rattle before the lunge, and the bite with its strike lead-in.
+    private const float BasiliskRattle = MonsterRules.BasiliskRattleSeconds, BasiliskBite = MonsterRules.BasiliskBiteWindup, BasiliskBiteLead = .09f;
+
     // Basilisk: slithers low; before the lunge the neck rears up, the jaw opens in a hiss and the tail tip
     // rattles; the lunge is a straight dart; constricting, the body winds into a tightening ring. The bite is a
     // low sideways S with the jaw wide open.
@@ -888,25 +917,56 @@ internal sealed class MonsterVisual : MonoBehaviour
         // Crawling: the S-wave grows with speed (a slow ripple at rest) and the body slides from side to side.
         float wave = Mathf.Lerp(6f, pose == MonsterPose.Flee ? 20f : 15f, _move), rise = 0f, jaw = 0f, coil = 0f, bite = 0f, headYaw = 0f, headPitch = 0f, k = 14f;
         bool rattle = false;
+        // dart: how far the whole snake is thrown forward (a share of its own scale) by a lunge or a bite.
+        float dart = 0f, since = t - _animAt;
         _eye = .65f;
         switch (anim)
         {
             case MonsterAnim.Rattle:
-                rise = Smooth(st / .3f); jaw = 24f + 6f * Mathf.Sin(t * 20f); rattle = true; wave = 3f;
-                headYaw = Mathf.Sin(t * 5f) * 12f * rise; headPitch = 6f;
+            {
+                // The neck rears up, the head weaves slowly with the jaw open in a hiss; in the last fifth of a
+                // second it pulls back and gapes wider - the lunge starts from there.
+                float up = MonsterAnimRules.Ease(st / .3f), pull = MonsterAnimRules.Ease((st - (BasiliskRattle - .22f)) / .22f);
+                rise = up + .12f * pull; jaw = (24f + 4f * Mathf.Sin(st * 11f)) * up + 14f * pull; rattle = true; wave = 3f;
+                headYaw = Mathf.Sin(st * 5f) * 12f * up * (1f - pull); headPitch = 6f * up - 8f * pull;
+                dart = -.05f * pull;
                 _eye = .8f + .2f * Mathf.Sin(t * 14f);
                 break;
+            }
             case MonsterAnim.BitePrep:
-                rise = .4f; bite = Smooth(st / .2f); jaw = 44f; wave = 2f; _eye = 1f;
+            {
+                // The neck draws into an S with the jaw wide open, then whips straight: the head snaps forward and
+                // the jaw shuts exactly when the host deals the bite.
+                float snap = MonsterAnimRules.Strike(st, BasiliskBite, BasiliskBiteLead);
+                rise = Mix(.4f, .25f, snap); bite = MonsterAnimRules.Ease(st / .2f) * (1f - Mathf.Clamp01(snap));
+                jaw = Mix(44f * MonsterAnimRules.Ease(st / .12f), 8f, snap); headPitch = 8f * snap;
+                dart = .14f * snap; wave = 2f; k = 30f; _eye = 1f;
                 break;
+            }
+            case MonsterAnim.None when _animWas == MonsterAnim.BitePrep && since < .45f && !stunned:
+            {
+                // The bite holds for a moment before it lets go and slides back.
+                float carry = MonsterAnimRules.Release(since, .1f, .3f);
+                float snap = MonsterAnimRules.Strike(BasiliskBite + since, BasiliskBite, BasiliskBiteLead) * carry;
+                rise = .25f * carry; jaw = 8f * carry; headPitch = 8f * snap; dart = .14f * snap;
+                wave = Mathf.Lerp(wave, 2f, carry); k = 30f; _eye = Mathf.Lerp(.65f, 1f, carry);
+                break;
+            }
             case MonsterAnim.Lunge:
-                jaw = 48f; wave = 2f; k = 32f; headPitch = -4f; _eye = 1f;
+            {
+                // Out of the reared pose the neck shoots level and the whole body darts after it.
+                float go = MonsterAnimRules.Ease(st / .12f);
+                rise = _animWas == MonsterAnim.Rattle ? 1.12f * (1f - go) : 0f;
+                jaw = Mathf.Lerp(38f, 48f, go); wave = 2f; k = 32f; headPitch = Mathf.Lerp(-2f, -4f, go); _eye = 1f;
+                dart = Mathf.Lerp(-.05f, .1f, go);
                 break;
+            }
             case MonsterAnim.Coil:
-                coil = Smooth(st / .5f); rise = .5f; jaw = 14f; wave = 0f; _eye = .9f;
+                coil = MonsterAnimRules.Ease(st / .5f); rise = .5f; jaw = Mathf.Lerp(40f, 14f, coil); wave = 0f; _eye = .9f;
                 break;
         }
         if (anim == MonsterAnim.None && !stunned) _shift = Vector3.right * (Mathf.Sin(_phase * 1.5f) * .03f * _move);
+        if (!stunned) _shift += Vector3.forward * (dart * _modelScale);
         if (stunned) { wave = 0f; jaw = 10f; _eye = .2f; }
         // Picked up: a snake in hand curls into a tight ring, head tucked in on top, hissing.
         bool held = _brain.Held && !_brain.Dead;
@@ -945,25 +1005,46 @@ internal sealed class MonsterVisual : MonoBehaviour
     private void AnimateGorgon(MonsterAnim anim, float t, float st, float move, bool stunned)
     {
         float head = Mathf.Sin(t * 2f) * 3f, headYaw = 0f, jaw = 0f;
-        bool gallop = false, paw = false;
+        // gallop: 0 walking .. 1 full gallop; paw: how much the front left hoof scrapes; scrape: where in a scrape.
+        float gallop = 0f, paw = 0f, scrape = 0f, headK = 14f;
         _eye = .2f;
         switch (anim)
         {
             case MonsterAnim.Acquire:
-                head = 16f * Mathf.Clamp01(st / .6f); _eye = .45f;
+            {
+                // Locks on: the head sinks and the weight settles back onto the hind legs.
+                float u = MonsterAnimRules.Ease(st / .6f);
+                head = Mathf.Lerp(head, 18f, u); _eye = Mathf.Lerp(.2f, .45f, u);
+                _tilt = Quaternion.Euler(-2.5f * u, 0f, 0f);
+                _shift = Vector3.back * (.03f * u * _modelScale);
                 break;
+            }
             case MonsterAnim.Roar:
-                head = 30f + Mathf.Sin(t * 26f) * 2f; headYaw = Mathf.Sin(t * 22f) * 5f; jaw = 30f + Mathf.Sin(t * 30f) * 4f;
-                paw = true; _eye = .6f;
-                _tilt = Quaternion.Euler(4f, 0f, Mathf.Sin(t * 38f) * 1.3f);
+            {
+                // Bellows with the head low, swinging it slowly, and scrapes the floor; in the last quarter second
+                // it gathers itself - sinks back, jaw closing, hooves planted - and the charge launches from there.
+                float open = MonsterAnimRules.Ease(st / .22f), coil = MonsterAnimRules.Ease((st - (MonsterRules.RoarSeconds - .28f)) / .28f);
+                float loud = open * (1f - coil);
+                head = Mathf.Lerp(18f, 32f, open) + 6f * coil + Mathf.Sin(st * 7f) * 2.5f * loud;
+                headYaw = Mathf.Sin(st * 5.2f) * 7f * loud;
+                jaw = 30f * open - 14f * coil + Mathf.Sin(st * 9f) * 3f * loud;
+                paw = loud; scrape = Mathf.Repeat(st * 1.8f, 1f);
+                _eye = Mathf.Lerp(.45f, .75f, open);
+                _tilt = Quaternion.Euler(Mathf.Lerp(-2.5f, 4f, open) - 8f * coil, 0f, Mathf.Sin(st * 19f) * .5f * loud);
+                _shift = (Vector3.back * (.03f * (1f - open) + .08f * coil) + Vector3.down * (.03f * coil)) * _modelScale;
                 break;
+            }
             case MonsterAnim.Charge:
-                // Head down with the horns forward, body pitched into the run, bounding gallop.
-                head = 44f; jaw = 10f; gallop = true; _eye = .9f;
-                _tilt = Quaternion.Euler(10f + Mathf.Sin(_phase * 3f) * 5f, 0f, Mathf.Sin(_phase * 1.5f) * 2f);
-                _shift = Vector3.up * (Mathf.Abs(Mathf.Sin(_phase * 3f)) * .09f * _modelScale) + Vector3.forward * (.05f * _modelScale);
+            {
+                // Springs out of the crouch into the gallop: head down with the horns forward (held steady against
+                // the bounding body), body pitched into the run.
+                float go = MonsterAnimRules.Ease(st / .3f), bound = Mathf.Sin(_phase * 3f);
+                head = Mathf.Lerp(38f, 44f, go) - bound * 3f * go; jaw = 10f; gallop = go; _eye = .9f;
+                _tilt = Quaternion.Euler(Mathf.Lerp(-6f, 10f, go) + bound * 5f * go, 0f, Mathf.Sin(_phase * 1.5f) * 2f * go);
+                _shift = (Vector3.up * (bound * bound * .09f * go) + Vector3.forward * Mathf.Lerp(-.08f, .05f, go)) * _modelScale;
                 Glow(_head != null ? _head.T : null, new Color(1f, .25f, .05f), 1.4f, 3f);
                 break;
+            }
             case MonsterAnim.Stare:
             {
                 float u = Mathf.Clamp01(st / 2f); // unused since the balance pass (no Death Stare); kept for old snapshots
@@ -974,8 +1055,16 @@ internal sealed class MonsterVisual : MonoBehaviour
                 break;
             }
             case MonsterAnim.Daze:
-                head = 22f; headYaw = Mathf.Sin(t * 5f) * 20f; jaw = 14f; _eye = .08f;
+            {
+                // Out of a charge the body recoils from the stop; then the hanging head shakes, less and less.
+                float jolt = _animWas == MonsterAnim.Charge ? MonsterAnimRules.Impulse(st, .07f, .5f) : 0f;
+                float fade = .3f + .7f * Mathf.Exp(-st * .9f);
+                head = 22f - 30f * jolt; headYaw = Mathf.Sin(st * 5f) * 20f * fade; jaw = 14f; _eye = .08f;
+                _tilt = Quaternion.Euler(-9f * jolt, 0f, Mathf.Sin(st * 3.3f) * 3f * fade);
+                _shift = Vector3.back * (.08f * jolt * _modelScale);
+                if (jolt > .01f) headK = 30f;
                 break;
+            }
         }
         if (stunned)
         {
@@ -991,16 +1080,85 @@ internal sealed class MonsterVisual : MonoBehaviour
             _shift = Vector3.up * (Mathf.Abs(Mathf.Sin(_phase * 2f)) * .03f * move);
             head += Mathf.Sin(_phase * 4f) * 4f * move;
         }
+        // Head toss (too close to charge): the horns rip upward at once, then the head comes back down.
+        float toss = stunned ? 0f : MonsterAnimRules.Impulse(t - _tossAt, .08f, .6f);
+        if (toss > .01f)
+        {
+            head -= 46f * toss; jaw += 14f * toss; headK = 34f;
+            _tilt = Quaternion.Euler(-7f * toss, 0f, 0f) * _tilt;
+            _shift += Vector3.forward * (.06f * toss * _modelScale);
+        }
+        // One scrape: the hoof lifts quickly and drags back slowly.
+        float lift = scrape < .28f ? MonsterAnimRules.Ease(scrape / .28f) : 1f - MonsterAnimRules.Ease((scrape - .28f) / .72f);
         foreach (var (leg, left, front) in _legs)
         {
-            float phase = gallop ? (front ? 0f : 2.2f) + (left ? .35f : 0f) : (left ^ front) ? 0f : Mathf.PI;
-            float swing = Mathf.Sin(_phase * (gallop ? 3f : 2f) + phase) * (gallop ? 58f : 30f * move);
-            if (paw && front && left) swing = -30f + 28f * Mathf.Sin(t * 15f); // scraping the floor
-            if (stunned) swing = (front ? -14f : 16f) + Mathf.Sin(t * 2f + phase) * 4f; // legs splay and wobble
-            Rot(leg, swing, 0f, stunned ? (left ? -18f : 18f) : 0f, gallop || paw ? 34f : 16f);
+            float walk = Mathf.Sin(_phase * 2f + ((left ^ front) ? 0f : Mathf.PI)) * 30f * move;
+            float run = Mathf.Sin(_phase * 3f + (front ? 0f : 2.2f) + (left ? .35f : 0f)) * 58f;
+            float swing = Mathf.Lerp(walk, run, gallop);
+            if (front && left) swing = Mathf.Lerp(swing, -6f - 40f * lift, paw); // scraping the floor
+            if (front) swing -= 12f * toss; // braces into the toss
+            if (stunned) swing = (front ? -14f : 16f) + Mathf.Sin(t * 2f + ((left ^ front) ? 0f : Mathf.PI)) * 4f; // legs splay and wobble
+            Rot(leg, swing, 0f, stunned ? (left ? -18f : 18f) : 0f, gallop > 0f ? 34f : paw > 0f ? 24f : 16f);
         }
-        Rot(_head, head, headYaw, 0f, 12f);
+        Rot(_head, head, headYaw, 0f, headK);
         Rot(_jaw, jaw, 0f, 0f, 20f);
+    }
+
+    // The naga's four arms (upper/lower, left/right), body lean and head pitch at one moment of an attack.
+    private struct NagaPose
+    {
+        public Quaternion Ul, Ur, Ll, Lr, Tilt;
+        public float Head;
+
+        public static NagaPose Blend(NagaPose a, NagaPose b, float w) => new()
+        {
+            Ul = Quaternion.SlerpUnclamped(a.Ul, b.Ul, w), Ur = Quaternion.SlerpUnclamped(a.Ur, b.Ur, w),
+            Ll = Quaternion.SlerpUnclamped(a.Ll, b.Ll, w), Lr = Quaternion.SlerpUnclamped(a.Lr, b.Lr, w),
+            Tilt = Quaternion.SlerpUnclamped(a.Tilt, b.Tilt, w), Head = Mathf.LerpUnclamped(a.Head, b.Head, w),
+        };
+    }
+
+    // A strike takes this long from the wound-up pose to the hit; in the sweep the lower blades trail the upper.
+    private const float NagaLead = .13f, NagaTrail = .035f;
+
+    // Combo hit 1: the upper right blade rears back (wind), then chops down across the body (hit).
+    private static NagaPose NagaChop(NagaPose idle, float wind, float hit)
+    {
+        var raised = new NagaPose
+        {
+            Ur = Quaternion.Euler(-65f, 10f, 0f), Ul = Quaternion.Euler(-20f, 0f, 0f), Ll = idle.Ll, Lr = idle.Lr,
+            Tilt = Quaternion.Euler(-4f, 6f, 0f), Head = 6f,
+        };
+        var p = NagaPose.Blend(idle, raised, wind);
+        if (hit <= 0f) return p;
+        var down = raised;
+        down.Ur = Quaternion.Euler(88f, -18f, 0f); down.Ul = Quaternion.Euler(-8f, 0f, 0f);
+        down.Tilt = Quaternion.Euler(9f, -8f, 0f);
+        return NagaPose.Blend(p, down, hit);
+    }
+
+    // Combo hit 2: all four blades drawn back to one side (wind), then swung level across (hit / hitLow).
+    private static NagaPose NagaSweep(NagaPose idle, float wind, float hit, float hitLow)
+    {
+        var swung = new NagaPose
+        {
+            Ul = Quaternion.Euler(78f, Mix(-40f, 115f, hit), 0f), Ll = Quaternion.Euler(10f, Mix(-45f, 120f, hitLow), 0f),
+            Ur = Quaternion.Euler(78f, Mix(-80f, 40f, hit), 0f), Lr = Quaternion.Euler(10f, Mix(-75f, 45f, hitLow), 0f),
+            Tilt = Quaternion.Euler(5f, Mix(-18f, 22f, hit), 0f), Head = 4f,
+        };
+        return hit > 0f || hitLow > 0f ? swung : NagaPose.Blend(idle, swung, wind);
+    }
+
+    // Bleeding cut: the lower pair crosses low with the upper pair raised (wind), then rips apart (hit).
+    private static NagaPose NagaCut(NagaPose idle, float wind, float hit)
+    {
+        var cut = new NagaPose
+        {
+            Ll = Quaternion.Euler(Mix(-18f, 25f, hit), Mix(78f, -50f, hit), 0f), Lr = Quaternion.Euler(Mix(-18f, 25f, hit), Mix(-78f, 50f, hit), 0f),
+            Ul = Quaternion.Euler(-35f, -15f, 0f), Ur = Quaternion.Euler(-35f, 15f, 0f),
+            Tilt = Quaternion.Euler(Mix(-6f, 10f, hit), 0f, 0f), Head = 10f,
+        };
+        return hit > 0f ? cut : NagaPose.Blend(idle, cut, wind);
     }
 
     // Naga Queen. Combo hit 1: the upper right blade rears back and chops down. Hit 2: all four blades swing
@@ -1017,39 +1175,41 @@ internal sealed class MonsterVisual : MonoBehaviour
         float kUpper = 16f, kLower = 16f;
         _eye = .15f;
         _tilt = Quaternion.Euler(4f * move, Mathf.Sin(_phase * .9f) * 5f * move, 0f);
+        var idle = new NagaPose { Ul = ul, Ur = ur, Ll = ll, Lr = lr, Tilt = _tilt, Head = head };
+        float since = t - _animAt;
+        const float w1 = MonsterRules.ComboFirstWindup, w2 = MonsterRules.ComboSecondWindup, wb = MonsterRules.BleedWindup;
+        NagaPose? shown = null;
         switch (anim)
         {
             case MonsterAnim.Combo1:
-            {
-                // The blade comes down exactly when the host deals the damage (MonsterRules.ComboFirstWindup); the
-                // raised sword is held, slowly drawn back, for the whole windup so players can read it.
-                bool hit = st >= MonsterRules.ComboFirstWindup - .06f;
-                float draw = Mathf.Clamp01(st / MonsterRules.ComboFirstWindup);
-                ur = hit ? Quaternion.Euler(88f, -18f, 0f) : Quaternion.Euler(-30f - 35f * draw, 10f, 0f);
-                ul = Quaternion.Euler(-20f, 0f, 0f);
-                kUpper = hit ? 40f : 9f; head = 6f;
-                _tilt = Quaternion.Euler(hit ? 9f : -4f, hit ? -8f : 6f, 0f);
+                // The sword comes up early and is slowly drawn back for the rest of the windup so players can read
+                // it; the chop accelerates and lands exactly when the host deals the damage.
+                shown = NagaChop(idle, MonsterAnimRules.Draw(st, w1 - NagaLead), MonsterAnimRules.Strike(st, w1, NagaLead));
                 break;
-            }
             case MonsterAnim.Combo2:
             {
-                bool hit = st >= MonsterRules.ComboSecondWindup - .06f;
-                ul = Quaternion.Euler(78f, hit ? 115f : -40f, 0f); ll = Quaternion.Euler(10f, hit ? 120f : -45f, 0f);
-                ur = Quaternion.Euler(78f, hit ? 40f : -80f, 0f); lr = Quaternion.Euler(10f, hit ? 45f : -75f, 0f);
-                kUpper = kLower = hit ? 30f : 8f; head = 4f;
-                _tilt = Quaternion.Euler(5f, hit ? 22f : -18f, 0f);
+                // The chop follows through and settles, then all four blades are drawn back for the sweep. The
+                // lower pair trails the upper one by a beat, so the sweep reads as one rolling motion.
+                var p = NagaSweep(idle, MonsterAnimRules.Draw(st - .1f, w2 - NagaLead - .1f),
+                    MonsterAnimRules.Strike(st, w2, NagaLead), MonsterAnimRules.Strike(st - NagaTrail, w2, NagaLead));
+                float carry = _animWas == MonsterAnim.Combo1 ? MonsterAnimRules.Release(st, .1f, .32f) : 0f;
+                if (carry > 0f) p = NagaPose.Blend(p, NagaChop(idle, 1f, MonsterAnimRules.Strike(w1 + st, w1, NagaLead)), carry);
+                shown = p;
                 break;
             }
             case MonsterAnim.BleedCut:
             {
-                float u = Mathf.Clamp01(st / MonsterRules.BleedWindup);
-                bool cut = u >= .94f;
-                ll = cut ? Quaternion.Euler(25f, -50f, 0f) : Quaternion.Euler(-18f, 78f, 0f);
-                lr = cut ? Quaternion.Euler(25f, 50f, 0f) : Quaternion.Euler(-18f, -78f, 0f);
-                ul = Quaternion.Euler(-35f, -15f, 0f); ur = Quaternion.Euler(-35f, 15f, 0f);
-                kLower = cut ? 45f : 14f; head = 10f;
-                _tilt = Quaternion.Euler(cut ? 10f : -6f * u, 0f, 0f);
-                Glow(null, new Color(1f, .08f, .05f), cut ? 4f : 2.6f * u, 4f);
+                float wind = MonsterAnimRules.Draw(st, wb - NagaLead), cut = MonsterAnimRules.Strike(st, wb, NagaLead);
+                shown = NagaCut(idle, wind, cut);
+                Glow(null, new Color(1f, .08f, .05f), 2.6f * wind + 1.4f * Mathf.Clamp01(cut), 4f);
+                break;
+            }
+            case MonsterAnim.None when _animWas == MonsterAnim.BleedCut && since < .6f:
+            {
+                // The cut rips through and the blades stay out for a moment as she pulls away.
+                float carry = MonsterAnimRules.Release(since, .14f, .4f);
+                shown = NagaPose.Blend(idle, NagaCut(idle, 1f, MonsterAnimRules.Strike(wb + since, wb, NagaLead)), carry);
+                Glow(null, new Color(1f, .08f, .05f), 4f * carry, 4f);
                 break;
             }
             case MonsterAnim.StoneGaze:
@@ -1065,10 +1225,22 @@ internal sealed class MonsterVisual : MonoBehaviour
                 break;
             }
             case MonsterAnim.Exposed:
-                ul = droopUl; ur = droopUr; ll = droopLl; lr = droopLr;
-                kUpper = kLower = 6f; head = 20f; _eye = .05f;
-                _tilt = Quaternion.Euler(8f, 0f, sway * 3f);
+            {
+                // Winded: the sweep carries through, then the arms sink and hang.
+                var p = new NagaPose { Ul = droopUl, Ur = droopUr, Ll = droopLl, Lr = droopLr, Tilt = Quaternion.Euler(8f, 0f, sway * 3f), Head = 20f };
+                float carry = _animWas == MonsterAnim.Combo2 ? MonsterAnimRules.Release(st, .16f, .55f) : 0f;
+                if (carry > 0f)
+                    p = NagaPose.Blend(p, NagaSweep(idle, 1f, MonsterAnimRules.Strike(w2 + st, w2, NagaLead), MonsterAnimRules.Strike(w2 + st - NagaTrail, w2, NagaLead)), carry);
+                shown = p;
+                _eye = .05f;
                 break;
+            }
+        }
+        if (shown is { } pose)
+        {
+            // The curves above are already eased: the joints only follow them closely.
+            ul = pose.Ul; ur = pose.Ur; ll = pose.Ll; lr = pose.Lr; head = pose.Head; _tilt = pose.Tilt;
+            kUpper = kLower = anim == MonsterAnim.Exposed ? 14f : 28f;
         }
         bool folded = stunned && !_brain.Dead;
         if (folded)
@@ -1138,6 +1310,9 @@ internal sealed class MonsterVisual : MonoBehaviour
         else if (wand > .5f) Glow(_handR, new Color(1f, .85f, .35f), 1.6f * wand, 3f);
     }
 
+    // The snatch and the throw take this long from the wound-up pose to the moment they land.
+    private const float TwinsLead = .12f;
+
     // Hansel and Gretel: skipping hand in hand, heads tipped together. The lure - they stop dead and their heads
     // roll slowly apart. The rush - heads down, free arms out. The reach - both free arms straight at the player.
     // The hold - they rock from side to side, swinging the victim, then fling both arms up for the throw.
@@ -1150,30 +1325,62 @@ internal sealed class MonsterVisual : MonoBehaviour
         switch (anim)
         {
             case MonsterAnim.TwinsLure:
-                headIn = 16f - 46f * Smooth(st / MonsterRules.TwinsLureSeconds); // heads roll apart, far past upright
-                headPitch = -6f; outer = -20f + Mathf.Sin(t * 3f) * 10f; step = 0f;
-                _tilt = Quaternion.identity; _shift = Vector3.zero;
+            {
+                // They stop dead: the heads roll slowly apart (far past upright) and the free arms drift up. In the
+                // last quarter second they lean back and sink a little - the rush springs out of that.
+                float stop = MonsterAnimRules.Ease(st / .3f), coil = MonsterAnimRules.Ease((st - (MonsterRules.TwinsLureSeconds - .25f)) / .25f);
+                headIn = 16f - 46f * MonsterAnimRules.Ease(st / MonsterRules.TwinsLureSeconds);
+                headPitch = Mathf.Lerp(headPitch, -6f, stop) + 8f * coil;
+                outer = Mathf.Lerp(outer, -20f + Mathf.Sin(st * 3f) * 10f, stop) - 14f * coil; step *= 1f - stop;
+                _tilt = Quaternion.Slerp(_tilt, Quaternion.Euler(-5f * coil, 0f, 0f), stop);
+                _shift = Vector3.Lerp(_shift, Vector3.down * (.03f * coil), stop);
+                k = 20f;
                 break;
+            }
             case MonsterAnim.TwinsRush:
-                headIn = 4f; headPitch = 16f; outer = -70f; step = 46f; k = 24f;
-                _tilt = Quaternion.Euler(12f, 0f, skip * 4f);
+            {
+                // Heads go down and the free arms sweep out as they break into the run.
+                float go = MonsterAnimRules.Ease(st / .25f);
+                headIn = Mathf.Lerp(-30f, 4f, go); headPitch = Mathf.Lerp(2f, 16f, go); outer = Mathf.Lerp(-34f, -70f, go);
+                step = Mathf.Lerp(step, 46f, go); k = 24f;
+                _tilt = Quaternion.Euler(Mathf.Lerp(-5f, 12f, go), 0f, skip * 4f * go);
+                _shift *= go;
                 break;
+            }
             case MonsterAnim.TwinsReach:
-                headIn = -10f; headPitch = -4f; outer = Mathf.Lerp(-60f, -98f, Smooth(st / MonsterRules.TwinsReachSeconds)) + Mathf.Sin(t * 34f) * 2f; step = 0f; k = 22f;
-                _tilt = Quaternion.Euler(9f, 0f, 0f); _shift = Vector3.zero;
+            {
+                // Both free arms come up at the player early and keep stretching, fingers working; the snatch itself
+                // lunges forward and closes exactly when the host decides the grab.
+                const float reach = MonsterRules.TwinsReachSeconds;
+                float up = MonsterAnimRules.Draw(st, reach - TwinsLead), grab = MonsterAnimRules.Strike(st, reach, TwinsLead);
+                headIn = Mathf.Lerp(4f, -10f, up); headPitch = Mathf.Lerp(16f, -4f, up);
+                outer = Mix(Mathf.Lerp(-70f, -92f, up) + Mathf.Sin(st * 9f) * 1.5f * up, -106f, grab);
+                step = 0f; k = 26f;
+                _tilt = Quaternion.Euler(Mix(Mathf.Lerp(12f, 5f, up), 14f, grab), 0f, 0f);
+                _shift = Vector3.forward * (.05f * grab);
                 break;
+            }
             case MonsterAnim.TwinsSwing:
             {
-                float rock = Mathf.Sin(st * 15.7f); // three swings in the 1.2 s hold: one, two, three
-                headIn = 16f; headPitch = -8f; outer = -88f; step = 0f; k = 26f;
-                _tilt = Quaternion.Euler(4f, 0f, rock * 13f);
-                _shift = Vector3.right * (rock * .06f);
+                // One, two, three: they rock the victim from side to side, each swing a full smooth arc; before the
+                // third ends the arms drop and they crouch, winding up the throw.
+                const float hold = MonsterRules.TwinsHoldSeconds;
+                float take = MonsterAnimRules.Ease(st / .2f), wind = MonsterAnimRules.Ease((st - (hold - .24f)) / .24f);
+                float rock = Mathf.Sin(st * 15.7f) * take * (1f - wind);
+                headIn = 16f; headPitch = Mathf.Lerp(-8f, 6f, wind); outer = Mathf.Lerp(Mathf.Lerp(-106f, -88f, take), -45f, wind); step = 0f; k = 26f;
+                _tilt = Quaternion.Euler(Mathf.Lerp(Mathf.Lerp(14f, 4f, take), 11f, wind), 0f, rock * 13f);
+                _shift = Vector3.right * (rock * .06f) + Vector3.down * (.04f * wind);
                 break;
             }
             case MonsterAnim.TwinsThrow:
-                headIn = -6f; headPitch = -18f; outer = -165f; step = 0f; k = 40f;
-                _tilt = Quaternion.Euler(-9f, 0f, 0f); _shift = Vector3.zero;
+            {
+                // The throw: out of the crouch both arms fling up and over, they rise onto their toes, then settle.
+                float fling = MonsterAnimRules.Strike(st, TwinsLead, TwinsLead);
+                headIn = Mix(16f, -6f, fling); headPitch = Mix(6f, -18f, fling); outer = Mix(-45f, -165f, fling); step = 0f; k = 32f;
+                _tilt = Quaternion.Euler(Mix(11f, -9f, fling), 0f, 0f);
+                _shift = Vector3.up * (.05f * MonsterAnimRules.Impulse(st, TwinsLead, .45f)) + Vector3.down * (.04f * (1f - Mathf.Clamp01(fling)));
                 break;
+            }
         }
         if (stunned) { headIn = 30f; headPitch = 28f; outer = 12f; step = 0f; }
         for (int child = 0; child < 2; child++)

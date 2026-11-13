@@ -54,6 +54,7 @@ internal static class MonsterFx
                 MonsterAudio.Play(MonsterAudio.Cue.Spit, a, .7f, 1.1f); // venom going in
                 break;
             case HeadToss:
+                if (brain != null && brain.Visual != null) brain.Visual.Toss();
                 MonsterAudio.Play(MonsterAudio.Cue.Thud, a);
                 MonsterAudio.Play(MonsterAudio.Cue.Snort, a, .8f);
                 break;

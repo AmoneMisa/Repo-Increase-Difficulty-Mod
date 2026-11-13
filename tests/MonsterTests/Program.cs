@@ -196,6 +196,33 @@ for (float s = MonsterAnimRules.FlinchPeak + .02f; s < MonsterAnimRules.FlinchSe
     flinchPrev = f;
 }
 Check(flinchFalls && flinchPrev < .05f, "After the peak the flinch only eases back to rest, staying within 0..1");
+// Attack timelines: wind-up, a strike that lands on the damage moment, a small follow-through.
+{
+    const float atk_hitAt = MonsterRules.ComboFirstWindup, atk_lead = .13f;
+    Check(MonsterAnimRules.Strike(atk_hitAt - atk_lead, atk_hitAt, atk_lead) == 0f && MonsterAnimRules.Strike(0f, atk_hitAt, atk_lead) == 0f, "A strike does not start before its lead-in");
+    Check(Math.Abs(MonsterAnimRules.Strike(atk_hitAt, atk_hitAt, atk_lead) - 1f) < 1e-4, "The strike lands exactly when the damage is dealt");
+    bool atk_rises = true, atk_bounded = true; float atk_prev = 0f, atk_peak = 0f, atk_step = 0f;
+    for (float atk_s = 0f; atk_s < atk_hitAt + 1f; atk_s += .005f)
+    {
+        float atk_v = MonsterAnimRules.Strike(atk_s, atk_hitAt, atk_lead);
+        if (atk_s < atk_hitAt - .0051f && atk_v < atk_prev) atk_rises = false;
+        if (atk_v < 0f || atk_v > 1f + MonsterAnimRules.StrikeOvershoot) atk_bounded = false;
+        atk_step = Math.Max(atk_step, Math.Abs(atk_v - atk_prev));
+        atk_peak = Math.Max(atk_peak, atk_v); atk_prev = atk_v;
+    }
+    Check(atk_rises && atk_bounded, "The strike only accelerates into the hit and never swings further than its overshoot");
+    Check(atk_peak > 1.02f && atk_prev == 1f, "After the hit it follows through a little and settles on the end pose");
+    Check(atk_step < .1f, "The strike has no jump between two 5 ms samples");
+    Check(MonsterAnimRules.Strike(atk_hitAt + MonsterAnimRules.StrikeSettle, atk_hitAt, atk_lead) == 1f, "The follow-through is over after the settle time");
+    bool atk_drawOk = true; float atk_d0 = 0f;
+    for (float atk_s = 0f; atk_s <= 1f; atk_s += .01f) { float atk_d = MonsterAnimRules.Draw(atk_s, .57f); if (atk_d < atk_d0 - 1e-6f || atk_d < 0f || atk_d > 1f + 1e-5f) atk_drawOk = false; atk_d0 = atk_d; }
+    Check(atk_drawOk && MonsterAnimRules.Draw(0f, .57f) == 0f && Math.Abs(MonsterAnimRules.Draw(.57f, .57f) - 1f) < 1e-5 && MonsterAnimRules.Draw(.2f, .57f) > .7f,
+        "The wind-up comes up early, keeps drawing back and is complete when the strike begins");
+    Check(MonsterAnimRules.Release(0f, .1f, .3f) == 1f && MonsterAnimRules.Release(.1f, .1f, .3f) == 1f && MonsterAnimRules.Release(.4f, .1f, .3f) == 0f &&
+          MonsterAnimRules.Release(.25f, .1f, .3f) is > 0f and < 1f, "The previous strike'atk_s pose is held, then eased out");
+    Check(MonsterAnimRules.Impulse(.08f, .08f, .6f) == 1f && MonsterAnimRules.Impulse(.6f, .08f, .6f) == 0f && MonsterAnimRules.Impulse(-1f, .08f, .6f) == 0f,
+        "A jolt (head toss, wall recoil) peaks at once and is gone at its end");
+}
 // Holding a monster still is not an attack; swinging or throwing it is.
 Check(!MonsterRules.HoldImpactArms(true, 0f, 5.5f), "Holding a monster still or carrying it at a sprint does not arm impact damage");
 Check(!MonsterRules.HoldImpactArms(true, 0f, 9f), "Even fast movement in a player's hands does not arm impact damage while held");
@@ -218,4 +245,29 @@ Check(MonsterRules.SpotsPlayer(8f, .5f, false, false, 0f), "A standing player in
 Check(!MonsterRules.SpotsPlayer(8f, .5f, true, false, 5f), "A crouching player at the edge of the cone stays hidden");
 Check(!MonsterRules.SpotsPlayer(8f, .8f, true, false, .2f) && MonsterRules.SpotsPlayer(8f, .8f, true, false, .6f), "A crouching player in front is noticed only after half a second");
 Check(!MonsterRules.SpotsPlayer(8f, .8f, false, true, 3f) && MonsterRules.SpotsPlayer(8f, .95f, false, true, 1.1f), "A crawling player needs to be almost straight ahead for a second");
+// Procedural cues: every one renders to sane audio. Pass a folder as the first argument to export them as WAV.
+{
+    string dump = args.Length > 0 ? args[0] : null;
+    if (dump != null) Directory.CreateDirectory(dump);
+    bool sane = true; string worst = "";
+    foreach (MonsterAudio.Cue cue in Enum.GetValues<MonsterAudio.Cue>())
+    {
+        var samples = MonsterAudio.Render(cue);
+        double sum = 0; float top = 0f; bool finite = true;
+        foreach (float x in samples) { if (float.IsNaN(x) || float.IsInfinity(x)) finite = false; sum += x * x; top = Math.Max(top, Math.Abs(x)); }
+        double rms = Math.Sqrt(sum / samples.Length);
+        float edge = Math.Abs(samples[^1]);
+        if (!finite || top > 1.0001f || top < .15f || rms < .01 || edge > .05f || Math.Abs(samples.Length - MonsterAudio.SynthLength(cue) * MonsterAudio.SynthRate) > 1f)
+        { sane = false; worst += $" {cue}(peak {top:0.00}, rms {rms:0.000}, end {edge:0.00})"; }
+        if (dump == null) continue;
+        using var w = new BinaryWriter(File.Create(Path.Combine(dump, "monster_" + cue.ToString().ToLowerInvariant() + ".wav")));
+        int bytes = samples.Length * 2;
+        w.Write("RIFF"u8); w.Write(36 + bytes); w.Write("WAVEfmt "u8); w.Write(16); w.Write((short)1); w.Write((short)1);
+        w.Write(MonsterAudio.SynthRate); w.Write(MonsterAudio.SynthRate * 2); w.Write((short)2); w.Write((short)16); w.Write("data"u8); w.Write(bytes);
+        foreach (float x in samples) w.Write((short)(Math.Clamp(x, -1f, 1f) * 32767f));
+    }
+    Check(sane, "Every procedural monster cue is finite, audible, unclipped and ends in silence:" + worst);
+    var once = MonsterAudio.Render(MonsterAudio.Cue.Hurt); var twice = MonsterAudio.Render(MonsterAudio.Cue.Hurt);
+    Check(once.AsSpan().SequenceEqual(twice), "A cue renders the same samples every time (all clients hear the same sound)");
+}
 Console.WriteLine("MONSTER_CHECKS_PASSED: " + checks);
