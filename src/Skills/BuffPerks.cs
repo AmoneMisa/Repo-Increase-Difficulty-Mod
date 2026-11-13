@@ -78,11 +78,37 @@ internal static class BuffPerks
 
     private static void Show(Buff buff, float seconds) => Shown[buff] = Time.time + Mathf.Clamp(seconds, 0f, 10f);
 
+    /// <summary>Host: the Adrenaline Shot consumable. Starts Adrenaline on the user's own client (speed is local)
+    /// without the perk or its cooldown, and refills their stamina there.</summary>
+    internal static void GrantAdrenalineShot(PlayerAvatar player, float seconds)
+    {
+        if (player == null) return;
+        if (player.isLocal) { StartLocalShot(seconds); return; }
+        if (PhotonNetwork.InRoom && PhotonNetwork.IsMasterClient && player.photonView != null && player.photonView.Owner != null)
+            PhotonNetwork.RaiseEvent(EventCode, new object[] { (byte)Buff.Adrenaline, seconds },
+                new RaiseEventOptions { TargetActors = new[] { player.photonView.Owner.ActorNumber } }, SendOptions.SendReliable);
+    }
+
+    // The perk version of Adrenaline always starts on the victim's own client, so an Adrenaline event from the host
+    // can only come from the shot.
+    private static void StartLocalShot(float seconds)
+    {
+        var me = SemiFunc.PlayerAvatarLocal();
+        if (me == null || string.IsNullOrEmpty(me.steamID)) return;
+        var key = (me.steamID, Buff.Adrenaline);
+        float ready = State.TryGetValue(key, out var s) ? s.Ready : 0f;
+        State[key] = (Time.time + seconds, ready);
+        Show(Buff.Adrenaline, seconds);
+        var pc = PlayerController.instance;
+        if (pc != null) pc.EnergyCurrent = pc.EnergyStart;
+    }
+
     /// <summary>This client: the host says one of our buffs started (ModNetwork checks the sender).</summary>
     internal static void HandleEvent(EventData e)
     {
         if (e.CustomData is not object[] d || d.Length != 2 || d[0] is not byte kind || kind > (byte)Buff.MendingSurge ||
             d[1] is not float seconds || !Networking.NetworkPayload.Finite(seconds) || seconds <= 0f || seconds > 10f) return;
+        if ((Buff)kind == Buff.Adrenaline) { StartLocalShot(seconds); return; }
         Show((Buff)kind, seconds);
     }
 

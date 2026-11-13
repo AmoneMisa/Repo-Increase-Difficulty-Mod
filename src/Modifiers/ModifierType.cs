@@ -31,7 +31,7 @@ public enum ModifierType
 
     // --- Player conditions ---
     NoMap              = 1 << 9,  // punish: no map until you find a map upgrade pickup
-    ReducedPlayerHp    = 1 << 10, // punish: everyone starts wounded, current HP cut (param: percent 10-90)
+    ReducedPlayerHp    = 1 << 10, // punish: everyone starts wounded, current HP cut (param: percent 30-70)
     AutoRevive         = 1 << 11, // reward: one auto-revive per player this level
     MoneyLossOnDeath   = 1 << 12, // punish: lose a % of collected money on death (param: percent)
     LevelTimer         = 1 << 13, // mixed: timed level; kills add time, deaths remove, quota adds

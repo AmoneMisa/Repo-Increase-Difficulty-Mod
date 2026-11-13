@@ -146,6 +146,9 @@ internal static class CombatDamageUpgrades
             __instance.enemyDamage = Scale(__instance.enemyDamage,
                 Multiplier(MeleeId, wielder) * Skills.TradeOffs.DamageFactor(wielder, Skills.TradeOffs.Damage.Melee, _enemy) *
                 Skills.BuffPerks.DamageFactorFor(wielder, true, false, false)); // Battle Trance
+            // Critical Strike: the final hit, after every other factor, sometimes lands twice as hard.
+            __instance.enemyDamage = Skills.PerkRules.Crit(__instance.enemyDamage,
+                Skills.SkillEffects.Level(wielder, Skills.SkillCatalog.CriticalStrike), UnityEngine.Random.value);
             Skills.BuffPerks.NoteHit(wielder, _enemy, true, false, false);
             __state.Wielder = wielder;
             __state.Dealt = __instance.enemyDamage;

@@ -30,6 +30,12 @@ internal static class EnemyDamagePatch
             return;
 
         float mult = EnemyBalance.Damage;
+        // Last moon: now and then a monster lands a critical hit for double damage.
+        if (Economy.MoonRules.MonsterCrits(Economy.ExtendedMoons.Current, damage, Random.value))
+        {
+            mult *= Economy.MoonRules.MonsterCritMultiplier;
+            Hud.HudNotify.Toast(Localization.GameLanguage.Russian ? "КРИТИЧЕСКИЙ УДАР МОНСТРА" : "MONSTER CRITICAL HIT", Hud.HudStyle.Bad, 1.5f, "monster-crit");
+        }
         // A monster shocked by the Wizard Staff hits 25% softer.
         if (Gear.Shock.IsShocked(SemiFunc.EnemyGetFromIndex(enemyIndex))) mult *= Gear.Shock.MonsterDamageFactor;
 

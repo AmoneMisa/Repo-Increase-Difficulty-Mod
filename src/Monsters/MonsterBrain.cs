@@ -419,6 +419,7 @@ internal abstract class MonsterBrain : MonoBehaviour
     {
         var to = Chest(p) - from;
         if (to.magnitude > range) return false;
+        if (Gear.ModGrenades.Hidden(from, Chest(p))) return false; // smoke grenade cloud
         foreach (var hit in Physics.RaycastAll(from, to.normalized, to.magnitude, SemiFunc.LayerMaskGetVisionObstruct(), QueryTriggerInteraction.Ignore))
         {
             // The last stretch of the ray is inside the player's own body: the local player's collision capsule

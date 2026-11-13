@@ -6,8 +6,8 @@ int checks = 0;
 void Check(bool ok, string name) { if (!ok) throw new Exception("FAIL " + name); Console.WriteLine("PASS " + name); checks++; }
 
 // ---------------------------------------------------------------- catalogue
-Check(C.NormalPageCost(SkillPage.Recon) == 43 && C.NormalPageCost(SkillPage.Combat) == 181 &&
-      C.NormalPageCost(SkillPage.Survival) == 92 && C.NormalPageCost(SkillPage.Utility) == 55 && C.NormalPageCost(SkillPage.Arsenal) == 75, "Normal page costs include weapon rate and convoy perks");
+Check(C.NormalPageCost(SkillPage.Recon) == 43 && C.NormalPageCost(SkillPage.Combat) == 123 &&
+      C.NormalPageCost(SkillPage.Survival) == 80 && C.NormalPageCost(SkillPage.Utility) == 64 && C.NormalPageCost(SkillPage.Arsenal) == 63, "Normal page costs include weapon rate and convoy perks");
 Check(C.Find(C.LightBasket).MaxLevel == 5 && C.Find(C.LightBasket).Cost == 1, "Light Basket has five affordable ranks");
 Check(C.Find(C.Hemostasis).Requires.SequenceEqual(new[]{C.Survivor}) && C.Find(C.LinkOperator).Requires.SequenceEqual(new[]{C.Technician}), "New perks have the intended prerequisite");
 Check(PerkRules.BasketLift(0)==1f && PerkRules.BasketLift(5)==1.5f && PerkRules.BasketLift(50)==1.5f, "Cart lifting is capped at +50%, zero without a perk");
@@ -28,9 +28,9 @@ foreach (var (id, page, cost) in new[] { (C.Grounding, SkillPage.Survival, 1), (
     (C.GoldenNose, SkillPage.Utility, 1), (C.SoulHunter, SkillPage.Utility, 2) })
     Check(C.Find(id) != null && C.Find(id).Page == page && C.Find(id).MaxLevel == 3 && C.Find(id).Cost == cost && id.StartsWith("IHM_ST_"), "Monster perk " + id + " is in the tree with 3 levels");
 Check(System.Array.IndexOf(C.Find(C.DodgeRoll).Requires, C.Evasion) >= 0, "Dodge Roll requires Evasion");
-Check(C.PageCost(SkillPage.Recon) == 49 && C.PageCost(SkillPage.Combat) == 187 && C.PageCost(SkillPage.Survival) == 98 &&
-      C.PageCost(SkillPage.Utility) == 61 && C.PageCost(SkillPage.Arsenal) == 81, "Each page adds one trade-off per tier (1+2+3 points)");
-Check(C.TotalCost() == 525, "Whole tree includes the firing-rate and Wide View perks (Stone Resilience retired)");
+Check(C.PageCost(SkillPage.Recon) == 49 && C.PageCost(SkillPage.Combat) == 129 && C.PageCost(SkillPage.Survival) == 86 &&
+      C.PageCost(SkillPage.Utility) == 70 && C.PageCost(SkillPage.Arsenal) == 69, "Each page adds one trade-off per tier (1+2+3 points)");
+Check(C.TotalCost() == 452, "Whole tree includes the firing-rate and Wide View perks (Stone Resilience retired)");
 Check(C.Find(C.WideView) is { Page: SkillPage.Recon, Branch: "Vision", Cost: 1, MaxLevel: 3, Root: true, Tier: 0, QuestOnly: false } &&
       C.Find(C.WideView).Requires.Length == 0 && C.Find(C.WideView).NameRu.Length > 0, "Wide View is a 3-rank root perk on the first page");
 Check(PerkRules.FovBonus(0) == 0f && PerkRules.FovBonus(1) == 5f && PerkRules.FovBonus(3) == 15f && PerkRules.FovBonus(99) == 15f &&
@@ -76,17 +76,17 @@ foreach (string id in new[] { C.ExplosiveGrenade, C.ClusterGrenade, C.StunGrenad
           !IncreaseHardMod.Courier.CourierRules.SoulFits(61000f, 0f, 5000f, 65000f) && !IncreaseHardMod.Courier.CourierRules.SoulFits(0f, 0f, 0f, 65000f),
           "Soul Collector takes a soul only if its whole value fits, counting souls already on the way");
     Check(C.Find(C.CourierSouls) is { Cost: 2, MaxLevel: 1, Root: true, Page: SkillPage.Courier }, "Soul Collector is a 2-point courier perk");
-    Check(C.Find(C.FreeBullet) is { Cost: 7, MaxLevel: 3 } && C.Find(C.FreeLaser) is { Cost: 7, MaxLevel: 3 } &&
-          C.Find(C.FreeTranq) is { Cost: 7, MaxLevel: 3 } && C.Find(C.FreeMelee) is { Cost: 7, MaxLevel: 3 } &&
-          C.Find(C.DroneThrift) is { Cost: 8, MaxLevel: 3 } && C.Find(C.RegenCap) is { Cost: 5, MaxLevel: 5 } && C.Find(C.FreeCartShot) is { Cost: 7, MaxLevel: 3, Page: SkillPage.Arsenal },
-          "Free-use perks cost 7 a level, Frugal Drones 8, Deep Regeneration 5");
-    Check(IncreaseHardMod.Skills.PerkRules.FreeUseChance(0) == 0f && IncreaseHardMod.Skills.PerkRules.FreeUseChance(1) == .02f &&
-          IncreaseHardMod.Skills.PerkRules.FreeUseChance(2) == .04f && IncreaseHardMod.Skills.PerkRules.FreeUseChance(3) == .07f &&
-          IncreaseHardMod.Skills.PerkRules.CartFreeShotChance(1) == .02f && IncreaseHardMod.Skills.PerkRules.CartFreeShotChance(2) == .035f && IncreaseHardMod.Skills.PerkRules.CartFreeShotChance(3) == .05f &&
-          IncreaseHardMod.Skills.PerkRules.DroneThriftFactor(1) == .97f && IncreaseHardMod.Skills.PerkRules.DroneThriftFactor(3) == .93f &&
-          Math.Abs(IncreaseHardMod.Skills.PerkRules.RegenCap(.30f, 1) - .31f) < 1e-5 && Math.Abs(IncreaseHardMod.Skills.PerkRules.RegenCap(.30f, 5) - .35f) < 1e-5 &&
-          Math.Abs(IncreaseHardMod.Skills.PerkRules.RegenCap(.30f, 9) - .35f) < 1e-5,
-          "Free use 2/4/7%, drones 3/5/7% thriftier, regeneration cap 31-35%");
+    Check(C.Find(C.FreeBullet) is { Cost: 3, MaxLevel: 3 } && C.Find(C.FreeLaser) is { Cost: 3, MaxLevel: 3 } &&
+          C.Find(C.FreeTranq) is { Cost: 3, MaxLevel: 3 } && C.Find(C.FreeMelee) is { Cost: 3, MaxLevel: 3 } &&
+          C.Find(C.DroneThrift) is { Cost: 3, MaxLevel: 3 } && C.Find(C.RegenCap) is { Cost: 2, MaxLevel: 5 } && C.Find(C.FreeCartShot) is { Cost: 3, MaxLevel: 3, Page: SkillPage.Arsenal },
+          "Free-use perks and Frugal Drones cost 3 a level, Deep Regeneration 2");
+    Check(IncreaseHardMod.Skills.PerkRules.FreeUseChance(0) == 0f && IncreaseHardMod.Skills.PerkRules.FreeUseChance(1) == .04f &&
+          IncreaseHardMod.Skills.PerkRules.FreeUseChance(2) == .08f && IncreaseHardMod.Skills.PerkRules.FreeUseChance(3) == .12f &&
+          IncreaseHardMod.Skills.PerkRules.CartFreeShotChance(1) == .03f && IncreaseHardMod.Skills.PerkRules.CartFreeShotChance(2) == .06f && IncreaseHardMod.Skills.PerkRules.CartFreeShotChance(3) == .09f &&
+          IncreaseHardMod.Skills.PerkRules.DroneThriftFactor(1) == .95f && IncreaseHardMod.Skills.PerkRules.DroneThriftFactor(3) == .85f &&
+          Math.Abs(IncreaseHardMod.Skills.PerkRules.RegenCap(.30f, 1) - .33f) < 1e-5 && Math.Abs(IncreaseHardMod.Skills.PerkRules.RegenCap(.30f, 5) - .45f) < 1e-5 &&
+          Math.Abs(IncreaseHardMod.Skills.PerkRules.RegenCap(.30f, 9) - .45f) < 1e-5,
+          "Free use 4/8/12%, drones 5/10/15% thriftier, regeneration cap 33-45%");
     {
         Check(IncreaseHardMod.Economy.BlackMarketRules.Multiplier(-3) == 0f && IncreaseHardMod.Economy.BlackMarketRules.Multiplier(-1) == .5f &&
               IncreaseHardMod.Economy.BlackMarketRules.Multiplier(0) == 1f && IncreaseHardMod.Economy.BlackMarketRules.Multiplier(3) == 2.5f &&
@@ -386,4 +386,15 @@ foreach (SkillPage page in Enum.GetValues(typeof(SkillPage)))
     if (SectionBonusRules.Stats(page).Length > 0)
         Check(C.NormalPageCost(page) >= SectionBonusRules.PointsPerLevel * SectionBonusRules.PageMax(page), $"{page}: its normal perks can reach the full page bonus");
 
+Check(C.Find(C.Toughness) is { Cost: 1, MaxLevel: 3, Page: SkillPage.Survival } && C.Find(C.Hauler) is { Cost: 1, MaxLevel: 3, Page: SkillPage.Utility },
+    "Toughness and Hauler are 1-point, 3-rank perks");
+Check(Math.Abs(PerkRules.ToughnessFactor(3) - .7f) < 1e-5 && PerkRules.ToughnessFactor(9) == PerkRules.ToughnessFactor(3) &&
+      Math.Abs(PerkRules.HaulerSpeed(2) - 1.1f) < 1e-5, "Toughness cuts hard control up to 30%, Hauler adds 5% a rank");
+Check(C.Find(C.Scavenger) is { Cost: 2, MaxLevel: 3, Page: SkillPage.Utility } && Math.Abs(PerkRules.ScavengerChance(3) - .3f) < 1e-5,
+    "Scavenger: 2 points a rank, up to a 30% drop chance");
+Check(C.Find(C.CriticalStrike) is { Cost: 1, MaxLevel: 5, Page: SkillPage.Combat } && Math.Abs(PerkRules.CritChance(5) - .3f) < 1e-5 &&
+      Math.Abs(PerkRules.CritExpected(5) - 1.3f) < 1e-5 && PerkRules.CritChance(9) == PerkRules.CritChance(5), "Critical Strike: 6% a rank, double damage, 30% at rank 5");
+Check(Math.Round(PerkRules.HitsSaved(4, 5), 1) == .9 && Math.Round(PerkRules.HitsSaved(9, 5), 1) == 2.1 && Math.Round(PerkRules.HitsSaved(13, 5), 1) == 3.0,
+    "Rank 5 saves about 1 hit on a 4-hit monster, 2 on a 9-hit one, 3 on a 13-hit one");
+Check(PerkRules.Crit(50, 5, .29) == 100 && PerkRules.Crit(50, 5, .31) == 50 && PerkRules.Crit(50, 0, 0) == 50, "A crit doubles the hit only under the chance");
 Console.WriteLine($"All {checks} skill tree checks passed.");

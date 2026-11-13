@@ -78,6 +78,8 @@ internal static class SkillCatalog
     public const string Grounding = P + "Grounding", ThermalProtection = P + "ThermalProtection", Antidote = P + "Antidote",
         Evasion = P + "Evasion", DodgeRoll = P + "DodgeRoll",
         GoldenNose = P + "GoldenNose", SoulHunter = P + "SoulHunter";
+    public const string CriticalStrike = P + "CriticalStrike";
+    public const string Toughness = P + "Toughness", Hauler = P + "Hauler", Scavenger = P + "Scavenger";
     public const string Hemostasis = P + "Hemostasis", Sapper = P + "Sapper",
         LinkOperator = P + "LinkOperator", LightBasket = P + "LightBasket",
         FlameCartDamage = P + "FlameCartDamage", GhostConvoy = P + "GhostConvoy", LaserGunDamage = P + "LaserGunDamage",
@@ -136,7 +138,7 @@ internal static class SkillCatalog
         Add(combat, "Damage", MeleeAccuracy, "Melee Accuracy", "Точность в ближнем бою", 1, 3, Brawler);
         Add(combat, "Damage", TumbleDamage, "Tumble Damage", "Урон кувырком", 1, 5, Brawler);
         Add(combat, "Damage", Vampirism, "Vampirism", "Вампиризм", 1, 7, MeleeDamage);
-        Add(combat, "Damage", FreeMelee, "Unworn Edge", "Без износа", 7, 3, MeleeDamage);
+        Add(combat, "Damage", FreeMelee, "Unworn Edge", "Без износа", 3, 3, MeleeDamage);
 
         Add(combat, "Grenades", GrenadeDamage, "Grenade Damage", "Урон гранат", 1, 5, Brawler);
         Add(combat, "Grenades", ExplosiveGrenade, "Explosive Grenade", "Осколочная граната", 1, 3, GrenadeDamage);
@@ -149,14 +151,14 @@ internal static class SkillCatalog
         Add(combat, "Guns", BulletShots, "Bullet Gun Shots", "Запас патронов", 1, 5, Gunsmith);
         Add(combat, "Guns", LaserShots, "Laser Gun Shots", "Заряды лазера", 1, 5, Gunsmith);
         Add(combat, "Guns", TranqShots, "Tranq Gun Shots", "Заряды транквилизатора", 1, 5, Gunsmith);
-        Add(combat, "Guns", FreeBullet, "Free Rounds", "Бесплатный патрон", 7, 3, BulletShots);
-        Add(combat, "Guns", FreeLaser, "Free Laser Shot", "Бесплатный разряд", 7, 3, LaserShots);
-        Add(combat, "Guns", FreeTranq, "Free Dart", "Бесплатный дротик", 7, 3, TranqShots);
+        Add(combat, "Guns", FreeBullet, "Free Rounds", "Бесплатный патрон", 3, 3, BulletShots);
+        Add(combat, "Guns", FreeLaser, "Free Laser Shot", "Бесплатный разряд", 3, 3, LaserShots);
+        Add(combat, "Guns", FreeTranq, "Free Dart", "Бесплатный дротик", 3, 3, TranqShots);
 
         Add(combat, "Tech", Technician, "Technician", "Техник", 1, 1, root: true);
         Add(combat, "Tech", DroneBattery, "Drone Battery", "Батарея дронов", 1, 5, Technician);
         Add(combat, "Tech", Overcharge, "Overcharge", "Перегрузка", 1, 5, Technician);
-        Add(combat, "Tech", DroneThrift, "Frugal Drones", "Экономные дроны", 8, 3, DroneBattery);
+        Add(combat, "Tech", DroneThrift, "Frugal Drones", "Экономные дроны", 3, 3, DroneBattery);
 
         var survival = SkillPage.Survival;
         Add(survival, "Survival", Survivor, "Survivor", "Выживший", 1, 1, root: true);
@@ -164,7 +166,7 @@ internal static class SkillCatalog
         Add(survival, "Survival", SecondWind, "Second Wind", "Второе дыхание", 1, 2, StaminaEfficiency);
         Add(survival, "Survival", Armor, "Armor", "Броня", 2, 5, Survivor);
         Add(survival, "Survival", HpRegen, "HP Regeneration", "Регенерация", 3, 3, Survivor);
-        Add(survival, "Survival", RegenCap, "Deep Regeneration", "Глубокая регенерация", 5, 5, HpRegen);
+        Add(survival, "Survival", RegenCap, "Deep Regeneration", "Глубокая регенерация", 2, 5, HpRegen);
         Add(survival, "Survival", Desperation, "Desperation", "Отчаяние", 2, 3, Survivor);
         Add(survival, "Survival", HuntedWarning, "Hunted Warning", "Чувство погони", 1, 1, Survivor);
         Add(survival, "Survival", CrouchSpeed, "Crouch Speed", "Скорость в приседе", 1, 3, Survivor);
@@ -202,7 +204,7 @@ internal static class SkillCatalog
         Add(arsenal, "Weapons", CartLaserDamage, "Cart Laser Damage", "Урон лазера тележки", 1, 3, Marksman);
         Add(arsenal, "Weapons", StaffDamage, "Wizard Staff Damage", "Урон посоха", 1, 4, Marksman);
         Add(arsenal, "Weapons", CrossbowDamage, "Poison Crossbow Damage", "Урон арбалета", 1, 3, Marksman);
-        Add(arsenal, "Weapons", FreeCartShot, "Free Cart Shot", "Бесплатный залп тележки", 7, 3, Marksman);
+        Add(arsenal, "Weapons", FreeCartShot, "Free Cart Shot", "Бесплатный залп тележки", 3, 3, Marksman);
 
         Add(arsenal, "Status", StatusLab, "Status Lab", "Мастер эффектов", 1, 1, root: true);
         Add(arsenal, "Status", TranqTime, "Longer Tranquilizer", "Долгий транквилизатор", 1, 3, StatusLab);
@@ -251,6 +253,10 @@ internal static class SkillCatalog
         Add(arsenal, "Weapons", LaserGunDamage, "Laser Gun Damage", "Урон лазерного оружия", 1, 3, Marksman);
         Add(arsenal, "Weapons", RapidFire, "Rapid Fire", "Скорострельность", 1, 3, Marksman);
         // Wider camera view, local to each player and switchable in the tree (see WideView.cs).
+        Add(survival, "Resistances", Toughness, "Toughness", "Стойкость", 1, 3, Survivor);
+        Add(utility, "Loot", Hauler, "Hauler", "Грузчик", 1, 3, root: true);
+        Add(utility, "Loot", Scavenger, "Scavenger", "Мародёр", 2, 3, root: true);
+        Add(combat, "Damage", CriticalStrike, "Critical Strike", "Критический удар", 1, 5, Brawler);
         Add(recon, "Vision", WideView, "Wide View", "Широкий обзор", 1, 3, root: true);
     }
 
@@ -270,9 +276,9 @@ internal static class SkillCatalog
         AddTradeOff(combat, 2, Overdrive, "Overdrive", "Форсаж", "Hold monsters in your grab 40% longer; your melee and tranquilizer stuns last 30% longer", "All your battery items drain 25% faster",
             "Монстров можно держать захватом на 40% дольше; оглушения в ближнем бою и транквилизатором на 30% дольше", "Все ваши предметы с батареей разряжаются на 25% быстрее",
             (Fx.GrabHold, 1.4f), (Fx.StunLength, 1.3f), (Fx.BatteryItems, 1.25f), (Fx.BatteryGuns, 1.25f), (Fx.BatteryDrones, 1.25f));
-        AddTradeOff(combat, 3, Sharpshooter, "Sharpshooter", "Снайпер", "+35% gun damage", "25% fewer shots per charge",
-            "+35% урона оружием", "На 25% меньше выстрелов на заряд",
-            (Fx.GunDamage, 1.35f), (Fx.CartDamage, 1.35f), (Fx.BatteryGuns, 1f / .75f));
+        AddTradeOff(combat, 3, Sharpshooter, "Sharpshooter", "Снайпер", "+35% gun damage", "15% fewer shots per charge",
+            "+35% урона оружием", "На 15% меньше выстрелов на заряд",
+            (Fx.GunDamage, 1.35f), (Fx.CartDamage, 1.35f), (Fx.BatteryGuns, 1f / .85f));
         AddTradeOff(combat, 3, Berserker, "Berserker", "Берсерк", "+40% melee damage; melee stuns last 1 s longer", "-30% gun and grenade damage; sprinting costs 20% more stamina",
             "+40% урона в ближнем бою; оглушение в ближнем бою на 1 с дольше", "-30% урона оружием и гранатами; бег тратит на 20% больше стамины",
             (Fx.MeleeDamage, 1.4f), (Fx.MeleeStunSeconds, 1f), (Fx.GunDamage, .7f), (Fx.CartDamage, .7f), (Fx.GrenadeDamage, .7f),
@@ -312,8 +318,8 @@ internal static class SkillCatalog
             "Регенерация HP работает вдвое быстрее", "Аптечки лечат вас на 30% меньше", (Fx.RegenRate, 2f), (Fx.SelfHeal, .7f));
         AddTradeOff(survival, 3, LastStand, "Last Stand", "Последний рубеж", "Once per level, a hit that would kill you leaves you at 1 HP", "-30% max stamina",
             "Раз за уровень удар, который убил бы вас, оставляет 1 HP", "-30% максимальной стамины", (Fx.MaxStamina, .7f)).Special = true;
-        AddTradeOff(survival, 3, GhostRunner, "Ghost Runner", "Призрак", "Monsters hear you 30% less; +15% crouching speed", "+30% damage taken",
-            "Монстры слышат вас на 30% хуже; +15% скорости в присяде", "+30% получаемого урона", (Fx.Noise, .7f), (Fx.CrouchSpeed, 1.15f), (Fx.DamageTaken, 1.3f));
+        AddTradeOff(survival, 3, GhostRunner, "Ghost Runner", "Призрак", "Monsters hear you 30% less; +15% crouching speed", "+15% damage taken",
+            "Монстры слышат вас на 30% хуже; +15% скорости в присяде", "+15% получаемого урона", (Fx.Noise, .7f), (Fx.CrouchSpeed, 1.15f), (Fx.DamageTaken, 1.15f));
 
         var recon = SkillPage.Recon;
         AddTradeOff(recon, 1, Floodlight, "Floodlight", "Широкий луч", "Flashlight beam 40% wider", "Beam 25% dimmer and shorter",
@@ -330,8 +336,8 @@ internal static class SkillCatalog
         AddTradeOff(recon, 3, Oracle, "Oracle", "Оракул", "Your map shows every valuable on the level, found or not", "+20% damage taken",
             "Ваша карта показывает все ценности уровня, найденные или нет", "+20% получаемого урона",
             (Fx.DamageTaken, 1.2f)).Special = true;
-        AddTradeOff(recon, 3, HuntersEye, "Hunter's Eye", "Глаз охотника", "Monster dots on your map and monster HP on your pings, as if you had both perks", "Crouching and crawling no longer hide you from monsters' eyes",
-            "Карта показывает монстров, а метки показывают их здоровье", "Монстры видят вас, даже когда вы крадётесь или ползёте").Special = true;
+        AddTradeOff(recon, 3, HuntersEye, "Hunter's Eye", "Глаз охотника", "Monster dots on your map; pings show monster HP, threat tier and distance, as if you had those perks", "Crouching and crawling no longer hide you from monsters' eyes",
+            "Карта показывает монстров, а метки — их здоровье, уровень угрозы и расстояние", "Монстры видят вас, даже когда вы крадётесь или ползёте").Special = true;
 
         var utility = SkillPage.Utility;
         AddTradeOff(utility, 1, Tinkerer, "Tinkerer", "Самоделкин", "Battery items drain 20% slower", "Drone batteries last 20% shorter",

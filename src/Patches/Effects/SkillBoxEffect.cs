@@ -179,6 +179,7 @@ internal static class SkillBoxEffect
             ModConfig.SkillLuckyBoxShift.Value);
         int points = SkillBoxRules.RollPoints(Random.value, w[0], w[1], w[2], w[3]);
         if (points > 0) SkillStore.GrantPoints(opener.steamID, points, "skill box");
+        DropScavenged(opener, b.Pos);
         b.State = Opened;
         b.Points = (byte)points;
         b.Opener = opener.photonView != null && opener.photonView.Owner != null ? opener.photonView.Owner.ActorNumber : 0;
@@ -187,6 +188,25 @@ internal static class SkillBoxEffect
         Plugin.Log.LogInfo($"[SkillBox] {b.OpenerName} opened a skill box: {points} point(s).");
         if (b.Visual != null) b.Visual.SetState(Opened, b.Points, animate: true);
         Announce(b);
+    }
+
+    private static readonly string[] ScavengerLoot =
+    {
+        "Item Health Pack Antidote", "Item Health Pack Adrenaline", "Item Health Pack Repair Kit",
+        "Item Grenade Smoke", "Item Grenade Cryo", "Item Grenade Glue",
+    };
+
+    // Scavenger perk (host): sometimes the box also drops one of the mod's consumables or grenades.
+    private static void DropScavenged(PlayerAvatar opener, Vector3 at)
+    {
+        float chance = Skills.PerkRules.ScavengerChance(Skills.SkillEffects.Level(opener, Skills.SkillCatalog.Scavenger));
+        if (chance <= 0f || Random.value >= chance || StatsManager.instance == null) return;
+        var pool = new List<Item>();
+        foreach (string asset in ScavengerLoot)
+            if (StatsManager.instance.itemDictionary.TryGetValue(asset, out var item) && item != null && item.prefab != null) pool.Add(item);
+        if (pool.Count == 0) return;
+        var drop = pool[Random.Range(0, pool.Count)];
+        Quests.QuestRewards.SpawnItemAt(drop, at + Vector3.up * .7f, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
     }
 
     private static bool Mine(Box b) => !PhotonNetwork.InRoom || PhotonNetwork.LocalPlayer.ActorNumber == b.Opener;

@@ -29,9 +29,11 @@ internal static class ThornyMonsters
     /// <summary>Host: a melee hit on <paramref name="enemy"/> dealt <paramref name="dealt"/> damage.</summary>
     internal static void Reflect(PlayerAvatar wielder, Enemy enemy, int dealt)
     {
-        if (!SemiFunc.IsMasterClientOrSingleplayer() || !ModifierManager.Current.Has(ModifierType.ThornyMonsters)) return;
+        if (!SemiFunc.IsMasterClientOrSingleplayer()) return;
         if (wielder == null || wielder.playerHealth == null || wielder.deadSet || dealt <= 0) return;
-        float share = Share(enemy);
+        // The level surprise and a Thorned elite never stack: the bigger share wins.
+        float share = Mathf.Max(ModifierManager.Current.Has(ModifierType.ThornyMonsters) ? Share(enemy) : 0f,
+            Monsters.EliteMonsters.ThornShare(enemy));
         if (share <= 0f) return;
         int damage = Mathf.Max(1, Mathf.RoundToInt(dealt * share));
         var from = enemy.CenterTransform != null ? enemy.CenterTransform.position : enemy.transform.position;

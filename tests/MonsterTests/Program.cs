@@ -270,4 +270,32 @@ Check(!MonsterRules.SpotsPlayer(8f, .8f, false, true, 3f) && MonsterRules.SpotsP
     var once = MonsterAudio.Render(MonsterAudio.Cue.Hurt); var twice = MonsterAudio.Render(MonsterAudio.Cue.Hurt);
     Check(once.AsSpan().SequenceEqual(twice), "A cue renders the same samples every time (all clients hear the same sound)");
 }
+// ---- elite monsters
+Check(IncreaseHardMod.Monsters.EliteRules.Chance(15) == 0f && Math.Abs(IncreaseHardMod.Monsters.EliteRules.Chance(16) - .10f) < 1e-5 &&
+      Math.Abs(IncreaseHardMod.Monsters.EliteRules.Chance(20) - .22f) < 1e-5 && IncreaseHardMod.Monsters.EliteRules.Chance(60) == .40f,
+    "Elites start at 16 levels with 10%, +3% a level, capped at 40%");
+{
+    int elites = 0; var seen = new HashSet<IncreaseHardMod.Monsters.EliteTrait>();
+    bool same = true;
+    for (int id = 1; id <= 20000; id++)
+    {
+        var trait = IncreaseHardMod.Monsters.EliteRules.Roll(id, 30);
+        same &= trait == IncreaseHardMod.Monsters.EliteRules.Roll(id, 30);
+        if (trait != IncreaseHardMod.Monsters.EliteTrait.None) { elites++; seen.Add(trait); }
+    }
+    Check(same && elites > 7200 && elites < 8800 && seen.Count == 3, $"Elite roll is repeatable, ~40% at the cap ({elites}/20000) and uses all three traits");
+    bool none = true;
+    for (int id = 1; id <= 5000; id++) none &= IncreaseHardMod.Monsters.EliteRules.Roll(id, 10) == IncreaseHardMod.Monsters.EliteTrait.None;
+    Check(none, "No elites before the start level");
+}
+{
+    float regenCarry = 0f; int healed = 0;
+    healed += IncreaseHardMod.Monsters.EliteRules.Regen(300, 1f, 4f, ref regenCarry);
+    for (int i = 0; i < 100; i++) healed += IncreaseHardMod.Monsters.EliteRules.Regen(300, .1f, 6f, ref regenCarry);
+    Check(healed == 45, $"Regenerating heals 1.5% max HP a second after 5 quiet seconds ({healed} of 300 in 10 s)");
+}
+Check(IncreaseHardMod.Monsters.EliteRules.ArmoredDamage(100, false) == 70 && IncreaseHardMod.Monsters.EliteRules.ArmoredDamage(100, true) == 100 &&
+      IncreaseHardMod.Monsters.EliteRules.ArmoredDamage(1, false) == 1, "Armored takes 30% less until stunned, never less than 1");
+Check(MoonRules.MonsterCrits(7, 20, .04) && !MoonRules.MonsterCrits(7, 20, .06) && !MoonRules.MonsterCrits(6, 20, 0) && !MoonRules.MonsterCrits(7, 4, 0),
+    "Last moon: 5% monster crits, never on earlier moons or on damage-over-time ticks");
 Console.WriteLine("MONSTER_CHECKS_PASSED: " + checks);

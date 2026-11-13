@@ -120,6 +120,7 @@ internal static class SupportPerks
         private static void Prefix(ItemHealthPack __instance, out (int Heal, bool Used, PlayerAvatar User, int Level) __state)
         {
             __state = (__instance.healAmount, __instance.used, null, 0);
+            if (__instance.GetComponent<Gear.ModConsumable>() != null) return; // Antidote, Adrenaline Shot, Repair Kit
             if (__instance.used || !SemiFunc.IsMasterClientOrSingleplayer() || __instance.itemToggle == null || !__instance.itemToggle.toggleState) return;
             var user = SemiFunc.PlayerAvatarGetFromPhotonID(__instance.itemToggle.playerTogglePhotonID);
             int level = SkillEffects.Level(user, C.FieldMedic);
@@ -181,7 +182,7 @@ internal static class CrouchSpeedPerk
         var grabber = local != null ? local.physGrabber : null;
         bool loot = grabber != null && grabber.grabbed && grabber.grabbedPhysGrabObject != null &&
                     grabber.grabbedPhysGrabObject.GetComponent<ValuableObject>() != null;
-        float holding = loot ? TradeOffs.Factor(local, Fx.HoldingLootSpeed) : 1f;
+        float holding = loot ? TradeOffs.Factor(local, Fx.HoldingLootSpeed) * PerkRules.HaulerSpeed(SkillEffects.Level(local, SkillCatalog.Hauler)) : 1f;
 
         float adrenaline = BuffPerks.LocalSpeed; // Adrenaline instinct
         float walk = TradeOffs.Factor(local, Fx.WalkSpeed) * holding * adrenaline;

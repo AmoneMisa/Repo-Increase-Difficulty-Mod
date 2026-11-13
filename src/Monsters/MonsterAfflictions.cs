@@ -41,6 +41,7 @@ internal static class MonsterAfflictions
         public int BurnLeft, BleedLeft, VenomLeft;
         public float BurnDotUntil, BurnRate, StartedHold;
         public float NextSync;
+        public float CuredUntil; // Antidote: no burning, bleeding or venom until then
     }
 
     private static readonly Dictionary<PlayerAvatar, HostState> Host = new();
@@ -72,7 +73,9 @@ internal static class MonsterAfflictions
             case Affliction.Venom: seconds = MonsterRules.AntidoteSeconds(seconds, Perk(player, C.Antidote)); break;
             case Affliction.Bleeding: seconds *= 1f - Skills.PerkRules.DurationResistance(Perk(player, C.Hemostasis)); break;
         }
+        if (MonsterRules.IsHardControl(kind)) seconds *= Skills.PerkRules.ToughnessFactor(Perk(player, C.Toughness));
         var s = For(player);
+        if (s.CuredUntil > Time.time && kind is Affliction.Burning or Affliction.Bleeding or Affliction.Venom) return false;
         if (!s.Timers.TryApply(kind, Time.time, seconds)) return false;
         s.Source = source != null ? source : s.Source;
         switch (kind)
@@ -101,6 +104,24 @@ internal static class MonsterAfflictions
         if (player == null || !Host.TryGetValue(player, out var s) || !s.Timers.Active(kind, Time.time)) return;
         s.Timers.End(kind, Time.time);
         Send(player, kind, 0f, null);
+    }
+
+    /// <summary>Host: the Antidote ends burning, bleeding, venom and slowness and keeps the first three away for a while.</summary>
+    internal static void Cure(PlayerAvatar player, float immuneSeconds)
+    {
+        if (player == null || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+        var s = For(player);
+        s.CuredUntil = Time.time + Mathf.Max(0f, immuneSeconds);
+        s.BurnLeft = s.BleedLeft = s.VenomLeft = 0;
+        foreach (var a in new[] { Affliction.Burning, Affliction.Bleeding, Affliction.Venom, Affliction.Slowed }) End(player, a);
+    }
+
+    /// <summary>Host: the Adrenaline Shot breaks every hold on the player (the usual immunity follows).</summary>
+    internal static void BreakFree(PlayerAvatar player)
+    {
+        if (player == null || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+        foreach (var a in new[] { Affliction.Electrified, Affliction.Constricted, Affliction.Petrified, Affliction.Dragged, Affliction.Seized })
+            End(player, a);
     }
 
     /// <summary>Host: ends every hard control a monster holds (its death, stun or despawn).</summary>

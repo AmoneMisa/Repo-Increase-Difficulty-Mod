@@ -12,6 +12,24 @@ public static class PerkRules
     internal static float FovBonus(int rank) => Math.Min(FovCap, FovPerRank * Math.Clamp(rank, 0, 3));
     internal static float FireRate(int rank) => 1f + .25f * Math.Clamp(rank, 0, 3) / 3f;
     internal static float DurationResistance(int rank) => rank <= 0 ? 0f : rank == 1 ? .2f : rank == 2 ? .35f : .5f;
+    /// <summary>Toughness: hard control (levitation, constriction, petrification, the twins' grip) 10% shorter per rank.</summary>
+    internal static float ToughnessFactor(int rank) => 1f - .1f * Math.Clamp(rank, 0, 3);
+    /// <summary>Hauler: +5% walking, sprinting and crouching speed per rank while you hold loot.</summary>
+    internal static float HaulerSpeed(int rank) => 1f + .05f * Math.Clamp(rank, 0, 3);
+    /// <summary>Scavenger: chance that a skill box you open also drops a consumable or a mod grenade.</summary>
+    internal static float ScavengerChance(int rank) => .1f * Math.Clamp(rank, 0, 3);
+    /// <summary>
+    /// Critical Strike (melee): each hit has a CritChance(rank) chance to deal CritMultiplier x damage.
+    /// Average damage per hit E = 1 + p(k - 1); hits to kill drop from N to about N / E, i.e. N(1 - 1/E) fewer.
+    /// Rank 5 (p = 30%, k = 2, E = 1.3) saves about 1 hit on a monster that took 4-5, 2 on one that took 9 and 3 on
+    /// one that took 13.
+    /// </summary>
+    internal const float CritMultiplier = 2f, CritChancePerRank = .06f;
+    internal static float CritChance(int rank) => CritChancePerRank * Math.Clamp(rank, 0, 5);
+    internal static float CritExpected(int rank) => 1f + CritChance(rank) * (CritMultiplier - 1f);
+    internal static float HitsSaved(int hits, int rank) => hits <= 0 ? 0f : hits * (1f - 1f / CritExpected(rank));
+    internal static int Crit(int damage, int rank, double roll) =>
+        damage > 0 && roll < CritChance(rank) ? (int)Math.Round(damage * CritMultiplier, MidpointRounding.AwayFromZero) : damage;
     internal static float SapperFactor(int rank) => rank <= 0 ? 1f : rank == 1 ? .85f : rank == 2 ? .75f : .65f;
     internal static float LinkSpeed(int rank) => 1f + .1f * Math.Clamp(rank, 0, 3);
     internal static float BasketLift(int rank) => 1f + .1f * Math.Clamp(rank, 0, 5);
@@ -95,16 +113,16 @@ public static class PerkRules
     }
 
     /// <summary>Free Rounds / Free Laser Shot / Free Dart / Unworn Edge: chance that one use costs no charge (2%, 4%, 7%).</summary>
-    public static float FreeUseChance(int level) => level <= 0 ? 0f : level == 1 ? .02f : level == 2 ? .04f : .07f;
+    public static float FreeUseChance(int level) => level <= 0 ? 0f : level == 1 ? .04f : level == 2 ? .08f : .12f;
 
     /// <summary>Free Cart Shot: chance that a C.A.R.T. cannon or C.A.R.T. laser shot costs no charge (2%, 3.5%, 5%).</summary>
-    public static float CartFreeShotChance(int level) => level <= 0 ? 0f : level == 1 ? .02f : level == 2 ? .035f : .05f;
+    public static float CartFreeShotChance(int level) => level <= 0 ? 0f : level == 1 ? .03f : level == 2 ? .06f : .09f;
 
     /// <summary>Frugal Drones: the share of drone drain that still happens (3%, 5%, 7% less).</summary>
-    public static float DroneThriftFactor(int level) => level <= 0 ? 1f : level == 1 ? .97f : level == 2 ? .95f : .93f;
+    public static float DroneThriftFactor(int level) => level <= 0 ? 1f : level == 1 ? .95f : level == 2 ? .90f : .85f;
 
     /// <summary>Deep Regeneration: regeneration fills up to one more percent of max HP per level (30% -> 35%).</summary>
-    public const float RegenCapPerLevel = .01f;
+    public const float RegenCapPerLevel = .03f;
     public static float RegenCap(float baseCap, int level) => Math.Min(1f, Math.Max(0f, baseCap) + RegenCapPerLevel * Math.Max(0, Math.Min(5, level)));
 
     /// <summary>Battery Saver: the share of drain that still happens (1 = none saved). Never below 25%.</summary>

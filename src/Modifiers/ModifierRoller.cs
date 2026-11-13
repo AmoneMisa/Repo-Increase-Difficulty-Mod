@@ -179,7 +179,7 @@ public static class ModifierRoller
         if (m.Has(ModifierType.ReducedPlayerHp))
         {
             // 10-90% in 10% steps.
-            m.PlayerHpPercent = Random.Range(1, 10) * 10;
+            m.PlayerHpPercent = Random.Range(3, 8) * 10; // 30-70%: 10% on a deep level was a death sentence
         }
 
         if (m.Has(ModifierType.MoneyLossOnDeath))

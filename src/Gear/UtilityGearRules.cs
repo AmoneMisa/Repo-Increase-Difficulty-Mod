@@ -5,6 +5,11 @@ namespace IncreaseHardMod.Gear;
 internal static class UtilityGearRules
 {
     internal const float GhostSilencerSeconds = 180f, ProtectionDrain = 1.5f, OrbRadius = 1.25f;
+    /// <summary>Poison bolt total: the larger of the flat floor and a share of the monster's max HP, plus half the
+    /// damage the previous poison still had to deal.</summary>
+    internal static float PoisonTotal(int flat, int maxHpPercent, int maxHealth, float leftover) =>
+        Math.Max(Math.Max(0, flat), Math.Max(0, maxHealth) * Math.Max(0, maxHpPercent) / 100f) + Math.Max(0f, leftover) * .5f;
+
     internal static int DefenceCapacity(int configured) => Math.Max(450, configured);
     internal static int LootCapacity(int configured) => Math.Max(10000, configured);
     internal static float DefenceSeconds(float configured) => Math.Max(90f, configured);

@@ -74,7 +74,7 @@ internal static class GearItems
             {
                 if (ModConfig.PoisonCrossbowEnabled.Value)
                     MakeGun(gun, "Item Gun Poison Crossbow", "Poison Crossbow", GearKind.Poison, 19000f, 24000f, new Color(0.4f, 1f, 0.3f),
-                        "Poison bolts: a little damage plus a 15 second poison that refreshes (never stacks) and keeps the monster hunting players. Fewer shots than a normal gun.");
+                        $"Poison bolts: a little damage plus a 15 second poison worth {ModConfig.PoisonMaxHpPercent.Value}% of the monster's max health (at least {ModConfig.PoisonTotalDamage.Value}). A new bolt refreshes it and keeps half of what was left. The poisoned monster keeps hunting players. Fewer shots than a normal gun.");
                 if (ModConfig.IcePistolEnabled.Value)
                     MakeGun(pulseGun ?? gun, "Item Gun Ice Pulse", "Pulse Ice Pistol", GearKind.Ice, 11000f, 15000f, new Color(0.5f, 0.85f, 1f),
                         $"Freezes monsters and players. Deals 20 damage to monsters on the first freeze; further shots extend it without extra freeze damage. Frozen monsters take {ModConfig.IceGunDamagePercent.Value}% firearm damage, +{ModConfig.IceMeleeBonusPercent.Value}% melee damage and +80% grenade damage. They cannot be lifted.");
@@ -83,7 +83,7 @@ internal static class GearItems
                         $"Fires a weighted rope net that pins a monster to the floor for {ModConfig.NetSeconds.Value:0.#} seconds. It can still turn and attack anything in reach, and may tear free early. {ModConfig.NetShots.Value} nets per charge.");
                 if (ModConfig.StickyPistolEnabled.Value)
                     MakeGun(gun, "Item Gun Sticky", "Sticky Pistol", GearKind.Sticky, 9000f, 10000f, new Color(1f, 0.5f, 0.9f),
-                        "Glues players and monsters to the ground for 2 seconds. Pulls loot you could lift with one strength level less; pulled loot takes 80% less damage.");
+                        "Glues monsters to the ground for 3 seconds and players for 2. Pulls loot you could lift with one strength level less; pulled loot takes 80% less damage.");
             }
             else
                 Plugin.Log.LogWarning("[Gear] No vanilla gun found to clone; guns disabled.");
@@ -93,6 +93,22 @@ internal static class GearItems
 
             if (grenade != null && ModConfig.DecoyGrenadeEnabled.Value)
                 MakeDecoy(grenade);
+            if (grenade != null && ModConfig.NewGrenadesEnabled.Value)
+            {
+                bool ru = Localization.GameLanguage.Russian;
+                MakeGrenade(grenade, "Item Grenade Smoke", ru ? "Дымовая граната" : "Smoke Grenade", GrenadeKind.Smoke, 1500f, 1900f, new Color(.55f, .56f, .6f),
+                    ru ? $"Облако дыма радиусом {GrenadeRules.SmokeRadius:0.#} м на {GrenadeRules.SmokeSeconds:0} с. Монстры не видят игроков в дыму и сквозь него, если не стоят вплотную."
+                       : $"A {GrenadeRules.SmokeRadius:0.#} m smoke cloud for {GrenadeRules.SmokeSeconds:0} s. Monsters cannot see players inside or through it unless they are right next to them.");
+                MakeGrenade(grenade, "Item Grenade Cryo", ru ? "Крио-граната" : "Cryo Grenade", GrenadeKind.Cryo, 2400f, 3000f, new Color(.55f, .85f, 1f),
+                    ru ? $"Замораживает всех монстров в радиусе {GrenadeRules.CryoRadius:0.#} м на {GrenadeRules.CryoSeconds:0} с, как ледяной пистолет. Игроков не задевает."
+                       : $"Freezes every monster within {GrenadeRules.CryoRadius:0.#} m for {GrenadeRules.CryoSeconds:0} s, like the Ice Pistol. Players are unaffected.");
+                MakeGrenade(grenade, "Item Grenade Glue", ru ? "Клеевая граната" : "Glue Grenade", GrenadeKind.Glue, 1600f, 2000f, new Color(1f, .5f, .9f),
+                    ru ? $"Приклеивает к полу всех монстров в радиусе {GrenadeRules.GlueRadius:0.#} м на {StickyRoot.MonsterSeconds:0} с. Игроков не задевает."
+                       : $"Glues every monster within {GrenadeRules.GlueRadius:0.#} m to the floor for {StickyRoot.MonsterSeconds:0} s. Players are unaffected.");
+            }
+
+            if (ModConfig.ConsumablesEnabled.Value)
+                MakeConsumables();
 
             FlameCartItem.Build();
             CustomCarts.Build();
@@ -109,6 +125,18 @@ internal static class GearItems
                 Register(attributes, Katana.Asset);
             }
             else Plugin.Log.LogWarning("[Gear] Vanilla sword not found; Katana disabled.");
+            if (ModConfig.SickleEnabled.Value && StatsManager.instance.itemDictionary.TryGetValue("Item Melee Sword", out var blade) && blade?.prefab?.Prefab != null)
+            {
+                bool ru = Localization.GameLanguage.Russian;
+                const float factor = 1.1f / CustomItemPrices.Multiplier;
+                var (_, go, attributes) = Clone(blade, SickleRules.Asset, ru ? "Серп-бумеранг" : "Boomerang Sickle", blade.value.valueMin * factor,
+                    blade.value.valueMax * factor, new Color(.75f, .8f, .55f), ru
+                        ? $"Бьёт как меч. Брошенный серп вращается, наносит {SickleRules.ThrowDamage} урона каждому монстру на пути и возвращается к вам."
+                        : $"Swings like a sword. Thrown, it spins, cuts every monster in its path for {SickleRules.ThrowDamage} damage and flies back to you.",
+                    _ => false, tint: true);
+                go.AddComponent<BoomerangSickle>();
+                Register(attributes, SickleRules.Asset);
+            }
         }
         catch (Exception e)
         {
@@ -388,6 +416,45 @@ internal static class GearItems
         h.enemyStun = false;
         h.enemyStunTime = 0f;
         h.horizontalVerticalHitForce = Vector2.zero;
+    }
+
+    private static void MakeGrenade(Item baseItem, string asset, string display, GrenadeKind kind, float priceMin, float priceMax, Color color, string desc)
+    {
+        var (_, go, attributes) = Clone(baseItem, asset, display, priceMin, priceMax, color, desc,
+            mb => mb.GetType().Name.StartsWith("ItemGrenade") && mb.GetType().Name != "ItemGrenade", tint: true);
+        go.AddComponent<ModGrenade>().kind = kind;
+        Register(attributes, asset);
+    }
+
+    private static void MakeConsumables()
+    {
+        if (!StatsManager.instance.itemDictionary.TryGetValue("Item Health Pack Small", out var pack) || pack?.prefab?.Prefab == null ||
+            pack.prefab.Prefab.GetComponent<ItemHealthPack>() == null)
+        {
+            Plugin.Log.LogWarning("[Gear] Small health pack not found; consumables disabled.");
+            return;
+        }
+        bool ru = Localization.GameLanguage.Russian;
+        MakeConsumable(pack, "Item Health Pack Antidote", ru ? "Антидот" : "Antidote", ConsumableKind.Antidote, 1f, new Color(.45f, 1f, .4f),
+            ru ? $"Снимает горение, кровотечение, яд и замедление и защищает от горения, кровотечения и яда на {ConsumableRules.AntidoteImmunitySeconds:0} с."
+               : $"Ends burning, bleeding, venom and slowness, and keeps burning, bleeding and venom away for {ConsumableRules.AntidoteImmunitySeconds:0} s.");
+        MakeConsumable(pack, "Item Health Pack Adrenaline", ru ? "Шприц адреналина" : "Adrenaline Shot", ConsumableKind.Adrenaline, 1.3f, new Color(1f, .35f, .3f),
+            ru ? $"Вырывает из любого захвата монстра (левитация, удушение, окаменение, хватка), затем {ConsumableRules.AdrenalineSeconds:0} с +30% скорости и полная выносливость."
+               : $"Breaks any monster hold (levitation, constriction, petrification, a grip), then +30% speed and a full stamina bar for {ConsumableRules.AdrenalineSeconds:0} s.");
+        MakeConsumable(pack, "Item Health Pack Repair Kit", ru ? "Ремкомплект" : "Repair Kit", ConsumableKind.RepairKit, 1.5f, new Color(1f, .75f, .3f),
+            ru ? $"Возвращает половину потерянной ценности самому повреждённому луту в радиусе {ConsumableRules.RepairRange:0} м. Без повреждённого лута рядом не срабатывает."
+               : $"Gives the most damaged valuable within {ConsumableRules.RepairRange:0} m back half of the value it lost. Refused when nothing nearby is damaged.");
+    }
+
+    private static void MakeConsumable(Item pack, string asset, string display, ConsumableKind kind, float priceFactor, Color color, string desc)
+    {
+        float min = pack.value.valueMin * priceFactor / CustomItemPrices.Multiplier;
+        float max = pack.value.valueMax * priceFactor / CustomItemPrices.Multiplier;
+        var (item, go, attributes) = Clone(pack, asset, display, min, max, color, desc, _ => false, tint: true);
+        item.maxAmountInShop = 2;
+        go.GetComponent<ItemHealthPack>().healAmount = 0;
+        go.AddComponent<ModConsumable>().kind = kind;
+        Register(attributes, asset);
     }
 
     private static void MakeDecoy(Item baseItem)

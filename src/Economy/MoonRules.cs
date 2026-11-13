@@ -20,6 +20,11 @@ internal static class MoonRules
         moon >= Resistant && now >= ready && roll < GuardChance;
     internal static int Damage(int damage, int moon, bool guard) => damage <= 0 ? damage :
         Math.Max(1, (int)Math.Round(damage * DamageFactor(moon) * (guard ? GuardDamage : 1f), MidpointRounding.AwayFromZero));
+    /// <summary>Last moon: a monster attack (not a damage-over-time tick) has a 5% chance to deal double damage.</summary>
+    internal const float MonsterCritChance = .05f, MonsterCritMultiplier = 2f;
+    internal const int MonsterCritMinDamage = 6; // DoT ticks arrive in chunks of at most 4-5 HP
+    internal static bool MonsterCrits(int moon, int damage, double roll) =>
+        moon >= Resistant && damage >= MonsterCritMinDamage && roll < MonsterCritChance;
     internal static int Strength(int tier) => tier <= 1 ? 3 : tier == 2 ? 5 : 7;
     // Native PhysGrabber: forceMax=4, base grabStrength=1, +.2 per Strength upgrade.
     internal static float GrabForce(int tier) => 4f * (1f + .2f * Strength(tier));

@@ -72,6 +72,23 @@ Check(UtilityGearRules.UpgradedBars(10, 10f, 0f, .7f, 1, 40) == 14 && UtilityGea
     "Battery trade-offs change the bar count, not the cost of a shot (Overclock 10->14, Overdrive 15->12)");
 Check(UtilityGearRules.UpgradedBars(15, 15f, 30f, .7f, 1, 40) == 40 && UtilityGearRules.UpgradedBars(4, 2f, 3f, 1f, 2, 9) == 8,
     "Upgraded bars respect the readable cap and stay a whole number of shots for multi-bar guns");
+Check(UtilityGearRules.PoisonTotal(125, 15, 300, 0f) == 125f && UtilityGearRules.PoisonTotal(125, 15, 1080, 0f) == 162f,
+    "Poison uses the larger of the flat floor and 15% of max HP (ramped 3x Gorgon: 162)");
+Check(UtilityGearRules.PoisonTotal(125, 15, 1080, 100f) == 212f && UtilityGearRules.PoisonTotal(125, 0, 1080, 0f) == 125f,
+    "A refresh keeps half the leftover poison; 0% falls back to the flat total");
+// ---- 0.10.15 gear
+Check(GrenadeRules.Hides(0, 1, 0, 10, 1, 0, 5, 1, 0, 4.5f) && !GrenadeRules.Hides(0, 1, 0, 10, 1, 0, 5, 1, 6, 4.5f),
+    "Smoke hides a player behind the cloud, not one beside it");
+Check(GrenadeRules.Hides(0, 1, 0, 10, 1, 0, 10, 1, 0, 4.5f) && !GrenadeRules.Hides(0, 1, 0, 1, 1, 0, .5f, 1, 0, 4.5f),
+    "A player inside the cloud is hidden, but never at touching range");
+Check(GrenadeRules.Within(0, 0, 0, 3, 0, 2, GrenadeRules.CryoRadius) && !GrenadeRules.Within(0, 0, 0, 4, 0, 2, GrenadeRules.CryoRadius),
+    "Cryo reaches 4 m");
+Check(ConsumableRules.Repaired(1000f, 400f) == 700f && ConsumableRules.Repaired(1000f, 1000f) == 1000f && ConsumableRules.Repaired(1000f, 0f) == 500f,
+    "Repair Kit gives back half the lost value, never above the original");
+Check(SickleRules.Thrown(true, false, 6f) && !SickleRules.Thrown(true, false, 3f) && !SickleRules.Thrown(false, false, 9f),
+    "The sickle flies only when let go at speed");
+Check(!SickleRules.Ends(.3f, .5f) && SickleRules.Ends(.8f, 1f) && SickleRules.Ends(2.7f, 30f) && SickleRules.Returning(.6f),
+    "The sickle is not caught on release, returns after .55 s and lands by 2.6 s");
 Console.WriteLine($"GEAR_CHECKS_PASSED: {checks}");
 
 public class HurtCollider

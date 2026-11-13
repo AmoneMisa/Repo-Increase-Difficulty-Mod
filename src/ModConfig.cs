@@ -245,11 +245,13 @@ public static class ModConfig
     public static ConfigEntry<float> DefenceIdleDrainPerMinute;
     public static ConfigEntry<int> DefenceItemAbsorb;
     public static ConfigEntry<float> DefenceDroneSeconds;
-    public static ConfigEntry<int> PoisonHitDamage, PoisonTotalDamage;
+    public static ConfigEntry<int> PoisonHitDamage, PoisonTotalDamage, PoisonMaxHpPercent;
     public static ConfigEntry<float> PoisonSeconds, IceFreezeSeconds, DecoySeconds, StickyFreeLiftMass;
     public static ConfigEntry<int> IceGunDamagePercent, IceMeleeBonusPercent;
     // New monsters (0.10.0). Prefabs are always registered on every client so a host may spawn them; the switches
     // below only decide (on the host) whether the director picks them.
+    public static ConfigEntry<bool> EliteMonstersEnabled;
+    public static ConfigEntry<bool> NewGrenadesEnabled, ConsumablesEnabled, SickleEnabled;
     public static ConfigEntry<bool> MonstersEnabled, PigEnabled, WitchEnabled, BasiliskEnabled, GorgonEnabled, NagaEnabled, FairyEnabled, TwinsEnabled;
     public static ConfigEntry<float> PigSpawnChance, NewMonsterChance;
     public static ConfigEntry<int> MonsterRarity;
@@ -461,7 +463,7 @@ public static class ModConfig
         EconomyEventChance = economicSurprises.Chance;
         EconomyStartLevel = economicSurprises.StartLevel;
         MapValueStartLevel = BindInt(cfg, Lvl, "MapValueStartLevel", 2, 0, 50, "Levels completed before valuables start gaining value.");
-        MapValuePerLevel = BindFloat(cfg, Lvl, "MapValuePerLevel", 0.02f, 0f, 0.5f, "Valuable value growth per level (compounding). 0.02 = x1.02 per level.");
+        MapValuePerLevel = BindFloat(cfg, Lvl, "MapValuePerLevel", 0.03f, 0f, 0.5f, "Valuable value growth per level (compounding). 0.03 = x1.03 per level.");
         MapValueMax = BindFloat(cfg, Lvl, "MapValueMax", 3f, 1f, 20f, "Cap on the depth multiplier of valuables' value.");
         EnemyCapStartLevel = BindInt(cfg, Lvl, "EnemyCountStartLevel", 8, 0, 100, "Levels completed before extra monsters appear.");
         EnemyCapPerLevel = BindFloat(cfg, Lvl, "EnemyCountPerLevel", 0.03f, 0f, 1f, "Extra monsters per level past the start, as a fraction of the normal count (0.03 = +3%).");
@@ -478,6 +480,9 @@ public static class ModConfig
         ProtectionOrbEnabled = Module(cfg, "Gear", "ProtectionOrbEnabled", true, "ProtectionOrb", "Sell the Protection Orb.");
         PoisonCrossbowEnabled = Module(cfg, "Gear", "PoisonCrossbowEnabled", true, "PoisonCrossbow", "Sell the Poison Crossbow.");
         DecoyGrenadeEnabled = Module(cfg, "Gear", "DecoyGrenadeEnabled", true, "DecoyGrenade", "Sell the Decoy Grenade.");
+        NewGrenadesEnabled = Module(cfg, "Gear", "NewGrenadesEnabled", true, "NewGrenades", "Sell the Smoke, Cryo and Glue grenades. Every player must use the same setting (shop items must match). Takes effect on restart.");
+        ConsumablesEnabled = Module(cfg, "Gear", "ConsumablesEnabled", true, "Consumables", "Sell the Antidote, Adrenaline Shot and Repair Kit. Every player must use the same setting (shop items must match). Takes effect on restart.");
+        SickleEnabled = Module(cfg, "Gear", "SickleEnabled", true, "Sickle", "Sell the Boomerang Sickle. Every player must use the same setting (shop items must match). Takes effect on restart.");
         IcePistolEnabled = Module(cfg, "Gear", "IcePistolEnabled", true, "IcePistol", "Sell the Pulse Ice Pistol.");
         StickyPistolEnabled = Module(cfg, "Gear", "StickyPistolEnabled", true, "StickyPistol", "Sell the Sticky Pistol.");
         FlameCartEnabled = Module(cfg, "Gear", "FlameCartEnabled", true, "FlameCart", "Sell the Flamethrower C.A.R.T. (a wheeled flamethrower turret with a loot storage box).");
@@ -498,14 +503,14 @@ public static class ModConfig
         if (SoulCartValueCap.Value == 55000) SoulCartValueCap.Value = 65000;
         WideCartWidth = BindFloat(cfg, "Carts", "WideCartWidth", 1.25f, 1f, 1.5f, $"How much wider the Wide C.A.R.T. is than the big C.A.R.T. (1.25 = 25% wider). Length is at least {Gear.CustomCarts.MinWideLength.ToString("0.##", CultureInfo.InvariantCulture)}x, with extra length at lower widths to retain floor space. Above about 1.3 it may not fit through doorways. Applies after a game restart.");
         // New keys (not DamagePerTick/TickSeconds/BatteryDamage): saved values of the old keys would keep the slow flame.
-        FlameDamagePerSecond = BindInt(cfg, "Flamethrower", "DamagePerSecond", 24, 1, 500, "Damage per second dealt to every monster inside the flame, applied in small fast ticks.");
+        FlameDamagePerSecond = BindInt(cfg, "Flamethrower", "DamagePerSecond", 30, 1, 500, "Damage per second dealt to every monster inside the flame, applied in small fast ticks.");
         FlameTickSeconds = BindFloat(cfg, "Flamethrower", "DamageTickSeconds", 0.25f, 0.1f, 2f, "Seconds between flame damage ticks. Smaller = smoother, more immediate damage.");
         FlameFuelSeconds = BindFloat(cfg, "Flamethrower", "FuelSeconds", 60f, 5f, 600f, "Seconds of continuous flame one full battery provides (used whether or not anything is hit).");
         FlameRange = BindFloat(cfg, "Flamethrower", "Range", 7f, 2f, 15f, "Flame reach in metres, in the direction the operator looks.");
         FlameConeAngle = BindFloat(cfg, "Flamethrower", "ConeHalfAngle", 30f, 5f, 80f, "Half-angle of the flame cone in degrees.");
         FlameCartValueCap = BindInt(cfg, "Flamethrower", "CargoValueCap", 25000, 0, 1000000, "Most loot value its storage box (the Hauler's storage system) holds; loot that would exceed it is refused. 0 = the Hauler's own limit.");
-        FlameCartPriceMinK = BindInt(cfg, "Flamethrower", "ShopPriceMinK", 75, 1, 5000, "Lowest shop price, in K as the shop shows it (75 = $75K). Shop economy modifiers still apply on top.");
-        FlameCartPriceMaxK = BindInt(cfg, "Flamethrower", "ShopPriceMaxK", 120, 1, 5000, "Highest shop price, in K as the shop shows it (120 = $120K).");
+        FlameCartPriceMinK = BindInt(cfg, "Flamethrower", "ShopPriceMinK", 50, 1, 5000, "Lowest shop price, in K as the shop shows it (50 = $50K). Shop economy modifiers still apply on top.");
+        FlameCartPriceMaxK = BindInt(cfg, "Flamethrower", "ShopPriceMaxK", 80, 1, 5000, "Highest shop price, in K as the shop shows it (80 = $80K).");
         StaffEnabled = Module(cfg, "Gear", "WizardStaffEnabled", true, "WizardStaff", "Sell the Wizard Staff (chain-lightning wand).");
         NetLauncherEnabled = Module(cfg, "Gear", "NetLauncherEnabled", true, "NetLauncher", "Sell the Net Launcher (roots a monster to the floor).");
         GuaranteedStrengthEnabled = Module(cfg, "Shop", "GuaranteedStrength", true, "GuaranteedStrength", "When MoreStandsForShops is installed, the shop always offers at least one Strength (grab strength) upgrade, while the team can still buy it. Host setting.");
@@ -531,7 +536,7 @@ public static class ModConfig
         NetBreakChance = BindFloat(cfg, "Net Launcher", "BreakChancePerSecond", .12f, 0f, 1f, "Chance each second that the monster tears the net and breaks free early (0.12 = about 45% over 5 seconds).");
         NetShots = BindInt(cfg, "Net Launcher", "Shots", 8, 1, 20, "Nets per full battery (one battery bar per net).");
         StaffDamage = BindInt(cfg, "Wizard Staff", "BoltDamage", 75, 1, 1000, "Total lightning damage per bolt, split evenly between the monsters it strikes (75 = 75 to one, 38 + 37 to two, 25 each to three).");
-        StaffRange = BindFloat(cfg, "Wizard Staff", "Range", 5f, 1f, 20f, "How far (metres) the first bolt reaches from the staff tip.");
+        StaffRange = BindFloat(cfg, "Wizard Staff", "Range", 7.5f, 1f, 20f, "How far (metres) the first bolt reaches from the staff tip.");
         StaffShockSeconds = BindFloat(cfg, "Wizard Staff", "ShockSeconds", 4f, 0f, 15f,
             "Everything a bolt strikes is shocked this long: players move 50% slower and recover stamina half as fast; monsters move 50% slower and deal 25% less damage. 0 turns it off.");
         StaffPlayerDamagePercent = BindFloat(cfg, "Wizard Staff", "PlayerDamagePercent", 30f, 0f, 100f,
@@ -636,8 +641,8 @@ public static class ModConfig
             "Log each enemy's internal name the first time it spawns, so you can tune HealthMaxPerEnemy.");
 
         EnemyDamagePerLevel = BindFloat(cfg,
-            "Enemies", "DamagePerLevel", 0.10f, 0f, 2f,
-            "Extra enemy attack damage per level past the ramp start. 0.10 = +10% per level.");
+            "Enemies", "DamagePerLevel", 0.07f, 0f, 2f,
+            "Extra enemy attack damage per level past the ramp start. 0.07 = +7% per level.");
         EnemyDamageMax = BindFloat(cfg,
             "Enemies", "DamageMaxMultiplier", 3.0f, 1f, 20f,
             "Upper cap on the enemy damage multiplier.");
@@ -657,8 +662,8 @@ public static class ModConfig
             "Floor for the respawn-wait multiplier. 0.3 = respawn wait never drops below 30% of vanilla.");
 
         QuotaPerLevel = BindFloat(cfg,
-            "Quota", "QuotaPerLevel", 0.10f, 0f, 2f,
-            "Extra extraction quota per level past the ramp start. 0.10 = +10% per level.");
+            "Quota", "QuotaPerLevel", 0.07f, 0f, 2f,
+            "Extra extraction quota per level past the ramp start. 0.07 = +7% per level.");
         QuotaMax = BindFloat(cfg,
             "Quota", "QuotaMaxMultiplier", 5.0f, 1f, 20f,
             "Upper cap on the quota multiplier.");
@@ -904,13 +909,15 @@ public static class ModConfig
         ProtectionReductionPercent = BindInt(cfg, Gear, "ProtectionReductionPercent", 30, 5, 90,
             "Damage reduction inside an active Protection Orb.");
         PoisonHitDamage = BindInt(cfg, Gear, "PoisonHitDamage", 7, 1, 100, "Direct damage of a poison bolt.");
-        PoisonTotalDamage = BindInt(cfg, Gear, "PoisonTotalDamage", 125, 1, 1000, "Total poison damage over the full duration.");
+        PoisonTotalDamage = BindInt(cfg, Gear, "PoisonTotalDamage", 125, 1, 1000, "Smallest total poison damage over the full duration (the max-HP share below wins on tougher monsters).");
+        PoisonMaxHpPercent = BindInt(cfg, Gear, "PoisonMaxHpPercent", 15, 0, 100, "Total poison damage as a percent of the monster's max HP (after depth scaling). A fresh bolt also keeps half of the poison still left. 0 = flat PoisonTotalDamage only.");
         PoisonSeconds = BindFloat(cfg, Gear, "PoisonSeconds", 15f, 1f, 60f,
             "Poison duration. Each hit refreshes it to this value (it does not stack).");
         IceFreezeSeconds = BindFloat(cfg, Gear, "IceFreezeSeconds", 4.5f, 0.5f, 30f, "How long the Ice Pistol freezes a monster or player. Players receive a visible ice coating and movement pause without shot damage, including in the shop. Repeated hits refresh the timer.");
-        IceGunDamagePercent = BindInt(cfg, Gear, "IceGunDamagePercent", 60, 10, 100,
+        IceGunDamagePercent = BindInt(cfg, Gear, "IceGunDamagePercent", 75, 10, 100,
             "Firearm damage frozen enemies take, in percent of normal.");
         const string Monsters = "Monsters";
+        EliteMonstersEnabled = cfg.Bind(Monsters, "EliteMonsters", true, "From 16 completed levels some monsters roll one elite trait: Armored (30% less damage until stunned), Regenerating (heals after 5 quiet seconds) or Thorned (reflects 10% of melee damage). 10% of monsters at 16 levels, +3% per level, at most 40%. Pings with Monster Threat name the trait. Host setting.");
         MonstersEnabled = cfg.Bind(Monsters, "Enabled", true, "Let the director spawn the mod's new monsters (Golden Pig, Mischief Fairy, Witch, Basilisk, Hansel and Gretel, Gorgon, Naga Queen). Host setting.");
         PigEnabled = cfg.Bind(Monsters, "GoldenPig", true, "Golden flying pig (Tier I, neutral). At most one per level, rolled separately. Host setting.");
         WitchEnabled = cfg.Bind(Monsters, "Witch", true, "Witch (Tier II): fireball and electric levitation. Host setting.");
@@ -1028,8 +1035,8 @@ public static class ModConfig
             "Player Upgrades", "StaminaMaxLevel", 5, 1, 20,
             "Slower Stamina Use: maximum purchasable level.");
         RegenPercentPerLevel = BindFloat(cfg,
-            "Player Upgrades", "RegenPercentPerLevel", 0.000667f, 0.0005f, 0.05f,
-            "HP Regen: fraction of MAX HP healed per SECOND, per level. 0.000667 = about 0.07%/s per level (~1 HP every 15s at level 1 for a 100 HP player).");
+            "Player Upgrades", "RegenPercentPerLevel", 0.00133f, 0.0005f, 0.05f,
+            "HP Regen: fraction of MAX HP healed per SECOND, per level. 0.00133 = about 0.13%/s per level (~1 HP every 7.5s at level 1 for a 100 HP player).");
         RegenMaxHpFraction = BindFloat(cfg,
             "Player Upgrades", "RegenMaxHpFraction", 0.30f, 0.05f, 1f,
             "HP Regen: stops once current HP reaches this fraction of max HP. 0.30 = regen only fills up to 30% of max HP.");
@@ -1185,12 +1192,52 @@ public static class ModConfig
                 $"{ModifierDescription(m)} Toggle whether it can be rolled on special levels.");
         }
 
+        var statOrphans = Orphans(cfg);
         foreach (var sm in Modifiers.StatModifiers.All)
-            StatModifierEnabled[sm.Id] = cfg.Bind("Surprise Modifiers", sm.Name, true,
-                $"{sm.Description} Toggle whether it can be rolled on special levels.");
+        {
+            var def = new ConfigDefinition("Surprise Modifiers", sm.Name);
+            bool existed = statOrphans != null && statOrphans.ContainsKey(def);
+            StatModifierEnabled[sm.Id] = cfg.Bind(def, true, new ConfigDescription($"{sm.Description} Toggle whether it can be rolled on special levels."));
+            // Renamed modifiers keep the player's old on/off choice.
+            if (!existed && sm.OldName != null && statOrphans != null &&
+                statOrphans.TryGetValue(new ConfigDefinition("Surprise Modifiers", sm.OldName), out var raw))
+                StatModifierEnabled[sm.Id].SetSerializedValue(raw);
+        }
+
+        ApplyBalanceRevision(cfg);
 
         RebuildPerEnemyCaps();
         EnemyHealthMaxPerEnemy.SettingChanged += (_, _) => RebuildPerEnemyCaps();
+    }
+
+    // Bump when shipping new balance defaults. Values a player never touched (still equal to the old default) move to
+    // the new default once; values they changed by hand stay as they are.
+    private const int BalanceRevision = 1;
+
+    private static void ApplyBalanceRevision(ConfigFile cfg)
+    {
+        var revision = cfg.Bind("General", "BalanceRevision", 0,
+            new ConfigDescription("Internal: last balance update applied to this file. Do not edit.", null, HideFromRepoConfig));
+        if (revision.Value >= BalanceRevision) return;
+        if (revision.Value < 1)
+        {
+            Retune(EnemyDamagePerLevel, .10f);
+            Retune(QuotaPerLevel, .10f);
+            Retune(MapValuePerLevel, .02f);
+            Retune(RegenPercentPerLevel, .000667f);
+            Retune(IceGunDamagePercent, 60);
+            Retune(StaffRange, 5f);
+            Retune(FlameDamagePerSecond, 24);
+            Retune(FlameCartPriceMinK, 75);
+            Retune(FlameCartPriceMaxK, 120);
+        }
+        revision.Value = BalanceRevision;
+    }
+
+    private static void Retune<T>(ConfigEntry<T> entry, T oldDefault)
+    {
+        if (entry != null && EqualityComparer<T>.Default.Equals(entry.Value, oldDefault))
+            entry.Value = (T)entry.DefaultValue;
     }
 
     // Parsed form of EnemyHealthMaxPerEnemy, rebuilt whenever the string changes.

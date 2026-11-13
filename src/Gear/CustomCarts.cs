@@ -9,7 +9,7 @@ using Object = UnityEngine.Object;
 
 namespace IncreaseHardMod.Gear;
 
-internal enum CartKind : byte { Soul = 1, Wide = 2, Double = 3 }
+internal enum CartKind : byte { Soul = 1, Wide = 2, Double = 3, Armored = 4 }
 
 /// <summary>
 /// Three extra C.A.R.T.s for the shop, each a copy of a vanilla cart (so pushing, the haul screen, cart physics
@@ -24,8 +24,15 @@ internal enum CartKind : byte { Soul = 1, Wide = 2, Double = 3 }
 /// </summary>
 internal static class CustomCarts
 {
-    internal const string SoulAsset = "Item Cart Soul", WideAsset = "Item Cart Wide", DoubleAsset = "Item Cart Double";
-    internal static bool IsModCart(string assetName) => assetName == SoulAsset || assetName == WideAsset || assetName == DoubleAsset;
+    internal const string SoulAsset = "Item Cart Soul", WideAsset = "Item Cart Wide", DoubleAsset = "Item Cart Double", ArmoredAsset = "Item Cart Armored";
+    internal static bool IsModCart(string assetName) => assetName == SoulAsset || assetName == WideAsset || assetName == DoubleAsset || assetName == ArmoredAsset;
+
+    /// <summary>Armored C.A.R.T.: loot inside loses this share of the value it would lose; the fairy cannot lift from it.</summary>
+    internal const float ArmoredLossFactor = .6f, ArmoredMassFactor = 1.3f;
+
+    internal static bool InArmoredCart(PhysGrabObjectImpactDetector detector) =>
+        detector != null && detector.inCart && detector.currentCart != null &&
+        detector.currentCart.GetComponent<ModCart>() is { kind: CartKind.Armored };
 
     private const float MinWideArea = 1.5f; // retain the original floor space for narrower configurations
     internal const float MinWideLength = 1.4f; // about 2.27 m between the end walls for the 2.18 m Museum Tray
@@ -61,6 +68,10 @@ internal static class CustomCarts
                 Localization.GameLanguage.Russian
                     ? "На 15% короче и на 20% тяжелее большой тележки. Стеклянные стенки вдвое выше."
                     : "15% shorter and 20% heavier than the big C.A.R.T., with glass walls twice as tall.");
+            Make(big, big, ArmoredAsset, "Armored C.A.R.T.", CartKind.Armored, 1.4f, new Color(.55f, .58f, .62f),
+                Localization.GameLanguage.Russian
+                    ? "Бронированная большая тележка: лут внутри теряет на 40% меньше ценности при ударах, а Фея не может его утащить. На 30% тяжелее."
+                    : "An armored big C.A.R.T.: loot inside loses 40% less value from knocks, and the Mischief Fairy cannot lift it out. 30% heavier.");
             var hauler = FlameCartItem.FindHaulerBox(items);
             if (hauler != null)
             {
@@ -114,6 +125,8 @@ internal static class CustomCarts
             AddGlassWalls(go);
             mass = StandardMass * DoubleMassFactor;
         }
+        if (kind == CartKind.Armored)
+            mass = StandardMass * ArmoredMassFactor;
         if (mass > 0f)
         {
             var rb = go.GetComponent<Rigidbody>();
@@ -368,6 +381,16 @@ internal static class CustomCarts
                 if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", Color.Lerp(m.GetColor("_BaseColor"), color, .35f));
                 else if (m.HasProperty("_Color")) m.SetColor("_Color", Color.Lerp(m.color, color, .35f));
             }
+    }
+
+    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), nameof(PhysGrabObjectImpactDetector.Break))]
+    private static class ArmoredCargo
+    {
+        [HarmonyPrefix]
+        private static void Prefix(PhysGrabObjectImpactDetector __instance, ref float valueLost)
+        {
+            if (valueLost > 0f && __instance.isValuable && InArmoredCart(__instance)) valueLost *= ArmoredLossFactor;
+        }
     }
 
     // PhysGrabCart.Start puts every cart back to the standard mass; the Wide and Double-Decker keep their own.

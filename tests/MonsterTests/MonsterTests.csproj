@@ -7,6 +7,7 @@
   <ItemGroup>
     <Compile Include="../../src/Economy/MoonRules.cs" Link="Production/MoonRules.cs" />
     <Compile Include="../../src/Monsters/MonsterRules.cs" Link="Production/MonsterRules.cs" />
+    <Compile Include="../../src/Monsters/EliteRules.cs" Link="Production/EliteRules.cs" />
     <Compile Include="../../src/Monsters/MonsterSynth.cs" Link="Production/MonsterSynth.cs" />
     <Compile Include="../../src/Patches/RoomAttackRules.cs" Link="Production/RoomAttackRules.cs" />
   </ItemGroup>

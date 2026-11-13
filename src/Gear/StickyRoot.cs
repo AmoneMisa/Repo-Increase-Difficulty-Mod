@@ -18,13 +18,17 @@ internal sealed class StickyRoot : MonoBehaviour
     private GameObject _glue;
     private static Material _material;
 
+    // Monsters stay glued a little longer than players: a friendly-fire hit should not cost a teammate more than 2 s.
+    internal const float PlayerSeconds = 2f, MonsterSeconds = 3f;
+
     internal static void Send(PlayerAvatar player, Enemy enemy)
     {
         if (!SemiFunc.IsMasterClientOrSingleplayer()) return;
         var view = player != null ? player.photonView : enemy?.GetComponentInParent<EnemyParent>()?.GetComponent<PhotonView>();
-        Apply(player, enemy, 2f);
+        float seconds = player != null ? PlayerSeconds : MonsterSeconds;
+        Apply(player, enemy, seconds);
         if (view == null || view.ViewID <= 0 || !PhotonNetwork.InRoom) return;
-        PhotonNetwork.RaiseEvent(EventCode, new object[] { view.ViewID, 2f, PhotonNetwork.Time, Networking.ModNetwork.FreezeLevelKey() },
+        PhotonNetwork.RaiseEvent(EventCode, new object[] { view.ViewID, seconds, PhotonNetwork.Time, Networking.ModNetwork.FreezeLevelKey() },
             new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
     }
 
@@ -32,7 +36,7 @@ internal sealed class StickyRoot : MonoBehaviour
     {
         if (!PhotonNetwork.InRoom || PhotonNetwork.MasterClient == null || message.Sender != PhotonNetwork.MasterClient.ActorNumber ||
             !PlayerFreezeEffect.ReadSnapshot(message.CustomData, PhotonNetwork.Time, Networking.ModNetwork.FreezeLevelKey(), out int id, out float seconds) ||
-            seconds > 2f) return;
+            seconds > MonsterSeconds) return;
         var view = PhotonView.Find(id);
         if (view != null) Apply(view.GetComponent<PlayerAvatar>(), view.GetComponentInChildren<Enemy>(true), seconds);
     }

@@ -191,6 +191,7 @@ internal sealed class FairyBrain : MonsterBrain
         if (valuable == null || Patches.Effects.BiggerSoulDropsEffect.IsEnemyValuable(valuable)) return false;
         var room = pgo.roomVolumeCheck;
         bool inCart = pgo.impactDetector != null && pgo.impactDetector.inCart;
+        if (Gear.CustomCarts.InArmoredCart(pgo.impactDetector)) return false;
         return MonsterRules.FairyMayLift(pgo.rb.mass, pgo.playerGrabbing.Count > 0, inCart, room != null && room.inExtractionPoint, room != null && room.inTruck);
     }
 

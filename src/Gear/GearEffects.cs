@@ -18,7 +18,7 @@ namespace IncreaseHardMod.Gear;
 ///             (GearCombatRules.RefreshFreeze). Every damage type still lands on a frozen enemy, scaled per hit by
 ///             FrozenDamage: gun bullets IceGunDamagePercent (60%), melee +IceMeleeBonusPercent (+35%),
 ///             grenade blasts +80%, everything else unchanged. Frozen players keep the damage-free freeze.
-///  * Sticky - roots living targets for 2 s (StickyRoot) and pulls light enough loot toward the shooter; pulled
+///  * Sticky - roots monsters for 3 s and players for 2 s (StickyRoot) and pulls light enough loot toward the shooter; pulled
 ///             loot loses 80% less value while it travels (not invulnerable).
 /// </summary>
 internal static class GearEffects
@@ -47,6 +47,19 @@ internal static class GearEffects
     private static readonly List<Pull> Pulls = new();
     private static readonly List<Enemy> Scratch = new();
     private static float _visualSync;
+
+    /// <summary>Host: freeze a monster (or extend its freeze); the first freeze deals the ice damage.</summary>
+    internal static void FreezeEnemy(Enemy enemy, float seconds)
+    {
+        if (enemy == null || seconds <= 0f || !SemiFunc.IsMasterClientOrSingleplayer()) return;
+        Frozen.TryGetValue(enemy, out float previousEnd);
+        int damage = GearCombatRules.RefreshFreeze(Time.time, previousEnd, seconds, out float end);
+        Frozen[enemy] = end;
+        enemy.Freeze(end - Time.time);
+        if (damage > 0 && enemy.HasHealth && enemy.Health != null)
+            enemy.Health.Hurt(damage, Vector3.zero);
+        ModNetwork.BroadcastEnemyStatus(enemy, 1, end - Time.time);
+    }
 
     public static bool IsFrozen(Enemy e) => e != null && Frozen.TryGetValue(e, out var until) && until > Time.time;
 
@@ -406,9 +419,13 @@ internal static class GearEffects
                         if (!Poisoned.TryGetValue(enemy.Health, out var p))
                             Poisoned[enemy.Health] = p = new Poison { Health = enemy.Health, Enemy = enemy };
                         p.Shooter = SemiFunc.PlayerAvatarGetFromPhotonID(_shooterID);
-                        // Refresh, never stack. Fast Poison deals the same total in less time (never under 8 s).
+                        // Refresh, never stack: a share of the monster's max HP (so it keeps up with the depth ramp),
+                        // plus half of what the previous poison had left. Fast Poison deals it in less time (never under 8 s).
+                        float left = p.Remaining > 0f ? p.Remaining * p.Rate : 0f;
+                        float total = UtilityGearRules.PoisonTotal(ModConfig.PoisonTotalDamage.Value, ModConfig.PoisonMaxHpPercent.Value,
+                            enemy.Health.health, left);
                         p.Remaining = Skills.SkillEffects.StatusSeconds(p.Shooter, Skills.SkillEffects.Status.Poison, ModConfig.PoisonSeconds.Value);
-                        p.Rate = ModConfig.PoisonTotalDamage.Value / Mathf.Max(0.1f, p.Remaining);
+                        p.Rate = total / Mathf.Max(0.1f, p.Remaining);
                         ModNetwork.BroadcastEnemyStatus(enemy, 0, p.Remaining);
                     }
                     else
@@ -425,13 +442,7 @@ internal static class GearEffects
                     {
                         float t = Skills.SkillEffects.StatusSeconds(SemiFunc.PlayerAvatarGetFromPhotonID(_shooterID),
                             Skills.SkillEffects.Status.Freeze, ModConfig.IceFreezeSeconds.Value);
-                        Frozen.TryGetValue(enemy, out float previousEnd);
-                        int damage = GearCombatRules.RefreshFreeze(Time.time, previousEnd, t, out float end);
-                        Frozen[enemy] = end;
-                        enemy.Freeze(end - Time.time);
-                        if (damage > 0 && enemy.HasHealth && enemy.Health != null)
-                            enemy.Health.Hurt(damage, Vector3.zero);
-                        ModNetwork.BroadcastEnemyStatus(enemy, 1, end - Time.time);
+                        FreezeEnemy(enemy, t);
                     }
                     else
                     {

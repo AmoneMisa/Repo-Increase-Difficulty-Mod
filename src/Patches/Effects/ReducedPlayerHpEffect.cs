@@ -6,7 +6,7 @@ namespace IncreaseHardMod.Patches.Effects;
 
 /// <summary>
 /// ReducedPlayerHp modifier — every player STARTS the special level with their current
-/// HP cut to a rolled percentage (PlayerHpPercent, 10-90). Max HP is left untouched, so
+/// HP cut to a rolled percentage (PlayerHpPercent, 30-70). Max HP is left untouched, so
 /// players can heal back up to full; they just begin the level wounded.
 ///
 /// A player's starting health for a level is read exactly once, inside the

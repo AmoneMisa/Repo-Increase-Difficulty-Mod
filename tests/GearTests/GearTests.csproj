@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../src/Gear/UtilityGearRules.cs" Link="Production/UtilityGearRules.cs" />
+    <Compile Include="../../src/Gear/NewGearRules.cs" Link="Production/NewGearRules.cs" />
     <Compile Include="../../src/Gear/PoisonBoltDamage.cs" Link="Production/PoisonBoltDamage.cs" />
     <Compile Include="../../src/Gear/GearCombatRules.cs" Link="Production/GearCombatRules.cs" />
   </ItemGroup>

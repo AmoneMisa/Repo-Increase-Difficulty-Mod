@@ -686,7 +686,11 @@ internal static class PingController
             if (health != null && PingUpgrades.OwnsEnemyHp())
                 parts.Add($"HP {Mathf.Max(0, health.healthCurrent)}/{Mathf.Max(1, health.health)}");
             if (enemy != null && PingUpgrades.OwnsThreat())
+            {
                 parts.Add($"Tier {(int)enemy.difficulty + 1}");
+                string elite = Monsters.EliteMonsters.PingLabel(enemy.Enemy);
+                if (elite != null) parts.Add(elite);
+            }
         }
         else if (type == PingType.Valuable && PingUpgrades.OwnsLootCondition())
         {

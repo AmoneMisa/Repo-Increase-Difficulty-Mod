@@ -23,7 +23,7 @@ internal static class SkillEffects
         if (!On || avatar == null || string.IsNullOrEmpty(avatar.steamID)) return 0;
         int level = SkillStore.Level(avatar.steamID, node);
         // Hunter's Eye works as if you had Monster Dots and Enemy HP.
-        if (level == 0 && (node == C.MonsterDots || node == C.EnemyHp) && SkillStore.Level(avatar.steamID, C.HuntersEye) > 0) return 1;
+        if (level == 0 && (node == C.MonsterDots || node == C.EnemyHp || node == C.Threat || node == C.PingRange) && SkillStore.Level(avatar.steamID, C.HuntersEye) > 0) return 1;
         return level;
     }
     internal static bool Has(PlayerAvatar avatar, string node) => Level(avatar, node) > 0;

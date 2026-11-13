@@ -162,7 +162,7 @@ internal static class ModifierText
         ["A 40% bigger level with one more extraction point."] = "Уровень на 40% больше и на одну точку сдачи больше.",
         ["Field Hospital"] = "Полевой госпиталь",
         ["Healing is 60% stronger, but players take 10% more damage."] = "Лечение на 60% сильнее, но игроки получают на 10% больше урона.",
-        ["Iron Lungs"] = "Железные лёгкие",
+        ["Kevlar Crew"] = "Кевларовая бригада",
         ["Players take 30% less damage, but the quota is 20% higher."] = "Игроки получают на 30% меньше урона, но квота на 20% выше.",
 
         // ---- level economy events
