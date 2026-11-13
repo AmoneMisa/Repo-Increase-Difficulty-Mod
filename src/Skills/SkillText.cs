@@ -152,6 +152,10 @@ internal static class SkillText
             case C.CrouchSpeed: return $"+{Pct(ModConfig.SkillCrouchSpeedPerLevel.Value)} speed while crouched per level (+{Pct(ModConfig.SkillCrouchSpeedPerLevel.Value * C.Find(id).MaxLevel)} at max).";
             case C.SoulWard: return $"Exploding monster souls hurt you {Pct(SoulPerks.WardPerLevel)} less per level (-{Pct(SoulPerks.WardPerLevel * C.Find(id).MaxLevel)} at max).";
             case C.Toughness: return "Levitation, constriction, petrification and the twins' grip hold you 10 / 20 / 30% shorter.";
+            case C.SmokeGrenade: return "Your Smoke Grenades: +10% cloud radius and +2 s of smoke per rank.";
+            case C.CryoGrenade: return "Your Cryo Grenades: +10% radius and +0.5 s of freeze per rank.";
+            case C.GlueGrenade: return "Your Glue Grenades: +15% radius per rank.";
+            case C.SickleThrow: return "+13.3% Boomerang Sickle throw damage per level (+40% at max: 84 instead of 60).";
             case C.CriticalStrike: return "Each melee hit has a 6 / 12 / 18 / 24 / 30% chance to deal double damage (about 1-3 fewer hits per monster at rank 5).";
             case C.Scavenger: return "A skill box you open has a 10 / 20 / 30% chance to also drop an Antidote, Adrenaline Shot, Repair Kit or a Smoke, Cryo or Glue grenade (for this level).";
             case C.Hauler: return "+5 / 10 / 15% walking, sprinting and crouching speed while you hold loot.";
@@ -336,6 +340,10 @@ internal static class SkillText
             case C.CrouchSpeed: return $"+{Pct(ModConfig.SkillCrouchSpeedPerLevel.Value)} к скорости в приседе за уровень (+{Pct(ModConfig.SkillCrouchSpeedPerLevel.Value * C.Find(id).MaxLevel)} на максимуме).";
             case C.SoulWard: return $"Взрывы душ монстров ранят вас на {Pct(SoulPerks.WardPerLevel)} меньше за уровень (-{Pct(SoulPerks.WardPerLevel * C.Find(id).MaxLevel)} на максимуме).";
             case C.Toughness: return "Левитация, удушение, окаменение и хватка близнецов держат вас на 10 / 20 / 30% меньше.";
+            case C.SmokeGrenade: return "Ваши дымовые гранаты: +10% к радиусу облака и +2 с дыма за ранг.";
+            case C.CryoGrenade: return "Ваши крио-гранаты: +10% к радиусу и +0,5 с заморозки за ранг.";
+            case C.GlueGrenade: return "Ваши клеевые гранаты: +15% к радиусу за ранг.";
+            case C.SickleThrow: return "+13,3% к урону брошенного серпа-бумеранга за уровень (+40% на максимуме: 84 вместо 60).";
             case C.CriticalStrike: return "Каждый удар в ближнем бою с шансом 6 / 12 / 18 / 24 / 30% наносит двойной урон (на 5-м уровне примерно на 1-3 удара меньше на монстра).";
             case C.Scavenger: return "Открытый вами ящик навыков с шансом 10 / 20 / 30% также выбрасывает антидот, шприц адреналина, ремкомплект или дымовую, крио- или клеевую гранату (на этот уровень).";
             case C.Hauler: return "+5 / 10 / 15% к скорости ходьбы, бега и приседа, пока вы держите лут.";

@@ -13,11 +13,13 @@ namespace IncreaseHardMod.Upgrades;
 /// them, and the shop stocking fills those. Every client makes the same copies of the same shelf in its own scene
 /// from the host's list (event <see cref="EventCode"/>), sent again when someone joins. The copies belong to the shop
 /// scene and go with it. No other mod's shelves are needed or used.
+/// The same rack also stands the consumables stand: a copy of the shop's health-pack shelf that holds only the mod's
+/// consumables (Antidote, Adrenaline Shot, Repair Kit), so they never take the health packs' slots.
 /// </summary>
 internal sealed class UpgradeShelfRack : MonoBehaviour, IOnEventCallback
 {
     internal const byte EventCode = 151;
-    private const int MaxCopies = 4;
+    private const int MaxCopies = 6; // up to four upgrade shelves plus the consumables stand
     private const float WallGap = .03f, FrontClearance = 1.4f;
 
     /// <summary>One copy: which shelf of the scene it copies (name and position) and where it stands.</summary>
@@ -32,21 +34,31 @@ internal sealed class UpgradeShelfRack : MonoBehaviour, IOnEventCallback
 
     // ------------------------------------------------------------------ host
 
+    /// <summary>Host, start of shop stocking: forget the previous shop's copies.</summary>
+    internal static void HostBegin() { Copies.Clear(); _sentPlayers = -1; }
+
     /// <summary>Host, shop stocking: stand copies of the shop's upgrade shelf and return up to <paramref name="wanted"/> upgrade slots on them.</summary>
-    internal static List<ItemVolume> HostBuild(ShopManager shop, int wanted)
+    internal static List<ItemVolume> HostBuild(ShopManager shop, int wanted) =>
+        HostBuild(shop, wanted, SemiFunc.itemVolume.upgrade, "Upgrade Shelf", 4);
+
+    /// <summary>Host: the consumables stand, one copy of the shop's health-pack shelf, with up to <paramref name="wanted"/> slots.</summary>
+    internal static List<ItemVolume> HostBuildConsumableStand(ShopManager shop, int wanted) =>
+        HostBuild(shop, wanted, SemiFunc.itemVolume.healthPack, "Consumables Stand", 1);
+
+    private static List<ItemVolume> HostBuild(ShopManager shop, int wanted, SemiFunc.itemVolume kind, string what, int maxCopies)
     {
         var slots = new List<ItemVolume>();
-        Copies.Clear(); _sentPlayers = -1;
         if (wanted <= 0 || shop == null) return slots;
 
-        if (!FindSourceShelf(shop, out var source, out var slotPoses))
+        if (!FindSourceShelf(shop, kind, out var source, out var slotPoses))
         {
-            Plugin.Log.LogWarning("[Shop] No upgrade shelf found to copy for Upgrade Shelf; the extra upgrades use free slots only.");
+            Plugin.Log.LogWarning($"[Shop] No shelf found to copy for the {what}.");
             return slots;
         }
+        int before = Copies.Count;
         var bounds = LocalBounds(source);
         var back = BackAxis(source, bounds);
-        for (int copy = 0; copy < MaxCopies && slots.Count < wanted; copy++)
+        for (int copy = 0; copy < maxCopies && Copies.Count < MaxCopies && slots.Count < wanted; copy++)
         {
             if (!FindWallSpot(source, bounds, back, out var pos, out float yaw)) break;
             var built = Instantiate(source, pos, yaw);
@@ -56,19 +68,19 @@ internal sealed class UpgradeShelfRack : MonoBehaviour, IOnEventCallback
             foreach (var pose in slotPoses)
             {
                 if (slots.Count >= wanted) break;
-                var slot = new GameObject("IHM Upgrade Shelf Slot");
+                var slot = new GameObject("IHM " + what + " Slot");
                 slot.transform.SetPositionAndRotation(pos + turn * pose.position, turn * pose.rotation);
                 slot.transform.SetParent(built.transform, true);
                 var volume = slot.AddComponent<ItemVolume>();
-                volume.itemVolume = SemiFunc.itemVolume.upgrade;
+                volume.itemVolume = kind;
                 volume.itemSecretShopType = SemiFunc.itemSecretShopType.none;
                 slots.Add(volume);
             }
         }
-        if (Copies.Count == 0)
-            Plugin.Log.LogWarning("[Shop] No free wall for an extra upgrade shelf; the extra upgrades use free slots only.");
+        if (Copies.Count == before)
+            Plugin.Log.LogWarning($"[Shop] No free wall for the {what}.");
         else
-            Plugin.Log.LogInfo($"[Shop] Upgrade Shelf: {Copies.Count} copy(ies) of '{source.name}' with {slots.Count} slot(s).");
+            Plugin.Log.LogInfo($"[Shop] {what}: {Copies.Count - before} copy(ies) of '{source.name}' with {slots.Count} slot(s).");
         Broadcast();
         return slots;
     }
@@ -78,13 +90,13 @@ internal sealed class UpgradeShelfRack : MonoBehaviour, IOnEventCallback
     /// when the slot is not inside the shelf, the object under it). The shelf holding the most slots wins; its slots'
     /// poses are returned in its own space.
     /// </summary>
-    private static bool FindSourceShelf(ShopManager shop, out Transform best, out List<Pose> poses)
+    private static bool FindSourceShelf(ShopManager shop, SemiFunc.itemVolume kind, out Transform best, out List<Pose> poses)
     {
         best = null; poses = new List<Pose>();
         var counts = new Dictionary<Transform, List<Pose>>();
         foreach (var volume in shop.itemVolumes)
         {
-            if (volume == null || volume.itemVolume != SemiFunc.itemVolume.upgrade) continue;
+            if (volume == null || volume.itemVolume != kind) continue;
             var shelf = FurnitureAbove(volume.transform) ?? FurnitureUnder(volume.transform.position);
             if (shelf == null) continue;
             if (!counts.TryGetValue(shelf, out var list)) counts[shelf] = list = new List<Pose>();
@@ -237,7 +249,7 @@ internal sealed class UpgradeShelfRack : MonoBehaviour, IOnEventCallback
     private static GameObject Instantiate(Transform source, Vector3 pos, float yaw)
     {
         var copy = Object.Instantiate(source.gameObject, pos, Quaternion.Euler(0f, yaw, 0f));
-        copy.name = "IHM Upgrade Shelf (" + source.name + ")";
+        copy.name = "IHM Shop Rack (" + source.name + ")";
         copy.transform.localScale = source.lossyScale;
         var scripts = copy.GetComponentsInChildren<MonoBehaviour>(true);
         for (int i = scripts.Length - 1; i >= 0; i--)
@@ -277,7 +289,7 @@ internal sealed class UpgradeShelfRack : MonoBehaviour, IOnEventCallback
         Transform best = null; float bestD = .5f;
         foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
         {
-            if (t.name != name || t.root.name.StartsWith("IHM Upgrade Shelf", System.StringComparison.Ordinal)) continue; // not one of our copies
+            if (t.name != name || t.root.name.StartsWith("IHM Shop Rack", System.StringComparison.Ordinal)) continue; // not one of our copies
             float d = Vector3.Distance(t.position, at);
             if (d < bestD) { bestD = d; best = t; }
         }

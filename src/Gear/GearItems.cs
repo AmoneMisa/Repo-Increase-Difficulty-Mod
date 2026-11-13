@@ -135,6 +135,7 @@ internal static class GearItems
                         : $"Swings like a sword. Thrown, it spins, cuts every monster in its path for {SickleRules.ThrowDamage} damage and flies back to you.",
                     _ => false, tint: true);
                 go.AddComponent<BoomerangSickle>();
+                BoomerangSickle.BuildModel(go);
                 Register(attributes, SickleRules.Asset);
             }
         }
@@ -423,6 +424,7 @@ internal static class GearItems
         var (_, go, attributes) = Clone(baseItem, asset, display, priceMin, priceMax, color, desc,
             mb => mb.GetType().Name.StartsWith("ItemGrenade") && mb.GetType().Name != "ItemGrenade", tint: true);
         go.AddComponent<ModGrenade>().kind = kind;
+        ItemArt.Weapon(go, kind.ToString().ToLowerInvariant()); // Blender model; arming animation plays on isActive
         Register(attributes, asset);
     }
 
@@ -439,8 +441,8 @@ internal static class GearItems
             ru ? $"Снимает горение, кровотечение, яд и замедление и защищает от горения, кровотечения и яда на {ConsumableRules.AntidoteImmunitySeconds:0} с."
                : $"Ends burning, bleeding, venom and slowness, and keeps burning, bleeding and venom away for {ConsumableRules.AntidoteImmunitySeconds:0} s.");
         MakeConsumable(pack, "Item Health Pack Adrenaline", ru ? "Шприц адреналина" : "Adrenaline Shot", ConsumableKind.Adrenaline, 1.3f, new Color(1f, .35f, .3f),
-            ru ? $"Вырывает из любого захвата монстра (левитация, удушение, окаменение, хватка), затем {ConsumableRules.AdrenalineSeconds:0} с +30% скорости и полная выносливость."
-               : $"Breaks any monster hold (levitation, constriction, petrification, a grip), then +30% speed and a full stamina bar for {ConsumableRules.AdrenalineSeconds:0} s.");
+            ru ? $"Вырывает из любого захвата монстра (левитация, удушение, окаменение, хватка, язык Похитителя, левитация Менталиста; держащего монстра ненадолго оглушает), затем {ConsumableRules.AdrenalineSeconds:0} с +30% скорости и полная выносливость."
+               : $"Breaks any monster hold (levitation, constriction, petrification, a grip, the Snatcher's tongue, the Mentalist's levitation; the holder is briefly stunned), then +30% speed and a full stamina bar for {ConsumableRules.AdrenalineSeconds:0} s.");
         MakeConsumable(pack, "Item Health Pack Repair Kit", ru ? "Ремкомплект" : "Repair Kit", ConsumableKind.RepairKit, 1.5f, new Color(1f, .75f, .3f),
             ru ? $"Возвращает половину потерянной ценности самому повреждённому луту в радиусе {ConsumableRules.RepairRange:0} м. Без повреждённого лута рядом не срабатывает."
                : $"Gives the most damaged valuable within {ConsumableRules.RepairRange:0} m back half of the value it lost. Refused when nothing nearby is damaged.");
@@ -452,8 +454,13 @@ internal static class GearItems
         float max = pack.value.valueMax * priceFactor / CustomItemPrices.Multiplier;
         var (item, go, attributes) = Clone(pack, asset, display, min, max, color, desc, _ => false, tint: true);
         item.maxAmountInShop = 2;
-        go.GetComponent<ItemHealthPack>().healAmount = 0;
+        var health = go.GetComponent<ItemHealthPack>();
+        health.healAmount = 0;
         go.AddComponent<ModConsumable>().kind = kind;
+        string key = kind switch { ConsumableKind.Antidote => "antidote", ConsumableKind.Adrenaline => "adrenaline", _ => "repairkit" };
+        ItemArt.Weapon(go, key); // Blender model; the use animation plays from UsedRPC on every client
+        try { health.soundUse = ItemAudio.Cue(kind == ConsumableKind.RepairKit ? "repair_use" : key + "_use", .5f); }
+        catch (Exception e) { Plugin.Log.LogWarning($"[Audio] Keeping the health pack sound for {asset}: {e.Message}"); }
         Register(attributes, asset);
     }
 

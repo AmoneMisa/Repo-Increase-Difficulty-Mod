@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
@@ -15,8 +16,7 @@ internal sealed class StickyRoot : MonoBehaviour
     private float _until, _began;
     private Scene _scene;
     private Vector3 _anchor;
-    private GameObject _glue;
-    private static Material _material;
+    private Visuals.GlueBlob _blob;
 
     // Monsters stay glued a little longer than players: a friendly-fire hit should not cost a teammate more than 2 s.
     internal const float PlayerSeconds = 2f, MonsterSeconds = 3f;
@@ -53,6 +53,7 @@ internal sealed class StickyRoot : MonoBehaviour
                 SemiFunc.LayerMaskGetVisionObstruct(), QueryTriggerInteraction.Ignore))
             effect._anchor.y = Mathf.Min(effect._anchor.y, floor.point.y + .7f);
         effect._began = Time.time;
+        if (effect._blob != null) effect._blob.Refresh();
         effect._until = Time.time + seconds;
         effect._scene = SceneManager.GetActiveScene();
         effect.enabled = true;
@@ -93,30 +94,34 @@ internal sealed class StickyRoot : MonoBehaviour
         body.linearVelocity = new Vector3(Mathf.Clamp(delta.x * 8f, -3f, 3f), Mathf.Min(body.linearVelocity.y, down), Mathf.Clamp(delta.z * 8f, -3f, 3f));
     }
 
+    // The look (every client): the gel puddle, strands and, on monsters, the gel coat (Visuals.GlueBlob).
     private void LateUpdate()
     {
-        if (_glue == null)
+        if (_blob != null) return;
+        try
         {
-            _glue = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            _glue.name = "Sticky glue puddle";
-            var collider = _glue.GetComponent<Collider>(); collider.enabled = false; Destroy(collider);
-            if (_material == null)
+            var renderers = new List<Renderer>();
+            Bounds body;
+            if (_enemy != null)
             {
-                _material = new Material(Shader.Find("Standard"));
-                _material.color = new Color(.9f, .35f, .65f);
-                _material.SetFloat("_Glossiness", .85f);
+                var mesh = _enemy.HasHealth && _enemy.Health != null ? _enemy.Health.meshParent : null;
+                foreach (var r in (mesh != null ? mesh : _enemy.transform).GetComponentsInChildren<Renderer>())
+                    if (r is MeshRenderer or SkinnedMeshRenderer) renderers.Add(r);
+                body = renderers.Count > 0 ? renderers[0].bounds : new Bounds(transform.position + Vector3.up * .6f, Vector3.one);
+                foreach (var r in renderers) body.Encapsulate(r.bounds);
             }
-            _glue.GetComponent<Renderer>().sharedMaterial = _material;
+            else body = new Bounds(transform.position + Vector3.up * .9f, new Vector3(.55f, 1.8f, .55f));
+            var view = GetComponentInParent<PhotonView>();
+            _blob = Visuals.GlueBlob.Create(transform, body, view != null ? view.ViewID : GetInstanceID(), renderers, _enemy != null);
         }
-        Vector3 pos = transform.position;
-        if (Physics.Raycast(pos + Vector3.up * .5f, Vector3.down, out var hit, 5f, SemiFunc.LayerMaskGetVisionObstruct(), QueryTriggerInteraction.Ignore))
-            pos = hit.point + Vector3.up * .025f;
-        _glue.transform.position = pos;
-        float grow = Mathf.Clamp01((Time.time - _began) / .18f);
-        float fade = Mathf.Clamp01((_until - Time.time) / .25f);
-        _glue.transform.localScale = new Vector3(1.15f, .11f, 1.15f) * grow * fade;
+        catch (System.Exception e)
+        {
+            Plugin.Log.LogWarning($"[Glue] Could not draw the glue: {e.Message}");
+            _blob = null;
+            enabled = false;
+        }
     }
 
-    private void OnDisable() { if (_glue != null) Destroy(_glue); }
+    private void OnDisable() { if (_blob != null) { _blob.Release(); _blob = null; } }
     private void OnDestroy() => OnDisable();
 }

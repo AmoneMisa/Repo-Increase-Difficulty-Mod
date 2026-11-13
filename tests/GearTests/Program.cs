@@ -89,6 +89,10 @@ Check(SickleRules.Thrown(true, false, 6f) && !SickleRules.Thrown(true, false, 3f
     "The sickle flies only when let go at speed");
 Check(!SickleRules.Ends(.3f, .5f) && SickleRules.Ends(.8f, 1f) && SickleRules.Ends(2.7f, 30f) && SickleRules.Returning(.6f),
     "The sickle is not caught on release, returns after .55 s and lands by 2.6 s");
+Check(Math.Abs(GrenadeRules.Radius(GrenadeKind.Smoke, 3) - 5.85f) < 1e-4 && Math.Abs(GrenadeRules.Radius(GrenadeKind.Glue, 3) - 6.525f) < 1e-4 &&
+      GrenadeRules.SmokeDuration(3) == 18f && GrenadeRules.CryoDuration(3) == 4.5f && GrenadeRules.CryoDuration(9) == 4.5f,
+    "Grenade perks: radius +10% (glue +15%) a rank, smoke +2 s, cryo +0.5 s, capped at rank 3");
+Check(SickleRules.Damage(0) == 60 && SickleRules.Damage(3) == 84 && SickleRules.Damage(7) == 84, "Sickle Throw: 60 -> 84 damage at rank 3");
 Console.WriteLine($"GEAR_CHECKS_PASSED: {checks}");
 
 public class HurtCollider

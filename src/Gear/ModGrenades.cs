@@ -17,33 +17,61 @@ internal sealed class ModGrenade : MonoBehaviour
 {
     public GrenadeKind kind;
     private ItemGrenade _grenade;
+    private Sound _arm, _burst;
+    private bool _armed;
 
     private void Start()
     {
         _grenade = GetComponent<ItemGrenade>();
         if (_grenade == null) return;
+        try
+        {
+            _arm = Visuals.ItemAudio.Cue("gear_arm", .35f);
+            _burst = Visuals.ItemAudio.Cue(kind.ToString().ToLowerInvariant() + "_burst", .75f);
+        }
+        catch (System.Exception e) { Plugin.Log.LogWarning($"[Audio] No cue for the {kind} grenade: {e.Message}"); }
         // Only our burst may run off this grenade: the stun parts were stripped, their listeners go too.
         _grenade.onDetonate = new UnityEngine.Events.UnityEvent();
-        _grenade.onDetonate.AddListener(() => ModGrenades.Burst(kind, transform.position));
+        _grenade.onDetonate.AddListener(() =>
+        {
+            _burst?.Play(transform.position);
+            ModGrenades.Burst(kind, transform.position, ModGrenades.Rank(kind, _grenade.activatorPlayerAvatar));
+        });
+    }
+
+    // Every client: a click when the pin is pulled (the native countdown tick keeps playing).
+    private void Update()
+    {
+        if (_grenade == null) return;
+        if (_grenade.isActive && !_armed) _arm?.Play(transform.position);
+        _armed = _grenade.isActive;
     }
 }
 
 internal static class ModGrenades
 {
-    private struct Cloud { internal Vector3 Center; internal float Until; }
+    private struct Cloud { internal Vector3 Center; internal float Until, Radius; }
+
+    internal static int Rank(GrenadeKind kind, PlayerAvatar thrower) => Skills.SkillEffects.Level(thrower, kind switch
+    {
+        GrenadeKind.Smoke => Skills.SkillCatalog.SmokeGrenade,
+        GrenadeKind.Cryo => Skills.SkillCatalog.CryoGrenade,
+        _ => Skills.SkillCatalog.GlueGrenade,
+    });
     private static readonly List<Cloud> Clouds = new();
 
-    internal static void Burst(GrenadeKind kind, Vector3 at)
+    internal static void Burst(GrenadeKind kind, Vector3 at, int rank)
     {
-        Visual(kind, at);
+        Visual(kind, at, rank);
         if (!SemiFunc.IsMasterClientOrSingleplayer()) return;
         if (kind == GrenadeKind.Smoke)
         {
             Clouds.RemoveAll(c => c.Until <= Time.time);
-            Clouds.Add(new Cloud { Center = at + Vector3.up * .8f, Until = Time.time + GrenadeRules.SmokeSeconds });
+            Clouds.Add(new Cloud { Center = at + Vector3.up * .8f, Until = Time.time + GrenadeRules.SmokeDuration(rank),
+                Radius = GrenadeRules.Radius(kind, rank) });
             return;
         }
-        float radius = GrenadeRules.Radius(kind);
+        float radius = GrenadeRules.Radius(kind, rank);
         var director = EnemyDirector.instance;
         if (director == null || director.enemiesSpawned == null) return;
         foreach (var parent in director.enemiesSpawned.ToArray())
@@ -52,7 +80,7 @@ internal static class ModGrenades
             if (enemy == null || !enemy.isActiveAndEnabled) continue;
             var p = enemy.CenterTransform != null ? enemy.CenterTransform.position : enemy.transform.position;
             if (!GrenadeRules.Within(p.x, p.y, p.z, at.x, at.y, at.z, radius)) continue;
-            if (kind == GrenadeKind.Cryo) GearEffects.FreezeEnemy(enemy, GrenadeRules.CryoSeconds);
+            if (kind == GrenadeKind.Cryo) GearEffects.FreezeEnemy(enemy, GrenadeRules.CryoDuration(rank));
             else StickyRoot.Send(null, enemy);
         }
     }
@@ -63,7 +91,7 @@ internal static class ModGrenades
         if (Clouds.Count == 0) return false;
         float now = Time.time;
         foreach (var c in Clouds)
-            if (c.Until > now && GrenadeRules.Hides(from.x, from.y, from.z, to.x, to.y, to.z, c.Center.x, c.Center.y, c.Center.z, GrenadeRules.SmokeRadius))
+            if (c.Until > now && GrenadeRules.Hides(from.x, from.y, from.z, to.x, to.y, to.z, c.Center.x, c.Center.y, c.Center.z, c.Radius))
                 return true;
         return false;
     }
@@ -72,7 +100,7 @@ internal static class ModGrenades
 
     // ------------------------------------------------------------------ visuals (every client)
 
-    private static void Visual(GrenadeKind kind, Vector3 at)
+    private static void Visual(GrenadeKind kind, Vector3 at, int rank)
     {
         var go = new GameObject("IHM " + kind + " Grenade Burst");
         go.transform.position = at + Vector3.up * .3f;
@@ -93,15 +121,15 @@ internal static class ModGrenades
         if (kind == GrenadeKind.Smoke)
         {
             color = new Color(.42f, .43f, .45f, .85f);
-            main.duration = GrenadeRules.SmokeSeconds - 3f;
+            main.duration = GrenadeRules.SmokeDuration(rank) - 3f;
             main.startLifetime = new ParticleSystem.MinMaxCurve(3f, 4.5f);
             main.startSpeed = new ParticleSystem.MinMaxCurve(.2f, .8f);
             main.startSize = new ParticleSystem.MinMaxCurve(2.2f, 3.6f);
             main.maxParticles = 220;
-            shape.radius = GrenadeRules.SmokeRadius * .55f;
+            shape.radius = GrenadeRules.Radius(kind, rank) * .55f;
             emission.rateOverTime = 26f;
             emission.SetBursts(new[] { new ParticleSystem.Burst(0f, 60) });
-            life = GrenadeRules.SmokeSeconds + 5f;
+            life = GrenadeRules.SmokeDuration(rank) + 5f;
             gradient.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
                 new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, .15f), new GradientAlphaKey(.9f, .7f), new GradientAlphaKey(0f, 1f) });
         }
@@ -110,7 +138,7 @@ internal static class ModGrenades
             color = kind == GrenadeKind.Cryo ? new Color(.62f, .88f, 1f, .9f) : new Color(1f, .45f, .85f, .9f);
             main.duration = .2f;
             main.startLifetime = new ParticleSystem.MinMaxCurve(.6f, 1.2f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(2f, GrenadeRules.Radius(kind) * 2.2f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(2f, GrenadeRules.Radius(kind, rank) * 2.2f);
             main.startSize = new ParticleSystem.MinMaxCurve(.25f, .7f);
             main.maxParticles = 160;
             shape.radius = .3f;

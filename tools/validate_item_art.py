@@ -8,7 +8,8 @@ def xyz(v): return tuple(v[c] for c in 'xyz')
 def sub(a,b): return tuple(x-y for x,y in zip(a,b))
 def cross(a,b): return (a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0])
 total=0
-for key in ('poison','ice','sticky','decoy'):
+STATIC=('sickle','sickle_broken','armored') # attached without animation (sword shells, cart plating)
+for key in ('poison','ice','sticky','decoy','smoke','cryo','glue','antidote','adrenaline','repairkit','sickle','sickle_broken','armored'):
     model=json.loads((assets/(key+'.mesh.json')).read_text())
     assert model['version']==1 and model['fps']==30 and model['frames']==30
     moving=triangles=0
@@ -32,14 +33,15 @@ for key in ('poison','ice','sticky','decoy'):
             assert len(part['samples'])==model['frames']
             assert part['samples'][0]==part['rest'], (key,part['name'],'start pose')
             assert any(p!=part['rest'] for p in part['samples'])
-            if key!='decoy': assert part['samples'][-1]==part['rest'], (key,part['name'],'return to idle')
+            # Guns return to idle; grenades and consumables hold their armed / used pose, like the decoy.
+            if key in ('poison','ice','sticky'): assert part['samples'][-1]==part['rest'], (key,part['name'],'return to idle')
             moving+=1
-    assert moving>0
+    assert moving>0 or key in STATIC
     print(f'{key}: {triangles} triangles, {moving} animated parts')
     total+=triangles
 for key in ('ghost','silencer','link_a','link_b','repair','defence','protection'):
     for suffix in ('icon','coat','skin'): assert (assets/f'{key}_{suffix}.png').is_file()
-for key in ('poison','ice','sticky','decoy'): assert (assets/f'{key}_inventory.png').is_file()
+for key in ('poison','ice','sticky','decoy','smoke','cryo','glue','antidote','adrenaline','repairkit','sickle'): assert (assets/f'{key}_inventory.png').is_file()
 for png in assets.glob('*.png'):
     data=png.read_bytes(); assert data[:8]==b'\x89PNG\r\n\x1a\n'
     expected_sizes=((256,16),) if png.name=='v09_rgb_gradient.png' else ((2048,2048),(1024,1024)) if png.name.startswith('v14_maneki_') else ((1024,1024),) if png.name.startswith(('v08_','v09_','v10_','v11_')) else ((128,128),(256,256))

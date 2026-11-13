@@ -23,6 +23,12 @@ internal static class GrenadeRules
         _ => GlueRadius,
     };
 
+    // Grenade perks (Smoke / Cryo / Glue Grenade, 3 ranks each, decided by the thrower).
+    internal static float Radius(GrenadeKind kind, int rank) =>
+        Radius(kind) * (1f + (kind == GrenadeKind.Glue ? .15f : .10f) * Math.Max(0, Math.Min(3, rank)));
+    internal static float SmokeDuration(int rank) => SmokeSeconds + 2f * Math.Max(0, Math.Min(3, rank));
+    internal static float CryoDuration(int rank) => CryoSeconds + .5f * Math.Max(0, Math.Min(3, rank));
+
     /// <summary>
     /// True when a cloud at (cx, cy, cz) hides the line from a monster's eye (a) to a player (b): the line passes
     /// through the cloud, or the player stands inside it. Never true at touching range.
@@ -50,6 +56,7 @@ internal static class ConsumableRules
 {
     internal const float AntidoteImmunitySeconds = 20f;
     internal const float AdrenalineSeconds = 8f;
+    internal const float AdrenalineStunSeconds = 1.5f; // native holders (Snatcher, Mentalist) let go when stunned
     internal const float RepairRange = 3f, RepairShare = .5f;
 
     /// <summary>Value a Repair Kit gives back: half of what the valuable lost, never above its original value.</summary>
@@ -65,6 +72,9 @@ internal static class SickleRules
     internal const float ReturnAfter = .55f, MaxFlight = 2.6f, CatchRange = 1.2f;
     internal const float ReturnSpeed = 9f, Steer = 4f, Spin = 25f;
     internal const int ThrowDamage = 60;         // per monster, once per throw
+    internal const float ThrowDamageMaxBonus = .4f; // Sickle Throw perk at rank 3
+
+    internal static int Damage(int rank) => (int)Math.Round(ThrowDamage * (1f + ThrowDamageMaxBonus * Math.Max(0, Math.Min(3, rank)) / 3f));
 
     internal static bool Thrown(bool wasHeld, bool held, float speed) => wasHeld && !held && speed > ThrowSpeed;
     internal static bool Returning(float flight) => flight >= ReturnAfter;

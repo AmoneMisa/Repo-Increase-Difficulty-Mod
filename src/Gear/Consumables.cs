@@ -30,10 +30,36 @@ internal static class Consumables
                 return true;
             case ConsumableKind.Adrenaline:
                 Monsters.MonsterAfflictions.BreakFree(user);
+                ReleaseNativeHolds(user);
                 Skills.BuffPerks.GrantAdrenalineShot(user, ConsumableRules.AdrenalineSeconds);
                 return true;
             default:
                 return Repair(user);
+        }
+    }
+
+    /// <summary>
+    /// Host: native monsters hold players with their own logic, which lets go when the monster is stunned. The shot
+    /// gives a short stun to the Snatcher that has its tongue on the user and to the Mentalist levitating them.
+    /// </summary>
+    private static void ReleaseNativeHolds(PlayerAvatar user)
+    {
+        var director = EnemyDirector.instance;
+        if (director == null || director.enemiesSpawned == null) return;
+        foreach (var parent in director.enemiesSpawned.ToArray())
+        {
+            var enemy = parent != null && parent.Spawned ? parent.Enemy : null;
+            if (enemy == null || !enemy.HasStateStunned || enemy.StateStunned == null) continue;
+            var snatcher = parent.GetComponentInChildren<EnemySnatcher>();
+            bool holds = snatcher != null && snatcher.playerTarget == user &&
+                         snatcher.tongueTargetType == EnemySnatcher.TongueTargetType.Player &&
+                         snatcher.tongueCommandState != EnemySnatcher.TongueCommandState.Released;
+            var floater = parent.GetComponentInChildren<EnemyFloater>();
+            holds |= floater != null && floater.targetPlayer == user && floater.currentState is
+                EnemyFloater.State.ChargeAttack or EnemyFloater.State.DelayAttack or EnemyFloater.State.Attack;
+            if (!holds) continue;
+            enemy.StateStunned.Set(ConsumableRules.AdrenalineStunSeconds);
+            Plugin.Log.LogInfo($"[Gear] Adrenaline Shot: {parent.enemyName} let go of {SemiFunc.PlayerGetName(user)}.");
         }
     }
 
@@ -53,6 +79,17 @@ internal static class Consumables
         Networking.ModNetwork.Instance?.BroadcastRepair(best, best.dollarValueCurrent);
         Plugin.Log.LogInfo($"[Gear] Repair Kit: {best.name} restored by ${bestLoss * ConsumableRules.RepairShare:0} for {SemiFunc.PlayerGetName(user)}.");
         return true;
+    }
+
+    // Every client: the use animation (plunger, cap, lid) plays with the native use effects.
+    [HarmonyPatch(typeof(ItemHealthPack), nameof(ItemHealthPack.UsedRPC))]
+    private static class UseAnimation
+    {
+        [HarmonyPostfix]
+        private static void Postfix(ItemHealthPack __instance)
+        {
+            if (__instance.GetComponent<ModConsumable>() != null) __instance.GetComponent<Visuals.ItemArtMotion>()?.Play();
+        }
     }
 
     // Replaces the health pack's heal for our clones; everything else mirrors the native Update.

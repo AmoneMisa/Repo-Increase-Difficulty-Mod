@@ -79,6 +79,8 @@ internal static class SkillCatalog
         Evasion = P + "Evasion", DodgeRoll = P + "DodgeRoll",
         GoldenNose = P + "GoldenNose", SoulHunter = P + "SoulHunter";
     public const string CriticalStrike = P + "CriticalStrike";
+    public const string SmokeGrenade = P + "SmokeGrenade", CryoGrenade = P + "CryoGrenade", GlueGrenade = P + "GlueGrenade",
+        SickleThrow = P + "SickleThrow";
     public const string Toughness = P + "Toughness", Hauler = P + "Hauler", Scavenger = P + "Scavenger";
     public const string Hemostasis = P + "Hemostasis", Sapper = P + "Sapper",
         LinkOperator = P + "LinkOperator", LightBasket = P + "LightBasket",
@@ -257,6 +259,10 @@ internal static class SkillCatalog
         Add(utility, "Loot", Hauler, "Hauler", "Грузчик", 1, 3, root: true);
         Add(utility, "Loot", Scavenger, "Scavenger", "Мародёр", 2, 3, root: true);
         Add(combat, "Damage", CriticalStrike, "Critical Strike", "Критический удар", 1, 5, Brawler);
+        Add(combat, "Grenades", SmokeGrenade, "Smoke Grenade", "Дымовая граната", 1, 3, GrenadeDamage);
+        Add(combat, "Grenades", CryoGrenade, "Cryo Grenade", "Крио-граната", 1, 3, GrenadeDamage);
+        Add(combat, "Grenades", GlueGrenade, "Glue Grenade", "Клеевая граната", 1, 3, GrenadeDamage);
+        Add(combat, "Damage", SickleThrow, "Sickle Throw", "Бросок серпа", 1, 3, Brawler);
         Add(recon, "Vision", WideView, "Wide View", "Широкий обзор", 1, 3, root: true);
     }
 

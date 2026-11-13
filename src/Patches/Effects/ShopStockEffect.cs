@@ -29,9 +29,14 @@ internal static class ShopStockEffect
             if (_baseItems < 0) { _baseItems = shop.itemSpawnTargetAmount; _baseUpgrades = shop.itemUpgradesAmount; }
             shop.itemSpawnTargetAmount = _baseItems + ModConfig.ShopExtraItems.Value;
             shop.itemUpgradesAmount = _baseUpgrades + Upgrades.ShopUpgrades.ExtraUpgradeSlots; // the shop scene's own count (10 in the current game), plus Upgrade Shelf
+            Upgrades.UpgradeShelfRack.HostBegin();
             // Upgrade Shelf: its extra upgrades get slots on a rack of their own.
             int shelf = Upgrades.ShopUpgrades.ExtraUpgradeSlots;
             if (shelf > 0) shop.itemVolumes.AddRange(Upgrades.UpgradeShelfRack.HostBuild(shop, shelf));
+            // The mod's consumables never take a health pack's slot: they come out of every pool here and go on a
+            // stand of their own (a copy of the health-pack shelf by a free wall) after the normal stocking.
+            var consumables = TakeConsumables(shop);
+            var stand = consumables.Count > 0 ? Upgrades.UpgradeShelfRack.HostBuildConsumableStand(shop, consumables.Count) : new List<ItemVolume>();
             // Crystal Stock: more power crystals at once (the game rolls 4-5), up to what the truck lacks.
             int crystals = Upgrades.ShopUpgrades.CrystalStock;
             if (crystals > 0)
@@ -83,6 +88,20 @@ internal static class ShopStockEffect
                     bigger++;
                 }
 
+            int onStand = 0;
+            for (int i = 0; i < stand.Count && i < consumables.Count; i++)
+                if (PlaceOn(__instance, stand[i], consumables[i], _spawns)) onStand++;
+            foreach (var volume in stand) if (volume != null) UnityEngine.Object.Destroy(volume.gameObject);
+            // No wall for the stand (a cramped shop): the rest still turn up on a free slot of a fitting size.
+            for (int i = onStand; i < consumables.Count; i++)
+            {
+                var slot = free.Find(v => TruckItemSlotsPatch.Fits(consumables[i].itemVolume, v.itemVolume));
+                if (slot == null || !PlaceOn(__instance, slot, consumables[i], _spawns)) continue;
+                free.Remove(slot);
+                onStand++;
+            }
+            if (consumables.Count > 0) Plugin.Log.LogInfo($"[Shop] Consumables: {onStand}/{consumables.Count} placed ({stand.Count} stand slot(s)).");
+
             Plugin.Log.LogInfo($"[Shop] Stocked {counts[0]}/{targets[0]} items, {counts[1]}/{targets[1]} consumables, " +
                                $"{counts[2]}/{targets[2]} upgrades, {counts[3]}/{targets[3]} health packs on {shop.itemVolumes.Count} slot(s) " +
                                $"({bigger} on a bigger slot, {free.Count} slot(s) left empty).");
@@ -97,6 +116,26 @@ internal static class ShopStockEffect
             Plugin.Log.LogWarning($"[Shop] Stocking fell back to native: {e.Message}");
             return true;
         }
+    }
+
+    /// <summary>The mod's consumables, taken out of every native pool (each as often as the shop allows it), shuffled.</summary>
+    private static List<Item> TakeConsumables(ShopManager shop)
+    {
+        var taken = new List<Item>();
+        foreach (var pool in new[] { shop.potentialItems, shop.potentialItemConsumables, shop.potentialItemUpgrades, shop.potentialItemHealthPacks })
+            for (int i = pool.Count - 1; i >= 0; i--)
+            {
+                var prefab = pool[i] != null && pool[i].prefab != null ? pool[i].prefab.Prefab : null;
+                if (prefab == null || prefab.GetComponent<Gear.ModConsumable>() == null) continue;
+                taken.Add(pool[i]);
+                pool.RemoveAt(i);
+            }
+        for (int i = taken.Count - 1; i > 0; i--)
+        {
+            int j = UnityEngine.Random.Range(0, i + 1);
+            (taken[i], taken[j]) = (taken[j], taken[i]);
+        }
+        return taken;
     }
 
     // Native SpawnShopItem matches classes exactly; this places a chosen item on any slot, same rotation handling.

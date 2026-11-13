@@ -26,6 +26,12 @@ Created against `e6e0bb9` (master), using Blender 5.2.1. All shipped geometry an
 | Sticky Pistol | Pink pressure drum, feed tube, wide nozzle and piston recoil |
 | Decoy Grenade | Orange speaker beacon and antenna deployment on activation |
 
+## 0.10.15 gear
+
+`tools/build_gear15_art.py` (same exporter and conventions) builds the Smoke / Cryo / Glue grenades, Antidote, Adrenaline Shot, Repair Kit (key `repairkit`; `repair` belongs to the Repair Drone), the Boomerang Sickle (`sickle`, `sickle_broken`) and the Armored C.A.R.T. plating (`armored`), plus inventory renders and `art/gear15/gear15.blend`. `tools/build_gear15_audio.py` writes their cues. Both leave the older assets untouched.
+
+The glue effect uses the original `IHM/Glue` shader (`tools/IceShaderBundle/Assets/Shaders/IHMGlue.shader`), built into `src/Art/ihm_glue.bundle` with `Unity.exe -batchmode -quit -projectPath tools/IceShaderBundle -executeMethod BuildGlueBundle.Build`; `RenderGluePreview.Render` writes `art/gear15/glue_shader.png`. `Assets/Editor/GlueMesh.cs` is a copy of `src/Visuals/GlueMesh.cs` (keep them in sync).
+
 ## Rebuild
 
 Pass an **absolute** root to Blender; Blender can change its working directory when saving files.

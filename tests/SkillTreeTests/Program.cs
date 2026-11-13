@@ -6,7 +6,7 @@ int checks = 0;
 void Check(bool ok, string name) { if (!ok) throw new Exception("FAIL " + name); Console.WriteLine("PASS " + name); checks++; }
 
 // ---------------------------------------------------------------- catalogue
-Check(C.NormalPageCost(SkillPage.Recon) == 43 && C.NormalPageCost(SkillPage.Combat) == 123 &&
+Check(C.NormalPageCost(SkillPage.Recon) == 43 && C.NormalPageCost(SkillPage.Combat) == 135 &&
       C.NormalPageCost(SkillPage.Survival) == 80 && C.NormalPageCost(SkillPage.Utility) == 64 && C.NormalPageCost(SkillPage.Arsenal) == 63, "Normal page costs include weapon rate and convoy perks");
 Check(C.Find(C.LightBasket).MaxLevel == 5 && C.Find(C.LightBasket).Cost == 1, "Light Basket has five affordable ranks");
 Check(C.Find(C.Hemostasis).Requires.SequenceEqual(new[]{C.Survivor}) && C.Find(C.LinkOperator).Requires.SequenceEqual(new[]{C.Technician}), "New perks have the intended prerequisite");
@@ -28,9 +28,9 @@ foreach (var (id, page, cost) in new[] { (C.Grounding, SkillPage.Survival, 1), (
     (C.GoldenNose, SkillPage.Utility, 1), (C.SoulHunter, SkillPage.Utility, 2) })
     Check(C.Find(id) != null && C.Find(id).Page == page && C.Find(id).MaxLevel == 3 && C.Find(id).Cost == cost && id.StartsWith("IHM_ST_"), "Monster perk " + id + " is in the tree with 3 levels");
 Check(System.Array.IndexOf(C.Find(C.DodgeRoll).Requires, C.Evasion) >= 0, "Dodge Roll requires Evasion");
-Check(C.PageCost(SkillPage.Recon) == 49 && C.PageCost(SkillPage.Combat) == 129 && C.PageCost(SkillPage.Survival) == 86 &&
+Check(C.PageCost(SkillPage.Recon) == 49 && C.PageCost(SkillPage.Combat) == 141 && C.PageCost(SkillPage.Survival) == 86 &&
       C.PageCost(SkillPage.Utility) == 70 && C.PageCost(SkillPage.Arsenal) == 69, "Each page adds one trade-off per tier (1+2+3 points)");
-Check(C.TotalCost() == 452, "Whole tree includes the firing-rate and Wide View perks (Stone Resilience retired)");
+Check(C.TotalCost() == 464, "Whole tree includes the firing-rate and Wide View perks (Stone Resilience retired)");
 Check(C.Find(C.WideView) is { Page: SkillPage.Recon, Branch: "Vision", Cost: 1, MaxLevel: 3, Root: true, Tier: 0, QuestOnly: false } &&
       C.Find(C.WideView).Requires.Length == 0 && C.Find(C.WideView).NameRu.Length > 0, "Wide View is a 3-rank root perk on the first page");
 Check(PerkRules.FovBonus(0) == 0f && PerkRules.FovBonus(1) == 5f && PerkRules.FovBonus(3) == 15f && PerkRules.FovBonus(99) == 15f &&
@@ -397,4 +397,7 @@ Check(C.Find(C.CriticalStrike) is { Cost: 1, MaxLevel: 5, Page: SkillPage.Combat
 Check(Math.Round(PerkRules.HitsSaved(4, 5), 1) == .9 && Math.Round(PerkRules.HitsSaved(9, 5), 1) == 2.1 && Math.Round(PerkRules.HitsSaved(13, 5), 1) == 3.0,
     "Rank 5 saves about 1 hit on a 4-hit monster, 2 on a 9-hit one, 3 on a 13-hit one");
 Check(PerkRules.Crit(50, 5, .29) == 100 && PerkRules.Crit(50, 5, .31) == 50 && PerkRules.Crit(50, 0, 0) == 50, "A crit doubles the hit only under the chance");
+Check(C.Find(C.SmokeGrenade) is { Cost: 1, MaxLevel: 3 } && C.Find(C.CryoGrenade) is { Cost: 1, MaxLevel: 3 } &&
+      C.Find(C.GlueGrenade) is { Cost: 1, MaxLevel: 3 } && C.Find(C.SickleThrow) is { Cost: 1, MaxLevel: 3 } &&
+      C.Find(C.SmokeGrenade).Requires.SequenceEqual(new[] { C.GrenadeDamage }), "New grenade and sickle perks: 1 point, 3 ranks");
 Console.WriteLine($"All {checks} skill tree checks passed.");

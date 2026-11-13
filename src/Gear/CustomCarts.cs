@@ -135,6 +135,7 @@ internal static class CustomCarts
             if (grab != null) grab.massOriginal = mass;
         }
         Tint(go, color);
+        if (kind == CartKind.Armored) AddArmorPlating(go);
         var cart = go.AddComponent<ModCart>();
         cart.kind = kind;
         cart.mass = mass;
@@ -381,6 +382,23 @@ internal static class CustomCarts
                 if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", Color.Lerp(m.GetColor("_BaseColor"), color, .35f));
                 else if (m.HasProperty("_Color")) m.SetColor("_Color", Color.Lerp(m.color, color, .35f));
             }
+    }
+
+    /// <summary>Bolt-on plates (Blender model "armored") outside the side walls and the front; purely visual,
+    /// the native colliders stay as they are.</summary>
+    private static void AddArmorPlating(GameObject go)
+    {
+        try
+        {
+            var body = go.transform.Find("Cart Mesh");
+            var template = ItemArt.FresnelMaterialDonor(body);
+            if (template == null) throw new System.IO.InvalidDataException("No albedo-capable cart material");
+            ItemArt.AttachStatic(go, "armored", template, body != null ? body.gameObject.layer : go.layer);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.LogWarning($"[Carts] Armored C.A.R.T. keeps the plain look: {e.Message}");
+        }
     }
 
     [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), nameof(PhysGrabObjectImpactDetector.Break))]

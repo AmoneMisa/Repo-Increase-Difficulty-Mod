@@ -17,7 +17,51 @@ internal sealed class BoomerangSickle : MonoBehaviour
     private bool _gravity;
     private readonly HashSet<Enemy> _hit = new();
 
+    private Vector3 _lastPosition;
+    private float _nextWhoosh;
+    private Sound _whoosh;
+
     private void Awake() => _grab = GetComponent<PhysGrabObject>();
+
+    /// <summary>Blender blade on both native shells (healthy and broken), like the Katana; donor geometry hidden.</summary>
+    internal static void BuildModel(GameObject go)
+    {
+        try
+        {
+            var healthy = go.transform.Find("Mesh Healthy");
+            var broken = go.transform.Find("Mesh Broken");
+            if (healthy == null || broken == null) throw new System.IO.InvalidDataException("Unknown melee mesh hierarchy");
+            var template = Visuals.ItemArt.FresnelMaterialDonor(healthy);
+            if (template == null) throw new System.IO.InvalidDataException("No albedo-capable melee material");
+            foreach (var (shell, key) in new[] { (healthy, "sickle"), (broken, "sickle_broken") })
+            {
+                var renderers = shell.GetComponentsInChildren<MeshRenderer>(true);
+                var root = Visuals.ItemArt.AttachStatic(go, key, template, shell.gameObject.layer);
+                root.SetParent(shell, true); // aligned to the item origin, shown and hidden with the native shell
+                Visuals.DonorVisuals.RemoveGeometry(renderers);
+            }
+            Visuals.ItemArt.RetargetItemLights(go, go.transform);
+            var icon = Upgrades.UpgradeIcons.Load("sickle_inventory.png");
+            if (icon != null) go.GetComponent<ItemAttributes>().icon = icon;
+        }
+        catch (System.Exception e)
+        {
+            Plugin.Log.LogWarning($"[Art] Keeping the sword look for the Boomerang Sickle: {e.Message}");
+        }
+    }
+
+    // Every client: a spinning whoosh while it flies loose (position-based, so it works without host messages).
+    private void Update()
+    {
+        if (_grab == null) return;
+        var position = transform.position;
+        float speed = Time.deltaTime > 0f ? Vector3.Distance(position, _lastPosition) / Time.deltaTime : 0f;
+        _lastPosition = position;
+        if (_grab.playerGrabbing.Count > 0 || speed < SickleRules.ThrowSpeed + 1f || Time.time < _nextWhoosh) return;
+        try { _whoosh ??= Visuals.ItemAudio.Cue("sickle_throw", .45f); } catch { enabled = false; return; }
+        _whoosh.Play(position);
+        _nextWhoosh = Time.time + .32f;
+    }
 
     private void FixedUpdate()
     {
@@ -68,6 +112,6 @@ internal sealed class BoomerangSickle : MonoBehaviour
         var enemy = body != null ? body.enemy : null;
         if (enemy == null || !enemy.HasHealth || enemy.Health == null || enemy.Health.dead || !_hit.Add(enemy)) return;
         var direction = _grab.rb.velocity.sqrMagnitude > .01f ? _grab.rb.velocity.normalized : transform.forward;
-        enemy.Health.Hurt(SickleRules.ThrowDamage, direction);
+        enemy.Health.Hurt(SickleRules.Damage(Skills.SkillEffects.Level(_holder, Skills.SkillCatalog.SickleThrow)), direction);
     }
 }
