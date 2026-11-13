@@ -86,7 +86,9 @@ internal static class HpRegenUpgrade
             }
 
             // Cap: stop once current HP reaches the configured fraction of max HP.
-            int cap = Mathf.RoundToInt(ph.maxHealth * Mathf.Clamp01(ModConfig.RegenMaxHpFraction.Value));
+            // Deep Regeneration raises it by one percent of max HP per level.
+            float capShare = Skills.PerkRules.RegenCap(ModConfig.RegenMaxHpFraction.Value, Skills.SkillEffects.Level(avatar, Skills.SkillCatalog.RegenCap));
+            int cap = Mathf.RoundToInt(ph.maxHealth * Mathf.Clamp01(capShare));
             if (ph.health >= cap)
             {
                 _accumulated = 0f;

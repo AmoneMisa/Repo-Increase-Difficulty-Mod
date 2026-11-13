@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 using RepoUpgrades = REPOLib.Modules.Upgrades;
 
@@ -24,7 +25,9 @@ internal static class TruckUpgrades
     public const string HealId = "IHM_TruckHeal";
     public const string ChargeId = "IHM_TruckCharge";
     public const string SellId = "IHM_TruckSell";
-    internal static bool IsShared(string id) => id == HealId || id == ChargeId || id == SellId;
+    // Team-wide: the truck upgrades and the team shop upgrades (ShopUpgrades).
+    private static readonly string[] SharedIds = new[] { HealId, ChargeId, SellId }.Concat(ShopUpgrades.Ids).ToArray();
+    internal static bool IsShared(string id) => System.Array.IndexOf(SharedIds, id) >= 0;
     internal static void StoreShared(string id, int level)
     {
         if (!IsShared(id) || !SemiFunc.IsMasterClientOrSingleplayer() || StatsManager.instance == null) return;
@@ -37,7 +40,7 @@ internal static class TruckUpgrades
     internal static void ShareLevels()
     {
         if (!SemiFunc.IsMasterClientOrSingleplayer() || GameDirector.instance == null || GameDirector.instance.PlayerList == null) return;
-        foreach (string id in new[] { HealId, ChargeId, SellId })
+        foreach (string id in SharedIds)
         {
             var upgrade = RepoUpgrades.GetUpgrade(id);
             if (upgrade == null) continue;
@@ -60,6 +63,7 @@ internal static class TruckUpgrades
             Id = HealId,
             DisplayName = "Heal Power",
             Description = $"Truck upgrade (whole team): all healing heals {ModConfig.TruckHealPercentPerLevel.Value * 100f:0.#}% more per level, compounding (each level multiplies the previous heal).",
+            DescriptionRu = $"Улучшение машины (вся команда): всё лечение лечит на {ModConfig.TruckHealPercentPerLevel.Value * 100f:0.#}% больше за уровень, с накоплением (каждый уровень умножает предыдущий).",
             MaxLevel = Mathf.Max(1, ModConfig.TruckHealMaxLevel.Value),
             BaseShopPrice = ModConfig.TruckHealBaseCost.Value,
             IconFile = "Upgrade_Truck_Heal-Power.png",
@@ -70,6 +74,7 @@ internal static class TruckUpgrades
             Id = ChargeId,
             DisplayName = "Charge Efficiency",
             Description = "Truck upgrade (whole team): each level multiplies the charging station's remaining energy drain; at least 5% drain remains.",
+            DescriptionRu = "Улучшение машины (вся команда): каждый уровень уменьшает расход энергии зарядной станции; минимум 5% расхода остаётся.",
             MaxLevel = Mathf.Max(1, ModConfig.TruckChargeMaxLevel.Value),
             BaseShopPrice = ModConfig.TruckChargeBaseCost.Value,
             IconFile = "Upgrade_Truck_Charge-Power.png",
@@ -80,10 +85,13 @@ internal static class TruckUpgrades
             Id = SellId,
             DisplayName = "Loot Cash-In",
             Description = "Truck upgrade (whole team): once owned, leftover valuables are auto-cashed when every quota is closed. One-time unlock.",
+            DescriptionRu = "Улучшение машины (вся команда): когда все квоты закрыты, оставшиеся ценности продаются автоматически. Покупается один раз.",
             MaxLevel = 1,
             BaseShopPrice = ModConfig.TruckSellCost.Value,
             IconFile = "Upgrade_Truck_Cache.png",
         });
+
+        ShopUpgrades.Register();
     }
 
     /// <summary>Highest level of <paramref name="id"/> owned across all players in the run (0 if none).</summary>

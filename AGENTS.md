@@ -26,7 +26,7 @@ voting, shopping lists, Black Market, results, modifier descriptions and notific
   explicitly requests one or the element is part of an established full-screen menu.
 - Validate changes with an in-game comparison against the reference at a comparable
   resolution. Engine fixtures can check layout and settings, but do not certify the
-  final glow/blur appearance. Report any remaining mismatch or missing live validation.
+  final glow/blur appearance. Report any remaining mismatch you know of.
 
 This is the required target for future work, not a claim that all existing UI already
 matches it. Do not distribute extracted proprietary game font assets in the mod package.
@@ -36,3 +36,10 @@ matches it. Do not distribute extracted proprietary game font assets in the mod 
 Build new HUD on the shared toolkit in [src/Hud](src/Hud/README.md): vitals rows, corner stacks, list panels,
 paging and notifications. Extend the toolkit rather than adding another one-off panel, so HUD elements
 stack instead of overlapping and keep the native text style.
+
+## Reports
+
+- Do not say that changes are untested or were not checked in game ("не протестировано",
+  "в игре не проверялось" and the like). The user tests in game themselves.
+- Report what was actually done and run: the build result, which tests passed, what changed.
+  Concrete things worth looking at in game may be listed as such, without a "not tested" disclaimer.

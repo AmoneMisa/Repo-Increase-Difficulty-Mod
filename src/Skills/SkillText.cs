@@ -139,6 +139,13 @@ internal static class SkillText
             case C.SecondWind: return $"Stamina recovers {Pct(ModConfig.SkillSecondWindPerLevel.Value)} faster per level.";
             case C.Armor: return $"-{Pct(PerLevel(ModConfig.ArmorPercentPerLevel.Value, ModConfig.ArmorMaxLevel.Value, id))} damage taken per level (up to -{Pct(Upgrades.SurvivalUpgrades.ArmorCap)}).";
             case C.HpRegen: return $"Slowly regain health, up to {Pct(ModConfig.RegenMaxHpFraction.Value)} of max HP; faster per level.";
+            case C.FreeBullet: return "Each shot of a bullet gun has a 2% / 4% / 7% chance to cost no charge.";
+            case C.FreeLaser: return "Each shot of a laser or energy gun has a 2% / 4% / 7% chance to cost no charge.";
+            case C.FreeTranq: return "Each shot of a tranquilizer gun has a 2% / 4% / 7% chance to cost no charge.";
+            case C.FreeMelee: return "Each melee hit has a 2% / 4% / 7% chance to cost no durability.";
+            case C.DroneThrift: return "Your drones use 3% / 5% / 7% less energy.";
+            case C.FreeCartShot: return "Each shot of the C.A.R.T. cannon or C.A.R.T. laser you operate has a 2% / 3.5% / 5% chance to cost no charge.";
+            case C.RegenCap: return $"HP Regeneration fills up to {Pct(Skills.PerkRules.RegenCap(ModConfig.RegenMaxHpFraction.Value, 1))} of max HP, +1% per level ({Pct(Skills.PerkRules.RegenCap(ModConfig.RegenMaxHpFraction.Value, 5))} at max).";
 
             case C.Desperation: return $"-{Pct(ModConfig.SkillDesperationPerLevel.Value)} damage taken per level while your health is under {Pct(ModConfig.SkillDesperationThreshold.Value)}.";
             case C.HuntedWarning: return "Shows HUNTED on your screen while a monster is chasing you.";
@@ -312,6 +319,13 @@ internal static class SkillText
             case C.SecondWind: return $"Выносливость восстанавливается на {Pct(ModConfig.SkillSecondWindPerLevel.Value)} быстрее за уровень.";
             case C.Armor: return $"-{Pct(PerLevel(ModConfig.ArmorPercentPerLevel.Value, ModConfig.ArmorMaxLevel.Value, id))} получаемого урона за уровень (до -{Pct(Upgrades.SurvivalUpgrades.ArmorCap)}).";
             case C.HpRegen: return $"Здоровье понемногу восстанавливается, до {Pct(ModConfig.RegenMaxHpFraction.Value)} от максимума; с каждым уровнем быстрее.";
+            case C.FreeBullet: return "Каждый выстрел из огнестрела с шансом 2% / 4% / 7% не тратит заряд.";
+            case C.FreeLaser: return "Каждый выстрел из лазерного или энергетического оружия с шансом 2% / 4% / 7% не тратит заряд.";
+            case C.FreeTranq: return "Каждый выстрел из транквилизатора с шансом 2% / 4% / 7% не тратит заряд.";
+            case C.FreeMelee: return "Каждый удар оружием ближнего боя с шансом 2% / 4% / 7% не тратит прочность.";
+            case C.DroneThrift: return "Ваши дроны тратят на 3% / 5% / 7% меньше энергии.";
+            case C.FreeCartShot: return "Каждый выстрел пушки или лазера тележки под вашим управлением с шансом 2% / 3,5% / 5% не тратит заряд.";
+            case C.RegenCap: return $"Регенерация восполняет здоровье до {Pct(Skills.PerkRules.RegenCap(ModConfig.RegenMaxHpFraction.Value, 1))} от максимума, +1% за уровень ({Pct(Skills.PerkRules.RegenCap(ModConfig.RegenMaxHpFraction.Value, 5))} на максимуме).";
 
             case C.Desperation: return $"-{Pct(ModConfig.SkillDesperationPerLevel.Value)} получаемого урона за уровень, пока здоровья меньше {Pct(ModConfig.SkillDesperationThreshold.Value)}.";
             case C.HuntedWarning: return "Пока за вами гонится монстр, на экране горит надпись ПОГОНЯ.";

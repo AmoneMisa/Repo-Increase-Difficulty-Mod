@@ -11,7 +11,7 @@ as a run goes deeper, sprinkles in random per-level "surprise" modifiers, adds c
 a team ping system, a round-results board and a set of quality-of-life features for lobbies.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Version:** `0.10.13`
+- **Version:** `0.10.14`
 
 Mid-level joining also catches up live battery charge, upgraded capacity and native battery indicator colours. New-monster selection now recommends a score of 100.
 
@@ -186,6 +186,12 @@ after it saves you, ~50,000).
 | **Heal Power** | 10 | The truck's heal is multiplied by 1.05 per level, compounding (35 HP: 36.75 at level 1, 38.59 at level 2, about 57 at level 10); heal packs, drones and regeneration are not affected. The Taxman's line shows the real amount. Starts at 10,000 |
 | **Charge Efficiency** | 10 | The charging station multiplies remaining energy drain by 0.95 per level, compounding like Slower Stamina Use: 95% / 90.25% / 85.7% at levels 1-3, 59.9% at level 10; minimum 5%. Starts at 10,000. Stacks with the power-crystal economy: fewer crystals burned per recharge |
 | **Loot Cash-In** | 1 | Once every quota is closed, leftover valuables are sold automatically for 75% of their value. One-time unlock, 50,000 |
+| **Haggling** | 3 | The shopkeeper robot allows one more discount attempt per shop visit per level: 3 -> 6. From 45,000 |
+| **Crystal Stock** | 3 | The shop stocks 6 / 7 / 8 power crystals at once instead of 4-5, never more than the truck needs for a full charge (10). From 15,000 |
+| **Spare Gun** | 1 | Every gun and launcher can be bought one more time than usual. 25,000 |
+| **Spare Melee** | 1 | Every melee weapon can be bought one more time than usual. 15,000 |
+| **Spare Drone** | 1 | Every drone can be bought one more time than usual. 25,000 |
+| **Upgrade Shelf** | 4 | Two more upgrades in the shop per level, up to +8. From 20,000 |
 
 #### Utility drones (shop)
 
@@ -434,7 +440,7 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 магазине, командная система пингов, таблица итогов уровня и набор удобств для лобби.
 
 - **GUID:** `com.kubai.increasehardmod`
-- **Версия:** `0.10.13`
+- **Версия:** `0.10.14`
 
 При входе посреди уровня также досылаются фактический заряд, увеличенная ёмкость и восстанавливаются штатные цвета индикатора батареи. Рекомендуемый балл выбора новых монстров — 100.
 
@@ -606,6 +612,12 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 | **Heal Power** | 10 | Лечение в грузовике умножается на 1,05 за уровень с накоплением (35 HP: 36,75 на уровне 1, 38,59 на уровне 2, около 57 на уровне 10); аптечки, дроны и регенерация не затронуты. Таксман показывает реальное значение. От 10 000 |
 | **Charge Efficiency** | 10 | Остаточный расход энергии умножается на 0,95 за уровень с накоплением, как у Slower Stamina Use: 95% / 90,25% / 85,7% на уровнях 1-3, 59,9% на уровне 10; минимум 5%. От 10 000. Работает вместе с экономикой кристаллов: на зарядку уходит меньше кристаллов |
 | **Loot Cash-In** | 1 | Когда все квоты закрыты, оставшиеся ценности продаются автоматически за 75% стоимости. Разовая разблокировка, 50 000 |
+| **Haggling** | 3 | Робот-продавец даёт на одну попытку скидки больше за посещение магазина за уровень: 3 -> 6. От 45 000 |
+| **Crystal Stock** | 3 | В магазине одновременно 6 / 7 / 8 кристаллов энергии вместо 4-5, но не больше, чем нужно машине до полного заряда (10). От 15 000 |
+| **Spare Gun** | 1 | Каждое огнестрельное оружие и пусковую установку можно купить на один раз больше обычного. 25 000 |
+| **Spare Melee** | 1 | Каждое оружие ближнего боя можно купить на один раз больше обычного. 15 000 |
+| **Spare Drone** | 1 | Каждого дрона можно купить на один раз больше обычного. 25 000 |
+| **Upgrade Shelf** | 4 | На два улучшения в магазине больше за уровень, до +8. От 20 000 |
 
 #### Утилитарные дроны (магазин)
 

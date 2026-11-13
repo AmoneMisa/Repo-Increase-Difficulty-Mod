@@ -6,10 +6,10 @@ namespace IncreaseHardMod.Patches.Effects;
 /// <summary>
 /// More different items and upgrades in the shop, with room for them (host; the host fills the shop).
 ///
-/// The native PunManager.ShopPopulateItemVolumes stocks 8 items, 6 consumables, 3 upgrades and 3 health packs, and
+/// The native PunManager.ShopPopulateItemVolumes stocks the shop scene's amounts (now 8 items, 4-5 crystals, 10 upgrades and 6 health packs), and
 /// puts an item only on a free shelf slot (ItemVolume) of exactly its own size class; once a class runs out, the rest
 /// of that kind never appears. This replacement keeps the native secret-shelf pass and order, stocks
-/// <c>ExtraItems</c> more items and <c>ExtraUpgrades</c> more upgrades, and in a second pass lets anything still
+/// <c>ExtraItems</c> more items and, with the Upgrade Shelf team upgrade, more upgrades on its own shelves, and in a second pass lets anything still
 /// unplaced use a free bigger slot (a grenade on a medium slot), with the same size rule as the truck
 /// (<see cref="TruckItemSlotsPatch.Fits"/>). No duplicates: every placed item comes out of the game's own pool, which
 /// holds each item only as often as the game allows. Items are never stacked here, so price tags don't overlap.
@@ -28,7 +28,17 @@ internal static class ShopStockEffect
         {
             if (_baseItems < 0) { _baseItems = shop.itemSpawnTargetAmount; _baseUpgrades = shop.itemUpgradesAmount; }
             shop.itemSpawnTargetAmount = _baseItems + ModConfig.ShopExtraItems.Value;
-            shop.itemUpgradesAmount = _baseUpgrades + ModConfig.ShopExtraUpgrades.Value;
+            shop.itemUpgradesAmount = _baseUpgrades + Upgrades.ShopUpgrades.ExtraUpgradeSlots; // the shop scene's own count (10 in the current game), plus Upgrade Shelf
+            // Upgrade Shelf: its extra upgrades get slots on a rack of their own.
+            int shelf = Upgrades.ShopUpgrades.ExtraUpgradeSlots;
+            if (shelf > 0) shop.itemVolumes.AddRange(Upgrades.UpgradeShelfRack.HostBuild(shop, shelf));
+            // Crystal Stock: more power crystals at once (the game rolls 4-5), up to what the truck lacks.
+            int crystals = Upgrades.ShopUpgrades.CrystalStock;
+            if (crystals > 0)
+            {
+                shop.itemConsumablesAmount = UnityEngine.Mathf.Max(shop.itemConsumablesAmount, crystals);
+                Upgrades.ShopUpgrades.TopUpCrystals(shop.potentialItemConsumables, shop.itemConsumablesAmount);
+            }
 
             // Secret shelves: exactly as native (one in three gets an item; the volumes are then removed).
             int secretCount = 0;

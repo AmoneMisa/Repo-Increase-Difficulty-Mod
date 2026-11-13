@@ -60,6 +60,10 @@ internal sealed class ShopItemInfo : MonoBehaviour
         _rows.Clear();
         void Add(string en, string russian, string value) => _rows.Add(new HudListRow(ru ? russian : en, value, HudStyle.Info));
         Add("PRICE", "ЦЕНА", "$" + _selected.value.ToString("N0") + "K"); // shop values are in thousands
+        // Team upgrades: the level the whole team already has.
+        var upgrade = Upgrades.PlayerUpgradeRegistry.DefinitionOf(_selected.item);
+        if (upgrade != null && Upgrades.TruckUpgrades.IsShared(upgrade.Id))
+            Add("TEAM LEVEL", "УРОВЕНЬ КОМАНДЫ", Upgrades.TruckUpgrades.TeamLevel(upgrade.Id) + " / " + upgrade.MaxLevel);
         var prefab = _selected.item.prefab?.Prefab;
         if (prefab == null) { _panel.SetRows(_rows); return; }
         var body = prefab.GetComponent<Rigidbody>();
@@ -132,7 +136,7 @@ internal sealed class ShopItemInfo : MonoBehaviour
             Add("LOOT DAMAGE WHILE PULLING", "УРОН ЛУТУ ПРИ ПРИТЯГИВАНИИ", "−80%");
         }
         // The catalogue description is the item's source of truth, including third-party items.
-        string description = _selected.item.description;
+        string description = Upgrades.PlayerUpgradeRegistry.DescriptionOf(_selected.item);
         if (!string.IsNullOrWhiteSpace(description))
         {
             string line = "";

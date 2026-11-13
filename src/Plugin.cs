@@ -125,6 +125,8 @@ public class Plugin : BaseUnityPlugin
         // In-shop cart overlay: aggregates ShopManager.shoppingList into a colour-coded panel.
         netObject.AddComponent<ShoppingListHud>();
         netObject.AddComponent<Gear.ShopItemInfo>();
+        // Upgrade Shelf team upgrade: the extra rack in the shop (host places it, every client builds it).
+        netObject.AddComponent<Upgrades.UpgradeShelfRack>();
         // Map Vote: lobby-phase vote on the next map (host rolls candidates + applies the winner).
         netObject.AddComponent<Patches.Effects.MapVoteController>();
         // Drives the per-player HP Regeneration upgrade (continuous local heal-up-to-cap).

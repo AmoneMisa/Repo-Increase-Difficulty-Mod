@@ -70,6 +70,9 @@ internal static class SkillCatalog
         CourierArmor = P + "CourierArmor", CourierRecovery = P + "CourierRecovery", CourierLuck = P + "CourierLuck",
         CourierHealth = P + "CourierHealth", CourierStealth = P + "CourierStealth", CourierPack = P + "CourierPack",
         CourierSouls = P + "CourierSouls";
+    // Expensive late perks: a chance that a weapon use costs no charge, thriftier drones, a higher regeneration cap.
+    public const string FreeBullet = P + "FreeBullet", FreeLaser = P + "FreeLaser", FreeTranq = P + "FreeTranq", FreeMelee = P + "FreeMelee",
+        DroneThrift = P + "DroneThrift", RegenCap = P + "RegenCap", FreeCartShot = P + "FreeCartShot";
 
     // Monster resistances, mobility and loot perks for the 0.10.0 monsters. Ids are save keys: never rename.
     public const string Grounding = P + "Grounding", ThermalProtection = P + "ThermalProtection", Antidote = P + "Antidote",
@@ -133,6 +136,7 @@ internal static class SkillCatalog
         Add(combat, "Damage", MeleeAccuracy, "Melee Accuracy", "Точность в ближнем бою", 1, 3, Brawler);
         Add(combat, "Damage", TumbleDamage, "Tumble Damage", "Урон кувырком", 1, 5, Brawler);
         Add(combat, "Damage", Vampirism, "Vampirism", "Вампиризм", 1, 7, MeleeDamage);
+        Add(combat, "Damage", FreeMelee, "Unworn Edge", "Без износа", 7, 3, MeleeDamage);
 
         Add(combat, "Grenades", GrenadeDamage, "Grenade Damage", "Урон гранат", 1, 5, Brawler);
         Add(combat, "Grenades", ExplosiveGrenade, "Explosive Grenade", "Осколочная граната", 1, 3, GrenadeDamage);
@@ -145,10 +149,14 @@ internal static class SkillCatalog
         Add(combat, "Guns", BulletShots, "Bullet Gun Shots", "Запас патронов", 1, 5, Gunsmith);
         Add(combat, "Guns", LaserShots, "Laser Gun Shots", "Заряды лазера", 1, 5, Gunsmith);
         Add(combat, "Guns", TranqShots, "Tranq Gun Shots", "Заряды транквилизатора", 1, 5, Gunsmith);
+        Add(combat, "Guns", FreeBullet, "Free Rounds", "Бесплатный патрон", 7, 3, BulletShots);
+        Add(combat, "Guns", FreeLaser, "Free Laser Shot", "Бесплатный разряд", 7, 3, LaserShots);
+        Add(combat, "Guns", FreeTranq, "Free Dart", "Бесплатный дротик", 7, 3, TranqShots);
 
         Add(combat, "Tech", Technician, "Technician", "Техник", 1, 1, root: true);
         Add(combat, "Tech", DroneBattery, "Drone Battery", "Батарея дронов", 1, 5, Technician);
         Add(combat, "Tech", Overcharge, "Overcharge", "Перегрузка", 1, 5, Technician);
+        Add(combat, "Tech", DroneThrift, "Frugal Drones", "Экономные дроны", 8, 3, DroneBattery);
 
         var survival = SkillPage.Survival;
         Add(survival, "Survival", Survivor, "Survivor", "Выживший", 1, 1, root: true);
@@ -156,6 +164,7 @@ internal static class SkillCatalog
         Add(survival, "Survival", SecondWind, "Second Wind", "Второе дыхание", 1, 2, StaminaEfficiency);
         Add(survival, "Survival", Armor, "Armor", "Броня", 2, 5, Survivor);
         Add(survival, "Survival", HpRegen, "HP Regeneration", "Регенерация", 3, 3, Survivor);
+        Add(survival, "Survival", RegenCap, "Deep Regeneration", "Глубокая регенерация", 5, 5, HpRegen);
         Add(survival, "Survival", Desperation, "Desperation", "Отчаяние", 2, 3, Survivor);
         Add(survival, "Survival", HuntedWarning, "Hunted Warning", "Чувство погони", 1, 1, Survivor);
         Add(survival, "Survival", CrouchSpeed, "Crouch Speed", "Скорость в приседе", 1, 3, Survivor);
@@ -193,6 +202,7 @@ internal static class SkillCatalog
         Add(arsenal, "Weapons", CartLaserDamage, "Cart Laser Damage", "Урон лазера тележки", 1, 3, Marksman);
         Add(arsenal, "Weapons", StaffDamage, "Wizard Staff Damage", "Урон посоха", 1, 4, Marksman);
         Add(arsenal, "Weapons", CrossbowDamage, "Poison Crossbow Damage", "Урон арбалета", 1, 3, Marksman);
+        Add(arsenal, "Weapons", FreeCartShot, "Free Cart Shot", "Бесплатный залп тележки", 7, 3, Marksman);
 
         Add(arsenal, "Status", StatusLab, "Status Lab", "Мастер эффектов", 1, 1, root: true);
         Add(arsenal, "Status", TranqTime, "Longer Tranquilizer", "Долгий транквилизатор", 1, 3, StatusLab);

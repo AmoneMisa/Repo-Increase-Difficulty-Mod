@@ -290,6 +290,8 @@ public static class ModConfig
     // Post-quota selling: once bought, leftover valuables are auto-cashed AFTER
     // every extraction quota is closed, for TruckSellFraction of their value.
     public static ConfigEntry<int> TruckSellCost;
+    // Team shop upgrades (Upgrades/ShopUpgrades): first-level prices in dollars.
+    public static ConfigEntry<int> TeamHaggleCost, TeamCrystalCost, TeamSpareGunCost, TeamSpareMeleeCost, TeamSpareDroneCost, TeamShelfCost;
     public static ConfigEntry<float> TruckSellFraction, TruckSellMaxQuotaShare;
 
     // --- Player Upgrades (custom per-player upgrades sold in the DEFAULT shop) ---
@@ -369,15 +371,14 @@ public static class ModConfig
 
     // --- Shop ---
     // Scale shop item prices up with player count (big lobbies earn more, so keep it
-    // hard) and optionally let the same item show up multiple times in one shop.
+    // hard). Extra copies of limited items come only from the Spare Gun / Melee / Drone team upgrades.
     public static ConfigEntry<bool> ShopPriceScaleEnabled;
     public static ConfigEntry<int> ShopPriceBaselinePlayers;
     public static ConfigEntry<float> ShopPricePerExtraPlayer;
-    public static ConfigEntry<int> ShopDuplicatesExtra;
     public static ConfigEntry<bool> SkillPageBonuses;
     public static ConfigEntry<UnityEngine.KeyCode> FlashStunKey;
     public static ConfigEntry<float> FlashStunSeconds, FlashStunCooldown;
-    public static ConfigEntry<int> ShopExtraItems, ShopExtraUpgrades;
+    public static ConfigEntry<int> ShopExtraItems; // extra upgrades come only from the Upgrade Shelf team upgrade
 
     // REPOConfig (REPOModding) reads this exact string tag on a ConfigEntry to exclude it
     // from the in-game menu. Used for free-form strings it can't render as a slider/list.
@@ -438,7 +439,7 @@ public static class ModConfig
         ShopEconomyEnabled = Module(cfg, "Shop Economy", "Enabled", true, "ShopEconomy", "Shop price events: when the run reaches a shop it may get a sale, a tax or an inflation spike that changes item, upgrade, health pack and crystal prices (including this mod's own items and upgrades). Host rolls it.");
         BlackMarketEnabled = Module(cfg, "Black Market", "Enabled", true, "BlackMarket", "Black Market: in the shop, pay to make a surprise modifier rarer (down to never) or more common for the rest of the run, and switch what you bought on or off for free; or block a level economy or shop economy. Keyboard driven.");
         PlayerUpgradesEnabled = Module(cfg, "Player Upgrades", "Enabled", true, "PlayerUpgrades", "Master switch for the mod's custom per-player upgrades that appear in the normal shop. Requires REPOLib. Takes effect on restart.");
-        TruckUpgradesEnabled = Module(cfg, "Truck Upgrades", "Enabled", true, "TruckUpgrades", "Enable the team-wide truck upgrades (Heal Power, Charge Efficiency, Loot Cash-In). Bought in the normal shop; effects apply for the whole team.");
+        TruckUpgradesEnabled = Module(cfg, "Truck Upgrades", "Enabled", true, "TruckUpgrades", "Enable the team-wide truck upgrades (Heal Power, Charge Efficiency, Loot Cash-In, Haggling, Crystal Stock, Spare Gun / Melee / Drone, Upgrade Shelf). Bought in the normal shop; effects apply for the whole team.");
         ScaleEnemyHealth = Module(cfg, "Scaling", "EnemyHealth", true, "ScaleEnemyHealth", "Enemies gain max HP as the run goes deeper. Off disables the depth ramp; level surprises remain independent. Host settings apply to the lobby.");
         ScaleEnemyDamage = Module(cfg, "Scaling", "EnemyDamage", true, "ScaleEnemyDamage", "Enemies deal more damage to players as the run goes deeper. Off disables the depth ramp; level surprises remain independent. Host settings apply to the lobby.");
         ScaleEnemySpeed = Module(cfg, "Scaling", "EnemySpeed", true, "ScaleEnemySpeed", "Enemies move faster as the run goes deeper. Off disables the depth ramp; level surprises remain independent. Host settings apply to the lobby.");
@@ -970,9 +971,6 @@ public static class ModConfig
         ShopPricePerExtraPlayer = BindFloat(cfg,
             "Shop", "PricePerExtraPlayer", 0.15f, 0f, 2f,
             "Extra shop price per player above the baseline. 0.15 = +15% per extra player (e.g. 8 players with baseline 4 = +60%).");
-        ShopDuplicatesExtra = BindInt(cfg,
-            "Shop", "DuplicatesExtra", 0, 0, 10,
-            "Allow the same item (e.g. a gun) to appear more than once in a single shop by adding this many extra copies of each item to the shop pool. 0 = vanilla (usually one of each).");
         FlashStunKey = cfg.Bind("Skill Tree", "FlashStunKey", UnityEngine.KeyCode.F, "Flash Stun perk: flares your flashlight to stun monsters in the beam.");
         FlashStunSeconds = BindFloat(cfg, "Skill Tree", "FlashStunSeconds", 2f, .5f, 6f, "How long Flash Stun stuns monsters in the beam. Host setting.");
         FlashStunCooldown = BindFloat(cfg, "Skill Tree", "FlashStunCooldown", 45f, 5f, 300f, "Seconds between Flash Stun uses. Host setting.");
@@ -980,8 +978,6 @@ public static class ModConfig
             "Every 5 points spent on a skill tree page's perks give +1 level of its main stats, like a shop upgrade, up to each stat's cap: Combat Power +5, Survival Health +5, Recon Sprint Speed +3, Courier Stamina +5 and Crouch Rest +3, Arsenal Tumble Launch +3, Utility Range +3 and Death Head Battery +5. Host setting.");
         ShopExtraItems = BindInt(cfg, "Shop", "ExtraItems", 4, 0, 20,
             "Extra different regular items (weapons, tools, drones...) stocked per shop visit on top of the game's 8. Never copies of the same item; they go on free shelf slots, using a bigger free slot when no slot of their own size is left.");
-        ShopExtraUpgrades = BindInt(cfg, "Shop", "ExtraUpgrades", 3, 0, 20,
-            "Extra different upgrades stocked per shop visit on top of the game's 3, on free shelf slots (a bigger free slot when no slot of their own size is left).");
 
         // --- Truck upgrades ---
                 TruckHealPercentPerLevel = BindFloat(cfg,
@@ -1005,6 +1001,18 @@ public static class ModConfig
         TruckSellCost = BindInt(cfg,
             "Truck Upgrades", "SellUnlockCost", 50000, 0, 1000000,
             "Loot Cash-In: one-time cost to unlock selling leftover valuables after all quotas are closed.");
+        TeamHaggleCost = BindInt(cfg, "Truck Upgrades", "HagglingCost", 45000, 0, 1000000,
+            "Haggling (whole team, 3 levels): cost of the first level. Each level gives the shopkeeper robot one more discount attempt per shop visit (3 -> 6).");
+        TeamCrystalCost = BindInt(cfg, "Truck Upgrades", "CrystalStockCost", 15000, 0, 1000000,
+            "Crystal Stock (whole team, 3 levels): cost of the first level. The shop stocks 6 / 7 / 8 power crystals at once, never more than the truck needs for a full charge.");
+        TeamSpareGunCost = BindInt(cfg, "Truck Upgrades", "SpareGunCost", 25000, 0, 1000000,
+            "Spare Gun (whole team, one level): every gun and launcher can be bought one more time.");
+        TeamSpareMeleeCost = BindInt(cfg, "Truck Upgrades", "SpareMeleeCost", 15000, 0, 1000000,
+            "Spare Melee (whole team, one level): every melee weapon can be bought one more time.");
+        TeamSpareDroneCost = BindInt(cfg, "Truck Upgrades", "SpareDroneCost", 25000, 0, 1000000,
+            "Spare Drone (whole team, one level): every drone can be bought one more time.");
+        TeamShelfCost = BindInt(cfg, "Truck Upgrades", "UpgradeShelfCost", 20000, 0, 1000000,
+            "Upgrade Shelf (whole team, 4 levels): cost of the first level. Two more upgrades in the shop per level (up to +8).");
         TruckSellFraction = BindFloat(cfg,
             "Truck Upgrades", "SellFraction", 0.75f, 0f, 1f,
             "Loot Cash-In: fraction of a leftover valuable's value returned as currency when sold. 0.75 = 75%.");

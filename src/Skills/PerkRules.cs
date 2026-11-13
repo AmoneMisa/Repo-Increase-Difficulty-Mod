@@ -94,6 +94,19 @@ public static class PerkRules
         return Math.Max(baseSeconds, Math.Min(longer, Math.Max(baseSeconds, cap)));
     }
 
+    /// <summary>Free Rounds / Free Laser Shot / Free Dart / Unworn Edge: chance that one use costs no charge (2%, 4%, 7%).</summary>
+    public static float FreeUseChance(int level) => level <= 0 ? 0f : level == 1 ? .02f : level == 2 ? .04f : .07f;
+
+    /// <summary>Free Cart Shot: chance that a C.A.R.T. cannon or C.A.R.T. laser shot costs no charge (2%, 3.5%, 5%).</summary>
+    public static float CartFreeShotChance(int level) => level <= 0 ? 0f : level == 1 ? .02f : level == 2 ? .035f : .05f;
+
+    /// <summary>Frugal Drones: the share of drone drain that still happens (3%, 5%, 7% less).</summary>
+    public static float DroneThriftFactor(int level) => level <= 0 ? 1f : level == 1 ? .97f : level == 2 ? .95f : .93f;
+
+    /// <summary>Deep Regeneration: regeneration fills up to one more percent of max HP per level (30% -> 35%).</summary>
+    public const float RegenCapPerLevel = .01f;
+    public static float RegenCap(float baseCap, int level) => Math.Min(1f, Math.Max(0f, baseCap) + RegenCapPerLevel * Math.Max(0, Math.Min(5, level)));
+
     /// <summary>Battery Saver: the share of drain that still happens (1 = none saved). Never below 25%.</summary>
     public static float BatteryDrainMultiplier(int level, float perLevel)
     {

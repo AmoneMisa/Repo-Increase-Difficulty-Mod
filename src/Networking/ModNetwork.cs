@@ -32,7 +32,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     // 159 = LateJoinProgress.RequestCode (request saved health and upgrades from the host).
     // 160 = Skills.FlashStun.EventCode (a guest's Flash Stun beam; host only).
     // 161 = LateJoinCatchUp: guest requests level/battery state; typed battery responses are host-only.
-    // 180 is retired (old cart-upgrade state). 170-171 = HostRunControls (failed-level vote), 152 = HostRunControls.CallVoteEventCode (player-called restart vote). 169 = loot safety net notice.
+    // 180 is retired (old cart-upgrade state). 170-171 = HostRunControls (failed-level vote), 152 = HostRunControls.CallVoteEventCode (player-called restart vote), 151 = Upgrades.UpgradeShelfRack.EventCode (Upgrade Shelf rack position). 169 = loot safety net notice.
     // 168 = Challenges.ChallengeManager.EventCode (challenge shrine state). 167 = Skills.BuffPerks.EventCode (instinct buff start).
     // 163 = Courier.CourierManager.StateCode (courier state/notices, host), 162 = Courier.CourierManager.RequestCode (courier command to host).
     // 165 = Upgrades.RespawnList.EventCode (respawning monster list for the map). 164 = Cosmetics.CostumeRewards.EventCode (costume piece for everyone).

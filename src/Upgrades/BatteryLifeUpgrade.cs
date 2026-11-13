@@ -333,7 +333,9 @@ internal static class BatteryLifeUpgrade
             if ((int)droneState.Category == -1) droneState.Category = category;
             if (level >= 0) droneState.Level = level;
             SyncUpgradeBars(battery, droneState);
-            return level <= 0 ? 1f : 1f / (1f + Mathf.Clamp01(ModConfig.DroneBatteryPercentPerLevel.Value * level));
+            // Frugal Drones takes a few percent more off the drain.
+            float thrift = Skills.PerkRules.DroneThriftFactor(Skills.SkillEffects.Level(UserOf(battery), Skills.SkillCatalog.DroneThrift));
+            return thrift * (level <= 0 ? 1f : 1f / (1f + Mathf.Clamp01(ModConfig.DroneBatteryPercentPerLevel.Value * level)));
         }
 
         // Guns: the bar count already grew with the level (SyncUpgradeBars). A gun that spends whole bars keeps the
@@ -356,8 +358,39 @@ internal static class BatteryLifeUpgrade
         return Mathf.Clamp(desiredCost / nativeCost, 0.01f, 1f);
     }
 
+    // Free Rounds / Free Laser Shot / Free Dart: the perk that can make a shot of this gun free.
+    private static string FreeUseNode(Category c) => c switch
+    {
+        Category.GunBullet => Skills.SkillCatalog.FreeBullet,
+        Category.GunLaser => Skills.SkillCatalog.FreeLaser,
+        Category.GunTranq => Skills.SkillCatalog.FreeTranq,
+        _ => null,
+    };
+
+    /// <summary>
+    /// Host: with the user's perk chance, undo a use that just cost charge (a shot, or a melee hit's durability) and
+    /// publish the restored charge. Returns true when the use was free.
+    /// </summary>
+    private static bool TryFreeUse(ItemBattery battery, float before, string node)
+    {
+        if (node == null || battery == null || !ModConfig.PlayerUpgradesEnabled.Value || !SemiFunc.IsMasterClientOrSingleplayer() ||
+            battery.batteryLife >= before) return false;
+        int level = Skills.SkillEffects.Level(UserOf(battery), node);
+        float chance = node == Skills.SkillCatalog.FreeCartShot ? Skills.PerkRules.CartFreeShotChance(level) : Skills.PerkRules.FreeUseChance(level);
+        if (chance <= 0f || Random.value >= chance) return false;
+        battery.batteryLife = Mathf.Clamp(before, 0f, 100f);
+        battery.batteryLifeInt = battery.BatteryBarsGet();
+        battery.BatteryFullPercentChange(battery.batteryLifeInt, false, false);
+        _states.GetOrCreateValue(battery).PrevLife = battery.batteryLife; // the watchdog must not touch it again
+        return true;
+    }
+
     private static void SetDrainResult(ItemBattery battery, float before, float rawCost)
     {
+        // Hand guns by kind; the C.A.R.T. cannon and C.A.R.T. laser (one bar a shot) by Free Cart Shot.
+        string node = FreeUseNode(Resolve(battery)) ??
+            (battery.GetComponent<ItemCartCannon>() != null || battery.GetComponent<ItemCartLaser>() != null ? Skills.SkillCatalog.FreeCartShot : null);
+        if (TryFreeUse(battery, before, node)) return;
         float multiplier = DrainMultiplier(battery);
         if (battery.batteryLife >= before) return;
         if (Mathf.Abs(multiplier - 1f) > 0.001f) // cheaper or (trade-offs) dearer
@@ -383,6 +416,37 @@ internal static class BatteryLifeUpgrade
             if (__instance.itemBattery != null && !__instance.batteryDrainFullBar)
                 SetDrainResult(__instance.itemBattery, __state, __instance.batteryDrain);
         }
+    }
+
+    // Unworn Edge: a melee hit's durability loss (on monsters, players or the world) may be free.
+    [HarmonyPatch(typeof(ItemMelee), nameof(ItemMelee.SwingHitRPC))]
+    private static class MeleeHitDurability
+    {
+        [HarmonyPrefix]
+        private static void Prefix(ItemMelee __instance, out float __state) => __state = MeleeLife(__instance);
+        [HarmonyPostfix]
+        private static void Postfix(ItemMelee __instance, float __state) => MeleeFreeUse(__instance, __state);
+    }
+
+    [HarmonyPatch(typeof(ItemMelee), nameof(ItemMelee.EnemyOrPVPSwingHitRPC))]
+    private static class MeleeEnemyDurability
+    {
+        [HarmonyPrefix]
+        private static void Prefix(ItemMelee __instance, out float __state) => __state = MeleeLife(__instance);
+        [HarmonyPostfix]
+        private static void Postfix(ItemMelee __instance, float __state) => MeleeFreeUse(__instance, __state);
+    }
+
+    private static float MeleeLife(ItemMelee melee)
+    {
+        var battery = melee != null ? melee.GetComponent<ItemBattery>() : null;
+        return battery != null ? battery.batteryLife : -1f;
+    }
+
+    private static void MeleeFreeUse(ItemMelee melee, float before)
+    {
+        if (before < 0f || melee == null) return;
+        TryFreeUse(melee.GetComponent<ItemBattery>(), before, Skills.SkillCatalog.FreeMelee);
     }
 
     [HarmonyPatch(typeof(ItemBattery), nameof(ItemBattery.RemoveFullBar))]

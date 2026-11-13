@@ -17,8 +17,21 @@ and so the only atlases shipped, are:
 | Truck_Heal-Power | Heal Power (truck) | Boxy truck and medical plus | Sage |
 | Truck_Charge-Power | Charge Efficiency (truck) | Boxy truck and battery/lightning | Ochre |
 | Truck_Cache | Loot Cash-In (truck) | Boxy truck, coins and arrow | Tan brown |
+| Team_Haggling | Haggling (team) | Robot head and a % price tag | Plum |
+| Team_Crystal-Stock | Crystal Stock (team) | Three crystals on a shelf, up arrow | Cobalt |
+| Team_Spare-Gun | Spare Gun (team) | Pistol, +1 tag | Olive |
+| Team_Spare-Melee | Spare Melee (team) | Bat, +1 tag | Crimson |
+| Team_Spare-Drone | Spare Drone (team) | Quad drone, +1 tag | Teal |
+| Team_Upgrade-Shelf | Upgrade Shelf (team) | Shelf of upgrade boxes, +2 tag | Rose |
 
 ## Rebuilding
+
+The six team upgrade atlases are drawn by `tools/build_team_upgrade_atlases.py` the same way (then render each
+`Upgrade_Team_*.png` with `build_upgrade_art.py --atlas ...`):
+
+```powershell
+python tools/build_team_upgrade_atlases.py --root .
+```
 
 The Skill Point atlas is drawn by `tools/build_skill_point_atlas.py` on top of the old bullet-gun
 wrapper, kept as a source reference in `art/upgrade-reference/Upgrade_Gun-Bullet-Count.png` (not shipped):

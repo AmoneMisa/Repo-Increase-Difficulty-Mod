@@ -38,6 +38,8 @@ internal static class PlayerUpgradeRegistry
         public string Id;
         public string DisplayName;
         public string Description;
+        // Russian description for the shop's item info panel (falls back to Description).
+        public string DescriptionRu;
         public int MaxLevel;
         // Base shop price at 1 player, before the game's own scaling. Mapped to the
         // item's Value via BaseShopPrice * ValueToPrice below.
@@ -79,6 +81,20 @@ internal static class PlayerUpgradeRegistry
     /// <summary>Called from ModConfig/Plugin init to declare an upgrade before registration.</summary>
     public static void Define(Definition def) => _definitions.Add(def);
     internal static Definition FindDefinition(string id) => _definitions.Find(d => d.Id == id);
+
+    private const string ItemPrefix = "IHM Upgrade ";
+
+    /// <summary>The mod upgrade an item sells, or null (third-party and game items).</summary>
+    internal static Definition DefinitionOf(Item item) =>
+        item != null && item.name != null && item.name.StartsWith(ItemPrefix, StringComparison.Ordinal) ? FindDefinition(item.name.Substring(ItemPrefix.Length)) : null;
+
+    /// <summary>An item's description in the game's language: Russian for the mod's upgrades when it has one.</summary>
+    internal static string DescriptionOf(Item item)
+    {
+        var def = DefinitionOf(item);
+        if (def != null && Localization.GameLanguage.Russian && !string.IsNullOrEmpty(def.DescriptionRu)) return def.DescriptionRu;
+        return item != null ? item.description : null;
+    }
 
     // REPOLib 4.3 loads an existing stats dictionary into a local variable during registration.
     // Rebind the public PlayerDictionary as well so GetLevel, saved levels and effect gates agree.
