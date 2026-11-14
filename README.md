@@ -1,4 +1,6 @@
-# IncreaseDifficultyMod
+# DeepRunOverhaul
+
+*Formerly IncreaseDifficultyMod / ранее IncreaseDifficultyMod.*
 
 **English** · [Русский](#-русский)
 
@@ -62,11 +64,13 @@ See [release notes](release-notes/v0.7.0.md).
 
 ### Installation and updating
 
-**Thunderstore Mod Manager / r2modman:** install IncreaseDifficultyMod and its required dependencies, then launch the game with **Start modded**. REPOConfig and MenuLib are optional for changing settings in-game. For a local ZIP, use the manager's **Import local mod** option; install BepInExPack and REPOLib separately if the import does not resolve dependencies.
+**Thunderstore Mod Manager / r2modman:** install DeepRunOverhaul and its required dependencies, then launch the game with **Start modded**. REPOConfig and MenuLib are optional for changing settings in-game. For a local ZIP, use the manager's **Import local mod** option; install BepInExPack and REPOLib separately if the import does not resolve dependencies.
 
-**Manual installation:** install BepInEx 5 and REPOLib, close the game, and copy the archive's `plugins/IncreaseDifficultyMod` directory into `BepInEx/plugins/` in the game or your active mod-manager profile. The final plugin path is `BepInEx/plugins/IncreaseDifficultyMod/IncreaseDifficultyMod.dll`.
+**Manual installation:** install BepInEx 5 and REPOLib, close the game, and copy the archive's `plugins/DeepRunOverhaul` directory into `BepInEx/plugins/` in the game or your active mod-manager profile. The final plugin path is `BepInEx/plugins/DeepRunOverhaul/DeepRunOverhaul.dll`.
 
-**Updating from Increase Hard Mod:** replace the previous installation. Remove the old `IncreaseHardMod.dll` from the active plugins folder before launching; keep only one active copy of this mod. If the old mod was installed as a separate manager package, uninstall that package and install IncreaseDifficultyMod. Keep `BepInEx/config/com.kubai.increasehardmod.cfg`: the plugin GUID and configuration filename intentionally stay the same, so existing settings and saved upgrade IDs continue to work.
+**Moving from IncreaseDifficultyMod:** this is the same mod under a name that says what it does. The old IncreaseDifficultyMod package's last update installs DeepRunOverhaul for you and carries no plugin of its own, so managers move over on their next update; you can then uninstall the old one. Settings, perks, upgrades and costumes carry over (same plugin GUID and config file).
+
+**Updating from Increase Hard Mod:** replace the previous installation. Remove the old `IncreaseHardMod.dll` from the active plugins folder before launching; keep only one active copy of this mod. If the old mod was installed as a separate manager package, uninstall that package and install DeepRunOverhaul. Keep `BepInEx/config/com.kubai.increasehardmod.cfg`: the plugin GUID and configuration filename intentionally stay the same, so existing settings and saved upgrade IDs continue to work.
 
 All players in a lobby must use the same mod version and restart the game after updating. Models, textures, icons and audio are embedded in the DLL; no separate asset download is needed. The release ZIP contains the mod only, without personal configs, saves or game assemblies.
 
@@ -430,7 +434,7 @@ Override the game location if it isn't in the default Steam path:
 dotnet build -p:GameDir="D:\Games\REPO"
 ```
 
-Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Release`). To build and validate the uploadable Thunderstore ZIP, run `powershell -ExecutionPolicy Bypass -File tools/package-thunderstore.ps1`. Building does not install the mod automatically. Explicit local deployment is available with `-p:DeployToGame=true -p:PluginsDir="YOUR_PROFILE/BepInEx/plugins/IncreaseDifficultyMod"`; this disables a legacy DLL in that same directory.
+Release output: `bin/Release/DeepRunOverhaul.dll` (use `dotnet build -c Release`). To build and validate the uploadable Thunderstore ZIP, run `powershell -ExecutionPolicy Bypass -File tools/package-thunderstore.ps1`. Building does not install the mod automatically. Explicit local deployment is available with `-p:DeployToGame=true -p:PluginsDir="YOUR_PROFILE/BepInEx/plugins/DeepRunOverhaul"`; this disables a legacy DLL in that same directory.
 
 ### Notes
 
@@ -496,11 +500,13 @@ Release output: `bin/Release/IncreaseDifficultyMod.dll` (use `dotnet build -c Re
 
 ### Установка и обновление
 
-**Thunderstore Mod Manager / r2modman:** установите IncreaseDifficultyMod с обязательными зависимостями и запускайте игру через **Start modded**. Для настройки в игре дополнительно установите REPOConfig и MenuLib. Для локального ZIP используйте **Import local mod**; если импорт не установил зависимости, отдельно установите BepInExPack и REPOLib.
+**Thunderstore Mod Manager / r2modman:** установите DeepRunOverhaul с обязательными зависимостями и запускайте игру через **Start modded**. Для настройки в игре дополнительно установите REPOConfig и MenuLib. Для локального ZIP используйте **Import local mod**; если импорт не установил зависимости, отдельно установите BepInExPack и REPOLib.
 
-**Ручная установка:** установите BepInEx 5 и REPOLib, закройте игру и скопируйте папку `plugins/IncreaseDifficultyMod` из архива в `BepInEx/plugins/` игры или активного профиля менеджера. Итоговый путь плагина: `BepInEx/plugins/IncreaseDifficultyMod/IncreaseDifficultyMod.dll`.
+**Ручная установка:** установите BepInEx 5 и REPOLib, закройте игру и скопируйте папку `plugins/DeepRunOverhaul` из архива в `BepInEx/plugins/` игры или активного профиля менеджера. Итоговый путь плагина: `BepInEx/plugins/DeepRunOverhaul/DeepRunOverhaul.dll`.
 
-**Обновление с Increase Hard Mod:** замените прежнюю установку. Перед запуском уберите старый `IncreaseHardMod.dll` из активной папки плагинов; должна остаться одна активная копия мода. Если прежняя версия установлена отдельным пакетом в менеджере, удалите этот пакет и установите IncreaseDifficultyMod. Сохраните файл `BepInEx/config/com.kubai.increasehardmod.cfg`: GUID плагина и название конфига оставлены прежними, поэтому настройки и идентификаторы сохранённых улучшений сохраняют совместимость.
+**Переход с IncreaseDifficultyMod:** это тот же мод под названием, которое говорит, что он делает. Последнее обновление старого пакета IncreaseDifficultyMod само ставит DeepRunOverhaul и не содержит своего плагина, поэтому менеджер переезжает при следующем обновлении; после этого старый пакет можно удалить. Настройки, перки, улучшения и костюмы сохраняются (тот же GUID плагина и файл конфига).
+
+**Обновление с Increase Hard Mod:** замените прежнюю установку. Перед запуском уберите старый `IncreaseHardMod.dll` из активной папки плагинов; должна остаться одна активная копия мода. Если прежняя версия установлена отдельным пакетом в менеджере, удалите этот пакет и установите DeepRunOverhaul. Сохраните файл `BepInEx/config/com.kubai.increasehardmod.cfg`: GUID плагина и название конфига оставлены прежними, поэтому настройки и идентификаторы сохранённых улучшений сохраняют совместимость.
 
 Все участники лобби должны использовать одну версию мода и перезапустить игру после обновления. Модели, текстуры, иконки и звуки встроены в DLL; отдельно скачивать ресурсы не нужно. В релизном ZIP только мод: без личных конфигов, сохранений и сборок игры.
 
@@ -826,7 +832,7 @@ dotnet build
 dotnet build -p:GameDir="D:\Games\REPO"
 ```
 
-Release-файл: `bin/Release/IncreaseDifficultyMod.dll` (команда `dotnet build -c Release`). Для сборки и проверки ZIP для Thunderstore запустите `powershell -ExecutionPolicy Bypass -File tools/package-thunderstore.ps1`. Обычная сборка не устанавливает мод автоматически. Для явной установки укажите `-p:DeployToGame=true -p:PluginsDir="ПРОФИЛЬ/BepInEx/plugins/IncreaseDifficultyMod"`; старая DLL в этой же папке будет отключена.
+Release-файл: `bin/Release/DeepRunOverhaul.dll` (команда `dotnet build -c Release`). Для сборки и проверки ZIP для Thunderstore запустите `powershell -ExecutionPolicy Bypass -File tools/package-thunderstore.ps1`. Обычная сборка не устанавливает мод автоматически. Для явной установки укажите `-p:DeployToGame=true -p:PluginsDir="ПРОФИЛЬ/BepInEx/plugins/IncreaseDifficultyMod"`; старая DLL в этой же папке будет отключена.
 
 ### Примечания
 

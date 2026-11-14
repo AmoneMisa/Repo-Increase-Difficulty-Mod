@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <AssemblyName>IncreaseDifficultyMod</AssemblyName>
-    <Product>IncreaseDifficultyMod</Product>
+    <AssemblyName>DeepRunOverhaul</AssemblyName>
+    <Product>DeepRunOverhaul</Product>
     <!-- Preserve code/resource identities and saved integrations after the public rename. -->
     <RootNamespace>IncreaseHardMod</RootNamespace>
-    <Version>0.10.14</Version>
+    <Version>0.10.15</Version>
     <LangVersion>latest</LangVersion>
     <!-- Unity fixture DLLs must never become candidates for resolving the game's Assembly-CSharp. -->
     <DefaultItemExcludes>$(DefaultItemExcludes);tests\UnityCloneRegression\Library\**;tests\UnityCloneRegression\Temp\**;tests\UnityCloneRegression\Logs\**;tests\UnityCloneRegression\UserSettings\**</DefaultItemExcludes>
@@ -23,7 +23,7 @@
     <!-- The game is launched via Thunderstore Mod Manager, which loads plugins from the
          active profile folder (NOT the Steam install). Deploy there so builds actually
          take effect in-game. Override with -p:PluginsDir=... to target a different profile. -->
-    <PluginsDir Condition="'$(PluginsDir)' == ''">$(AppData)\Thunderstore Mod Manager\DataFolder\REPO\profiles\Default\BepInEx\plugins\WhitesLove-IncreaseDifficultyMod\IncreaseDifficultyMod</PluginsDir>
+    <PluginsDir Condition="'$(PluginsDir)' == ''">$(AppData)\Thunderstore Mod Manager\DataFolder\REPO\profiles\Default\BepInEx\plugins\WhitesLove-DeepRunOverhaul\DeepRunOverhaul</PluginsDir>
   </PropertyGroup>
 
   <!-- _decompiled/ is a read-only reference dump of the game code; never compile it. -->
@@ -175,6 +175,10 @@
     <Move SourceFiles="$(PluginsDir)\IncreaseHardMod.dll"
           DestinationFiles="$(PluginsDir)\IncreaseHardMod.dll.disabled-before-rename"
           Condition="Exists('$(PluginsDir)\IncreaseHardMod.dll')" />
+    <!-- Renamed package (IncreaseDifficultyMod -> DeepRunOverhaul): never leave the old copy active next to the new one. -->
+    <Move SourceFiles="$(PluginsDir)\..\..\WhitesLove-IncreaseDifficultyMod\IncreaseDifficultyMod\IncreaseDifficultyMod.dll"
+          DestinationFiles="$(PluginsDir)\..\..\WhitesLove-IncreaseDifficultyMod\IncreaseDifficultyMod\IncreaseDifficultyMod.dll.disabled-before-rename"
+          Condition="Exists('$(PluginsDir)\..\..\WhitesLove-IncreaseDifficultyMod\IncreaseDifficultyMod\IncreaseDifficultyMod.dll')" />
     <Message Importance="high" Text="Deployed $(AssemblyName).dll -> $(PluginsDir)" />
   </Target>
 

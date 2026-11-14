@@ -8,7 +8,7 @@ if (-not $OutputDirectory) { $OutputDirectory = Join-Path $repo 'bin\thunderstor
 $OutputDirectory = [IO.Path]::GetFullPath($OutputDirectory)
 $manifestPath = Join-Path $repo 'manifest.json'
 $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
-if ($manifest.name -cne 'IncreaseDifficultyMod') { throw 'Incorrect package name.' }
+if ($manifest.name -cne 'DeepRunOverhaul') { throw 'Incorrect package name.' }
 if ($manifest.version_number -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid package version.' }
 if ($manifest.description.Length -gt 250) { throw 'Description exceeds 250 characters.' }
 if (-not $manifest.website_url -or $manifest.dependencies.Count -lt 2) { throw 'Incomplete manifest.' }
@@ -33,7 +33,7 @@ try {
 
 & dotnet build $project -c Release -p:DeployToGame=false -p:NuGetAudit=false
 if ($LASTEXITCODE -ne 0) { throw 'Release build failed.' }
-$dll = Join-Path $repo 'bin\Release\IncreaseDifficultyMod.dll'
+$dll = Join-Path $repo 'bin\Release\DeepRunOverhaul.dll'
 $assembly = [Reflection.AssemblyName]::GetAssemblyName($dll)
 if ($assembly.Name -cne $manifest.name -or $assembly.Version.ToString(3) -ne $manifest.version_number) {
     throw 'Plugin identity/version does not match manifest.'
@@ -53,7 +53,7 @@ try {
         'icon.png' = (Join-Path $repo 'icon.png')
         'CHANGELOG.md' = (Join-Path $repo "release-notes\v$($manifest.version_number).md")
         'COLLECTION.md' = (Join-Path $repo 'art\valuables\COLLECTION_IN_GAME.md')
-        'plugins/IncreaseDifficultyMod/IncreaseDifficultyMod.dll' = $dll
+        'plugins/DeepRunOverhaul/DeepRunOverhaul.dll' = $dll
     }
     foreach ($entry in $files.GetEnumerator()) {
         if ($entry.Key -match '\.(md|json)$') {

@@ -1,8 +1,8 @@
 {
-  "name": "IncreaseDifficultyMod",
-  "version_number": "0.10.14",
+  "name": "DeepRunOverhaul",
+  "version_number": "0.10.15",
   "website_url": "https://github.com/AmoneMisa/Repo-Increase-Difficulty-Mod",
-  "description": "Configurable difficulty, Spritz tranquilizer, map-specific valuables with physics and explosions, custom weapons and drones, upgrades, Black Market and round statistics. English / Russian.",
+  "description": "Run overhaul: harder the deeper you go, level surprises, elite and new monsters, skill tree, new weapons, grenades, consumables, carts, courier pets and Black Market. EN/RU. Formerly IncreaseDifficultyMod.",
   "dependencies": [
     "BepInEx-BepInExPack-5.4.2305",
     "Zehs-REPOLib-4.3.0"

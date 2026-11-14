@@ -11,10 +11,11 @@ namespace IncreaseHardMod;
 
 public static class PluginInfo
 {
-    // Keep the identity stable across the rename: existing config and integrations use it.
+    // Keep the identity stable across both renames (Increase Hard Mod -> IncreaseDifficultyMod -> DeepRunOverhaul):
+    // the config file, saved upgrade/perk IDs and cosmetic IDs ("modded:IncreaseDifficultyMod.*") all depend on it.
     public const string PLUGIN_GUID = "com.kubai.increasehardmod";
-    public const string PLUGIN_NAME = "IncreaseDifficultyMod";
-    public const string PLUGIN_VERSION = "0.10.13";
+    public const string PLUGIN_NAME = "DeepRunOverhaul";
+    public const string PLUGIN_VERSION = "0.10.15";
 }
 
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
