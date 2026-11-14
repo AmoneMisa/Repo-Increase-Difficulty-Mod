@@ -5,8 +5,8 @@
     <AssemblyName>DeepRunOverhaul</AssemblyName>
     <Product>DeepRunOverhaul</Product>
     <!-- Preserve code/resource identities and saved integrations after the public rename. -->
-    <RootNamespace>IncreaseHardMod</RootNamespace>
-    <Version>0.10.15</Version>
+    <RootNamespace>DeepRunOverhaul</RootNamespace>
+    <Version>0.10.16</Version>
     <LangVersion>latest</LangVersion>
     <!-- Unity fixture DLLs must never become candidates for resolving the game's Assembly-CSharp. -->
     <DefaultItemExcludes>$(DefaultItemExcludes);tests\UnityCloneRegression\Library\**;tests\UnityCloneRegression\Temp\**;tests\UnityCloneRegression\Logs\**;tests\UnityCloneRegression\UserSettings\**</DefaultItemExcludes>
@@ -45,7 +45,7 @@
     <EmbeddedResource Include="src\Textures\*.png" />
     <EmbeddedResource Include="src\Art\*.png" />
     <!-- Prepared monster silhouettes (made by MonsterIcons from the monsters themselves); fixed names keep spaces intact. -->
-    <EmbeddedResource Include="src\MonsterIcons\*.png" LogicalName="IHM.MonsterIcon.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="src\MonsterIcons\*.png" LogicalName="DeepRunOverhaul.MonsterIcon.%(Filename)%(Extension)" />
     <EmbeddedResource Include="src\Art\*.bundle" />
     <EmbeddedResource Include="src\Audio\*.wav" />
   </ItemGroup>
@@ -135,7 +135,8 @@
 
   <!-- Deployment is explicit so packaging/building never adds a second active DLL to a profile. -->
   <!-- Models are plain JSON in the repo but embedded gzipped (about a tenth of the size); EmbeddedArt.ReadText inflates
-       them at load. The resource names stay the same, so the loaders' name lookups are unchanged. -->
+       them at load. The embedded name ends in .gz so it says what the bytes are: a .json name over gzip data trips
+       Thunderstore's package scanner (flagged on v11_bride_veil). EmbeddedArt.Find accepts both names. -->
   <UsingTask TaskName="GzipArt" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>
       <Files ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
@@ -149,7 +150,7 @@
         foreach (var file in Files)
         {
             string source = file.GetMetadata("FullPath");
-            string target = Path.Combine(OutputDir, Path.GetFileName(source));
+            string target = Path.Combine(OutputDir, Path.GetFileName(source) + ".gz");
             if (File.Exists(target) && File.GetLastWriteTimeUtc(target) >= File.GetLastWriteTimeUtc(source)) continue;
             using (var input = File.OpenRead(source))
             using (var output = File.Create(target))
@@ -165,7 +166,7 @@
     </ItemGroup>
     <GzipArt Files="@(ArtModel)" OutputDir="$(IntermediateOutputPath)art" />
     <ItemGroup>
-      <EmbeddedResource Include="@(ArtModel->'$(IntermediateOutputPath)art\%(Filename)%(Extension)')" LogicalName="IncreaseHardMod.src.Art.%(Filename)%(Extension)" />
+      <EmbeddedResource Include="@(ArtModel->'$(IntermediateOutputPath)art\%(Filename)%(Extension).gz')" LogicalName="DeepRunOverhaul.src.Art.%(Filename)%(Extension).gz" />
     </ItemGroup>
   </Target>
 

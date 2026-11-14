@@ -18,15 +18,12 @@ internal static class ItemArt
     {
         if (Models.TryGetValue(key, out var model)) return model;
         var asm = Assembly.GetExecutingAssembly();
-        foreach (string name in asm.GetManifestResourceNames())
-        {
-            if (!name.EndsWith("." + key + ".mesh.json", StringComparison.Ordinal)) continue;
-            using var stream = asm.GetManifestResourceStream(name);
-            model = ArtModelReader.Parse(EmbeddedArt.ReadText(stream), key);
-            Models[key] = model;
-            return model;
-        }
-        throw new FileNotFoundException("Missing embedded item art: " + key);
+        string name = EmbeddedArt.Find(asm.GetManifestResourceNames(), "." + key + ".mesh.json");
+        if (name == null) throw new FileNotFoundException("Missing embedded item art: " + key);
+        using var stream = asm.GetManifestResourceStream(name);
+        model = ArtModelReader.Parse(EmbeddedArt.ReadText(stream), key);
+        Models[key] = model;
+        return model;
     }
 
     private static Texture2D Texture(string name)

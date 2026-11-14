@@ -20,10 +20,10 @@ internal static class ValuableVisuals
         if (RitualLoot.IsProcedural(key)) return Models[key] = RitualLoot.Build(key);
         var assembly = Assembly.GetExecutingAssembly();
         var names = assembly.GetManifestResourceNames();
-        string resource = names.FirstOrDefault(n => n.EndsWith(".v11_" + key + ".mesh.json", StringComparison.Ordinal))
-            ?? names.FirstOrDefault(n => n.EndsWith(".v10_" + key + ".mesh.json", StringComparison.Ordinal))
-            ?? names.FirstOrDefault(n => n.EndsWith(".v09_" + key + ".mesh.json", StringComparison.Ordinal))
-            ?? names.FirstOrDefault(n => n.EndsWith(".v08_" + key + ".mesh.json", StringComparison.Ordinal));
+        string resource = Visuals.EmbeddedArt.Find(names, ".v11_" + key + ".mesh.json")
+            ?? Visuals.EmbeddedArt.Find(names, ".v10_" + key + ".mesh.json")
+            ?? Visuals.EmbeddedArt.Find(names, ".v09_" + key + ".mesh.json")
+            ?? Visuals.EmbeddedArt.Find(names, ".v08_" + key + ".mesh.json");
         if (resource == null) throw new FileNotFoundException("Missing valuable art: " + key);
         using var stream = assembly.GetManifestResourceStream(resource);
         var model = JsonConvert.DeserializeObject<ValuableArtModel>(Visuals.EmbeddedArt.ReadText(stream), new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.None, MaxDepth = 64 });

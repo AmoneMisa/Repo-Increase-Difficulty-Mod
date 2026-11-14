@@ -42,7 +42,7 @@ internal static class MonsterIcons
         return entry.Texture;
     }
 
-    private const string ResourcePrefix = "IHM.MonsterIcon.";
+    private const string ResourcePrefix = "DeepRunOverhaul.MonsterIcon.";
     private static bool _prepared;
 
     internal static Texture2D GetPrepared(string key)
