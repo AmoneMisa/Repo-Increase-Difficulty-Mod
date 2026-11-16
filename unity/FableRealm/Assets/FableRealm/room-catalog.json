@@ -10,11 +10,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 0,
       "upperRoute": false,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/BookGate.room.json"
     },
     {
       "id": "02",
@@ -26,11 +26,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 0,
       "upperRoute": false,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/RootHall.room.json"
     },
     {
       "id": "03",
@@ -42,11 +42,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 4,
       "upperRoute": false,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/MushroomChoir.room.json"
     },
     {
       "id": "04",
@@ -58,11 +58,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 4,
       "upperRoute": false,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/FireflyBrook.room.json"
     },
     {
       "id": "05",
@@ -74,11 +74,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 0,
       "upperRoute": false,
       "shelterType": "under-table",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/LostPicnic.room.json"
     },
     {
       "id": "06",
@@ -90,11 +90,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 0,
       "upperRoute": true,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/HollowLibrary.room.json"
     },
     {
       "id": "07",
@@ -106,11 +106,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 0,
       "upperRoute": false,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/SugarGate.room.json"
     },
     {
       "id": "08",
@@ -122,11 +122,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 4,
       "upperRoute": false,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/GingerbreadSquare.room.json"
     },
     {
       "id": "09",
@@ -138,11 +138,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 0,
       "upperRoute": true,
       "shelterType": "under-table",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/BakersWorkshop.room.json"
     },
     {
       "id": "10",
@@ -154,11 +154,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 0,
       "upperRoute": false,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/CandyMarket.room.json"
     },
     {
       "id": "11",
@@ -170,11 +170,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 0,
       "upperRoute": true,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/Clockmaker.room.json"
     },
     {
       "id": "12",
@@ -186,11 +186,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 0,
       "upperRoute": false,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/MarzipanVault.room.json"
     },
     {
       "id": "13",
@@ -202,11 +202,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 4,
       "upperRoute": true,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/BeanstalkCourt.room.json"
     },
     {
       "id": "14",
@@ -218,11 +218,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 0,
       "upperRoute": true,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/GiantTea.room.json"
     },
     {
       "id": "15",
@@ -234,11 +234,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 4,
       "upperRoute": false,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/PorcelainWalk.room.json"
     },
     {
       "id": "16",
@@ -250,11 +250,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 0,
       "upperRoute": false,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/RoseMaze.room.json"
     },
     {
       "id": "17",
@@ -266,11 +266,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 0,
       "upperRoute": true,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/ForgottenToy.room.json"
     },
     {
       "id": "18",
@@ -282,11 +282,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 0,
       "upperRoute": false,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/GardenStore.room.json"
     },
     {
       "id": "19",
@@ -298,11 +298,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 4,
       "upperRoute": false,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/ThornGate.room.json"
     },
     {
       "id": "20",
@@ -314,11 +314,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 0,
       "upperRoute": true,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/MirrorCourt.room.json"
     },
     {
       "id": "21",
@@ -330,11 +330,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 0,
       "upperRoute": true,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/SilentBallroom.room.json"
     },
     {
       "id": "22",
@@ -346,11 +346,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 4,
       "upperRoute": true,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/SleepingObservatory.room.json"
     },
     {
       "id": "23",
@@ -362,11 +362,11 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 0,
       "upperRoute": false,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/StoryArchive.room.json"
     },
     {
       "id": "24",
@@ -378,11 +378,107 @@
       "width": 15,
       "depth": 15,
       "doorClearance": 3.2,
-      "status": "authored-layout-gameplay-pending",
+      "status": "authored-recipe-gameplay-anchors",
       "pitDepth": 0,
       "upperRoute": false,
       "shelterType": "alcove",
-      "layoutSource": "Editor/FableRealmLayouts.cs"
+      "layoutSource": "RoomDefinitions/RoyalTreasury.room.json"
+    },
+    {
+      "id": "25",
+      "key": "CoachYard",
+      "title": "Каретный двор",
+      "biome": "Village",
+      "role": "Start",
+      "hero": "Cottage",
+      "width": 15,
+      "depth": 15,
+      "doorClearance": 3.2,
+      "pitDepth": 0,
+      "upperRoute": false,
+      "shelterType": "alcove",
+      "status": "authored-recipe-gameplay-anchors",
+      "layoutSource": "RoomDefinitions/CoachYard.room.json"
+    },
+    {
+      "id": "26",
+      "key": "DrawbridgeYard",
+      "title": "Двор у подъёмного моста",
+      "biome": "Castle",
+      "role": "Start",
+      "hero": "Tower",
+      "width": 15,
+      "depth": 15,
+      "doorClearance": 3.2,
+      "pitDepth": 0,
+      "upperRoute": false,
+      "shelterType": "alcove",
+      "status": "authored-recipe-gameplay-anchors",
+      "layoutSource": "RoomDefinitions/DrawbridgeYard.room.json"
+    },
+    {
+      "id": "27",
+      "key": "FairyRing",
+      "title": "Ведьмин круг",
+      "biome": "Forest",
+      "role": "Extraction",
+      "hero": "Mushroom",
+      "width": 15,
+      "depth": 15,
+      "doorClearance": 3.2,
+      "pitDepth": 0,
+      "upperRoute": false,
+      "shelterType": "alcove",
+      "status": "authored-recipe-gameplay-anchors",
+      "layoutSource": "RoomDefinitions/FairyRing.room.json"
+    },
+    {
+      "id": "28",
+      "key": "TeaTray",
+      "title": "Чайный поднос",
+      "biome": "Giant",
+      "role": "Extraction",
+      "hero": "GiantCup",
+      "width": 15,
+      "depth": 15,
+      "doorClearance": 3.2,
+      "pitDepth": 0,
+      "upperRoute": false,
+      "shelterType": "alcove",
+      "status": "authored-recipe-gameplay-anchors",
+      "layoutSource": "RoomDefinitions/TeaTray.room.json"
+    },
+    {
+      "id": "29",
+      "key": "CrownChapel",
+      "title": "Коронная капелла",
+      "biome": "Castle",
+      "role": "Extraction",
+      "hero": "Arch",
+      "width": 15,
+      "depth": 15,
+      "doorClearance": 3.2,
+      "pitDepth": 0,
+      "upperRoute": false,
+      "shelterType": "alcove",
+      "status": "authored-recipe-gameplay-anchors",
+      "layoutSource": "RoomDefinitions/CrownChapel.room.json"
+    },
+    {
+      "id": "30",
+      "key": "BeanstalkGrove",
+      "title": "Роща великаньего боба",
+      "biome": "Giant",
+      "role": "DeadEnd",
+      "hero": "Tree",
+      "width": 15,
+      "depth": 15,
+      "doorClearance": 3.2,
+      "pitDepth": 0,
+      "upperRoute": false,
+      "shelterType": "alcove",
+      "status": "authored-recipe-gameplay-anchors",
+      "layoutSource": "RoomDefinitions/BeanstalkGrove.room.json"
     }
   ]
 }

@@ -22,9 +22,7 @@ namespace LevelAuthoring.Editor
         {
             var definition=RoomCompiler.Read(recipePath);
             var scene=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
-            RenderSettings.ambientMode=AmbientMode.Flat;
-            RenderSettings.ambientLight=new Color(.19f,.22f,.27f);
-            RenderSettings.fog=false;
+            ApplyLighting(definition);
             QualitySettings.pixelLightCount=12;
             var root=new GameObject(definition.id);
             RoomCompiler.BuildInto(root.transform,recipePath,output);
@@ -37,7 +35,7 @@ namespace LevelAuthoring.Editor
             Debug.Log(navigationReport);
             var camera=new GameObject("Player-height review camera").AddComponent<Camera>();
             camera.clearFlags=CameraClearFlags.SolidColor;
-            camera.backgroundColor=new Color(.025f,.035f,.045f);
+            camera.backgroundColor=RenderSettings.fog?RenderSettings.fogColor:new Color(.025f,.035f,.045f);
             camera.nearClipPlane=.05f; camera.farClipPlane=80;
             if(definition.views.Length>0) Position(camera,definition.views[0]);
             EditorSceneManager.SaveScene(scene,output+"/"+definition.id+".unity");
@@ -49,6 +47,23 @@ namespace LevelAuthoring.Editor
             if(definition.navigation!=null) RenderNavigation(root,camera,output);
             if(definition.views.Length>0) Position(camera,definition.views[0]);
             AssetDatabase.SaveAssets(); AssetDatabase.Refresh();
+        }
+
+        /// <summary>Room ambience for review scenes: darker from below, optional distance fog.</summary>
+        public static void ApplyLighting(RoomDefinition definition)
+        {
+            RenderSettings.fog=false;
+            if(string.IsNullOrEmpty(definition.ambient) || !ColorUtility.TryParseHtmlString(definition.ambient,out var ambient))
+            {
+                RenderSettings.ambientMode=AmbientMode.Flat; RenderSettings.ambientLight=new Color(.19f,.22f,.27f); return;
+            }
+            RenderSettings.ambientMode=AmbientMode.Trilight;
+            RenderSettings.ambientSkyColor=ambient; RenderSettings.ambientEquatorColor=ambient*.62f; RenderSettings.ambientGroundColor=ambient*.3f;
+            if(definition.fogDensity>0 && ColorUtility.TryParseHtmlString(definition.fog,out var fog))
+            {
+                RenderSettings.fog=true; RenderSettings.fogMode=FogMode.ExponentialSquared;
+                RenderSettings.fogColor=fog; RenderSettings.fogDensity=definition.fogDensity;
+            }
         }
 
         static void Position(Camera camera,ViewDefinition view)

@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "id": "FableRealm",
+  "title": "Страна забытых сказок",
+  "gameplayContract": true,
+  "rooms": [
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/BookGate.room.json",
+      "role": "Start",
+      "difficulty": 1
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/RootHall.room.json",
+      "role": "Normal",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/MushroomChoir.room.json",
+      "role": "Normal",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/FireflyBrook.room.json",
+      "role": "Passage",
+      "difficulty": 1
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/LostPicnic.room.json",
+      "role": "Normal",
+      "difficulty": 1
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/HollowLibrary.room.json",
+      "role": "DeadEnd",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/SugarGate.room.json",
+      "role": "Passage",
+      "difficulty": 1
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/GingerbreadSquare.room.json",
+      "role": "Normal",
+      "difficulty": 1
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/BakersWorkshop.room.json",
+      "role": "Normal",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/CandyMarket.room.json",
+      "role": "Normal",
+      "difficulty": 1
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/Clockmaker.room.json",
+      "role": "DeadEnd",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/MarzipanVault.room.json",
+      "role": "Extraction",
+      "difficulty": 1
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/BeanstalkCourt.room.json",
+      "role": "Normal",
+      "difficulty": 3
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/GiantTea.room.json",
+      "role": "Normal",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/PorcelainWalk.room.json",
+      "role": "Passage",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/RoseMaze.room.json",
+      "role": "Normal",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/ForgottenToy.room.json",
+      "role": "DeadEnd",
+      "difficulty": 1
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/GardenStore.room.json",
+      "role": "Extraction",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/ThornGate.room.json",
+      "role": "Passage",
+      "difficulty": 3
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/MirrorCourt.room.json",
+      "role": "Normal",
+      "difficulty": 3
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/SilentBallroom.room.json",
+      "role": "Normal",
+      "difficulty": 3
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/SleepingObservatory.room.json",
+      "role": "Normal",
+      "difficulty": 3
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/StoryArchive.room.json",
+      "role": "DeadEnd",
+      "difficulty": 3
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/RoyalTreasury.room.json",
+      "role": "Extraction",
+      "difficulty": 3
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/CoachYard.room.json",
+      "role": "Start",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/DrawbridgeYard.room.json",
+      "role": "Start",
+      "difficulty": 3
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/FairyRing.room.json",
+      "role": "Extraction",
+      "difficulty": 1
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/TeaTray.room.json",
+      "role": "Extraction",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/CrownChapel.room.json",
+      "role": "Extraction",
+      "difficulty": 3
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/BeanstalkGrove.room.json",
+      "role": "DeadEnd",
+      "difficulty": 3,
+      "special": "bean-puzzle"
+    }
+  ]
+}

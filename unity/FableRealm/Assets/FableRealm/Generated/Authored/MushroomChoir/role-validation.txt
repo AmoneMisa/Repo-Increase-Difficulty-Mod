@@ -1,0 +1,1 @@
+ROLE PASS: MushroomChoir as Normal; exits east,north,south,west; 14 loot volumes; 0 extraction; 0 spawns.

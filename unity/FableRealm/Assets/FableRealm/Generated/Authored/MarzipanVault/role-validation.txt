@@ -1,0 +1,1 @@
+ROLE PASS: MarzipanVault as Extraction; exits south; 12 loot volumes; 1 extraction; 0 spawns.

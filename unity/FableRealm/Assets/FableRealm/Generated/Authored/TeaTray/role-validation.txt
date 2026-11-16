@@ -1,0 +1,1 @@
+ROLE PASS: TeaTray as Extraction; exits south; 14 loot volumes; 1 extraction; 0 spawns.

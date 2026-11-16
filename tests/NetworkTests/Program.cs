@@ -175,6 +175,8 @@ Send(IncreaseHardMod.Challenges.ChallengeManager.EventCode,new object[]{"k"});Ch
 {bool was=PhotonNetwork.IsMasterClient;PhotonNetwork.IsMasterClient=false;
  Send(IncreaseHardMod.Challenges.MapRitual.EventCode,new object[]{"k"},3);Check(IncreaseHardMod.Challenges.MapRitual.Received==0,"Non-host cannot send ritual state");
  Send(IncreaseHardMod.Challenges.MapRitual.EventCode,new object[]{"k"});Check(IncreaseHardMod.Challenges.MapRitual.Received==1,"Host ritual state is delivered");
+ Send(IncreaseHardMod.FableRealm.BeanPuzzleWire.EventCode,new object[]{"k"},3);Check(IncreaseHardMod.FableRealm.BeanPuzzle.Received==0,"Non-host cannot send bean puzzle state");
+ Send(IncreaseHardMod.FableRealm.BeanPuzzleWire.EventCode,new object[]{"k"});Check(IncreaseHardMod.FableRealm.BeanPuzzle.Received==1,"Host bean puzzle state is delivered");
  PhotonNetwork.IsMasterClient=was;}
 // Loot safety net notice: host only, well-formed only.
 foreach(var raw in new object[]{null,42,new object[]{0,100,true},new object[]{101,100,true},new object[]{3,-1,true},new object[]{3,100,"yes"},new object[]{3,100}})

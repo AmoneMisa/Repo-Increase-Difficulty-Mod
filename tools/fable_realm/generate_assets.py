@@ -220,6 +220,11 @@ ROOMS = [
     ('22','SleepingObservatory','Спящая обсерватория','Castle','Normal','Tower'),
     ('23','StoryArchive','Архив недописанных сказок','Castle','DeadEnd','Rose'),
     ('24','RoyalTreasury','Королевская сокровищница','Castle','Extraction','Arch'),
+    ('25','CoachYard','Каретный двор','Village','Start','Cottage'),
+    ('26','DrawbridgeYard','Двор у подъёмного моста','Castle','Start','Tower'),
+    ('27','FairyRing','Ведьмин круг','Forest','Extraction','Mushroom'),
+    ('28','TeaTray','Чайный поднос','Giant','Extraction','GiantCup'),
+    ('29','CrownChapel','Коронная капелла','Castle','Extraction','Arch'),
 ]
 
 

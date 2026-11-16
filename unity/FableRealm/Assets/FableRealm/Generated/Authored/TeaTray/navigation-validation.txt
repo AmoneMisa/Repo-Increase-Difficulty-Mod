@@ -1,0 +1,1 @@
+NAVMESH PASS: TeaTray; 8 points; 9 complete paths; 161 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

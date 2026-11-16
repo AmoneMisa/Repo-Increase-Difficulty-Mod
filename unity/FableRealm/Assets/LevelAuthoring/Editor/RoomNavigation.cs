@@ -114,7 +114,7 @@ namespace LevelAuthoring.Editor
             var sources=new List<NavMeshBuildSource>();
             foreach(var e in definition.elements)
             {
-                if(e.navigation=="Ignore") continue;
+                if(e.navigation=="Ignore" || !string.IsNullOrEmpty(e.variant)) continue;
                 var parent=root.Find("Architecture/"+e.id);
                 if(parent==null) throw new InvalidOperationException("Missing navigation element: "+e.id);
                 foreach(var collider in parent.GetComponentsInChildren<Collider>())
@@ -177,6 +177,69 @@ namespace LevelAuthoring.Editor
                 File.WriteAllText(output+"/seam-path.json",JsonUtility.ToJson(new Route { from=a.id+"/"+firstPortal,to=b.id+"/"+secondPortal,status=path.status.ToString(),corners=corners },true));
                 string report=$"SEAM PASS: {a.id}/{firstPortal} <-> {b.id}/{secondPortal}; full NavMesh path, coincident portals, matching height. No runtime repair or off-mesh link used.";
                 File.WriteAllText(output+"/seam-validation.txt",report+"\n"); return report;
+            }
+            finally { if(instance.valid) instance.Remove(); UnityEngine.Object.DestroyImmediate(data); }
+        }
+
+        public sealed class PlacedRoom { public GameObject room; public RoomDefinition definition; }
+
+        /// <summary>
+        /// Bakes one NavMesh over an assembled set of rooms and requires a complete path from the origin
+        /// level point to every level point of every room. Returns the triangulation for review renders.
+        /// </summary>
+        public static string ValidateAssembly(List<PlacedRoom> rooms,PlacedRoom origin,string originNav,out Mesh preview)
+        {
+            var n=origin.definition.navigation;
+            var sources=new List<NavMeshBuildSource>(); var bounds=new Bounds(origin.room.transform.position,Vector3.one);
+            foreach(var placed in rooms)
+            {
+                if(placed.definition.navigation==null || JsonUtility.ToJson(placed.definition.navigation)!=JsonUtility.ToJson(n))
+                    throw new InvalidOperationException("Assembly requires matching navigation profiles: "+placed.definition.id);
+                sources.AddRange(Collect(placed.room.transform,placed.definition));
+                foreach(var c in placed.room.GetComponentsInChildren<Collider>()) bounds.Encapsulate(c.bounds);
+            }
+            bounds.Expand(2);
+            var settings=NavMesh.GetSettingsByID(0);
+            settings.agentRadius=n.radius; settings.agentHeight=n.height; settings.agentClimb=n.climb; settings.agentSlope=n.slope;
+            settings.overrideVoxelSize=true; settings.voxelSize=n.voxel; settings.minRegionArea=.1f;
+            var data=NavMeshBuilder.BuildNavMeshData(settings,sources,bounds,Vector3.zero,Quaternion.identity);
+            if(data==null) throw new InvalidOperationException("Assembly bake failed.");
+            var offset=new Vector3(10000,0,10000);
+            var instance=NavMesh.AddNavMeshData(data,offset,Quaternion.identity);
+            try
+            {
+                Vector3 Sample(PlacedRoom placed,AnchorDefinition anchor)
+                {
+                    Vector3 p=placed.room.transform.TransformPoint(anchor.position)+offset;
+                    if(!NavMesh.SamplePosition(p,out var hit,n.sampleDistance,NavMesh.AllAreas) || Mathf.Abs(hit.position.y-p.y)>n.maxVerticalSnap)
+                        throw new InvalidOperationException(placed.definition.id+": level point off the assembled NavMesh: "+anchor.id);
+                    return hit.position;
+                }
+                var first=Array.Find(origin.definition.anchors,x=>x.kind=="nav" && x.id==originNav);
+                if(first==null) throw new InvalidOperationException("Unknown origin level point.");
+                Vector3 start=Sample(origin,first); int points=0;
+                foreach(var placed in rooms)
+                    foreach(var anchor in placed.definition.anchors)
+                    {
+                        if(anchor.kind!="nav") continue;
+                        var path=new NavMeshPath();
+                        if(!NavMesh.CalculatePath(start,Sample(placed,anchor),NavMesh.AllAreas,path) || path.status!=NavMeshPathStatus.PathComplete)
+                            throw new InvalidOperationException(placed.definition.id+": no complete path from "+origin.definition.id+"/"+originNav+" to "+anchor.id);
+                        points++;
+                    }
+                var tri=NavMesh.CalculateTriangulation();
+                var vertices=new List<Vector3>(); var indices=new List<int>();
+                for(int i=0;i<tri.indices.Length;i+=3)
+                {
+                    var a=tri.vertices[tri.indices[i]]-offset;
+                    if(!bounds.Contains(a)) continue;
+                    int at=vertices.Count;
+                    vertices.Add(a); vertices.Add(tri.vertices[tri.indices[i+1]]-offset); vertices.Add(tri.vertices[tri.indices[i+2]]-offset);
+                    indices.Add(at); indices.Add(at+1); indices.Add(at+2);
+                }
+                preview=new Mesh { indexFormat=UnityEngine.Rendering.IndexFormat.UInt32 };
+                preview.SetVertices(vertices); preview.SetTriangles(indices,0); preview.RecalculateNormals(); preview.RecalculateBounds();
+                return "ASSEMBLY PASS: "+rooms.Count+" rooms on one NavMesh; "+points+" level points reachable from "+origin.definition.id+"/"+originNav+"; "+indices.Count/3+" triangles. No off-mesh links or runtime repair.";
             }
             finally { if(instance.valid) instance.Remove(); UnityEngine.Object.DestroyImmediate(data); }
         }

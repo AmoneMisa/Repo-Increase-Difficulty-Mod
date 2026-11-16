@@ -1,0 +1,1 @@
+NAVMESH PASS: SilentBallroom; 17 points; 18 complete paths; 221 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

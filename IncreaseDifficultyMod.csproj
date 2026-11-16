@@ -48,6 +48,9 @@
     <EmbeddedResource Include="src\MonsterIcons\*.png" LogicalName="DeepRunOverhaul.MonsterIcon.%(Filename)%(Extension)" />
     <EmbeddedResource Include="src\Art\*.bundle" />
     <EmbeddedResource Include="src\Audio\*.wav" />
+    <!-- Fable Realm: the recipe contract is embedded; the room bundle ships as a file beside the DLL. -->
+    <EmbeddedResource Include="src\FableRealm\fable_rooms.json" />
+    <None Include="src\FableRealm\fablerealm.bundle" Condition="Exists('src\FableRealm\fablerealm.bundle')" Link="fablerealm.bundle" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -112,6 +115,11 @@
       <HintPath>$(ManagedDir)\Unity.TextMeshPro.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <!-- NavMeshModifier: marks the Fable Realm rooms for the game's runtime navmesh build. -->
+    <Reference Include="Unity.AI.Navigation">
+      <HintPath>$(ManagedDir)\Unity.AI.Navigation.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="Unity.Localization">
       <HintPath>$(ManagedDir)\Unity.Localization.dll</HintPath>
       <Private>false</Private>
@@ -173,6 +181,7 @@
   <Target Name="DeployToGame" AfterTargets="Build" Condition="'$(DeployToGame)' == 'true'">
     <MakeDir Directories="$(PluginsDir)" />
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PluginsDir)" />
+    <Copy SourceFiles="src\FableRealm\fablerealm.bundle" DestinationFolder="$(PluginsDir)" SkipUnchangedFiles="true" Condition="Exists('src\FableRealm\fablerealm.bundle')" />
     <Move SourceFiles="$(PluginsDir)\IncreaseHardMod.dll"
           DestinationFiles="$(PluginsDir)\IncreaseHardMod.dll.disabled-before-rename"
           Condition="Exists('$(PluginsDir)\IncreaseHardMod.dll')" />

@@ -142,6 +142,10 @@ public static class ModConfig
     // only loot the team can reach and also topping up when the open point stops making progress.
     public static ConfigEntry<bool> LootSafetyNetEnabled;
     public static ConfigEntry<bool> ChallengesEnabled;
+    // Fable Realm: the mod's own level (rooms from fablerealm.bundle) and its bean puzzle room.
+    public static ConfigEntry<bool> FableRealmEnabled;
+    public static ConfigEntry<bool> FableRealmVanillaStartRoom;
+    public static ConfigEntry<bool> FableRealmForce;
     public static ConfigEntry<float> ChallengeChancePercent;
     public static ConfigEntry<float> LootSafetyMinPlayerDistance;
     public static ConfigEntry<int> LootSafetyMaxSpawns;
@@ -572,6 +576,9 @@ public static class ModConfig
         PingUnderglowEnabled = Module(cfg, "Ping", "UnderglowEnabled", true, "PingUnderglow",
             "Pinged loot, items, carts and other physical objects get a neon underglow in the ping colour: coloured light on the floor beneath them for as long as the ping lasts. Local visuals only.");
         ItemUnstuckEnabled = Module(cfg, "Item Unstuck", "Enabled", true, "ItemUnstuck", "Master switch for the valuable safety-net features (relocate stuck loot, invulnerable-until-grab, undamaged-value HUD). The relocate/invuln parts are HOST-SIDE (computed by the host).");
+        FableRealmEnabled = cfg.Bind("Modules", "FableRealm", true, "Add the Fable Realm level (needs fablerealm.bundle next to the plugin DLL) to the run's levels, with its giant bean puzzle room. Every player needs the same setting. Takes effect on restart.");
+        FableRealmVanillaStartRoom = cfg.Bind("Fable Realm", "VanillaStartRoom", false, "Start Fable Realm from a vanilla Manor start room instead of the level's own start rooms. A fallback if the truck does not sit right in them. Every player needs the same setting. Takes effect on restart.");
+        FableRealmForce = cfg.Bind("Fable Realm", "ForceLevel", false, "Every run level is Fable Realm instead of a random or voted map. For testing the level. Host-side; read each time a level is picked, no restart needed.");
         ChallengesEnabled = Module(cfg, "Challenges", "Enabled", true, "Challenges",
             "Run levels may get a challenge shrine: crouch on it to start a timed challenge (wisp escort, target practice, hunt, cull or smash). Winning gives a skill point for everyone, an upgrade or a cosmetic box. Host-side.");
         LootSafetyNetEnabled = Module(cfg, "Loot Safety Net", "Enabled", true, "LootSafetyNet",

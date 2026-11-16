@@ -1,0 +1,1 @@
+ROLE PASS: BookGate as Start; exits north; 9 loot volumes; 1 extraction; 8 spawns.

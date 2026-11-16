@@ -18,9 +18,10 @@ internal sealed class MapRitual : MonoBehaviour
     internal const byte EventCode = 158;
     private const string HudKey = "ihm.mapritual";
     private const int PaintingCount = 6;
-    private const string BackupMarker = "ihm.ritual.backup";
+    internal const string BackupMarker = "ihm.ritual.backup";
     private const float ScanSeconds = .25f;
     private static readonly string CubePrefabName = InteractiveValuables.PrefabName(RitualLoot.Cube);
+    private static readonly string EggPrefabName = InteractiveValuables.PrefabName(FableRealm.BeanPuzzleRules.EggKey);
     private static readonly string MousePrefabName = InteractiveValuables.PrefabName("rgb_mouse");
     private static readonly string KeyboardPrefabName = InteractiveValuables.PrefabName("rgb_keyboard");
     private static readonly int World = LayerMask.GetMask("Default", "PlayerOnlyCollision");
@@ -162,7 +163,7 @@ internal sealed class MapRitual : MonoBehaviour
         Plugin.Log.LogInfo($"[Ritual] Placed {_map} cube at {_altar}.");
     }
 
-    private static bool TryFloor(Vector3 near, out Vector3 floor)
+    internal static bool TryFloor(Vector3 near, out Vector3 floor)
     {
         floor = default;
         if (!NavMesh.SamplePosition(near, out var nav, 1.15f, NavMesh.AllAreas) ||
@@ -304,7 +305,7 @@ internal sealed class MapRitual : MonoBehaviour
         if (backup && offering.Value != null) SetBackupValue(offering.Value);
     }
 
-    private static Vector3 OfferingPosition(Vector3 floor, Quaternion rotation, PhysGrabObject body, float lift)
+    internal static Vector3 OfferingPosition(Vector3 floor, Quaternion rotation, PhysGrabObject body, float lift)
     {
         var position = floor + Vector3.up * lift;
         if (body == null) return position;
@@ -608,7 +609,7 @@ internal sealed class MapRitual : MonoBehaviour
         self._finished = finished;
     }
 
-    private static void SetBackupValue(ValuableObject value)
+    internal static void SetBackupValue(ValuableObject value)
     {
         value.dollarValueOriginal = value.dollarValueCurrent = 0f;
         value.dollarValueSet = true;
@@ -628,6 +629,8 @@ internal sealed class MapRitual : MonoBehaviour
             else if (__instance.dollarValueOverride != 0) return;
             else if (__instance.name.StartsWith(CubePrefabName, StringComparison.Ordinal) || IsRewardName(__instance.name))
                 __instance.dollarValueOverride = RitualRewardRules.Value;
+            else if (__instance.name.StartsWith(EggPrefabName, StringComparison.Ordinal))
+                __instance.dollarValueOverride = FableRealm.BeanPuzzleRules.EggValue; // exact, like the ritual rewards
             else if (__instance.name.StartsWith(MousePrefabName, StringComparison.Ordinal))
                 __instance.dollarValueOverride = Random.Range(5, 8) * 100;
             else if (__instance.name.StartsWith(KeyboardPrefabName, StringComparison.Ordinal))

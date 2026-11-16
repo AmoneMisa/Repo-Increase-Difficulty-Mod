@@ -1,0 +1,1 @@
+NAVMESH PASS: BeanstalkCourt; 24 points; 25 complete paths; 162 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

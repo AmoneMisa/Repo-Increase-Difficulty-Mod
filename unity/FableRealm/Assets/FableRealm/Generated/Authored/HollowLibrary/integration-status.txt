@@ -1,1 +1,1 @@
-Authoring only. Game component binding, navmesh, minimap, valuable spawning and REPOLib registration are not implemented.
+Authoring only. Editor NavMesh QA may be present; game component binding, runtime navmesh integration, minimap, valuable spawning and REPOLib registration are not implemented.

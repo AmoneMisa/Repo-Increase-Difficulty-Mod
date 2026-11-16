@@ -1,0 +1,1 @@
+NAVMESH PASS: GiantTea; 13 points; 12 complete paths; 221 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

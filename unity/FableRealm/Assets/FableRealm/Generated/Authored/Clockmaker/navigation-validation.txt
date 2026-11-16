@@ -1,0 +1,1 @@
+NAVMESH PASS: Clockmaker; 14 points; 13 complete paths; 209 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

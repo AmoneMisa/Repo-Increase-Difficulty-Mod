@@ -91,6 +91,9 @@ $files = [ordered]@{
     'COLLECTION.md' = (Read-Utf8 (Join-Path $repo 'art\valuables\COLLECTION_IN_GAME.md'))
     $plugin = $dll
 }
+# Fable Realm rooms: loaded from the plugin's own folder (see src/FableRealm/FableLevel.cs).
+$fableBundle = Join-Path $repo 'src\FableRealm\fablerealm.bundle'
+if (Test-Path $fableBundle) { $files[($plugin -replace '[^/]+$', 'fablerealm.bundle')] = $fableBundle }
 $stream = [IO.File]::Open($zipPath, [IO.FileMode]::Create, [IO.FileAccess]::ReadWrite)
 $zip = [IO.Compression.ZipArchive]::new($stream, [IO.Compression.ZipArchiveMode]::Create)
 try {

@@ -1,0 +1,1 @@
+ROLE PASS: ForgottenToy as DeadEnd; exits south; 19 loot volumes; 0 extraction; 0 spawns.

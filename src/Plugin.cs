@@ -117,6 +117,8 @@ public class Plugin : BaseUnityPlugin
         // Challenge shrines: timed side challenges on run levels (host logic, every client draws the props).
         netObject.AddComponent<Challenges.ChallengeManager>();
         netObject.AddComponent<Challenges.MapRitual>();
+        // Fable Realm: the bean puzzle of its special room (host logic, every client shows the plates and the bean).
+        netObject.AddComponent<FableRealm.BeanPuzzle>();
         // Wizard Staff shock: slows shocked monsters (host) and halves the local player's stamina recovery.
         netObject.AddComponent<Gear.Shock.Controller>();
         // Instinct buffs: heal-over-time ticks (host) and the buff lines on each player's HUD.

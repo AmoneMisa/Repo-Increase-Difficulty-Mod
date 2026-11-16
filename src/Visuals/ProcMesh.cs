@@ -66,6 +66,28 @@ internal sealed class ProcMesh
         return this;
     }
 
+    /// <summary>Solid of revolution around Y: <paramref name="profile"/> lists (radius, height) from bottom to top,
+    /// transformed by <paramref name="m"/>. A radius of 0 closes the shape to a point.</summary>
+    internal ProcMesh Lathe(Matrix4x4 m, (float radius, float y)[] profile, int sides = 12)
+    {
+        sides = Mathf.Max(3, sides);
+        Vector3 Ring(int i, (float radius, float y) p)
+        {
+            float a = i * Mathf.PI * 2f / sides;
+            return m.MultiplyPoint3x4(new Vector3(Mathf.Cos(a) * p.radius, p.y, Mathf.Sin(a) * p.radius));
+        }
+        for (int k = 0; k + 1 < profile.Length; k++)
+            for (int i = 0; i < sides; i++)
+            {
+                var b0 = Ring(i, profile[k]); var b1 = Ring(i + 1, profile[k]);
+                var t0 = Ring(i, profile[k + 1]); var t1 = Ring(i + 1, profile[k + 1]);
+                if (profile[k].radius <= 0f) Tri(b0, t0, t1);
+                else if (profile[k + 1].radius <= 0f) Tri(b0, t0, b1);
+                else Quad(b0, t0, t1, b1);
+            }
+        return this;
+    }
+
     /// <summary>Unit cube with bevelled edges and corners (-0.5..0.5, faces inset by <paramref name="bevel"/>),
     /// transformed by <paramref name="m"/>: 6 faces, 12 edge bevels and 8 corner facets, so it reads rounded.</summary>
     internal ProcMesh ChamferBox(Matrix4x4 m, float bevel = .12f)

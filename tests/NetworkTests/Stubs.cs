@@ -75,6 +75,7 @@ namespace IncreaseHardMod.Quests {
 }
 namespace IncreaseHardMod.Gear { public static class Shock { public const byte EnemyKind=3; public static float Last; public static void ShockLocal(float s){Last=s;} } }
 namespace IncreaseHardMod.Challenges { public static class ChallengeManager { public const byte EventCode=168, StartRequestCode=166; public static int Received, Requests; public static void HandleEvent(ExitGames.Client.Photon.EventData e){Received++;} public static void HandleStartRequest(ExitGames.Client.Photon.EventData e){Requests++;} } }
+namespace IncreaseHardMod.FableRealm { public static class BeanPuzzleWire { public const byte EventCode=150; } public static class BeanPuzzle { public static int Received; public static void Receive(ExitGames.Client.Photon.EventData e){Received++;} } }
 namespace IncreaseHardMod.Challenges { public static class MapRitual { public const byte EventCode=158; public static int Received; public static void Receive(ExitGames.Client.Photon.EventData e){Received++;} } }
 namespace IncreaseHardMod.Skills { public static class BuffPerks { public const byte EventCode=167; public static int Received; public static void HandleEvent(ExitGames.Client.Photon.EventData e){Received++;} } }
 namespace IncreaseHardMod.Skills { public static class TradeOffs { public static int Echo; public static void HostPingedByActor(int actor, UnityEngine.Vector3 p){Echo++;} } }

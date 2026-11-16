@@ -13,119 +13,301 @@
       "id": "Oak",
       "color": "#896047",
       "grain": 0.26,
-      "smoothness": 0.25,
+      "smoothness": 0.16,
       "metallic": 0,
-      "emission": 0
+      "emission": 0,
+      "pattern": "planks",
+      "scale": 2.4
     },
     {
       "id": "OakLight",
       "color": "#a77d57",
-      "grain": 0.22,
-      "smoothness": 0.25,
+      "grain": 0.26,
+      "smoothness": 0.14,
       "metallic": 0,
-      "emission": 0
+      "emission": 0,
+      "pattern": "planks",
+      "scale": 2.4
     },
     {
       "id": "OakDark",
       "color": "#48322c",
       "grain": 0.3,
-      "smoothness": 0.25,
+      "smoothness": 0.18,
       "metallic": 0,
-      "emission": 0
+      "emission": 0,
+      "pattern": "planks",
+      "scale": 2.4
     },
     {
       "id": "Bark",
       "color": "#625047",
       "grain": 0.35,
-      "smoothness": 0.25,
+      "smoothness": 0.04,
       "metallic": 0,
-      "emission": 0
+      "emission": 0,
+      "pattern": "bark",
+      "scale": 2.6
     },
     {
       "id": "Stone",
       "color": "#343b40",
-      "grain": 0.1,
-      "smoothness": 0.25,
+      "grain": 0.26,
+      "smoothness": 0.06,
       "metallic": 0,
-      "emission": 0
+      "emission": 0,
+      "pattern": "blocks",
+      "scale": 2.0
     },
     {
       "id": "Brass",
       "color": "#c59b58",
       "grain": 0.12,
-      "smoothness": 0.25,
+      "smoothness": 0.5,
       "metallic": 0.55,
-      "emission": 0
+      "emission": 0,
+      "pattern": "plain",
+      "scale": 1.0
     },
     {
       "id": "BookWine",
       "color": "#743f4d",
-      "grain": 0.1,
-      "smoothness": 0.25,
+      "grain": 0.22,
+      "smoothness": 0.12,
       "metallic": 0,
-      "emission": 0
+      "emission": 0,
+      "pattern": "weave",
+      "scale": 0.8
     },
     {
       "id": "BookTeal",
       "color": "#366364",
-      "grain": 0.1,
-      "smoothness": 0.25,
+      "grain": 0.22,
+      "smoothness": 0.12,
       "metallic": 0,
-      "emission": 0
+      "emission": 0,
+      "pattern": "weave",
+      "scale": 0.8
     },
     {
       "id": "BookOchre",
       "color": "#bd8a49",
-      "grain": 0.1,
-      "smoothness": 0.25,
+      "grain": 0.22,
+      "smoothness": 0.12,
       "metallic": 0,
-      "emission": 0
+      "emission": 0,
+      "pattern": "weave",
+      "scale": 0.8
     },
     {
       "id": "BookInk",
       "color": "#394351",
-      "grain": 0.1,
-      "smoothness": 0.25,
+      "grain": 0.22,
+      "smoothness": 0.12,
       "metallic": 0,
-      "emission": 0
+      "emission": 0,
+      "pattern": "weave",
+      "scale": 0.8
     },
     {
       "id": "BookCream",
       "color": "#c5b398",
       "grain": 0.1,
-      "smoothness": 0.25,
+      "smoothness": 0.1,
       "metallic": 0,
-      "emission": 0
+      "emission": 0,
+      "pattern": "plain",
+      "scale": 0.8
     },
     {
       "id": "WarmGlass",
-      "color": "#ffd294",
+      "color": "#ffb45e",
       "grain": 0,
-      "smoothness": 0.25,
+      "smoothness": 0.3,
       "metallic": 0,
-      "emission": 1.4
+      "emission": 0.95,
+      "pattern": "plain",
+      "scale": 2
     },
     {
       "id": "MoonGlass",
       "color": "#69afbe",
       "grain": 0,
-      "smoothness": 0.25,
+      "smoothness": 0.3,
       "metallic": 0,
-      "emission": 1.4
+      "emission": 1.0,
+      "pattern": "plain",
+      "scale": 2
     },
     {
       "id": "MossGlow",
       "color": "#7db98f",
       "grain": 0,
-      "smoothness": 0.25,
+      "smoothness": 0.2,
       "metallic": 0,
-      "emission": 0.4
+      "emission": 0.4,
+      "pattern": "plain",
+      "scale": 2
     },
     {
       "id": "Moss",
       "color": "#53634a",
-      "grain": 0.18,
-      "smoothness": 0.1
+      "grain": 0.26,
+      "smoothness": 0.03,
+      "metallic": 0,
+      "emission": 0,
+      "pattern": "mottle",
+      "scale": 3.0
+    },
+    {
+      "id": "Vista",
+      "color": "#ffffff",
+      "grain": 0,
+      "smoothness": 0.6,
+      "metallic": 0,
+      "emission": 0.9,
+      "pattern": "vista",
+      "scale": 2
+    },
+    {
+      "id": "SkyView",
+      "color": "#ffffff",
+      "grain": 0,
+      "smoothness": 0.6,
+      "metallic": 0,
+      "emission": 0.9,
+      "pattern": "sky",
+      "scale": 2
+    },
+    {
+      "id": "Leaf",
+      "color": "#3f6b52",
+      "grain": 0.3,
+      "smoothness": 0.1,
+      "metallic": 0,
+      "emission": 0,
+      "pattern": "leaves",
+      "scale": 1.6
+    },
+    {
+      "id": "Hedge",
+      "color": "#2f4f3c",
+      "grain": 0.3,
+      "smoothness": 0.05,
+      "metallic": 0,
+      "emission": 0,
+      "pattern": "leaves",
+      "scale": 1.4
+    },
+    {
+      "id": "Candy",
+      "color": "#c8414f",
+      "grain": 0.1,
+      "smoothness": 0.6,
+      "metallic": 0,
+      "emission": 0,
+      "pattern": "plain",
+      "scale": 1.5
+    },
+    {
+      "id": "Gold",
+      "color": "#d2a550",
+      "grain": 0.1,
+      "smoothness": 0.6,
+      "metallic": 0.7,
+      "emission": 0,
+      "pattern": "plain",
+      "scale": 1.0
+    },
+    {
+      "id": "MarbleDark",
+      "color": "#3a3d47",
+      "grain": 0.16,
+      "smoothness": 0.55,
+      "metallic": 0,
+      "emission": 0,
+      "pattern": "cracks",
+      "scale": 3.0
+    },
+    {
+      "id": "Velvet",
+      "color": "#5c2238",
+      "grain": 0.22,
+      "smoothness": 0.05,
+      "metallic": 0,
+      "emission": 0,
+      "pattern": "weave",
+      "scale": 1.0
+    },
+    {
+      "id": "Mirror",
+      "color": "#b8c6d4",
+      "grain": 0,
+      "smoothness": 0.95,
+      "metallic": 0.9,
+      "emission": 0.15,
+      "pattern": "plain",
+      "scale": 2
+    },
+    {
+      "id": "Straw",
+      "color": "#d8c170",
+      "grain": 0.25,
+      "smoothness": 0.04,
+      "metallic": 0,
+      "emission": 0,
+      "pattern": "weave",
+      "scale": 0.6
+    },
+    {
+      "id": "Hair",
+      "color": "#e2b84a",
+      "grain": 0.22,
+      "smoothness": 0.3,
+      "metallic": 0,
+      "emission": 0,
+      "pattern": "weave",
+      "scale": 0.5
+    },
+    {
+      "id": "BeanRed",
+      "color": "#e0453a",
+      "grain": 0,
+      "smoothness": 0.4,
+      "metallic": 0,
+      "emission": 0.9,
+      "pattern": "plain",
+      "scale": 2
+    },
+    {
+      "id": "BeanYellow",
+      "color": "#f0cf4a",
+      "grain": 0,
+      "smoothness": 0.4,
+      "metallic": 0,
+      "emission": 0.9,
+      "pattern": "plain",
+      "scale": 2
+    },
+    {
+      "id": "BeanBlue",
+      "color": "#4a8fe0",
+      "grain": 0,
+      "smoothness": 0.4,
+      "metallic": 0,
+      "emission": 0.9,
+      "pattern": "plain",
+      "scale": 2
+    },
+    {
+      "id": "Pane",
+      "color": "#4f7f8a",
+      "grain": 0,
+      "smoothness": 0.85,
+      "metallic": 0,
+      "emission": 0.12,
+      "pattern": "plain",
+      "scale": 2
     }
   ],
   "elements": [
@@ -816,7 +998,10 @@
       },
       "collider": true,
       "radius": 0.23,
-      "navigation": "Obstacle"
+      "navigation": "Obstacle",
+      "palette": [
+        "Bark"
+      ]
     },
     {
       "id": "wall-1--1",
@@ -905,7 +1090,10 @@
       },
       "collider": true,
       "radius": 0.23,
-      "navigation": "Obstacle"
+      "navigation": "Obstacle",
+      "palette": [
+        "Bark"
+      ]
     },
     {
       "id": "wall-2--1",
@@ -994,7 +1182,10 @@
       },
       "collider": true,
       "radius": 0.23,
-      "navigation": "Obstacle"
+      "navigation": "Obstacle",
+      "palette": [
+        "Bark"
+      ]
     },
     {
       "id": "wall-3--1",
@@ -1083,7 +1274,10 @@
       },
       "collider": true,
       "radius": 0.23,
-      "navigation": "Obstacle"
+      "navigation": "Obstacle",
+      "palette": [
+        "Bark"
+      ]
     },
     {
       "id": "ceiling-side--1",
@@ -1456,7 +1650,7 @@
         "y": 7.5,
         "z": 0.05
       },
-      "material": "MoonGlass",
+      "material": "SkyView",
       "rotation": {
         "x": 90,
         "y": 0,
@@ -3974,6 +4168,1978 @@
       ],
       "radius": 0.15,
       "navigation": "Ignore"
+    },
+    {
+      "id": "plug-north",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 1.9,
+        "z": 7.3
+      },
+      "size": {
+        "x": 4.5,
+        "y": 3.8,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle",
+      "variant": "closed-door-north"
+    },
+    {
+      "id": "plug-north-root-0",
+      "kind": "box",
+      "position": {
+        "x": -0.9,
+        "y": 1.9,
+        "z": 7.1
+      },
+      "size": {
+        "x": 0.28,
+        "y": 4.3,
+        "z": 0.12
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 28
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "variant": "closed-door-north"
+    },
+    {
+      "id": "plug-north-root-1",
+      "kind": "box",
+      "position": {
+        "x": 0.9,
+        "y": 1.9,
+        "z": 7.1
+      },
+      "size": {
+        "x": 0.28,
+        "y": 4.3,
+        "z": 0.12
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": -28
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "variant": "closed-door-north"
+    },
+    {
+      "id": "plug-east",
+      "kind": "box",
+      "position": {
+        "x": 7.3,
+        "y": 1.9,
+        "z": 4.469960816887839e-16
+      },
+      "size": {
+        "x": 4.5,
+        "y": 3.8,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle",
+      "variant": "closed-door-east"
+    },
+    {
+      "id": "plug-east-root-0",
+      "kind": "box",
+      "position": {
+        "x": 7.1,
+        "y": 1.9,
+        "z": 0.9000000000000005
+      },
+      "size": {
+        "x": 0.28,
+        "y": 4.3,
+        "z": 0.12
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 28
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "variant": "closed-door-east"
+    },
+    {
+      "id": "plug-east-root-1",
+      "kind": "box",
+      "position": {
+        "x": 7.1,
+        "y": 1.9,
+        "z": -0.8999999999999996
+      },
+      "size": {
+        "x": 0.28,
+        "y": 4.3,
+        "z": 0.12
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": -28
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "variant": "closed-door-east"
+    },
+    {
+      "id": "plug-south",
+      "kind": "box",
+      "position": {
+        "x": 8.939921633775679e-16,
+        "y": 1.9,
+        "z": -7.3
+      },
+      "size": {
+        "x": 4.5,
+        "y": 3.8,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle",
+      "variant": "closed-door-south"
+    },
+    {
+      "id": "plug-south-root-0",
+      "kind": "box",
+      "position": {
+        "x": 0.9000000000000009,
+        "y": 1.9,
+        "z": -7.1
+      },
+      "size": {
+        "x": 0.28,
+        "y": 4.3,
+        "z": 0.12
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 28
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "variant": "closed-door-south"
+    },
+    {
+      "id": "plug-south-root-1",
+      "kind": "box",
+      "position": {
+        "x": -0.8999999999999991,
+        "y": 1.9,
+        "z": -7.1
+      },
+      "size": {
+        "x": 0.28,
+        "y": 4.3,
+        "z": 0.12
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": -28
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "variant": "closed-door-south"
+    },
+    {
+      "id": "plug-west",
+      "kind": "box",
+      "position": {
+        "x": -7.3,
+        "y": 1.9,
+        "z": -1.3409882450663517e-15
+      },
+      "size": {
+        "x": 4.5,
+        "y": 3.8,
+        "z": 0.3
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 270,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle",
+      "variant": "closed-door-west"
+    },
+    {
+      "id": "plug-west-root-0",
+      "kind": "box",
+      "position": {
+        "x": -7.1,
+        "y": 1.9,
+        "z": -0.9000000000000014
+      },
+      "size": {
+        "x": 0.28,
+        "y": 4.3,
+        "z": 0.12
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 270,
+        "z": 28
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "variant": "closed-door-west"
+    },
+    {
+      "id": "plug-west-root-1",
+      "kind": "box",
+      "position": {
+        "x": -7.1,
+        "y": 1.9,
+        "z": 0.8999999999999987
+      },
+      "size": {
+        "x": 0.28,
+        "y": 4.3,
+        "z": 0.12
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 270,
+        "z": -28
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "variant": "closed-door-west"
+    },
+    {
+      "id": "nook-0-foot-0",
+      "kind": "box",
+      "position": {
+        "x": -4.179999999999999,
+        "y": 0.325,
+        "z": -6.700000000000001
+      },
+      "size": {
+        "x": 0.16,
+        "y": 0.65,
+        "z": 0.8
+      },
+      "material": "Stone",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "nook-0-foot-1",
+      "kind": "box",
+      "position": {
+        "x": -5.419999999999999,
+        "y": 0.325,
+        "z": -6.700000000000001
+      },
+      "size": {
+        "x": 0.16,
+        "y": 0.65,
+        "z": 0.8
+      },
+      "material": "Stone",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "nook-0-slab",
+      "kind": "box",
+      "position": {
+        "x": -4.799999999999999,
+        "y": 0.72,
+        "z": -6.700000000000001
+      },
+      "size": {
+        "x": 1.5,
+        "y": 0.14,
+        "z": 0.9
+      },
+      "material": "Stone",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "nook-0-cap",
+      "kind": "box",
+      "position": {
+        "x": -4.799999999999999,
+        "y": 0.8,
+        "z": -6.700000000000001
+      },
+      "size": {
+        "x": 1.3,
+        "y": 0.03,
+        "z": 0.7
+      },
+      "material": "Moss",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "screen-0-leaf-0",
+      "kind": "box",
+      "position": {
+        "x": 6.220000000000001,
+        "y": 1.0,
+        "z": -6.05
+      },
+      "size": {
+        "x": 0.72,
+        "y": 2.0,
+        "z": 0.06
+      },
+      "material": "Hedge",
+      "rotation": {
+        "x": 0,
+        "y": 212,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "screen-0-top-0",
+      "kind": "box",
+      "position": {
+        "x": 6.220000000000001,
+        "y": 2.03,
+        "z": -6.05
+      },
+      "size": {
+        "x": 0.76,
+        "y": 0.06,
+        "z": 0.09
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 212,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "screen-0-foot-0",
+      "kind": "box",
+      "position": {
+        "x": 6.220000000000001,
+        "y": 0.03,
+        "z": -6.05
+      },
+      "size": {
+        "x": 0.76,
+        "y": 0.06,
+        "z": 0.09
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 212,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "screen-0-leaf-1",
+      "kind": "box",
+      "position": {
+        "x": 5.6000000000000005,
+        "y": 1.0,
+        "z": -5.85
+      },
+      "size": {
+        "x": 0.72,
+        "y": 2.0,
+        "z": 0.06
+      },
+      "material": "Hedge",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "screen-0-top-1",
+      "kind": "box",
+      "position": {
+        "x": 5.6000000000000005,
+        "y": 2.03,
+        "z": -5.85
+      },
+      "size": {
+        "x": 0.76,
+        "y": 0.06,
+        "z": 0.09
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "screen-0-foot-1",
+      "kind": "box",
+      "position": {
+        "x": 5.6000000000000005,
+        "y": 0.03,
+        "z": -5.85
+      },
+      "size": {
+        "x": 0.76,
+        "y": 0.06,
+        "z": 0.09
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "screen-0-leaf-2",
+      "kind": "box",
+      "position": {
+        "x": 4.98,
+        "y": 1.0,
+        "z": -6.05
+      },
+      "size": {
+        "x": 0.72,
+        "y": 2.0,
+        "z": 0.06
+      },
+      "material": "Hedge",
+      "rotation": {
+        "x": 0,
+        "y": 148,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "screen-0-top-2",
+      "kind": "box",
+      "position": {
+        "x": 4.98,
+        "y": 2.03,
+        "z": -6.05
+      },
+      "size": {
+        "x": 0.76,
+        "y": 0.06,
+        "z": 0.09
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 148,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "screen-0-foot-2",
+      "kind": "box",
+      "position": {
+        "x": 4.98,
+        "y": 0.03,
+        "z": -6.05
+      },
+      "size": {
+        "x": 0.76,
+        "y": 0.06,
+        "z": 0.09
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 148,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "shelf-0-board",
+      "kind": "box",
+      "position": {
+        "x": -4.199999999999999,
+        "y": 2.35,
+        "z": -6.900000000000001
+      },
+      "size": {
+        "x": 1.3,
+        "y": 0.1,
+        "z": 0.5
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "shelf-0-lip",
+      "kind": "box",
+      "position": {
+        "x": -4.199999999999999,
+        "y": 2.43,
+        "z": -6.670000000000001
+      },
+      "size": {
+        "x": 1.3,
+        "y": 0.06,
+        "z": 0.04
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "shelf-0-bracket-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -3.6999999999999993,
+          "y": 2.3,
+          "z": -6.700000000000001
+        },
+        {
+          "x": -3.6999999999999993,
+          "y": 1.9,
+          "z": -7.1400000000000015
+        }
+      ],
+      "radius": 0.035
+    },
+    {
+      "id": "shelf-0-bracket-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -4.699999999999999,
+          "y": 2.3,
+          "z": -6.700000000000001
+        },
+        {
+          "x": -4.699999999999999,
+          "y": 1.9,
+          "z": -7.1400000000000015
+        }
+      ],
+      "radius": 0.035
+    },
+    {
+      "id": "dress-0-plinth",
+      "kind": "box",
+      "position": {
+        "x": -6.466447613056378,
+        "y": 0.4,
+        "z": -6.524955871240047
+      },
+      "size": {
+        "x": 0.42,
+        "y": 0.8,
+        "z": 0.42
+      },
+      "material": "MarbleDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "dress-0-bean-0",
+      "kind": "lathe",
+      "position": {
+        "x": -6.586447613056378,
+        "y": 0.8,
+        "z": -6.524955871240047
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "BeanRed",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0
+        },
+        {
+          "x": 0.027499999999999997,
+          "y": 0.011052904187783812,
+          "z": 0
+        },
+        {
+          "x": 0.047631397208144126,
+          "y": 0.04124999999999999,
+          "z": 0
+        },
+        {
+          "x": 0.055,
+          "y": 0.0825,
+          "z": 0
+        },
+        {
+          "x": 0.047631397208144126,
+          "y": 0.12374999999999999,
+          "z": 0
+        },
+        {
+          "x": 0.027499999999999997,
+          "y": 0.1539470958122162,
+          "z": 0
+        },
+        {
+          "x": 6.735557395310442e-18,
+          "y": 0.165,
+          "z": 0
+        }
+      ],
+      "count": 8
+    },
+    {
+      "id": "dress-0-bean-1",
+      "kind": "lathe",
+      "position": {
+        "x": -6.466447613056378,
+        "y": 0.8,
+        "z": -6.464955871240047
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "BeanYellow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0
+        },
+        {
+          "x": 0.027499999999999997,
+          "y": 0.011052904187783812,
+          "z": 0
+        },
+        {
+          "x": 0.047631397208144126,
+          "y": 0.04124999999999999,
+          "z": 0
+        },
+        {
+          "x": 0.055,
+          "y": 0.0825,
+          "z": 0
+        },
+        {
+          "x": 0.047631397208144126,
+          "y": 0.12374999999999999,
+          "z": 0
+        },
+        {
+          "x": 0.027499999999999997,
+          "y": 0.1539470958122162,
+          "z": 0
+        },
+        {
+          "x": 6.735557395310442e-18,
+          "y": 0.165,
+          "z": 0
+        }
+      ],
+      "count": 8
+    },
+    {
+      "id": "dress-0-bean-2",
+      "kind": "lathe",
+      "position": {
+        "x": -6.346447613056378,
+        "y": 0.8,
+        "z": -6.524955871240047
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "BeanBlue",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0
+        },
+        {
+          "x": 0.027499999999999997,
+          "y": 0.011052904187783812,
+          "z": 0
+        },
+        {
+          "x": 0.047631397208144126,
+          "y": 0.04124999999999999,
+          "z": 0
+        },
+        {
+          "x": 0.055,
+          "y": 0.0825,
+          "z": 0
+        },
+        {
+          "x": 0.047631397208144126,
+          "y": 0.12374999999999999,
+          "z": 0
+        },
+        {
+          "x": 0.027499999999999997,
+          "y": 0.1539470958122162,
+          "z": 0
+        },
+        {
+          "x": 6.735557395310442e-18,
+          "y": 0.165,
+          "z": 0
+        }
+      ],
+      "count": 8
+    },
+    {
+      "id": "dress-1-wood",
+      "kind": "lathe",
+      "position": {
+        "x": -1.5354151656292867,
+        "y": 0,
+        "z": -4.494178571091142
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.5,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.4,
+          "y": 0.15,
+          "z": 0
+        },
+        {
+          "x": 0.36,
+          "y": 0.74540719495639,
+          "z": 0
+        },
+        {
+          "x": 0,
+          "y": 0.74540719495639,
+          "z": 0
+        }
+      ],
+      "count": 10
+    },
+    {
+      "id": "dress-1-block",
+      "kind": "blocker",
+      "position": {
+        "x": -1.5354151656292867,
+        "y": 0.372703597478195,
+        "z": -4.494178571091142
+      },
+      "size": {
+        "x": 0.72,
+        "y": 0.74540719495639,
+        "z": 0.72
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "dress-1-rings",
+      "kind": "lathe",
+      "position": {
+        "x": -1.5354151656292867,
+        "y": 0.74940719495639,
+        "z": -4.494178571091142
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakLight",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.33,
+          "y": 0,
+          "z": 0
+        }
+      ],
+      "count": 10
+    },
+    {
+      "id": "dress-2-stool",
+      "kind": "box",
+      "position": {
+        "x": 1.0766685279902628,
+        "y": 0.25,
+        "z": -4.3007051227702995
+      },
+      "size": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 0.5
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "dress-2-cushion",
+      "kind": "box",
+      "position": {
+        "x": 1.0766685279902628,
+        "y": 0.56,
+        "z": -4.3007051227702995
+      },
+      "size": {
+        "x": 0.56,
+        "y": 0.12,
+        "z": 0.56
+      },
+      "material": "Velvet",
+      "rotation": {
+        "x": 0,
+        "y": 4.255044546819651,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "dress-2-sole",
+      "kind": "box",
+      "position": {
+        "x": 1.0766685279902628,
+        "y": 0.65,
+        "z": -4.3007051227702995
+      },
+      "size": {
+        "x": 0.12,
+        "y": 0.03,
+        "z": 0.34
+      },
+      "material": "Pane",
+      "rotation": {
+        "x": -8,
+        "y": 4.255044546819651,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "dress-2-heel",
+      "kind": "box",
+      "position": {
+        "x": 1.0766685279902628,
+        "y": 0.7,
+        "z": -4.3007051227702995
+      },
+      "size": {
+        "x": 0.1,
+        "y": 0.12,
+        "z": 0.08
+      },
+      "material": "Pane",
+      "rotation": {
+        "x": 0,
+        "y": 4.255044546819651,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "dress-3-plinth",
+      "kind": "box",
+      "position": {
+        "x": -1.2055864758516321,
+        "y": 0.4,
+        "z": 4.3321933149507
+      },
+      "size": {
+        "x": 0.42,
+        "y": 0.8,
+        "z": 0.42
+      },
+      "material": "MarbleDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "dress-3-bean-0",
+      "kind": "lathe",
+      "position": {
+        "x": -1.3255864758516323,
+        "y": 0.8,
+        "z": 4.3321933149507
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "BeanRed",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0
+        },
+        {
+          "x": 0.027499999999999997,
+          "y": 0.011052904187783812,
+          "z": 0
+        },
+        {
+          "x": 0.047631397208144126,
+          "y": 0.04124999999999999,
+          "z": 0
+        },
+        {
+          "x": 0.055,
+          "y": 0.0825,
+          "z": 0
+        },
+        {
+          "x": 0.047631397208144126,
+          "y": 0.12374999999999999,
+          "z": 0
+        },
+        {
+          "x": 0.027499999999999997,
+          "y": 0.1539470958122162,
+          "z": 0
+        },
+        {
+          "x": 6.735557395310442e-18,
+          "y": 0.165,
+          "z": 0
+        }
+      ],
+      "count": 8
+    },
+    {
+      "id": "dress-3-bean-1",
+      "kind": "lathe",
+      "position": {
+        "x": -1.2055864758516321,
+        "y": 0.8,
+        "z": 4.3921933149507
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "BeanYellow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0
+        },
+        {
+          "x": 0.027499999999999997,
+          "y": 0.011052904187783812,
+          "z": 0
+        },
+        {
+          "x": 0.047631397208144126,
+          "y": 0.04124999999999999,
+          "z": 0
+        },
+        {
+          "x": 0.055,
+          "y": 0.0825,
+          "z": 0
+        },
+        {
+          "x": 0.047631397208144126,
+          "y": 0.12374999999999999,
+          "z": 0
+        },
+        {
+          "x": 0.027499999999999997,
+          "y": 0.1539470958122162,
+          "z": 0
+        },
+        {
+          "x": 6.735557395310442e-18,
+          "y": 0.165,
+          "z": 0
+        }
+      ],
+      "count": 8
+    },
+    {
+      "id": "dress-3-bean-2",
+      "kind": "lathe",
+      "position": {
+        "x": -1.0855864758516323,
+        "y": 0.8,
+        "z": 4.3321933149507
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "BeanBlue",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0
+        },
+        {
+          "x": 0.027499999999999997,
+          "y": 0.011052904187783812,
+          "z": 0
+        },
+        {
+          "x": 0.047631397208144126,
+          "y": 0.04124999999999999,
+          "z": 0
+        },
+        {
+          "x": 0.055,
+          "y": 0.0825,
+          "z": 0
+        },
+        {
+          "x": 0.047631397208144126,
+          "y": 0.12374999999999999,
+          "z": 0
+        },
+        {
+          "x": 0.027499999999999997,
+          "y": 0.1539470958122162,
+          "z": 0
+        },
+        {
+          "x": 6.735557395310442e-18,
+          "y": 0.165,
+          "z": 0
+        }
+      ],
+      "count": 8
+    },
+    {
+      "id": "hang-0-vine",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Leaf",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 3.6307253480887147,
+          "y": 4.578569801045926,
+          "z": -7.119999999999999
+        },
+        {
+          "x": 3.491057320141158,
+          "y": 3.378569801045926,
+          "z": -7.05
+        },
+        {
+          "x": 3.957730161431693,
+          "y": 2.1785698010459265,
+          "z": -7.099999999999999
+        },
+        {
+          "x": 3.802885979608762,
+          "y": 0.9785698010459263,
+          "z": -7.019999999999999
+        }
+      ],
+      "radius": 0.045
+    },
+    {
+      "id": "hang-0-leaf-0",
+      "kind": "box",
+      "position": {
+        "x": 3.6134713905959224,
+        "y": 4.078569801045926,
+        "z": -7.0
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.02,
+        "z": 0.18
+      },
+      "material": "Leaf",
+      "rotation": {
+        "x": 26.180616047227815,
+        "y": 169.5228437784836,
+        "z": 25
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "hang-0-leaf-1",
+      "kind": "box",
+      "position": {
+        "x": 3.9773450275952107,
+        "y": 3.3285698010459264,
+        "z": -6.999999999999999
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.02,
+        "z": 0.18
+      },
+      "material": "Leaf",
+      "rotation": {
+        "x": 28.399934681139754,
+        "y": 214.65876828155206,
+        "z": 25
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "hang-0-leaf-2",
+      "kind": "box",
+      "position": {
+        "x": 3.569227064103853,
+        "y": 2.5785698010459264,
+        "z": -7.0
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.02,
+        "z": 0.18
+      },
+      "material": "Leaf",
+      "rotation": {
+        "x": 22.688344559285802,
+        "y": 140.7146898242405,
+        "z": 25
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "hang-0-leaf-3",
+      "kind": "box",
+      "position": {
+        "x": 3.658498233952492,
+        "y": 1.8285698010459264,
+        "z": -6.999999999999999
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.02,
+        "z": 0.18
+      },
+      "material": "Leaf",
+      "rotation": {
+        "x": -15.189186210412089,
+        "y": 163.93516243393347,
+        "z": 25
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "hang-1-vine",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Hedge",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 5.629671074983563,
+          "y": 7.59610479466018,
+          "z": -7.119999999999999
+        },
+        {
+          "x": 5.626042003299811,
+          "y": 6.39610479466018,
+          "z": -7.049999999999999
+        },
+        {
+          "x": 5.251890439139481,
+          "y": 5.1961047946601795,
+          "z": -7.099999999999999
+        },
+        {
+          "x": 5.542731721924017,
+          "y": 3.9961047946601798,
+          "z": -7.019999999999999
+        }
+      ],
+      "radius": 0.045
+    },
+    {
+      "id": "hang-1-leaf-0",
+      "kind": "box",
+      "position": {
+        "x": 5.776760949118843,
+        "y": 7.09610479466018,
+        "z": -6.999999999999999
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.02,
+        "z": 0.18
+      },
+      "material": "Hedge",
+      "rotation": {
+        "x": -29.684214305131494,
+        "y": 142.31074666103558,
+        "z": 25
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "hang-1-leaf-1",
+      "kind": "box",
+      "position": {
+        "x": 5.891399336885629,
+        "y": 6.34610479466018,
+        "z": -6.999999999999999
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.02,
+        "z": 0.18
+      },
+      "material": "Hedge",
+      "rotation": {
+        "x": -0.11072850392640987,
+        "y": 168.76265994624484,
+        "z": 25
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "hang-1-leaf-2",
+      "kind": "box",
+      "position": {
+        "x": 5.760789853527229,
+        "y": 5.59610479466018,
+        "z": -6.999999999999999
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.02,
+        "z": 0.18
+      },
+      "material": "Hedge",
+      "rotation": {
+        "x": -10.303479738780531,
+        "y": 180.5438505670958,
+        "z": 25
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "hang-1-leaf-3",
+      "kind": "box",
+      "position": {
+        "x": 5.526679006357899,
+        "y": 4.84610479466018,
+        "z": -6.999999999999999
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.02,
+        "z": 0.18
+      },
+      "material": "Hedge",
+      "rotation": {
+        "x": -28.36931180890186,
+        "y": 149.2217555407679,
+        "z": 25
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "hang-2-glass",
+      "kind": "disc",
+      "position": {
+        "x": -5.0830512236799965,
+        "y": 5.680615511551306,
+        "z": -7.140000000000001
+      },
+      "size": {
+        "x": 0.9,
+        "y": 1.3,
+        "z": 0.05
+      },
+      "material": "Mirror",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "hang-2-frame",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Gold",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -5.553051223679996,
+          "y": 5.680615511551306,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -5.530047786338718,
+          "y": 5.88765689778252,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -5.463289211036222,
+          "y": 6.074431630587263,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -5.359310292257459,
+          "y": 6.222656897782521,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -5.228289211036222,
+          "y": 6.317823377469058,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -5.0830512236799965,
+          "y": 6.350615511551306,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -4.9378132363237714,
+          "y": 6.317823377469058,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -4.806792155102534,
+          "y": 6.222656897782521,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -4.702813236323771,
+          "y": 6.074431630587263,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -4.636054661021275,
+          "y": 5.887656897782521,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -4.613051223679997,
+          "y": 5.680615511551306,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -4.636054661021274,
+          "y": 5.473574125320091,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -4.702813236323771,
+          "y": 5.2867993925153485,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -4.806792155102534,
+          "y": 5.1385741253200905,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -4.9378132363237714,
+          "y": 5.043407645633553,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -5.0830512236799965,
+          "y": 5.010615511551306,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -5.228289211036222,
+          "y": 5.043407645633553,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -5.359310292257459,
+          "y": 5.1385741253200905,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -5.463289211036222,
+          "y": 5.2867993925153485,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -5.530047786338718,
+          "y": 5.4735741253200905,
+          "z": -7.120000000000001
+        },
+        {
+          "x": -5.553051223679996,
+          "y": 5.680615511551306,
+          "z": -7.120000000000001
+        }
+      ],
+      "radius": 0.05
+    },
+    {
+      "id": "hang-2-crown",
+      "kind": "box",
+      "position": {
+        "x": -5.0830512236799965,
+        "y": 6.460615511551306,
+        "z": -7.1000000000000005
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.2,
+        "z": 0.05
+      },
+      "material": "Gold",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 45
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "drop-3-strand",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Leaf",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -0.04154792424692477,
+          "y": 8.0,
+          "z": -5.053428926656206
+        },
+        {
+          "x": -0.025599519483611888,
+          "y": 6.6795806723465905,
+          "z": -4.932447646236206
+        },
+        {
+          "x": 0.1378999210932187,
+          "y": 5.359161344693181,
+          "z": -4.774198970575047
+        }
+      ],
+      "radius": 0.03
+    },
+    {
+      "id": "drop-6-braid",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Hair",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -0.4042235383040307,
+          "y": 8.0,
+          "z": -3.697036126071719
+        },
+        {
+          "x": -0.31905653041216336,
+          "y": 7.571519540052577,
+          "z": -3.8161321870894342
+        },
+        {
+          "x": -0.4592907484888754,
+          "y": 7.1430390801051535,
+          "z": -3.8582232201440165
+        },
+        {
+          "x": -0.45378523713781815,
+          "y": 6.714558620157731,
+          "z": -3.7119119754361947
+        },
+        {
+          "x": -0.3171107678211969,
+          "y": 6.286078160210307,
+          "z": -3.764422740239316
+        },
+        {
+          "x": -0.41098713914559354,
+          "y": 5.857597700262884,
+          "z": -3.876781620129393
+        },
+        {
+          "x": -0.4869631056138516,
+          "y": 5.4291172403154615,
+          "z": -3.751621948100409
+        },
+        {
+          "x": -0.3439622597063366,
+          "y": 5.000636780368038,
+          "z": -3.7201887005283885
+        },
+        {
+          "x": -0.3604476563071887,
+          "y": 4.572156320420614,
+          "z": -3.865672454542716
+        },
+        {
+          "x": -0.4927893887613785,
+          "y": 4.143675860473191,
+          "z": -3.8030389424727997
+        },
+        {
+          "x": -0.39073458943436495,
+          "y": 3.7151954005257677,
+          "z": -3.6980527104349186
+        },
+        {
+          "x": -0.3243793607217191,
+          "y": 3.286714940578345,
+          "z": -3.8285681294691507
+        },
+        {
+          "x": -0.4693380663480125,
+          "y": 2.858234480630922,
+          "z": -3.8491658149298607
+        },
+        {
+          "x": -0.4419660207506215,
+          "y": 2.4297540206834984,
+          "z": -3.705332362273661
+        },
+        {
+          "x": -0.3147055086550253,
+          "y": 2.0012735607360757,
+          "z": -3.7777343860323613
+        }
+      ],
+      "radius": 0.09
+    },
+    {
+      "id": "drop-6-strand",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Straw",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -0.3542235383040307,
+          "y": 8.0,
+          "z": -3.747036126071719
+        },
+        {
+          "x": -0.2690565304121634,
+          "y": 7.571519540052577,
+          "z": -3.866132187089434
+        },
+        {
+          "x": -0.4092907484888754,
+          "y": 7.1430390801051535,
+          "z": -3.9082232201440164
+        },
+        {
+          "x": -0.40378523713781816,
+          "y": 6.714558620157731,
+          "z": -3.7619119754361945
+        },
+        {
+          "x": -0.2671107678211969,
+          "y": 6.286078160210307,
+          "z": -3.8144227402393156
+        },
+        {
+          "x": -0.36098713914559355,
+          "y": 5.857597700262884,
+          "z": -3.926781620129393
+        },
+        {
+          "x": -0.4369631056138516,
+          "y": 5.4291172403154615,
+          "z": -3.8016219481004088
+        },
+        {
+          "x": -0.2939622597063366,
+          "y": 5.000636780368038,
+          "z": -3.7701887005283883
+        },
+        {
+          "x": -0.31044765630718874,
+          "y": 4.572156320420614,
+          "z": -3.9156724545427157
+        },
+        {
+          "x": -0.4427893887613785,
+          "y": 4.143675860473191,
+          "z": -3.8530389424727995
+        },
+        {
+          "x": -0.34073458943436497,
+          "y": 3.7151954005257677,
+          "z": -3.7480527104349184
+        },
+        {
+          "x": -0.2743793607217191,
+          "y": 3.286714940578345,
+          "z": -3.8785681294691505
+        },
+        {
+          "x": -0.4193380663480125,
+          "y": 2.858234480630922,
+          "z": -3.8991658149298605
+        },
+        {
+          "x": -0.39196602075062154,
+          "y": 2.4297540206834984,
+          "z": -3.755332362273661
+        },
+        {
+          "x": -0.2647055086550253,
+          "y": 2.0012735607360757,
+          "z": -3.827734386032361
+        }
+      ],
+      "radius": 0.06
+    },
+    {
+      "id": "drop-6-bow",
+      "kind": "box",
+      "position": {
+        "x": -0.4042235383040307,
+        "y": 2.0512735607360755,
+        "z": -3.787036126071719
+      },
+      "size": {
+        "x": 0.34,
+        "y": 0.12,
+        "z": 0.1
+      },
+      "material": "Candy",
+      "rotation": {
+        "x": 0,
+        "y": 85.08909079739037,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
     }
   ],
   "anchors": [
@@ -3988,7 +6154,13 @@
       "connectsTo": [
         "hide-entry",
         "front"
-      ]
+      ],
+      "tag": "connect",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      }
     },
     {
       "id": "hide-entry",
@@ -4094,7 +6266,13 @@
       },
       "connectsTo": [
         "back"
-      ]
+      ],
+      "tag": "connect",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
     },
     {
       "id": "east",
@@ -4107,7 +6285,13 @@
       "connectsTo": [
         "east-south",
         "east-north"
-      ]
+      ],
+      "tag": "connect",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      }
     },
     {
       "id": "east-south",
@@ -4146,7 +6330,13 @@
       "connectsTo": [
         "west-south",
         "west-north"
-      ]
+      ],
+      "tag": "connect",
+      "rotation": {
+        "x": 0,
+        "y": 270,
+        "z": 0
+      }
     },
     {
       "id": "west-south",
@@ -4351,6 +6541,256 @@
         "y": 11,
         "z": 14.8
       }
+    },
+    {
+      "id": "loot-01",
+      "kind": "loot",
+      "tag": "Small",
+      "position": {
+        "x": -3.0,
+        "y": 0,
+        "z": -6.3
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 0.5
+      }
+    },
+    {
+      "id": "loot-02",
+      "kind": "loot",
+      "tag": "Medium",
+      "position": {
+        "x": -3.0,
+        "y": 0,
+        "z": -4.2
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.9,
+        "y": 0.9,
+        "z": 0.9
+      }
+    },
+    {
+      "id": "loot-03",
+      "kind": "loot",
+      "tag": "Tiny",
+      "position": {
+        "x": 4.2,
+        "y": 0,
+        "z": -4.2
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.3,
+        "z": 0.3
+      }
+    },
+    {
+      "id": "loot-04",
+      "kind": "loot",
+      "tag": "Small",
+      "position": {
+        "x": 3.2,
+        "y": 0,
+        "z": 6.3
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 0.5
+      }
+    },
+    {
+      "id": "loot-05",
+      "kind": "loot",
+      "tag": "Tall",
+      "position": {
+        "x": 6.5,
+        "y": 0,
+        "z": -3.4
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.9,
+        "y": 1.9,
+        "z": 0.9
+      }
+    },
+    {
+      "id": "loot-06",
+      "kind": "loot",
+      "tag": "Medium",
+      "position": {
+        "x": -6.4,
+        "y": 0,
+        "z": 3.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.9,
+        "y": 0.9,
+        "z": 0.9
+      }
+    },
+    {
+      "id": "loot-07",
+      "kind": "loot",
+      "tag": "Small",
+      "position": {
+        "x": 5.9,
+        "y": 3,
+        "z": 2.2
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 0.5
+      }
+    },
+    {
+      "id": "loot-08",
+      "kind": "loot",
+      "tag": "Tiny",
+      "position": {
+        "x": 6.2,
+        "y": 3,
+        "z": 5.5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.3,
+        "z": 0.3
+      }
+    },
+    {
+      "id": "loot-tight-09",
+      "kind": "loot",
+      "tag": "Small",
+      "position": {
+        "x": -4.559999999999999,
+        "y": 0,
+        "z": -6.750000000000001
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 0.5
+      }
+    },
+    {
+      "id": "loot-tight-10",
+      "kind": "loot",
+      "tag": "Tiny",
+      "position": {
+        "x": -5.099999999999999,
+        "y": 0,
+        "z": -6.800000000000001
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.3,
+        "z": 0.3
+      }
+    },
+    {
+      "id": "screen-0",
+      "kind": "hide",
+      "tag": "cover",
+      "position": {
+        "x": 5.6000000000000005,
+        "y": 1,
+        "z": -6.6
+      }
+    },
+    {
+      "id": "loot-high-14",
+      "kind": "loot",
+      "tag": "Small",
+      "position": {
+        "x": -3.919999999999999,
+        "y": 2.4,
+        "z": -6.920000000000001
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 0.5
+      }
+    },
+    {
+      "id": "loot-high-15",
+      "kind": "loot",
+      "tag": "Tiny",
+      "position": {
+        "x": -4.56,
+        "y": 2.4,
+        "z": -6.920000000000001
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.3,
+        "z": 0.3
+      }
     }
   ],
   "views": [
@@ -4391,5 +6831,8 @@
     "voxel": 0.08,
     "sampleDistance": 0.25,
     "maxVerticalSnap": 0.15
-  }
+  },
+  "ambient": "#27393b",
+  "fog": "#0d1a1a",
+  "fogDensity": 0.03
 }

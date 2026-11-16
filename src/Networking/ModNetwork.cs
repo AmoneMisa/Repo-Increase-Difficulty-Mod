@@ -37,6 +37,7 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
     // 163 = Courier.CourierManager.StateCode (courier state/notices, host), 162 = Courier.CourierManager.RequestCode (courier command to host).
     // 165 = Upgrades.RespawnList.EventCode (respawning monster list for the map). 164 = Cosmetics.CostumeRewards.EventCode (costume piece for everyone).
     // 166 = Challenges.ChallengeManager.StartRequestCode (a guest pressed interact at the shrine; host only).
+    // 150 = FableRealm.BeanPuzzleWire.EventCode (host's bean puzzle state on the Fable Realm level).
     // Search every file for "EventCode" before adding one.
     // Host: a player was poisoned or sedated (screen effect on that player's own client only).
     public const byte PlayerStatusEventCode = 177;
@@ -535,6 +536,12 @@ public sealed class ModNetwork : MonoBehaviour, IOnEventCallback
         if (photonEvent.Code == Challenges.MapRitual.EventCode)
         {
             if (!PhotonNetwork.IsMasterClient && HostSender(photonEvent)) Challenges.MapRitual.Receive(photonEvent);
+            return;
+        }
+        if (photonEvent.Code == FableRealm.BeanPuzzleWire.EventCode)
+        {
+            // Only the host's word counts, and the host itself never takes puzzle state from the network.
+            if (!PhotonNetwork.IsMasterClient && HostSender(photonEvent)) FableRealm.BeanPuzzle.Receive(photonEvent);
             return;
         }
         if (photonEvent.Code == LateJoinProgress.RequestCode)

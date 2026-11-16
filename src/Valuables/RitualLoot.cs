@@ -26,15 +26,26 @@ internal static class RitualLoot
                 yield return new(reward, LootMap.None, 4f, RitualRewardRules.Value, RitualRewardRules.Value, LootFragility.Reinforced);
             for (int i = 0; i < SkeletonCount; i++)
                 yield return new(SkeletonKey(i), LootMap.None, 2.2f, 4200, 5200, LootFragility.Sturdy);
+            // Fable Realm bean puzzle: five light beans to carry and the heavy egg the giant bean leaves behind.
+            for (int i = 0; i < FableRealm.BeanPuzzleRules.Count; i++)
+                yield return new(FableRealm.BeanPuzzleRules.BeanKey(i), LootMap.None, .5f, 600, 900, LootFragility.Reinforced);
+            yield return new(FableRealm.BeanPuzzleRules.EggKey, LootMap.None, 9f, FableRealm.BeanPuzzleRules.EggValue,
+                FableRealm.BeanPuzzleRules.EggValue, LootFragility.Reinforced);
         }
     }
 
     internal static bool IsProcedural(string key) => key != null &&
-        (key is "rgb_mouse" or "rgb_keyboard" or "ritual_monitor" or "ritual_tower" or Cube ||
-         key.StartsWith("ritual_bones_", System.StringComparison.Ordinal));
+        (key is "rgb_mouse" or "rgb_keyboard" or "ritual_monitor" or "ritual_tower" or Cube or FableRealm.BeanPuzzleRules.EggKey ||
+         key.StartsWith("ritual_bones_", System.StringComparison.Ordinal) ||
+         key.StartsWith(FableRealm.BeanPuzzleRules.BeanKeyPrefix, System.StringComparison.Ordinal));
 
     private static readonly Color Case = new(.08f, .092f, .107f), Trim = new(.23f, .27f, .30f);
     private static readonly Color Bone = new(.72f, .62f, .46f), Inset = new(.065f, .049f, .04f);
+    /// <summary>Bean colours in plate order: red, yellow, blue, green, violet.</summary>
+    internal static readonly Color[] BeanColours =
+    {
+        new(.9f, .16f, .14f), new(.98f, .8f, .14f), new(.16f, .42f, .98f), new(.2f, .8f, .26f), new(.62f, .3f, .95f),
+    };
     internal static readonly Color[] Glow =
     {
         new(.96f, .28f, .15f), new(.93f, .58f, .15f), new(.5f, .91f, .2f),
@@ -47,6 +58,29 @@ internal static class RitualLoot
         var materials = new List<ValuableArtMaterial>();
         var body = new ProcMesh();
         var detail = new ProcMesh();
+        int bean = FableRealm.BeanPuzzleRules.ColourOf(key);
+        if (bean >= 0)
+        {
+            // A fat kidney bean lying on its side, about 30 cm long, glowing in the colour of its plate.
+            var lying = ProcMesh.TRS(new(0f, .1f, 0f), new(0f, 0f, 90f), new(1f, 1f, .8f));
+            body.Lathe(lying, new[] { (0f, -.15f), (.07f, -.125f), (.1f, -.05f), (.092f, .04f), (.1f, .1f), (.065f, .14f), (0f, .155f) }, 12);
+            detail.Lathe(ProcMesh.TRS(new(0f, .1f, -.074f), new(90f, 0f, 0f), Vector3.one),
+                new[] { (0f, -.012f), (.035f, -.006f), (.035f, .006f), (0f, .012f) }, 8);
+            Part("bean", body, BeanColours[bean], 1.1f);
+            Part("eye", detail, new Color(.93f, .9f, .8f));
+            return Model();
+        }
+        if (key == FableRealm.BeanPuzzleRules.EggKey)
+        {
+            // Half a metre of gold: wider at the bottom, like a hen's egg, with a chased band.
+            body.Lathe(ProcMesh.TRS(Vector3.zero, Vector3.zero, Vector3.one),
+                new[] { (0f, 0f), (.1f, .012f), (.185f, .08f), (.215f, .2f), (.19f, .33f), (.13f, .44f), (.06f, .5f), (0f, .52f) }, 16);
+            detail.Lathe(ProcMesh.TRS(Vector3.zero, Vector3.zero, Vector3.one),
+                new[] { (.2f, .19f), (.222f, .2f), (.222f, .23f), (.2f, .24f) }, 16);
+            Part("gold", body, new Color(1f, .78f, .22f), .55f);
+            Part("band", detail, new Color(1f, .93f, .6f), 1.6f);
+            return Model();
+        }
         if (key == "rgb_keyboard")
         {
             Box(body, 0f, .043f, 0f, .64f, .083f, .26f);

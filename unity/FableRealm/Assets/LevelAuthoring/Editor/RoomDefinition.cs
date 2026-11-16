@@ -15,18 +15,26 @@ namespace LevelAuthoring.Editor
         public AnchorDefinition[] anchors;
         public ViewDefinition[] views;
         public NavigationDefinition navigation;
+        // Review lighting, also the intended values for the game's room ambience and fog. Empty: neutral defaults.
+        public string ambient = "", fog = "";
+        public float fogDensity;
     }
 
     [Serializable] public sealed class SurfaceDefinition
     {
         public string id, color = "#ffffff";
         public float smoothness = .2f, metallic, emission, grain;
+        // Surface tile: plain, planks, blocks, mottle, pores, cracks, bark, weave, leaves. scale = metres per tile.
+        public string pattern = "";
+        public float scale = 2;
     }
 
     [Serializable] public sealed class ElementDefinition
     {
         public string id, kind, material;
         public string navigation = "Obstacle";
+        // Empty: always present. "closed-<portal id>": wall plug shown only when that exit is unused.
+        public string variant = "";
         public Vector3 position, rotation, size = Vector3.one;
         public bool collider = true;
         public bool shadows;
@@ -46,6 +54,8 @@ namespace LevelAuthoring.Editor
     [Serializable] public sealed class AnchorDefinition
     {
         public string id, kind;
+        // Gameplay subtype: loot volume type, nav "connect"/"truck", volume "truck"/"extraction".
+        public string tag = "";
         public Vector3 position, rotation, size;
         public string[] connectsTo;
     }

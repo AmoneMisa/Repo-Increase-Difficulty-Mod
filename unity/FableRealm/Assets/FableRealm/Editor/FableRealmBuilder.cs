@@ -24,7 +24,7 @@ namespace FableRealm.Editor
         {
             if (!Application.isBatchMode && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
             var catalog = JsonUtility.FromJson<Catalog>(File.ReadAllText(Root + "/room-catalog.json"));
-            if (catalog.rooms == null || catalog.rooms.Length != 24) throw new InvalidDataException("Expected 24 room briefs.");
+            if (catalog.rooms == null || catalog.rooms.Length < 24) throw new InvalidDataException("Expected at least 24 room briefs.");
             foreach (var room in catalog.rooms)
                 if (AssetDatabase.LoadAssetAtPath<GameObject>(Root + "/Models/" + room.hero + ".obj") == null)
                     throw new InvalidDataException("Missing model for " + room.key);

@@ -1,0 +1,1 @@
+NAVMESH PASS: RootHall; 20 points; 21 complete paths; 185 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

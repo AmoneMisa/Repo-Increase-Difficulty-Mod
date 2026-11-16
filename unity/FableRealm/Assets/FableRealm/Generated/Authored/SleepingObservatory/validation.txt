@@ -1,0 +1,1 @@
+PASS: SleepingObservatory; 40 anchors; 17 navigation edges; 4 closable exits. Clearance probe: radius 0.3 m, height 1.75 m. This is authoring QA, not game AI or cart validation.

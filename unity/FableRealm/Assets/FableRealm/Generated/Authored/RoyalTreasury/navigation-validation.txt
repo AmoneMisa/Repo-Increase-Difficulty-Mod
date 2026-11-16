@@ -1,0 +1,1 @@
+NAVMESH PASS: RoyalTreasury; 10 points; 11 complete paths; 201 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

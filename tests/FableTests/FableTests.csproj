@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Production sources, linked directly: the puzzle state machine and the room contract have no engine types. -->
+    <Compile Include="../../src/FableRealm/BeanPuzzleState.cs" Link="Production/BeanPuzzleState.cs" />
+    <Compile Include="../../src/FableRealm/FableContract.cs" Link="Production/FableContract.cs" />
+  </ItemGroup>
+</Project>

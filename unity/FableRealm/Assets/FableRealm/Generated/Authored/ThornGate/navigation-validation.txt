@@ -1,0 +1,1 @@
+NAVMESH PASS: ThornGate; 11 points; 12 complete paths; 131 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

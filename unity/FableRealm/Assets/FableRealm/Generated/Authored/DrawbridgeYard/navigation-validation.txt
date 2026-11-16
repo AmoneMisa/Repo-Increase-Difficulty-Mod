@@ -1,0 +1,1 @@
+NAVMESH PASS: DrawbridgeYard; 6 points; 5 complete paths; 153 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

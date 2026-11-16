@@ -1,0 +1,1 @@
+NAVMESH PASS: GardenStore; 9 points; 10 complete paths; 179 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

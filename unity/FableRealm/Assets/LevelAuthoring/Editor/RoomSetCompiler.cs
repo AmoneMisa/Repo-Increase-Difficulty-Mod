@@ -11,6 +11,8 @@ namespace LevelAuthoring.Editor
     {
         public int schemaVersion=1;
         public string id, title;
+        // True for a level set: every room must satisfy the vanilla-style module contract of its role.
+        public bool gameplayContract;
         public RoomSetEntry[] rooms;
     }
     [Serializable] public sealed class RoomSetEntry
@@ -43,7 +45,9 @@ namespace LevelAuthoring.Editor
                     throw new InvalidDataException("Recipe must be inside Assets.");
                 if(Array.IndexOf(new[]{"Start","Normal","Passage","DeadEnd","Extraction"},entry.role)<0 || entry.difficulty<1 || entry.difficulty>3)
                     throw new InvalidDataException("Invalid role or difficulty: "+entry.recipe);
-                if(!ids.Add(RoomCompiler.Read(entry.recipe).id)) throw new InvalidDataException("Duplicate room id.");
+                var definition=RoomCompiler.Read(entry.recipe);
+                if(!ids.Add(definition.id)) throw new InvalidDataException("Duplicate room id.");
+                if(set.gameplayContract) RoomChecks.ValidateRole(definition,entry.role);
             }
             return set;
         }
@@ -55,6 +59,11 @@ namespace LevelAuthoring.Editor
             {
                 var definition=RoomCompiler.Read(entry.recipe);
                 RoomStudio.Build(entry.recipe,output+"/"+definition.id);
+                if(set.gameplayContract)
+                {
+                    string report=RoomChecks.ValidateRole(definition,entry.role);
+                    File.WriteAllText(output+"/"+definition.id+"/role-validation.txt",report+"\n"); Debug.Log(report);
+                }
             }
             var scene=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
             for(int i=0;i<set.rooms.Length;i++)
