@@ -56,7 +56,7 @@ internal sealed class CollectionLights:MonoBehaviour
             _cookie=ScannerCookie();_scanner.cookie=_cookie;
         }
     }
-    private static Light Lamp(Transform parent,string name,Vector3 position,Color color,float intensity,float range)
+    internal static Light Lamp(Transform parent,string name,Vector3 position,Color color,float intensity,float range)
     {
         var node=parent.Find(name);
         if(node==null){var go=new GameObject(name);go.transform.SetParent(parent,false);node=go.transform;}

@@ -200,6 +200,7 @@ internal static class InteractiveValuables
                 if(key=="centrifuge")go.AddComponent<CollectionPhysics>();
                 if(key=="skeleton")go.AddComponent<SkeletonSway>(); // bones hang in a joint chain and sway; nothing can come loose
                 if(CollectionLights.Applies(key))go.AddComponent<CollectionLights>();
+                if(FableLights.Applies(key))go.AddComponent<FableLights>();
                 if(key=="maneki_neko")go.AddComponent<ManekiMotion>();
             }
             go.AddComponent<ValuableFoley>();
