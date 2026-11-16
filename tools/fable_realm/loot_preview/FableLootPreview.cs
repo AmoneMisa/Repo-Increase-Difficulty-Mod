@@ -9,7 +9,8 @@ using UnityEngine;
 
 namespace IncreaseHardMod.Valuables
 {
-    [System.Serializable] internal sealed class ValuableArtModel { public ValuableArtPart[] parts; public ValuableArtMaterial[] materials; }
+    [System.Serializable] internal sealed class ValuableArtModel { public ValuableArtPart[] parts; public ValuableArtMaterial[] materials; public ValuableArtPivot[] pivots; }
+    [System.Serializable] internal sealed class ValuableArtPivot { public string group; public Vector3 position; }
     [System.Serializable] internal sealed class ValuableArtMaterial { public string name, texture; public Color color; public float transmission, emission, roughness, metallic; }
     [System.Serializable] internal sealed class ValuableArtPart
     {
@@ -56,6 +57,7 @@ public static class FableLootPreview
             var bounds = new Bounds(); bool first = true; int triangles = 0;
             foreach (var part in model.parts)
             {
+                if (part.group == FableLoot.MirrorLids) continue; // the mirror is shown awake
                 var mesh = new Mesh { vertices = part.vertices, normals = part.normals, triangles = part.triangles };
                 mesh.RecalculateBounds(); triangles += part.triangles.Length / 3;
                 var go = new GameObject(part.name); go.transform.SetParent(root.transform, false);

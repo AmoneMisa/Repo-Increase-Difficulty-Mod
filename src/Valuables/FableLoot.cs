@@ -8,7 +8,7 @@ namespace IncreaseHardMod.Valuables;
 /// <summary>
 /// Valuables found only on Fable Realm: low-poly models built in code, like the ritual loot.
 /// The large ones come first (a wide coffin, a big wolf and cauldron, a tall portrait, a very tall broom),
-/// then the medium and small ones. Sizes are metres; X is the long side of a wide piece, -Z is its front.
+/// then the medium and small ones. A pumpkin and two mice left together become the coach (PumpkinSpell). Sizes are metres; X is the long side of a wide piece, -Z is its front.
 /// The spawn volume of each piece is picked from its measured bounds (InteractiveValuables.VolumeFor).
 /// </summary>
 internal static class FableLoot
@@ -19,10 +19,12 @@ internal static class FableLoot
         Basket = "fable_red_basket", Slipper = "fable_glass_slipper", Apple = "fable_poison_apple",
         Mirror = "fable_magic_mirror", Coach = "fable_royal_coach", Frog = "fable_frog_prince",
         Door = "fable_straw_door", Lamp = "fable_floor_lamp", Teapot = "fable_teapot", Teacup = "fable_teacup",
-        Ribbon = "fable_red_ribbon", Pumpkin = "fable_pumpkin", Rose = "fable_enchanted_rose", Wardrobe = "fable_wardrobe";
+        Ribbon = "fable_red_ribbon", Pumpkin = "fable_pumpkin", Rose = "fable_enchanted_rose", Wardrobe = "fable_wardrobe", Mouse = "fable_mouse";
     /// <summary>Part groups of the basket's pies, in the order they fall out.</summary>
     internal const string PieGroup = "pie_";
     internal const int Pies = 5;
+    /// <summary>Animated part groups of the magic mirror (MirrorGaze): the face turns, the pupils lead it, the lids close.</summary>
+    internal const string MirrorFace = "mirror_face", MirrorPupils = "mirror_pupils", MirrorLids = "mirror_lids";
 
     // Weights are not invented: each piece takes the weight preset of the game's own closest valuable
     // (PhysAttribute assets read from the installed game; the game has twelve steps from 0.5 to 8 kg).
@@ -52,6 +54,7 @@ internal static class FableLoot
         new CollectionEntry(Rose, LootMap.Fable, 1.5f, 9000, 12000, LootFragility.VeryFragile),   // Wizard Crystal Ball (glass): Medium+ 1.5 kg
         new CollectionEntry(Wardrobe, LootMap.Fable, 5f, 14000, 18000, LootFragility.Sturdy),     // Grandfather Clock (tall furniture): Heavy+ 5 kg
         new CollectionEntry(Pumpkin, LootMap.Fable, 4f, 3000, 4500),                              // Golden Pumpkin Small: Heavy 4 kg
+        new CollectionEntry(Mouse, LootMap.Fable, .5f, 1200, 1800, LootFragility.Sturdy),         // Manor Frog (a small toy animal): Light 0.5 kg; PumpkinSpell
     };
 
     /// <summary>True for the map loot of this file; the bean puzzle's beans and egg share the prefix but are ritual loot.</summary>
@@ -66,7 +69,7 @@ internal static class FableLoot
     internal static int Sound(string key) => key switch
     {
         Coffin or Slipper or Mirror or Rose => 2,
-        Wolf or Frog or Ribbon or Pumpkin => 11,
+        Wolf or Frog or Ribbon or Pumpkin or Mouse => 11,
         Portrait or Basket or Broom or Door or Wardrobe => 4,
         House or Apple or Teapot or Teacup => 10,
         _ => 0,
@@ -80,6 +83,7 @@ internal static class FableLoot
     {
         var parts = new List<ValuableArtPart>();
         var materials = new List<ValuableArtMaterial>();
+        var pivots = new List<ValuableArtPivot>();
         switch (key)
         {
             case Coffin: GlassCoffin(); break;
@@ -97,6 +101,7 @@ internal static class FableLoot
             case Rose: EnchantedRose(); break;
             case Wardrobe: TalkingWardrobe(); break;
             case Frog: FrogPrince(); break;
+            case Mouse: WhiteMouse(); break;
             case Door: StrawDoor(); break;
             case Lamp: FloorLamp(); break;
             case Teapot: ChinaTeapot(); break;
@@ -104,7 +109,7 @@ internal static class FableLoot
             case Ribbon: RedRibbon(); break;
             default: throw new ArgumentException("Unknown Fable Realm valuable: " + key);
         }
-        return new ValuableArtModel { parts = parts.ToArray(), materials = materials.ToArray() };
+        return new ValuableArtModel { parts = parts.ToArray(), materials = materials.ToArray(), pivots = pivots.Count > 0 ? pivots.ToArray() : null };
 
         // ---- large ----------------------------------------------------------------------------------
 
@@ -160,7 +165,7 @@ internal static class FableLoot
             Part("bandana", red, Red); Part("nose", black, Black); Part("eyes", eyes, new Color(1f, .78f, .2f), emission: 1.4f); Part("teeth", teeth, White);
         }
 
-        // Puss in Boots, full length, in a gilt frame 1.8 m high. The picture is a shallow relief on the canvas.
+        // Puss in Boots, full length, in a gilt frame 1.8 m high. The figure is a deep relief standing out of the canvas.
         void PussPortrait()
         {
             var gold = new ProcMesh(); var canvas = new ProcMesh(); var cat = new ProcMesh(); var cream = new ProcMesh(); var hat = new ProcMesh();
@@ -170,26 +175,26 @@ internal static class FableLoot
             foreach (float x in new[] { -.385f, .385f }) foreach (float y in new[] { .16f, 1.8f }) gold.Diamond(ProcMesh.TRS(new(x, y, -.04f), Vector3.zero, new(.1f, .1f, .1f)));
             foreach (float x in new[] { -.3f, .3f }) Box(feet, x, .05f, 0f, .12f, .1f, .44f);
             Box(canvas, 0f, .98f, .015f, .7f, 1.58f, .03f);
-            const float z = -.03f;
-            Box(cape, 0f, .92f, z + .012f, .5f, .46f, .02f);
-            Box(cat, 0f, .86f, z, .3f, .5f, .04f); Box(cream, 0f, .84f, z - .012f, .16f, .3f, .03f);
-            Box(cat, 0f, 1.26f, z - .005f, .32f, .27f, .05f); Box(cream, 0f, 1.2f, z - .02f, .16f, .1f, .04f);
+            // The figure stands out of the canvas (its face is z = 0) as a deep relief, up to 0.22 m: as far as the feet reach.
+            Box(cape, 0f, .92f, -.02f, .5f, .46f, .04f);
+            Box(cat, 0f, .86f, -.07f, .3f, .5f, .14f); Box(cream, 0f, .84f, -.13f, .16f, .3f, .05f);
+            Box(cat, 0f, 1.26f, -.09f, .32f, .27f, .18f); Box(cream, 0f, 1.2f, -.185f, .16f, .1f, .05f);
             foreach (float x in new[] { -.11f, .11f })
             {
-                cat.Diamond(ProcMesh.TRS(new(x, 1.42f, z), Vector3.zero, new(.11f, .16f, .04f)));
-                Box(eyes, x * .7f, 1.3f, z - .035f, .055f, .05f, .012f);
-                Box(white, x * 1.5f, 1.21f, z - .04f, .14f, .008f, .008f); Box(white, x * 1.5f, 1.185f, z - .04f, .13f, .008f, .008f);
-                Box(cat, x * 1.6f, .9f, z, .08f, .34f, .04f); Box(white, x * 1.6f, .72f, z - .01f, .1f, .08f, .05f);
-                Box(cat, x * .8f, .52f, z, .11f, .22f, .04f);
-                Box(boots, x * .8f, .4f, z - .012f, .14f, .26f, .05f); Box(boots, x * 1.15f, .27f, z - .02f, .22f, .08f, .06f);
-                Box(gold, x * .8f, .52f, z - .02f, .16f, .04f, .05f);
+                cat.Diamond(ProcMesh.TRS(new(x, 1.42f, -.09f), Vector3.zero, new(.11f, .16f, .1f)));
+                Box(eyes, x * .7f, 1.3f, -.183f, .055f, .05f, .012f);
+                Box(white, x * 1.5f, 1.21f, -.2f, .14f, .008f, .008f); Box(white, x * 1.5f, 1.185f, -.2f, .13f, .008f, .008f);
+                Box(cat, x * 1.6f, .9f, -.1f, .08f, .34f, .09f); Box(white, x * 1.6f, .72f, -.11f, .1f, .08f, .1f);
+                Box(cat, x * .8f, .52f, -.07f, .11f, .22f, .1f);
+                Box(boots, x * .8f, .4f, -.08f, .14f, .26f, .13f); Box(boots, x * 1.15f, .27f, -.11f, .22f, .08f, .16f);
+                Box(gold, x * .8f, .52f, -.08f, .16f, .04f, .15f);
             }
-            Box(nose, 0f, 1.235f, z - .042f, .035f, .025f, .012f);
-            Box(hat, 0f, 1.43f, z - .02f, .56f, .04f, .07f); Box(hat, 0f, 1.5f, z - .02f, .26f, .13f, .06f);
-            Tilt(white, .2f, 1.6f, z - .03f, .07f, .32f, .03f, -32f);
-            Box(gold, 0f, .68f, z - .016f, .32f, .045f, .05f);
-            Tilt(cat, -.24f, .6f, z + .004f, .07f, .36f, .035f, 38f);
-            Tilt(steel, .31f, .82f, z - .03f, .018f, .66f, .018f, -16f); Box(gold, .225f, .58f, z - .03f, .1f, .03f, .04f);
+            Box(nose, 0f, 1.235f, -.212f, .035f, .025f, .012f);
+            Box(hat, 0f, 1.43f, -.1f, .56f, .04f, .22f); Box(hat, 0f, 1.5f, -.09f, .26f, .13f, .18f);
+            Tilt(white, .2f, 1.6f, -.12f, .07f, .32f, .04f, -32f);
+            Box(gold, 0f, .68f, -.075f, .32f, .045f, .16f);
+            Tilt(cat, -.24f, .6f, -.04f, .07f, .36f, .06f, 38f);
+            Tilt(steel, .31f, .82f, -.15f, .018f, .66f, .018f, -16f); Box(gold, .225f, .58f, -.15f, .1f, .03f, .04f);
             Part("frame", gold, Gold, metallic: .8f, roughness: .3f); Part("feet", feet, DarkWood);
             Part("canvas", canvas, new Color(.1f, .2f, .17f)); Part("cape", cape, new Color(.12f, .2f, .5f));
             Part("fur", cat, new Color(.86f, .46f, .12f)); Part("fur light", cream, new Color(.97f, .86f, .66f));
@@ -337,20 +342,63 @@ internal static class FableLoot
             Part("stem", stem, new Color(.38f, .32f, .14f), smooth: true); Part("vine", leaf, new Color(.25f, .55f, .2f), smooth: true);
         }
 
-        // "Mirror, mirror": an oval glass on a stand, with a pale face looking out of it.
+        // "Mirror, mirror": an oval glass in a gilt frame on a turned foot. A pale mask of a face stands out of the glass;
+        // it sleeps until someone picks the mirror up, then opens its eyes and watches whoever carries it (MirrorGaze).
         void MagicMirror()
         {
-            var gold = new ProcMesh(); var glass = new ProcMesh(); var face = new ProcMesh(); var gem = new ProcMesh();
-            var facing = ProcMesh.TRS(new(0f, .47f, 0f), new(90f, 0f, 0f), new(.74f, 1f, 1f));
-            gold.Lathe(facing, new[] { (.24f, -.035f), (.3f, -.02f), (.3f, .02f), (.24f, .035f) }, 16);
-            glass.Lathe(facing, new[] { (0f, -.012f), (.245f, -.012f), (.245f, .012f), (0f, .012f) }, 16);
-            Box(gold, 0f, .1f, 0f, .07f, .18f, .06f); Box(gold, 0f, .025f, 0f, .32f, .05f, .22f);
-            gold.Diamond(ProcMesh.TRS(new(0f, .8f, 0f), Vector3.zero, new(.14f, .12f, .06f)));
-            foreach (float x in new[] { -.06f, .06f }) Box(face, x, .54f, -.018f, .055f, .035f, .01f);
-            Box(face, 0f, .39f, -.018f, .11f, .03f, .01f); Tilt(face, 0f, .465f, -.018f, .025f, .07f, .01f, 0f);
+            var gold = new ProcMesh(); var glass = new ProcMesh(); var gem = new ProcMesh();
+            var mask = new ProcMesh(); var dark = new ProcMesh(); var pupils = new ProcMesh(); var lids = new ProcMesh(); var lashes = new ProcMesh();
+            const float cy = .47f, glassZ = -.012f;
+            var facing = ProcMesh.TRS(new(0f, cy, 0f), new(90f, 0f, 0f), new(.74f, 1f, 1f));
+            gold.Lathe(facing, new[] { (.235f, -.03f), (.262f, -.045f), (.292f, -.04f), (.31f, -.015f), (.31f, .015f), (.292f, .04f), (.262f, .045f), (.235f, .03f) }, 36);
+            gold.Lathe(facing, new[] { (.24f, .025f), (.2f, .05f), (0f, .056f) }, 36); // the back plate
+            glass.Lathe(facing, new[] { (0f, glassZ), (.245f, glassZ) }, 36);
+            // The foot: a turned stem on an oval base.
+            gold.Lathe(ProcMesh.TRS(Vector3.zero, Vector3.zero, new(1f, 1f, .7f)), new[] { (0f, 0f), (.15f, 0f), (.16f, .014f), (.145f, .032f), (.07f, .046f), (.036f, .07f), (.03f, .115f), (.046f, .135f), (.03f, .155f), (.03f, .18f), (0f, .18f) }, 24);
+            // The crest: a jewel between two scrolls.
+            gold.Diamond(ProcMesh.TRS(new(0f, .8f, 0f), Vector3.zero, new(.13f, .12f, .07f)));
+            foreach (float x in new[] { -.075f, .075f }) Blob(gold, new(x, .765f, 0f), new(.07f, .06f, .06f));
             gem.Diamond(ProcMesh.TRS(new(0f, .8f, -.03f), Vector3.zero, new(.06f, .07f, .04f)));
-            Part("frame", gold, Gold, metallic: .8f, roughness: .3f); Part("glass", glass, new Color(.45f, .7f, .95f), emission: .45f);
-            Part("face", face, new Color(.1f, .14f, .3f)); Part("gem", gem, new Color(.9f, .2f, .5f), emission: 1.2f);
+
+            // The mask is an egg sunk to its middle in the glass, so it can turn without showing an edge.
+            const float halfWide = .1f, halfHigh = .15f, halfDeep = .06f;
+            var centre = new Vector3(0f, cy, glassZ);
+            Blob(mask, centre, new(halfWide * 2f, halfHigh * 2f, halfDeep * 2f));
+            float Front(float x, float y)
+            {
+                float inside = 1f - x * x / (halfWide * halfWide) - (y - cy) * (y - cy) / (halfHigh * halfHigh);
+                return glassZ - halfDeep * Mathf.Sqrt(Mathf.Max(0f, inside));
+            }
+            Vector3 On(float x, float y, float lift) => new(x, y, Front(x, y) - lift);
+            // A long nose and heavy brow ridges.
+            mask.Tube(Id, new[] { On(0f, .525f, .002f), On(0f, .49f, .012f), On(0f, .455f, .024f), On(0f, .44f, .02f) }, new[] { .011f, .013f, .019f, .012f }, 10, capped: true);
+            foreach (float side in new[] { -1f, 1f })
+            {
+                float x = side * .044f; const float eyeY = .508f;
+                mask.Tube(Id, new[] { On(side * .014f, .527f, .004f), On(side * .045f, .54f, .008f), On(side * .08f, .533f, .003f) }, new[] { .008f, .01f, .006f }, 8, capped: true);
+                dark.Tube(Id, new[] { On(side * .016f, .533f, .012f), On(side * .046f, .548f, .017f), On(side * .078f, .541f, .01f) }, new[] { .0045f }, 6, capped: true);
+                Blob(dark, On(x, eyeY, -.004f), new(.05f, .034f, .02f));
+                Blob(pupils, On(x, eyeY, .004f), new(.02f, .024f, .012f));
+                // Closed, the lid covers the socket and a lash line runs across it.
+                Blob(lids, On(x, eyeY, .001f), new(.056f, .04f, .024f));
+                lashes.Tube(Id, new[] { On(x - .022f, eyeY - .002f, .014f), On(x, eyeY - .008f, .016f), On(x + .022f, eyeY - .002f, .014f) }, new[] { .003f }, 6, capped: true);
+                Blob(mask, On(side * .058f, .44f, -.006f), new(.05f, .05f, .03f)); // cheekbones
+            }
+            var mouth = new Vector3[9];
+            for (int i = 0; i < mouth.Length; i++) { float t = -1f + 2f * i / (mouth.Length - 1); mouth[i] = On(.042f * t, .392f + .007f * (1f - t * t), .003f); }
+            dark.Tube(Id, mouth, new[] { .0045f }, 6, capped: true);
+            Blob(mask, On(0f, .376f, -.006f), new(.06f, .03f, .03f)); // lower lip and chin
+
+            var pale = new Color(.72f, .88f, 1f); var ink = new Color(.05f, .08f, .22f);
+            Part("frame", gold, Gold, metallic: .85f, roughness: .25f, smooth: true);
+            Part("glass", glass, new Color(.1f, .18f, .42f), emission: .15f, roughness: .08f);
+            Part("gem", gem, new Color(.9f, .2f, .5f), emission: 1.2f);
+            Part("mask", mask, pale, emission: .55f, roughness: .3f, smooth: true, motion: MirrorFace);
+            Part("features", dark, ink, roughness: .3f, smooth: true, motion: MirrorFace);
+            Part("pupils", pupils, new Color(.75f, 1f, .9f), emission: 2.2f, smooth: true, motion: MirrorPupils);
+            Part("lids", lids, pale, emission: .55f, roughness: .3f, smooth: true, motion: MirrorLids);
+            Part("lashes", lashes, ink, roughness: .3f, smooth: true, motion: MirrorLids);
+            foreach (string group in new[] { MirrorFace, MirrorPupils, MirrorLids }) pivots.Add(new ValuableArtPivot { group = group, position = centre });
         }
 
         // Little Red Riding Hood's basket. The five pies are separate parts: PieBasket tips them out one by one.
@@ -415,26 +463,49 @@ internal static class FableLoot
             Part("stem", stem, DarkWood); Part("leaf", leaf, new Color(.2f, .55f, .2f));
         }
 
-        // The frog who would be a prince, crown and all.
+        // The frog who would be a prince, crown and all: a plump round frog squatting on big back feet.
         void FrogPrince()
         {
-            var green = new ProcMesh(); var belly = new ProcMesh(); var white = new ProcMesh(); var black = new ProcMesh(); var gold = new ProcMesh();
-            Box(green, 0f, .07f, .02f, .17f, .12f, .19f); Box(belly, 0f, .055f, -.03f, .13f, .08f, .12f);
-            Box(green, 0f, .135f, -.06f, .16f, .08f, .13f); Box(black, 0f, .115f, -.127f, .11f, .008f, .01f);
-            foreach (float x in new[] { -.055f, .055f })
+            var green = new ProcMesh(); var spots = new ProcMesh(); var belly = new ProcMesh(); var white = new ProcMesh(); var black = new ProcMesh(); var gold = new ProcMesh();
+            Blob(green, new(0f, .078f, .025f), new(.19f, .145f, .2f));
+            Blob(belly, new(0f, .066f, -.02f), new(.15f, .115f, .15f));
+            var head = new Vector3(0f, .132f, -.05f); var headSize = new Vector3(.185f, .105f, .15f);
+            Blob(green, head, headSize);
+            float Front(float x, float y)
             {
-                Ball(white, x, .185f, -.075f, .03f); Box(black, x, .188f, -.103f, .018f, .022f, .008f);
-                Tilt(green, x * 1.7f, .04f, .06f, .09f, .05f, .12f, 0f); Box(green, x * 1.9f, .012f, -.04f, .07f, .02f, .09f);
-                Box(green, x * 1.3f, .012f, -.1f, .05f, .02f, .06f);
+                float inside = 1f - 4f * x * x / (headSize.x * headSize.x) - 4f * (y - head.y) * (y - head.y) / (headSize.y * headSize.y);
+                return head.z - headSize.z * .5f * Mathf.Sqrt(Mathf.Max(0f, inside));
             }
-            gold.Lathe(ProcMesh.TRS(new(0f, .175f, -.03f), Vector3.zero, Vector3.one), new[] { (.045f, 0f), (.05f, .025f), (.04f, .025f) }, 8);
-            for (int i = 0; i < 4; i++)
+            // A wide smile and two nostrils.
+            var mouth = new Vector3[11];
+            for (int i = 0; i < mouth.Length; i++) { float t = -1f + 2f * i / (mouth.Length - 1); float x = .074f * t, y = .112f + .016f * t * t; mouth[i] = new(x, y, Front(x, y) - .001f); }
+            black.Tube(Id, mouth, new[] { .0035f }, 6, capped: true);
+            foreach (float x in new[] { -.014f, .014f }) Blob(black, new(x, .15f, Front(x, .15f)), Vector3.one * .008f);
+            foreach (float s in new[] { -1f, 1f })
             {
-                float a = i * Mathf.PI / 2f + .78f;
-                gold.Diamond(ProcMesh.TRS(new(.045f * Mathf.Cos(a), .21f, -.03f + .045f * Mathf.Sin(a)), Vector3.zero, new(.022f, .04f, .022f)));
+                // Bulging eyes on top of the head.
+                Blob(green, new(s * .052f, .178f, -.06f), Vector3.one * .068f);
+                Blob(white, new(s * .053f, .182f, -.07f), Vector3.one * .058f);
+                Blob(black, new(s * .053f, .184f, -.094f), new(.026f, .032f, .016f));
+                // Folded back legs with long feet, and short front legs.
+                Blob(green, new(s * .092f, .052f, .06f), new(.085f, .095f, .14f), new(0f, s * 18f, 0f));
+                Blob(green, new(s * .118f, .012f, .0f), new(.07f, .024f, .12f), new(0f, s * 22f, 0f));
+                Blob(green, new(s * .068f, .05f, -.085f), new(.042f, .1f, .045f), new(-12f, 0f, 0f));
+                Blob(green, new(s * .076f, .011f, -.108f), new(.06f, .022f, .07f), new(0f, s * 18f, 0f));
+                Blob(spots, new(s * .045f, .135f, .06f), new(.04f, .02f, .045f));
+                Blob(spots, new(s * .02f, .15f, .02f), new(.028f, .016f, .03f));
             }
-            Part("frog", green, new Color(.2f, .6f, .16f)); Part("belly", belly, new Color(.75f, .85f, .45f));
-            Part("eyes", white, White); Part("pupils", black, Black); Part("crown", gold, Gold, metallic: .8f, roughness: .3f);
+            // The crown sits between the eyes.
+            gold.Lathe(ProcMesh.TRS(new(0f, .18f, -.02f), Vector3.zero, Vector3.one), new[] { (.036f, 0f), (.041f, .022f), (.034f, .022f), (.03f, 0f) }, 16);
+            for (int i = 0; i < 5; i++)
+            {
+                float a = i * Mathf.PI * 2f / 5f + Mathf.PI * .5f;
+                gold.Diamond(ProcMesh.TRS(new(.038f * Mathf.Cos(a), .21f, -.02f + .038f * Mathf.Sin(a)), new(0f, -a * Mathf.Rad2Deg, 0f), new(.02f, .036f, .02f)));
+            }
+            Part("frog", green, new Color(.22f, .62f, .18f), roughness: .3f, smooth: true); Part("spots", spots, new Color(.13f, .45f, .13f), roughness: .3f, smooth: true);
+            Part("belly", belly, new Color(.8f, .88f, .5f), roughness: .35f, smooth: true);
+            Part("eyes", white, White, roughness: .15f, smooth: true); Part("pupils", black, Black, roughness: .15f, smooth: true);
+            Part("crown", gold, Gold, metallic: .85f, roughness: .25f);
         }
 
         // ---- second set -----------------------------------------------------------------------------
@@ -568,6 +639,32 @@ internal static class FableLoot
             Part("dome", glass, new Color(.85f, .95f, 1f), transmission: .85f, roughness: .05f, smooth: true);
         }
 
+        // One of Cinderella's mice: a small white mouse sitting up, with round pink ears and a long tail.
+        void WhiteMouse()
+        {
+            var fur = new ProcMesh(); var pink = new ProcMesh(); var black = new ProcMesh();
+            Blob(fur, new(0f, .05f, .015f), new(.092f, .098f, .13f));
+            var head = new Vector3(0f, .085f, -.045f);
+            Blob(fur, head, new(.066f, .06f, .075f));
+            Blob(fur, new(0f, .078f, -.08f), new(.034f, .03f, .04f)); // the snout
+            Blob(pink, new(0f, .08f, -.101f), Vector3.one * .011f);
+            foreach (float s in new[] { -1f, 1f })
+            {
+                Blob(fur, new(s * .034f, .122f, -.03f), new(.046f, .046f, .012f), new(0f, s * 20f, 0f));
+                Blob(pink, new(s * .033f, .122f, -.035f), new(.03f, .03f, .008f), new(0f, s * 20f, 0f));
+                Blob(black, new(s * .018f, .096f, -.074f), Vector3.one * .011f);
+                Blob(pink, new(s * .026f, .007f, -.022f), new(.022f, .014f, .04f));
+                Blob(pink, new(s * .034f, .007f, .04f), new(.026f, .014f, .046f));
+                Blob(fur, new(s * .026f, .055f, -.04f), new(.018f, .034f, .02f));
+            }
+            var tail = new Vector3[10];
+            for (int i = 0; i < tail.Length; i++) { float t = i / (tail.Length - 1f); tail[i] = new(.05f * Mathf.Sin(t * 3.2f), .014f + .012f * t * t, .07f + .085f * t); }
+            pink.Tube(Id, tail, new[] { .006f, .006f, .005f, .005f, .004f, .004f, .003f, .003f, .002f, .0015f }, 8, capped: true);
+            Part("fur", fur, new Color(.93f, .92f, .9f), roughness: .5f, smooth: true);
+            Part("ears and tail", pink, new Color(.96f, .66f, .7f), roughness: .4f, smooth: true);
+            Part("eyes", black, Black, roughness: .15f, smooth: true);
+        }
+
         // The castle's talking wardrobe: a cream cabinet with rose doors, a cornice and an arched gilt pediment, a face across her doors.
         void TalkingWardrobe()
         {
@@ -637,13 +734,14 @@ internal static class FableLoot
             Part("cheeks", pink, new Color(1f, .6f, .66f), smooth: true);
         }
 
-        void Part(string group, ProcMesh shape, Color color, float emission = 0f, float transmission = 0f, float metallic = 0f, float roughness = .55f, bool smooth = false)
+        // <motion> names the animated group the part hangs under (see ValuableArtModel.pivots); otherwise the part is its own group.
+        void Part(string group, ProcMesh shape, Color color, float emission = 0f, float transmission = 0f, float metallic = 0f, float roughness = .55f, bool smooth = false, string motion = null)
         {
             var mesh = smooth ? shape.BuildSmooth(key + " " + group) : shape.Build(key + " " + group);
             if (mesh.vertexCount == 0) { Dispose(mesh); return; }
             parts.Add(new ValuableArtPart
             {
-                name = group, group = group, material = materials.Count,
+                name = group, group = motion ?? group, material = materials.Count,
                 vertices = mesh.vertices, normals = mesh.normals, uv = mesh.uv, triangles = mesh.triangles,
                 rest = new ArtPose { rotation = Quaternion.identity, scale = Vector3.one },
             });

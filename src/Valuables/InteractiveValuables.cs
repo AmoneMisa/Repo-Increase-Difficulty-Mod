@@ -194,6 +194,8 @@ internal static class InteractiveValuables
                 }
                 if(key==FableLoot.Basket)go.AddComponent<PieBasket>();
                 if(key==FableLoot.Ribbon)go.AddComponent<RibbonCharm>();
+                if(key==FableLoot.Mirror)go.AddComponent<MirrorGaze>();
+                if(key==FableLoot.Pumpkin)go.AddComponent<PumpkinSpell>();
                 if(key=="robot_vacuum"||key=="skeleton")go.AddComponent<FloorPropMotion>();
                 if(key=="centrifuge")go.AddComponent<CollectionPhysics>();
                 if(key=="skeleton")go.AddComponent<SkeletonSway>(); // bones hang in a joint chain and sway; nothing can come loose
