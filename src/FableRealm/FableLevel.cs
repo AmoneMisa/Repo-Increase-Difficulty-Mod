@@ -110,7 +110,7 @@ internal static class FableLevel
     }
 
     // Why the moon tower does or does not wake on a Fable Realm extraction point: one log line per activation.
-    [HarmonyPatch(typeof(ExtractionPoint), "HalloweenActivationSet")]
+    [HarmonyPatch(typeof(ExtractionPoint), nameof(ExtractionPoint.HalloweenActivationSet))]
     private static class MoonTowerReport
     {
         [HarmonyPostfix]
@@ -184,15 +184,14 @@ internal static class FableLevel
 
         var content = ScriptableObject.CreateInstance<LevelContent>();
         content.name = LevelName;
-        Set(content, "_level", level);
-        Set(content, "_startRooms", ownStart ? Templates(plan.Start, templates) : new List<GameObject>());
-        for (int tier = 0; tier < FableLevelPlan.Difficulties; tier++)
-        {
-            Set(content, "_modulesNormal" + (tier + 1), Templates(plan.Normal[tier], templates));
-            Set(content, "_modulesPassage" + (tier + 1), Templates(plan.Passage[tier], templates));
-            Set(content, "_modulesDeadEnd" + (tier + 1), Templates(plan.DeadEnd[tier], templates));
-            Set(content, "_modulesExtraction" + (tier + 1), Templates(plan.Extraction[tier], templates));
-        }
+        // LevelContent is the asset REPOLib's Unity SDK fills in the editor; its lists are private serialized fields,
+        // reached here through the publicized reference so a renamed field fails the build, not the level.
+        content._level = level;
+        content._startRooms = ownStart ? Templates(plan.Start, templates) : new List<GameObject>();
+        content._modulesNormal1 = Templates(plan.Normal[0], templates); content._modulesNormal2 = Templates(plan.Normal[1], templates); content._modulesNormal3 = Templates(plan.Normal[2], templates);
+        content._modulesPassage1 = Templates(plan.Passage[0], templates); content._modulesPassage2 = Templates(plan.Passage[1], templates); content._modulesPassage3 = Templates(plan.Passage[2], templates);
+        content._modulesDeadEnd1 = Templates(plan.DeadEnd[0], templates); content._modulesDeadEnd2 = Templates(plan.DeadEnd[1], templates); content._modulesDeadEnd3 = Templates(plan.DeadEnd[2], templates);
+        content._modulesExtraction1 = Templates(plan.Extraction[0], templates); content._modulesExtraction2 = Templates(plan.Extraction[1], templates); content._modulesExtraction3 = Templates(plan.Extraction[2], templates);
         Levels.RegisterLevel(content);
         if (!ownStart)
         {
@@ -325,12 +324,5 @@ internal static class FableLevel
         foreach (var room in rooms)
             if (templates.TryGetValue(room.id, out var template)) list.Add(template);
         return list;
-    }
-
-    // LevelContent is the asset REPOLib's Unity SDK fills in the editor; its lists are private serialized fields.
-    private static void Set(LevelContent content, string field, object value)
-    {
-        var info = AccessTools.Field(typeof(LevelContent), field) ?? throw new MissingFieldException("LevelContent." + field);
-        info.SetValue(content, value);
     }
 }

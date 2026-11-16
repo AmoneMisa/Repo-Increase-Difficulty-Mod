@@ -38,7 +38,7 @@ internal static class MonsterHurtLog
 /// Diagnostics: remembers which HurtCollider is dealing enemy damage right now, so <see cref="MonsterHurtLog"/> can
 /// name it (its object, the monster that owns it, the player behind it) instead of only "HurtCollider".
 /// </summary>
-[HarmonyPatch(typeof(HurtCollider), "EnemyHurt")]
+[HarmonyPatch(typeof(HurtCollider), nameof(HurtCollider.EnemyHurt))]
 internal static class HurtSource
 {
     private static HurtCollider _current;

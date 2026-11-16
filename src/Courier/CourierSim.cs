@@ -62,7 +62,7 @@ internal sealed class CourierSim
     private float _ownerStillSince;
     private Vector3? _frontSpot;
 
-    private static readonly AccessTools.FieldRef<ChargingStation, float> ChargeLeft = AccessTools.FieldRefAccess<ChargingStation, float>("chargeFloat");
+    private static readonly AccessTools.FieldRef<ChargingStation, float> ChargeLeft = AccessTools.FieldRefAccess<ChargingStation, float>(nameof(ChargingStation.chargeFloat));
 
     internal CourierSim(int actor, PlayerAvatar owner, Vector3 start, bool rollFind)
     {

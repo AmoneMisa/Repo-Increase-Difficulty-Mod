@@ -163,7 +163,7 @@ internal sealed class HeroAura : MonoBehaviour
     {
         private static System.Collections.Generic.IEnumerable<System.Reflection.MethodBase> TargetMethods()
         {
-            foreach (string name in new[] { "CreateIconReadback", "CreateIconFromRenderTexture" })
+            foreach (string name in new[] { nameof(SemiIconMaker.CreateIconReadback), nameof(SemiIconMaker.CreateIconFromRenderTexture) })
             {
                 var method = HarmonyLib.AccessTools.Method(typeof(SemiIconMaker), name);
                 if (method != null) yield return method;

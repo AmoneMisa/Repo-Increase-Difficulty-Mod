@@ -245,7 +245,7 @@ internal static class GearItems
     private static void MakeGun(Item baseItem, string name, string display, GearKind kind, float priceMin, float priceMax, Color color, string desc)
     {
         var (_, go, attributes) = Clone(baseItem, name, display, priceMin, priceMax, color, desc,
-            mb => mb.GetType().Name == "ItemGunTranq", tint: true);
+            mb => mb is ItemGunTranq, tint: true);
 
         var gun = go.GetComponent<ItemGun>();
         gun.numberOfBullets = 1;

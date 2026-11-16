@@ -42,7 +42,7 @@ internal static class FlameCartItem
     private static readonly Vector3 BoxMount = new(0f, .215f, -.30f);
     private const float BoxScale = .9f;
 
-    private static readonly string[] StripTypes = { "ItemCartCannon", "ItemCartCannonMain", "PhysGrabObjectGrabArea" };
+    private static readonly Type[] StripTypes = { typeof(ItemCartCannon), typeof(ItemCartCannonMain), typeof(PhysGrabObjectGrabArea) };
 
     internal static void Build()
     {
@@ -197,11 +197,11 @@ internal static class FlameCartItem
     private static void StripCannon(GameObject go)
     {
         // Dependents first, so no RequireComponent blocks the removal.
-        foreach (string type in StripTypes)
+        foreach (var type in StripTypes)
             foreach (var mb in go.GetComponents<MonoBehaviour>())
-                if (mb != null && mb.GetType().Name == type) Object.DestroyImmediate(mb);
+                if (mb != null && mb.GetType() == type) Object.DestroyImmediate(mb);
         foreach (var mb in go.GetComponents<MonoBehaviour>())
-            if (mb != null && Array.IndexOf(StripTypes, mb.GetType().Name) >= 0)
+            if (mb != null && Array.IndexOf(StripTypes, mb.GetType()) >= 0)
                 throw new InvalidOperationException("Could not remove " + mb.GetType().Name);
     }
 

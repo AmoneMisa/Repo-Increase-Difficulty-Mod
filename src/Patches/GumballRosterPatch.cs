@@ -13,7 +13,7 @@ internal static class GumballRosterPatch
 {
     private static IEnumerable<MethodBase> TargetMethods()
     {
-        foreach(string name in new[]{"Update","CheckForLeftPlayers","PlayerStateChangedRPC"})
+        foreach(string name in new[]{nameof(GumballValuable.Update),nameof(GumballValuable.CheckForLeftPlayers),nameof(GumballValuable.PlayerStateChangedRPC)})
             yield return AccessTools.DeclaredMethod(typeof(GumballValuable),name);
     }
 

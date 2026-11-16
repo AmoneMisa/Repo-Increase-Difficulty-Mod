@@ -22,7 +22,7 @@ internal static class WeaponFireRate
     private static IEnumerable<MethodBase> Targets()
     {
         yield return AccessTools.Method(typeof(ItemGun), nameof(ItemGun.Update));
-        foreach (string name in new[] { "Update", "TriggerPull", "TriggerRPC", "ChamberRPC" })
+        foreach (string name in new[] { nameof(ItemGunRevolver.Update), nameof(ItemGunRevolver.TriggerPull), nameof(ItemGunRevolver.TriggerRPC), nameof(ItemGunRevolver.ChamberRPC) })
             yield return AccessTools.Method(typeof(ItemGunRevolver), name);
     }
 

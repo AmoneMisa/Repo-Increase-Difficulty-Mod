@@ -107,7 +107,7 @@ internal static class ShopUpgrades
     [HarmonyPatch]
     private static class HaggleLimit
     {
-        private static readonly string[] Methods = { "ItemPresentationTargetValid", "ItemNoticeStart", "TryStartItemDiscount", "ItemDenyPhysics", "UpdateStateRPC" };
+        private static readonly string[] Methods = { nameof(ShopKeeper.ItemPresentationTargetValid), nameof(ShopKeeper.ItemNoticeStart), nameof(ShopKeeper.TryStartItemDiscount), nameof(ShopKeeper.ItemDenyPhysics), nameof(ShopKeeper.UpdateStateRPC) };
 
         private static IEnumerable<MethodBase> TargetMethods()
         {
@@ -121,7 +121,7 @@ internal static class ShopUpgrades
 
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase original)
         {
-            var attempts = AccessTools.Field(typeof(ShopKeeper), "itemDiscountAttempts");
+            var attempts = AccessTools.Field(typeof(ShopKeeper), nameof(ShopKeeper.itemDiscountAttempts));
             var clamp = AccessTools.Method(typeof(Mathf), nameof(Mathf.Clamp), new[] { typeof(int), typeof(int), typeof(int) });
             var limit = AccessTools.PropertyGetter(typeof(ShopUpgrades), nameof(DiscountAttempts));
             var code = instructions.ToList();
