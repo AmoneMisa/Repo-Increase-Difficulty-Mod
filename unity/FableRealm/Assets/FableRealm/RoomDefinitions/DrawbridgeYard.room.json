@@ -12647,7 +12647,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -12667,7 +12667,7 @@
           "z": 4.941008687970415
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-0-star-0",
@@ -12704,7 +12704,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -12724,7 +12724,7 @@
           "z": 4.941008687970415
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-0-star-1",
@@ -12761,7 +12761,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -12781,7 +12781,7 @@
           "z": 4.941008687970415
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-0-star-2",
@@ -14145,7 +14145,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -14165,7 +14165,7 @@
           "z": -3.3055515595332547
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-3-star-0",
@@ -14202,7 +14202,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -14222,7 +14222,7 @@
           "z": -3.3055515595332547
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-3-star-1",
@@ -14259,7 +14259,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -14279,7 +14279,7 @@
           "z": -3.3055515595332547
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-3-star-2",
@@ -14830,7 +14830,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -14850,7 +14850,7 @@
           "z": -1.0524235489251916
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-6-star-0",
@@ -14887,7 +14887,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -14907,7 +14907,7 @@
           "z": -1.0524235489251916
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-6-star-1",
@@ -14944,7 +14944,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -14964,7 +14964,7 @@
           "z": -1.0524235489251916
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-6-star-2",
@@ -15071,7 +15071,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -15091,7 +15091,7 @@
           "z": 4.309594194887914
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-7-star-0",
@@ -15128,7 +15128,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -15148,7 +15148,7 @@
           "z": 4.309594194887914
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-7-star-1",
@@ -15185,7 +15185,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -15205,7 +15205,7 @@
           "z": 4.309594194887914
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-7-star-2",

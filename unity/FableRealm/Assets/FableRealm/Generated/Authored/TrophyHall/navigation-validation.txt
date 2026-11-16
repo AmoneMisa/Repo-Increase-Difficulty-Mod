@@ -1,0 +1,1 @@
+NAVMESH PASS: TrophyHall; 7 points; 6 complete paths; 222 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

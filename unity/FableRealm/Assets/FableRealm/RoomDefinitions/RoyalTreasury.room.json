@@ -16488,7 +16488,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -16508,7 +16508,7 @@
           "z": 1.4191210607742706
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-4-star-0",
@@ -16545,7 +16545,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -16565,7 +16565,7 @@
           "z": 1.4191210607742706
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-4-star-1",
@@ -16602,7 +16602,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -16622,7 +16622,7 @@
           "z": 1.4191210607742706
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-4-star-2",

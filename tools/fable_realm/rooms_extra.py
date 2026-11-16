@@ -2,6 +2,7 @@
 import math
 
 from library_recipe import v
+from room_kit import PALETTE
 
 from rooms_forest_village import _forest, _village, _views
 from rooms_giant_castle import _giant, _castle, _views as _views_south
@@ -15,6 +16,8 @@ CATALOG = [
     ('28', 'TeaTray', 'Чайный поднос', 'Giant', 'Extraction', 'GiantCup'),
     ('29', 'CrownChapel', 'Коронная капелла', 'Castle', 'Extraction', 'Arch'),
     ('30', 'BeanstalkGrove', 'Роща великаньего боба', 'Giant', 'DeadEnd', 'Tree'),
+    ('31', 'GiantPantry', 'Кладовая великана', 'Giant', 'Normal', 'GiantCup'),
+    ('32', 'TrophyHall', 'Трофейный зал', 'Castle', 'Normal', 'Arch'),
 ]
 
 
@@ -131,22 +134,28 @@ BEAN_COLOURS = (('red', 'BeanRed'), ('yellow', 'BeanYellow'), ('blue', 'BeanBlue
 
 def beanstalk_grove():
     """Special puzzle room, one per level. Five coloured beans found elsewhere go on the five matching plates;
-    then the giant bean comes down onto the dais and leaves the Golden Egg.
-    Markers for the game side (kind 'surface'): bean-socket-<colour>, giant-bean-landing, golden-egg-spawn.
-    Moving piece: every element whose id starts with 'giant-bean-' hangs 5.2 m above its landing spot."""
+    then a beanstalk grows out of the dais and the Golden Egg appears on its crown.
+    Markers for the game side (kind 'surface'): bean-socket-<colour>, giant-bean-landing (the dais), golden-egg-spawn.
+    Moving piece: every element whose id starts with 'beanstalk-' rises 5.2 m out of the floor."""
     r = _giant('BeanstalkGrove', 'Роща великаньего боба', 'DeadEnd', 130)
     cx, cz = 0.0, .6
     # Dais the bean lands on.
     r.lathe('dais', (cx, 0, cz), [(0, .03), (1.75, .03), (1.9, 0)], 'Limestone', 28)
     r.ring('dais-rim', (cx, .035, cz), 1.75, .05, 'Gold', segments=40); r.ring('dais-glow', (cx, .04, cz), 1.2, .03, 'GiantBean', segments=32)
-    # The giant bean, hanging by three tendrils from the stalk that fills the north-east corner.
-    r.lathe('giant-bean-body', (cx, 5.2, cz), [(0, 0), (.75, .25), (1.1, .95), (1.05, 1.75), (.65, 2.45), (0, 2.7)], 'GiantBean', 16)
-    r.lathe('giant-bean-seam', (cx, 5.2, cz), [(1.12, .9), (1.14, 1.35), (1.07, 1.8)], 'Gold', 16)
-    r.tube('giant-bean-eye', [(cx-.25, 6.3, cz-1.08), (cx, 6.55, cz-1.12), (cx+.25, 6.3, cz-1.08)], .05, 'OakDark')
-    r.light('giant-bean-light', (cx, 4.6, cz), 'GiantBean', 2.4, 9)
-    for i, a in enumerate((.4, 2.5, 4.6)):
-        r.tube(f'tendril-{i}', [(cx+.5*math.cos(a), 7.8, cz+.5*math.sin(a)), (cx+1.4*math.cos(a), 8.9, cz+1.4*math.sin(a)),
-                                (cx+2.6*math.cos(a)+1.2, 9.7, cz+2.6*math.sin(a)+1.2), (5.0, 9.9, 5.2)], .09, 'Leaf')
+    # The beanstalk that grows out of the dais once the five beans lie on their plates. The game keeps every
+    # 'beanstalk-' element sunk 5.2 m under the floor until then and raises it; the recipe shows it fully grown.
+    # Eight leaves wind around the trunk as steps (half a metre each) up to the crown, where the Golden Egg waits.
+    r.tube('beanstalk-trunk', [(cx, 0, cz), (cx+.12, 1.3, cz-.1), (cx-.1, 2.6, cz+.12), (cx+.08, 3.9, cz-.06), (cx, 4.5, cz)], .34, 'Leaf')
+    r.tube('beanstalk-twin', [(cx+.3, 0, cz+.2), (cx-.3, 1.5, cz+.3), (cx+.32, 3.0, cz-.28), (cx-.1, 4.4, cz+.1)], .16, 'Hedge')
+    r.blocker('beanstalk-trunk-block', (cx, 2.25, cz), (.7, 4.5, .7))
+    for i in range(8):
+        a = math.radians(-90+45*i); top = .5+.5*i  # the first leaf faces the door
+        lx, lz = cx+1.3*math.cos(a), cz+1.3*math.sin(a)
+        r.box(f'beanstalk-leaf-{i}', (lx, top-.06, lz), (.8, .12, 1.05), 'Leaf' if i % 2 else 'Hedge', rot=(0, -math.degrees(a), 0))
+        r.tube(f'beanstalk-stem-{i}', [(cx, top-.25, cz), (lx, top-.1, lz)], .06, 'Hedge')
+    r.lathe('beanstalk-crown', (cx, 4.5, cz), [(0, 0), (.55, .02), (.82, .1), (.78, .16), (0, .15)], 'Leaf', 14)
+    r.blocker('beanstalk-crown-block', (cx, 4.57, cz), (1.5, .16, 1.5))
+    r.light('beanstalk-light', (cx, 5.2, cz), 'GiantBean', 2.4, 9)
     sx, sz = 5.3, 5.5
     r.tube('stalk', [(sx, 0, sz), (sx-.5, 2.2, sz+.3), (sx+.3, 4.4, sz-.4), (sx-.4, 6.6, sz+.2), (sx+.1, 8.6, sz-.3), (sx-.6, 10, sz-.6)], .55, 'Leaf')
     r.tube('stalk-twin', [(sx+.5, 0, sz-.5), (sx+.6, 2.4, sz-.2), (sx-.4, 4.8, sz+.3), (sx+.3, 7.2, sz), (sx-.2, 10, sz+.2)], .3, 'Hedge')
@@ -170,8 +179,8 @@ def beanstalk_grove():
         r.light(f'stone-{colour}-light', (mx-.5*c, 1.6, mz-.5*s), mat, 1.1, 3.6)
         r.tube(f'plate-{colour}-vine', [(mx-.2*c, .03, mz-.2*s), (cx+2.6*c+.2*s, .03, cz+2.6*s-.2*c), (cx+1.85*c, .03, cz+1.85*s)], .03, 'Hedge')
         r.anchors.append(dict(id=f'bean-socket-{colour}', kind='surface', position=v(px, 0, pz), rotation=v(*yaw)))
-    r.anchors.append(dict(id='giant-bean-landing', kind='surface', position=v(cx, 0, cz)))
-    r.anchors.append(dict(id='golden-egg-spawn', kind='surface', position=v(cx, 0, cz-1.1)))
+    r.anchors.append(dict(id='giant-bean-landing', kind='surface', position=v(cx, 0, cz-2.3)))  # bare ground at the foot of the dais
+    r.anchors.append(dict(id='golden-egg-spawn', kind='surface', position=v(cx, 4.66, cz)))  # on the crown
     out = r.hide('root-hollow', -5.5, -5.3, 'east', 'Bark', 'Moss')
     cup(r, 'grove-cup', 5.4, -5.3, .7, handle=140)
     lantern_post(r, 'lamp-w', -4.3, 6.4, 3.0, 'WarmGlass', 'Copper'); lantern_post(r, 'lamp-e', 6.5, -3.0, 3.0, 'WarmGlass', 'Copper')
@@ -185,4 +194,47 @@ def beanstalk_grove():
     return r.finish()
 
 
-ROOMS = [coach_yard, drawbridge_yard, fairy_ring, tea_tray, crown_chapel, beanstalk_grove]
+def _big_loot(r):
+    """Open-floor rooms for the large valuables: four big, two wide, two very tall, two tall and four medium spots,
+    one group per quarter of the room so the routes through the middle stay clear."""
+    for sx, sz in ((1, 1), (-1, 1), (1, -1), (-1, -1)): r.loot('Big', 3.5*sx, 0, 3.5*sz)
+    r.loot('VeryTall', 5.9, 0, 2.3); r.loot('VeryTall', -5.9, 0, -2.3)
+    r.loot('Wide', -5.7, 0, 2.7, 90); r.loot('Wide', 5.7, 0, -2.7, 90)
+    r.loot('Tall', 3.3, 0, 6.3); r.loot('Tall', -3.3, 0, -6.3)
+    r.loot('Medium', -3.3, 0, 6.3); r.loot('Medium', 3.3, 0, -6.3); r.loot('Medium', 1.7, 0, 1.7); r.loot('Medium', -1.7, 0, -1.7)
+
+
+def giant_pantry():
+    """The giant's larder: an open floor between a few huge stores pushed into the corners."""
+    r = _giant('GiantPantry', 'Кладовая великана', 'Normal', 131)
+    r.lathe('jar', (-6.1, 0, 6.1), [(.55, 0), (.95, .5), (1.0, 1.9), (.7, 2.5), (.72, 2.8), (0, 2.85)], 'PorcelainBlue', 20)
+    r.blocker('jar-block', (-6.1, 1.4, 6.1), (1.9, 2.8, 1.9))
+    crate(r, 'crate-a', 6.2, 6.2, 1.7); crate(r, 'crate-b', 6.4, 6.3, 1.1, y=1.7, yaw=20)
+    r.box('cheese', (6.1, .55, -6.1), (1.8, 1.1, 1.8), 'Butter' if 'Butter' in PALETTE else 'BookOchre', rot=(0, 30, 0))
+    out = r.hide('sack-nook', -5.6, -5.6, 'east', 'Cloth', 'OakLight')
+    r.lamp('pantry-lamp', 0, 6.4, 0, 'WarmGlass', 'Copper', 2.4, 11); r.tube('pantry-lamp-chain', [(0, 10, 0), (0, 6.7, 0)], .02, 'Copper')
+    fireflies(r, 'firefly', [(4.4, 2.4, .4), (-4.2, 3.0, 1.2), (.6, 3.6, -4.4)], 2)
+    r.nav('centre', 0, 0, 0)
+    for side in ('north', 'east', 'south', 'west'): r.link(side, 'centre')
+    r.link(out, 'south')
+    _big_loot(r)
+    _views_south(r)
+    return r.finish()
+
+
+def trophy_hall():
+    """A bare castle hall kept for the largest trophies: four columns, a chandelier and room to carry."""
+    r = _castle('TrophyHall', 'Трофейный зал', 'Normal', 132)
+    for i, (x, z) in enumerate(((-6.2, 6.2), (6.2, 6.2), (6.2, -6.2))):
+        column(r, f'column-{i}', x, z, 6.5, .4, 'Marble', 'Gold')
+    out = r.hide('alcove', -5.6, -5.6, 'east', 'LimestoneDark', 'Velvet')
+    chandelier(r, 'chandelier', 0, 6.0, 0, 1.5, 6, top=9.0)
+    r.nav('centre', 0, 0, 0)
+    for side in ('north', 'east', 'south', 'west'): r.link(side, 'centre')
+    r.link(out, 'south')
+    _big_loot(r)
+    _views_south(r)
+    return r.finish()
+
+
+ROOMS = [coach_yard, drawbridge_yard, fairy_ring, tea_tray, crown_chapel, beanstalk_grove, giant_pantry, trophy_hall]

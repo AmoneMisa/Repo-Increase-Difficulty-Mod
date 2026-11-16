@@ -1,1 +1,1 @@
-ROLE PASS: BeanstalkCourt as Normal; exits east,north,south,west; 13 loot volumes; 0 extraction; 0 spawns.
+ROLE PASS: BeanstalkCourt as Normal; exits east,north,south,west; 35 loot volumes; 0 extraction; 0 spawns.

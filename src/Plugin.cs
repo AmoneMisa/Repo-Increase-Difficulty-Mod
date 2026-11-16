@@ -15,7 +15,7 @@ public static class PluginInfo
     // the config file, saved upgrade/perk IDs and cosmetic IDs ("modded:IncreaseDifficultyMod.*") all depend on it.
     public const string PLUGIN_GUID = "com.kubai.increasehardmod";
     public const string PLUGIN_NAME = "DeepRunOverhaul";
-    public const string PLUGIN_VERSION = "0.10.16";
+    public const string PLUGIN_VERSION = "0.11.0";
 }
 
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]

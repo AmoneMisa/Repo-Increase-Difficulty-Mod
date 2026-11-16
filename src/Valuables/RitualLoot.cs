@@ -35,7 +35,7 @@ internal static class RitualLoot
     }
 
     internal static bool IsProcedural(string key) => key != null &&
-        (key is "rgb_mouse" or "rgb_keyboard" or "ritual_monitor" or "ritual_tower" or Cube or FableRealm.BeanPuzzleRules.EggKey ||
+        (FableLoot.Is(key) || key is "rgb_mouse" or "rgb_keyboard" or "ritual_monitor" or "ritual_tower" or Cube or FableRealm.BeanPuzzleRules.EggKey ||
          key.StartsWith("ritual_bones_", System.StringComparison.Ordinal) ||
          key.StartsWith(FableRealm.BeanPuzzleRules.BeanKeyPrefix, System.StringComparison.Ordinal));
 
@@ -54,6 +54,7 @@ internal static class RitualLoot
 
     internal static ValuableArtModel Build(string key)
     {
+        if (FableLoot.Is(key)) return FableLoot.Build(key);
         var parts = new List<ValuableArtPart>();
         var materials = new List<ValuableArtMaterial>();
         var body = new ProcMesh();

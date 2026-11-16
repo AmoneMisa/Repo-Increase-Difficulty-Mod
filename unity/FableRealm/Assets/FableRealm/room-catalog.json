@@ -479,6 +479,38 @@
       "shelterType": "alcove",
       "status": "authored-recipe-gameplay-anchors",
       "layoutSource": "RoomDefinitions/BeanstalkGrove.room.json"
+    },
+    {
+      "id": "31",
+      "key": "GiantPantry",
+      "title": "Кладовая великана",
+      "biome": "Giant",
+      "role": "Normal",
+      "hero": "GiantCup",
+      "width": 15,
+      "depth": 15,
+      "doorClearance": 3.2,
+      "pitDepth": 0,
+      "upperRoute": false,
+      "shelterType": "alcove",
+      "status": "authored-recipe-gameplay-anchors",
+      "layoutSource": "RoomDefinitions/GiantPantry.room.json"
+    },
+    {
+      "id": "32",
+      "key": "TrophyHall",
+      "title": "Трофейный зал",
+      "biome": "Castle",
+      "role": "Normal",
+      "hero": "Arch",
+      "width": 15,
+      "depth": 15,
+      "doorClearance": 3.2,
+      "pitDepth": 0,
+      "upperRoute": false,
+      "shelterType": "alcove",
+      "status": "authored-recipe-gameplay-anchors",
+      "layoutSource": "RoomDefinitions/TrophyHall.room.json"
     }
   ]
 }

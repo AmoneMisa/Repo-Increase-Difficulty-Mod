@@ -10,6 +10,23 @@ namespace IncreaseHardMod.Valuables;
 internal static class CollectionSpawnPools
 {
     private static readonly Dictionary<LootMap,string> Names=new();
+    /// <summary>
+    /// The mod's spawn pool of one map, made and registered on first use. Fable Realm joins the level list only
+    /// after this class has run, so its level asks for the pool by map instead of being found in run.levels.
+    /// </summary>
+    internal static LevelValuables Ensure(LootMap map)
+    {
+        string name="Valuables - IHM Collection - "+map;
+        if(!ValuablePresets.AllValuablePresets.TryGetValue(name,out var preset))
+        {
+            preset=ScriptableObject.CreateInstance<LevelValuables>();preset.name=name;
+            preset.tiny=new();preset.small=new();preset.medium=new();preset.big=new();preset.wide=new();preset.tall=new();preset.veryTall=new();
+            ValuablePresets.RegisterValuablePreset(preset);
+        }
+        Names[map]=name;
+        return preset;
+    }
+    internal const string PoolPrefix="Valuables - IHM Collection - ";
     internal static void Prepare(RunManager run)
     {
         foreach(var level in run.levels)

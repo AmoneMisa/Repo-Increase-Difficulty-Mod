@@ -310,6 +310,16 @@
       "scale": 2
     },
     {
+      "id": "Wax",
+      "color": "#e8dcc0",
+      "grain": 0.1,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0,
+      "pattern": "plain",
+      "scale": 1.0
+    },
+    {
       "id": "Pumpkin",
       "color": "#d9822b",
       "grain": 0.26,
@@ -13427,7 +13437,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -13447,7 +13457,7 @@
           "z": -0.25919660828820934
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-2-star-0",
@@ -13484,7 +13494,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -13504,7 +13514,7 @@
           "z": -0.25919660828820934
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-2-star-1",
@@ -13541,7 +13551,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -13561,7 +13571,7 @@
           "z": -0.25919660828820934
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-2-star-2",
@@ -14076,7 +14086,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -14096,7 +14106,7 @@
           "z": 3.806766854640916
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-7-star-0",
@@ -14133,7 +14143,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -14153,7 +14163,7 @@
           "z": 3.806766854640916
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-7-star-1",
@@ -14190,7 +14200,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -14210,7 +14220,7 @@
           "z": 3.806766854640916
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-7-star-2",

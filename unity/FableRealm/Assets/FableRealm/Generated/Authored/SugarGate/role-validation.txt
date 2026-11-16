@@ -1,1 +1,1 @@
-ROLE PASS: SugarGate as Passage; exits north,south; 17 loot volumes; 0 extraction; 0 spawns.
+ROLE PASS: SugarGate as Passage; exits north,south; 27 loot volumes; 0 extraction; 0 spawns.

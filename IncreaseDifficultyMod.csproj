@@ -6,7 +6,7 @@
     <Product>DeepRunOverhaul</Product>
     <!-- Preserve code/resource identities and saved integrations after the public rename. -->
     <RootNamespace>DeepRunOverhaul</RootNamespace>
-    <Version>0.10.16</Version>
+    <Version>0.11.0</Version>
     <LangVersion>latest</LangVersion>
     <!-- Unity fixture DLLs must never become candidates for resolving the game's Assembly-CSharp. -->
     <DefaultItemExcludes>$(DefaultItemExcludes);tests\UnityCloneRegression\Library\**;tests\UnityCloneRegression\Temp\**;tests\UnityCloneRegression\Logs\**;tests\UnityCloneRegression\UserSettings\**</DefaultItemExcludes>
@@ -35,6 +35,7 @@
     <!-- The standalone motion-rule fixture must not contribute generated assembly metadata. -->
     <Compile Remove="tools\ValuableMotionChecks\**\*.cs" />
     <Compile Remove="tools\IceShaderBundle\**\*.cs" />
+    <Compile Remove="tools\fable_realm\**\*.cs" />
     <!-- Export packages contain review copies, not additional plugin compilation units. -->
     <Compile Remove="art\valuables\**\runtime-source\**\*.cs" />
     <None Include="_decompiled\**\*.cs" />

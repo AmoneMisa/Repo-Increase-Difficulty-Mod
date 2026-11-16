@@ -16,6 +16,7 @@ from room_kit import LOOT, PALETTE, Room, surface  # noqa: E402
 import rooms_forest_village  # noqa: E402
 import rooms_giant_castle  # noqa: E402
 import rooms_extra  # noqa: E402
+import loot_fill  # noqa: E402
 
 CATALOG = ROOT.parent / 'room-catalog.json'
 # Vanilla keeps three difficulty pools per module type; harder pools get pits and upper routes.
@@ -23,7 +24,7 @@ DIFFICULTY = {'BookGate': 1, 'RootHall': 2, 'MushroomChoir': 2, 'FireflyBrook': 
               'SugarGate': 1, 'GingerbreadSquare': 1, 'BakersWorkshop': 2, 'CandyMarket': 1, 'Clockmaker': 2, 'MarzipanVault': 1,
               'BeanstalkCourt': 3, 'GiantTea': 2, 'PorcelainWalk': 2, 'RoseMaze': 2, 'ForgottenToy': 1, 'GardenStore': 2,
               'ThornGate': 3, 'MirrorCourt': 3, 'SilentBallroom': 3, 'SleepingObservatory': 3, 'StoryArchive': 3, 'RoyalTreasury': 3,
-              'CoachYard': 2, 'DrawbridgeYard': 3, 'FairyRing': 1, 'TeaTray': 2, 'CrownChapel': 3, 'BeanstalkGrove': 3}
+              'GiantPantry': 1, 'TrophyHall': 2, 'CoachYard': 2, 'DrawbridgeYard': 3, 'FairyRing': 1, 'TeaTray': 2, 'CrownChapel': 3, 'BeanstalkGrove': 3}
 
 
 SPECIAL = {'BeanstalkGrove': 'bean-puzzle'}
@@ -148,6 +149,7 @@ def main():
     entries = []
     for room in catalog['rooms']:
         recipe = recipes.pop(room['key'])
+        loot_fill.fill(recipe, room['role'])  # vanilla-like numbers of valuable volumes for every size
         path = ROOT / (room['key'] + '.room.json')
         path.write_text(json.dumps(recipe, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         entries.append(dict(recipe='Assets/FableRealm/RoomDefinitions/' + path.name, role=room['role'], difficulty=DIFFICULTY[room['key']]))
@@ -155,8 +157,10 @@ def main():
         room['status'] = 'authored-recipe-gameplay-anchors'
         room['layoutSource'] = 'RoomDefinitions/' + path.name
         count = lambda kind: sum(1 for a in recipe['anchors'] if a['kind'] == kind)
+        sizes = ' '.join(f"{kind[0]}{'T' if kind == 'VeryTall' else ''}{sum(1 for a in recipe['anchors'] if a['kind'] == 'loot' and a.get('tag') == kind)}"
+                         for kind in ('Tiny', 'Small', 'Medium', 'Big', 'Wide', 'Tall', 'VeryTall'))
         print(f"{room['id']} {room['key']:<20} {room['role']:<10} {len(recipe['elements']):>4} elements  "
-              f"{count('nav'):>2} level points  {count('loot'):>2} loot")
+              f"{count('nav'):>2} level points  {count('loot'):>2} loot ({sizes})")
     if recipes: raise SystemExit('Recipes missing from the catalog: ' + ', '.join(recipes))
     (ROOT / 'FableRealm.room-set.json').write_text(json.dumps(dict(
         schemaVersion=1, id='FableRealm', title='Страна забытых сказок', gameplayContract=True, rooms=entries),

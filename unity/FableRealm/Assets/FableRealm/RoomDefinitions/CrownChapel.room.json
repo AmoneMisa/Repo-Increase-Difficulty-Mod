@@ -14858,7 +14858,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -14878,7 +14878,7 @@
           "z": 1.851635796664465
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-5-star-0",
@@ -14915,7 +14915,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -14935,7 +14935,7 @@
           "z": 1.851635796664465
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-5-star-1",
@@ -14972,7 +14972,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -14992,7 +14992,7 @@
           "z": 1.851635796664465
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-5-star-2",
@@ -15321,7 +15321,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -15341,7 +15341,7 @@
           "z": -2.5798507941320428
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-7-star-0",
@@ -15378,7 +15378,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -15398,7 +15398,7 @@
           "z": -2.5798507941320428
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-7-star-1",
@@ -15435,7 +15435,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -15455,7 +15455,7 @@
           "z": -2.5798507941320428
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-7-star-2",

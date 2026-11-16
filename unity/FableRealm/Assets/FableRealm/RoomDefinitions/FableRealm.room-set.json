@@ -154,6 +154,16 @@
       "role": "DeadEnd",
       "difficulty": 3,
       "special": "bean-puzzle"
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/GiantPantry.room.json",
+      "role": "Normal",
+      "difficulty": 1
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/TrophyHall.room.json",
+      "role": "Normal",
+      "difficulty": 2
     }
   ]
 }

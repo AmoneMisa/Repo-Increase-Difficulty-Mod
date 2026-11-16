@@ -1,0 +1,1 @@
+NAVMESH PASS: ExampleRoom; 2 points; 1 complete paths; 8 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

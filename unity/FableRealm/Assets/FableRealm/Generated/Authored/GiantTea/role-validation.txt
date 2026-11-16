@@ -1,1 +1,1 @@
-ROLE PASS: GiantTea as Normal; exits east,north,south,west; 17 loot volumes; 0 extraction; 0 spawns.
+ROLE PASS: GiantTea as Normal; exits east,north,south,west; 35 loot volumes; 0 extraction; 0 spawns.

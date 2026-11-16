@@ -410,6 +410,16 @@
       "scale": 2
     },
     {
+      "id": "Wax",
+      "color": "#e8dcc0",
+      "grain": 0.1,
+      "smoothness": 0.25,
+      "metallic": 0,
+      "emission": 0,
+      "pattern": "plain",
+      "scale": 1.0
+    },
+    {
       "id": "Straw",
       "color": "#d8c170",
       "grain": 0.25,
@@ -14389,7 +14399,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -14409,7 +14419,7 @@
           "z": 2.0285730685798873
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-6-star-0",
@@ -14446,7 +14456,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -14466,7 +14476,7 @@
           "z": 2.0285730685798873
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-6-star-1",
@@ -14503,7 +14513,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -14523,7 +14533,7 @@
           "z": 2.0285730685798873
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-6-star-2",
@@ -14630,7 +14640,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -14650,7 +14660,7 @@
           "z": 0.7598384451127282
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-7-star-0",
@@ -14687,7 +14697,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -14707,7 +14717,7 @@
           "z": 0.7598384451127282
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-7-star-1",
@@ -14744,7 +14754,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Brass",
+      "material": "Wax",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -14764,7 +14774,7 @@
           "z": 0.7598384451127282
         }
       ],
-      "radius": 0.01
+      "radius": 0.018
     },
     {
       "id": "drop-7-star-2",
@@ -15447,6 +15457,206 @@
         "x": -2.1999999999999997,
         "y": 1,
         "z": -4.75
+      }
+    },
+    {
+      "id": "loot-fill-00",
+      "kind": "loot",
+      "tag": "VeryTall",
+      "position": {
+        "x": 4.0,
+        "y": 0,
+        "z": -3.5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1.2,
+        "y": 2.9,
+        "z": 1.2
+      }
+    },
+    {
+      "id": "loot-fill-01",
+      "kind": "loot",
+      "tag": "Big",
+      "position": {
+        "x": -2.25,
+        "y": 0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1.4,
+        "y": 1.4,
+        "z": 1.4
+      }
+    },
+    {
+      "id": "loot-fill-02",
+      "kind": "loot",
+      "tag": "Small",
+      "position": {
+        "x": -0.25,
+        "y": 0,
+        "z": 0.25
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 0.5
+      }
+    },
+    {
+      "id": "loot-fill-03",
+      "kind": "loot",
+      "tag": "Tiny",
+      "position": {
+        "x": -0.75,
+        "y": 0,
+        "z": 2.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.3,
+        "z": 0.3
+      }
+    },
+    {
+      "id": "loot-fill-04",
+      "kind": "loot",
+      "tag": "Tiny",
+      "position": {
+        "x": -2.5,
+        "y": 0,
+        "z": 5.25
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.3,
+        "z": 0.3
+      }
+    },
+    {
+      "id": "loot-fill-05",
+      "kind": "loot",
+      "tag": "Tiny",
+      "position": {
+        "x": -2.0,
+        "y": 0,
+        "z": 3.25
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.3,
+        "z": 0.3
+      }
+    },
+    {
+      "id": "loot-fill-06",
+      "kind": "loot",
+      "tag": "Tiny",
+      "position": {
+        "x": 0.75,
+        "y": 0,
+        "z": -4.5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.3,
+        "z": 0.3
+      }
+    },
+    {
+      "id": "loot-fill-07",
+      "kind": "loot",
+      "tag": "Tiny",
+      "position": {
+        "x": -4.5,
+        "y": 0,
+        "z": 1.75
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.3,
+        "z": 0.3
+      }
+    },
+    {
+      "id": "loot-fill-08",
+      "kind": "loot",
+      "tag": "Tiny",
+      "position": {
+        "x": -2.25,
+        "y": 0,
+        "z": 2.75
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.3,
+        "z": 0.3
+      }
+    },
+    {
+      "id": "loot-fill-09",
+      "kind": "loot",
+      "tag": "Tiny",
+      "position": {
+        "x": 2.75,
+        "y": 0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.3,
+        "z": 0.3
       }
     }
   ],

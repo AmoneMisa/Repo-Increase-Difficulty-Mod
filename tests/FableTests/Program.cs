@@ -50,7 +50,7 @@ int[] AllMatched() => Plates((Red, Bit(Red)), (Yellow, Bit(Yellow)), (Blue, Bit(
     string key = BeanRewardLedger.Key("REPO_SAVE_2026_11_16", 4);
     var puzzle = new BeanPuzzleState();
     puzzle.Observe(AllMatched(), 100);
-    Check(!puzzle.RewardDue(100 + BeanPuzzleRules.LowerSeconds - .1), "No egg while the giant bean is still coming down");
+    Check(!puzzle.RewardDue(100 + BeanPuzzleRules.LowerSeconds - .1), "No egg while the beanstalk is still growing");
     Check(puzzle.RewardDue(100 + BeanPuzzleRules.LowerSeconds), "The egg is due once the bean has landed");
     Check(puzzle.SettleReward(!ledger.Claimed(key)) && ledger.Claim(key) && puzzle.Reward == BeanReward.Given, "The first landing gives the egg");
     Check(!puzzle.RewardDue(1000) && !puzzle.SettleReward(true) && puzzle.Reward == BeanReward.Given, "The same puzzle never gives a second egg");
@@ -62,7 +62,7 @@ int[] AllMatched() => Plates((Red, Bit(Red)), (Yellow, Bit(Yellow)), (Blue, Bit(
     reloaded.Load(ledger.Lines());
     var again = new BeanPuzzleState();
     again.Observe(AllMatched(), 50);
-    Check(reloaded.Claimed(key) && !again.SettleReward(!reloaded.Claimed(key)) && again.Reward == BeanReward.AlreadyClaimed, "After a reload the bean comes down empty");
+    Check(reloaded.Claimed(key) && !again.SettleReward(!reloaded.Claimed(key)) && again.Reward == BeanReward.AlreadyClaimed, "After a reload the beanstalk grows with an empty crown");
     Check(!again.SettleReward(true) && again.Reward == BeanReward.AlreadyClaimed, "An empty landing is final too");
     Check(!reloaded.Claimed(BeanRewardLedger.Key("REPO_SAVE_2026_11_16", 5)) && !reloaded.Claimed(BeanRewardLedger.Key("OTHER_SAVE", 4)), "Another level or another save still has its egg");
     Check(BeanRewardLedger.Key("a|b\nc", 2) == "a_b c|2" && BeanRewardLedger.Key(null, 0) == "unsaved|0", "Ledger keys stay on one line");
@@ -80,7 +80,7 @@ int[] AllMatched() => Plates((Red, Bit(Red)), (Yellow, Bit(Yellow)), (Blue, Bit(
     host.Observe(Plates((Violet, Bit(Violet))), 2);
     Check(guest.Apply(host.Snapshot) && guest.Matched == Bit(Violet), "A guest follows a bean being taken away");
     host.Observe(AllMatched(), 30);
-    Check(guest.Apply(host.Snapshot) && guest.Solved && guest.SolvedAt == 30 && guest.Reward == BeanReward.Pending, "A guest lowers the bean from the host's solve time");
+    Check(guest.Apply(host.Snapshot) && guest.Solved && guest.SolvedAt == 30 && guest.Reward == BeanReward.Pending, "A guest grows the beanstalk from the host's solve time");
     var stale = new BeanSnapshot(Bit(Red), false, BeanReward.Pending, 0);
     Check(!guest.Apply(stale) && guest.Solved && guest.Matched == BeanPuzzleRules.AllMask, "A late unsolved report cannot undo a solved puzzle");
     host.SettleReward(true);
@@ -122,11 +122,11 @@ int[] AllMatched() => Plates((Red, Bit(Red)), (Yellow, Bit(Yellow)), (Blue, Bit(
 
 // ---- lowering
 {
-    Check(BeanPuzzleRules.Drop(-1) == 0 && BeanPuzzleRules.Drop(0) == 0 && BeanPuzzleRules.Drop(double.NaN) == 0, "The bean hangs still before the puzzle is solved");
-    Check(Math.Abs(BeanPuzzleRules.Drop(BeanPuzzleRules.LowerSeconds) - 5.2f) < 1e-4 && Math.Abs(BeanPuzzleRules.Drop(9999) - 5.2f) < 1e-4, "The bean comes down exactly 5.2 m");
+    Check(BeanPuzzleRules.Drop(-1) == 0 && BeanPuzzleRules.Drop(0) == 0 && BeanPuzzleRules.Drop(double.NaN) == 0, "The beanstalk stays in the ground before the puzzle is solved");
+    Check(Math.Abs(BeanPuzzleRules.Drop(BeanPuzzleRules.LowerSeconds) - 5.2f) < 1e-4 && Math.Abs(BeanPuzzleRules.Drop(9999) - 5.2f) < 1e-4, "The beanstalk rises exactly 5.2 m");
     float last = 0; bool rising = true;
     for (double t = 0; t <= BeanPuzzleRules.LowerSeconds; t += .1) { float d = BeanPuzzleRules.Drop(t); rising &= d >= last; last = d; }
-    Check(rising, "The bean never moves back up on its way down");
+    Check(rising, "The beanstalk never sinks back while it grows");
     Check(BeanPuzzleRules.ColourOf(BeanPuzzleRules.BeanKey(Green)) == Green && BeanPuzzleRules.ColourOf("fable_bean_pink") < 0 &&
         BeanPuzzleRules.ColourOf(BeanPuzzleRules.EggKey) < 0 && BeanPuzzleRules.ColourOf(null) < 0, "Only the five bean valuables count as beans");
 }
@@ -135,7 +135,7 @@ int[] AllMatched() => Plates((Red, Bit(Red)), (Yellow, Bit(Yellow)), (Blue, Bit(
 {
     string path = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "FableRealm", "fable_rooms.json");
     var file = JsonSerializer.Deserialize<FableRoomFile>(File.ReadAllText(path), new JsonSerializerOptions { IncludeFields = true });
-    Check(file?.rooms != null && file.rooms.Length == 30, "The contract lists the 30 rooms");
+    Check(file?.rooms != null && file.rooms.Length == 32, "The contract lists the 32 rooms");
     var plan = FableLevelPlan.From(file.rooms, out string error);
     Check(plan != null && error == null, "The contract makes a complete level: " + error);
     Check(plan.Special.Count == 1 && plan.Special[0].id == "BeanstalkGrove" && plan.Special[0].special == BeanPuzzleRules.Special, "The bean puzzle room is the one special room");
@@ -147,7 +147,31 @@ int[] AllMatched() => Plates((Red, Bit(Red)), (Yellow, Bit(Yellow)), (Blue, Bit(
     Check(FableLevelPlan.PuzzleAnchorsComplete(plan.Special[0], out string missing), "The grove has its five sockets, landing and egg markers: " + missing);
     int count = plan.Start.Count + plan.Special.Count;
     foreach (var tiers in new[] { plan.Normal, plan.Passage, plan.DeadEnd, plan.Extraction }) foreach (var tier in tiers) count += tier.Count;
-    Check(count == 30 && plan.Start.Count == 3 && plan.Normal[0].Count > 0, "Every room lands in exactly one list");
+    Check(count == 32 && plan.Start.Count == 3 && plan.Normal[0].Count > 0, "Every room lands in exactly one list");
+    // Pits: every pit has a death zone, wholly below the room floor, so the rim and bridges are safe.
+    foreach (var room in file.rooms)
+    {
+        int pits = 0, zones = 0; bool below = true;
+        foreach (var anchor in room.anchors)
+        {
+            if (anchor.kind == "pit") pits++;
+            if (anchor.kind != "kill") continue;
+            zones++;
+            below &= anchor.s != null && anchor.s.Length == 3 && anchor.s[1] >= 1.5f && anchor.p[1] + anchor.s[1] / 2 <= -1.2f && anchor.s[0] >= 1.5f && anchor.s[2] >= 1.5f;
+        }
+        if (pits > 0) Check(zones == pits && below, "Room " + room.id + " has a death zone under the floor for each pit");
+    }
+    // Beanstalk: the egg appears on the crown, above the last leaf and below the height the stalk rises by.
+    var crown = FableLevelPlan.Anchor(plan.Special[0], BeanPuzzleRules.EggSpawn);
+    Check(crown != null && crown.p[1] > 4f && crown.p[1] < BeanPuzzleRules.LowerDistance, "The Golden Egg appears on the crown of the beanstalk");
+    // The two open rooms carry the large valuables.
+    foreach (string id in new[] { "GiantPantry", "TrophyHall" })
+    {
+        var hall = Array.Find(file.rooms, r => r.id == id);
+        int Count(string type) { int n = 0; if (hall != null) foreach (var a in hall.anchors) if (a.kind == "loot" && a.tag == type) n++; return n; }
+        Check(hall != null && hall.role == "Normal" && Count("Big") >= 4 && Count("Wide") >= 2 && Count("VeryTall") >= 2 && Count("Tall") >= 2,
+            id + " has room for big, wide, tall and very tall loot");
+    }
     foreach (var room in plan.Start)
         Check(FableLevelPlan.Anchor(room, "truck") != null && FableLevelPlan.Anchor(room, "extraction") != null, "Start room " + room.id + " has truck and extraction anchors");
     foreach (var tier in plan.Extraction) foreach (var room in tier)

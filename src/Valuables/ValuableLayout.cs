@@ -6,7 +6,9 @@ internal static class ValuableLayout
 {
     internal static float Scale(string key)=>key=="bomb"?.8f:key=="cannon"?.85f:
         key=="robot_vacuum"?2.2f:key=="graphics_card"||key=="ram_pair"?1.2f:
-        key=="centrifuge"?1.1f:key=="maneki_neko"?2f:1f;
+        key=="centrifuge"?1.1f:key=="maneki_neko"?2f:
+        // Fable Realm: the wolf is modelled life-size and brought down to a big spawn slot, the house to a medium one.
+        key==FableLoot.Wolf?.76f:key==FableLoot.House?.95f:1f;
     internal static Bounds MeshBounds(Transform root,Transform visual)
     {
         bool first=true;var bounds=new Bounds();

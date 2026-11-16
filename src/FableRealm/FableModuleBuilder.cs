@@ -14,6 +14,10 @@ internal sealed class FableDonor
     internal GameObject Truck;
     internal Vector3 TruckPosition;
     internal Quaternion TruckRotation;
+    /// <summary>The vanilla wall piece around the truck's rear: frame, sill and its place in the start room.</summary>
+    internal GameObject Hole;
+    internal Vector3 HolePosition, HoleScale = Vector3.one;
+    internal Quaternion HoleRotation = Quaternion.identity;
     internal GameObject Extraction;
     /// <summary>A vanilla room volume whose reverb, ambience, light and fog presets our volumes reuse.</summary>
     internal RoomVolume Volume;
@@ -32,7 +36,8 @@ internal sealed class FableDonor
 /// | portal + variant closed-portal   | ModulePropSwitch (plug shown when the exit is unused)       |
 /// | extraction, volume tag extraction| clone of the vanilla ExtractionPoint (it has its own volume)|
 /// | truck, spawn, volume tag truck   | clone of the vanilla truck behind the room's back wall      |
-/// | surface (bean puzzle)            | BeanGrove marker with the plates and the giant bean         |
+/// | surface (bean puzzle)            | BeanGrove marker with the plates and the growing beanstalk  |
+/// | kill (one per pit)               | HurtCollider death pit: kills players, kills or maims monsters |
 /// </summary>
 internal static class FableModuleBuilder
 {
@@ -70,9 +75,11 @@ internal static class FableModuleBuilder
         gameplay.SetParent(body.transform, false);
 
         MarkNavigation(body.transform, room);
+        Solidify(body.transform);
         var volumes = Volumes(gameplay, room, donor, start && donor.Truck != null);
         LevelPoints(gameplay, room, volumes.Count > 0 ? volumes[0] : null, out var truckPoint);
         Loot(gameplay, room);
+        Pits(gameplay, room);
         if (module.type == Module.Type.Normal) Exits(body.transform, gameplay, room);
         var extraction = FableLevelPlan.Anchor(room, "extraction");
         if (extraction != null && donor.Extraction != null)
@@ -84,6 +91,7 @@ internal static class FableModuleBuilder
         }
         if (start) Truck(root.transform, body.transform, gameplay, room, donor, truckPoint);
         if (room.special == BeanPuzzleRules.Special) Grove(root, body.transform, room);
+        MapTiles(root, body.transform, room);
         view.RefreshRpcMonoBehaviourCache();
         return root;
     }
@@ -121,6 +129,64 @@ internal static class FableModuleBuilder
         // Authoring markers carry no geometry, but keep them out of every collection pass anyway.
         var markers = body.Find(MarkerRoot);
         if (markers != null) markers.gameObject.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
+    }
+
+    // The recipes give collision to floors, walls, furniture and to simple blocker boxes inside big props; the
+    // decoration itself (arches, vines, cups, roofs, wall trim) is visual only, so players walked through it.
+    // Here every decoration piece gets a collider in its own shape. It runs after MarkNavigation on purpose:
+    // those pieces stay out of the navmesh build, so monster paths remain the ones checked in the editor.
+    // Skipped: flat floor markings and small loose clutter, which would only snag carts and loot.
+    private static void Solidify(Transform body)
+    {
+        var architecture = body.Find("Architecture");
+        if (architecture == null) return;
+        foreach (Transform element in architecture)
+        {
+            if (element.GetComponentInChildren<Collider>(true) != null) continue;
+            foreach (var filter in element.GetComponentsInChildren<MeshFilter>(true))
+            {
+                var mesh = filter.sharedMesh;
+                if (mesh == null) continue;
+                var bounds = BoundsIn(body, filter.transform, mesh.bounds);
+                float largest = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
+                if (largest < .3f || (bounds.size.y < .06f && bounds.min.y < .2f)) continue;
+                if (mesh.name == "Cube") filter.gameObject.AddComponent<BoxCollider>();
+                else if (mesh.isReadable) filter.gameObject.AddComponent<MeshCollider>().sharedMesh = mesh;
+                else { var box = filter.gameObject.AddComponent<BoxCollider>(); box.center = mesh.bounds.center; box.size = mesh.bounds.size; }
+            }
+        }
+    }
+
+    /// <summary>The box around a mesh's bounds (given in the mesh object's space) in the axes of another transform.</summary>
+    private static Bounds BoundsIn(Transform space, Transform from, Bounds local)
+    {
+        var result = new Bounds(space.InverseTransformPoint(from.TransformPoint(local.center)), Vector3.zero);
+        for (int i = 0; i < 8; i++)
+        {
+            var corner = local.center + Vector3.Scale(local.extents, new Vector3((i & 1) == 0 ? -1f : 1f, (i & 2) == 0 ? -1f : 1f, (i & 4) == 0 ? -1f : 1f));
+            result.Encapsulate(space.InverseTransformPoint(from.TransformPoint(corner)));
+        }
+        return result;
+    }
+
+    // The handheld map draws a module from DirtFinderMapFloor / DirtFinderMapWall markers on its floor and wall
+    // pieces. The room prefabs have none, so the map showed our rooms as empty space. The markers need the game's
+    // map tile prefabs, which exist only inside a level: FableMapTiles places them when the module starts.
+    private static void MapTiles(GameObject root, Transform body, FableRoom room)
+    {
+        var architecture = body.Find("Architecture");
+        if (architecture == null) return;
+        var walkable = new HashSet<string>(room.walkable ?? Array.Empty<string>(), StringComparer.Ordinal);
+        var floors = new List<Transform>(); var walls = new List<Transform>();
+        foreach (Transform element in architecture)
+        {
+            bool wall = element.name.StartsWith("wall-", StringComparison.Ordinal);
+            if (!wall && !walkable.Contains(element.name)) continue;
+            foreach (var box in element.GetComponentsInChildren<BoxCollider>(true))
+                if (box.GetComponent<MeshFilter>() != null) (wall ? walls : floors).Add(box.transform);
+        }
+        var tiles = root.AddComponent<FableMapTiles>();
+        tiles.floors = floors.ToArray(); tiles.walls = walls.ToArray();
     }
 
     private static List<RoomVolume> Volumes(Transform parent, FableRoom room, FableDonor donor, bool truckCloned)
@@ -207,6 +273,32 @@ internal static class FableModuleBuilder
         }
     }
 
+    // A fall into a pit is fatal, as in the game's own death pits: the same HurtCollider with its deathPit flag.
+    // Players die at once. Monsters die on the first moons and take heavy damage with a stun on later ones
+    // (the game's own rule for death pits). Loot and carts are left alone, so nothing is destroyed by a slip.
+    private static void Pits(Transform parent, FableRoom room)
+    {
+        foreach (var anchor in room.anchors)
+        {
+            if (anchor.kind != "kill") continue;
+            var size = Vec(anchor.s);
+            if (size.x < .5f || size.y < .5f || size.z < .5f) continue;
+            var go = new GameObject("Death Pit " + anchor.id) { layer = Layer("Triggers", 2) };
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = Vec(anchor.p);
+            var box = go.AddComponent<BoxCollider>();
+            box.isTrigger = true; box.size = size;
+            var hurt = go.AddComponent<HurtCollider>();
+            hurt.deathPit = true;
+            hurt.playerLogic = true; hurt.playerKill = true;
+            hurt.enemyLogic = true; hurt.enemyKill = true;
+            hurt.physLogic = false;
+            // Unity fills these in for prefabs made in the editor; a component added in code starts with none.
+            hurt.onImpactAny = new UnityEngine.Events.UnityEvent(); hurt.onImpactPlayer = new UnityEngine.Events.UnityEvent();
+            hurt.onImpactPhysObject = new UnityEngine.Events.UnityEvent(); hurt.onImpactEnemy = new UnityEngine.Events.UnityEvent();
+        }
+    }
+
     // A normal module can end up with unused sides. Vanilla hides or shows props per side through
     // ModulePropSwitch; here the "not connected" side is the recipe's wall plug.
     private static void Exits(Transform body, Transform parent, FableRoom room)
@@ -235,8 +327,14 @@ internal static class FableModuleBuilder
     }
 
     // The vanilla truck is far longer than the recipe's parking bay (about 14 m), and the level cannot be finished
-    // without its screen, door and shelves. So the real truck is cloned and parked where vanilla parks it: outside,
-    // behind the wall opposite the exit, with a doorway cut into that wall. The bay becomes its forecourt.
+    // without its screen, door and shelves. So the real truck is cloned and parked the way vanilla parks it: outside,
+    // its rear flush with the wall opposite the exit, with a doorway cut into that wall. The bay becomes its forecourt.
+    //
+    // Measured in the Manor start rooms: the truck object sits at the room origin and its rear opening is 9.96 m
+    // behind it, exactly where the "Truck Hole" wall piece stands. The truck floor is 0.7 m above the room floor;
+    // the truck's own ramp comes 3.8 m into the room and the hole piece's sill closes the space under the floor.
+    private const float VanillaHoleZ = -9.96f;
+
     private static void Truck(Transform root, Transform body, Transform gameplay, FableRoom room, FableDonor donor, LevelPoint truckPoint)
     {
         var bay = FableLevelPlan.Anchor(room, "truck");
@@ -255,12 +353,22 @@ internal static class FableModuleBuilder
             if (truckPoint != null) truckPoint.Truck = true;
             return;
         }
+        // Slide the vanilla arrangement back until its hole plane lies in our back wall, and sideways to the bay.
+        var backWall = body.Find("Architecture/wall-south");
+        float wallZ = body.localPosition.z + (backWall != null ? backWall.localPosition.z : -HalfModule);
+        var shift = new Vector3(Vec(bay.p).x, 0f, wallZ - (donor.Hole != null ? donor.HolePosition.z : VanillaHoleZ));
         var truck = Object.Instantiate(donor.Truck, root);
         truck.name = donor.Truck.name;
-        // Same pose a vanilla start room gives it, shifted sideways to the bay. A vanilla start room is half a
-        // module deep and ours is a full one, so its back wall (and the truck behind it) is half a module further back.
-        truck.transform.localPosition = donor.TruckPosition + new Vector3(Vec(bay.p).x, 0f, -HalfModule);
+        truck.transform.localPosition = donor.TruckPosition + shift;
         truck.transform.localRotation = donor.TruckRotation;
+        if (donor.Hole != null)
+        {
+            var hole = Object.Instantiate(donor.Hole, root);
+            hole.name = donor.Hole.name;
+            hole.transform.localPosition = donor.HolePosition + shift;
+            hole.transform.localRotation = donor.HoleRotation;
+            hole.transform.localScale = donor.HoleScale;
+        }
 
         // Links to the vanilla start room's own level points did not survive the clone: keep the truck's inner
         // links and tie its point nearest to the door to the recipe's truck point.
@@ -276,7 +384,10 @@ internal static class FableModuleBuilder
         }
         if (nearest != null) Link(nearest, truckPoint);
 
-        Doorway(body, Vec(bay.p).x, Mathf.Max(4.8f, Vec(bay.s).x), 4.4f);
+        // With the vanilla frame the cut ends inside its posts and top bar (outer edge 2.6 m, bar at 3.9 m);
+        // without it the cut is the truck's inner width, so the truck's own walls close the sides.
+        if (donor.Hole != null) Doorway(body, Vec(bay.p).x, 5.1f, 3.9f);
+        else Doorway(body, Vec(bay.p).x, 4.6f, 4.4f);
     }
 
     // Replaces the solid back wall with three pieces around the truck door. The wall is scaled copies of itself:
@@ -300,6 +411,21 @@ internal static class FableModuleBuilder
         Piece(wall, "wall-south-right", doorRight, right, floor, top, origin, size);
         Piece(wall, "wall-south-lintel", doorLeft, doorRight, doorTop, top, origin, size);
         wall.gameObject.SetActive(false);
+
+        // Wall trim, hangings and lamps that sat on the removed stretch of wall would now hang in the doorway.
+        var opening = new Bounds(new Vector3((doorLeft + doorRight) * .5f, (floor + doorTop) * .5f + .05f, origin.z),
+            new Vector3(doorRight - doorLeft - .1f, doorTop - floor - .1f, 1.2f));
+        foreach (Transform element in wall.parent)
+        {
+            if (!element.gameObject.activeSelf || element.name.StartsWith("wall-", StringComparison.Ordinal) ||
+                element.name.StartsWith("floor", StringComparison.Ordinal) || element.name.StartsWith("ceiling", StringComparison.Ordinal)) continue;
+            foreach (var part in element.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (part.sharedMesh == null || !BoundsIn(body, part.transform, part.sharedMesh.bounds).Intersects(opening)) continue;
+                element.gameObject.SetActive(false);
+                break;
+            }
+        }
     }
 
     private static void Piece(Transform wall, string name, float x0, float x1, float y0, float y1, Vector3 origin, Vector3 size)
@@ -339,12 +465,12 @@ internal static class FableModuleBuilder
     }
 }
 
-/// <summary>Sits on the bean puzzle module, on every client: the plates, the landing spot and the giant bean.</summary>
+/// <summary>Sits on the bean puzzle module, on every client: the plates, the dais and the beanstalk that grows from it.</summary>
 internal sealed class BeanGrove : MonoBehaviour
 {
     internal static BeanGrove Instance { get; private set; }
 
-    // Public so Unity copies them from the template onto each spawned module.
+    // Public so Unity copies them from the template onto each spawned module. "giant" is every beanstalk piece.
     public Transform[] sockets;
     public Transform landing, eggSpawn;
     public Transform[] giant;
@@ -371,6 +497,7 @@ internal sealed class BeanGrove : MonoBehaviour
         if (giant == null) return;
         _rest = new Vector3[giant.Length];
         for (int i = 0; i < giant.Length; i++) _rest[i] = giant[i] != null ? giant[i].localPosition : Vector3.zero;
+        SetGrowth(0f); // the stalk starts under the floor, before the level's navmesh is built
     }
 
     /// <summary>Shows which plates hold the bean of their colour: the stone's lamp burns three times brighter.</summary>
@@ -389,12 +516,103 @@ internal sealed class BeanGrove : MonoBehaviour
 
     private void OnDestroy() { if (Instance == this) Instance = null; }
 
-    /// <summary>Moves every giant-bean element down by <paramref name="metres"/> from where the recipe hangs it.</summary>
-    internal void SetDrop(float metres)
+    /// <summary>
+    /// Raises the beanstalk <paramref name="metres"/> out of the floor: 0 keeps it fully sunk, LowerDistance puts
+    /// every piece where the recipe drew it. The leaves and the crown carry their colliders up with them.
+    /// </summary>
+    internal void SetGrowth(float metres)
     {
         if (_rest == null || Mathf.Approximately(metres, _drop)) return;
         _drop = metres;
+        float sunk = Mathf.Max(0f, BeanPuzzleRules.LowerDistance - metres);
         for (int i = 0; i < giant.Length; i++)
-            if (giant[i] != null) giant[i].localPosition = _rest[i] + Vector3.down * metres;
+            if (giant[i] != null) giant[i].localPosition = _rest[i] + Vector3.down * sunk;
+    }
+}
+
+/// <summary>
+/// Draws a Fable Realm module on the handheld map. Each floor and wall box of the room gets a marker the game's
+/// map understands; the marker is scaled and shifted so that the game's own 1x1 map tile covers exactly that box,
+/// whatever size and pivot the tile prefab has (both are measured from the prefab here, not assumed).
+/// Local to each client, like the map itself.
+/// </summary>
+internal sealed class FableMapTiles : MonoBehaviour
+{
+    // Public so Unity copies them from the template onto each spawned module. Each is a unit cube scaled to the box.
+    public Transform[] floors, walls;
+    private static bool _logged;
+
+    private void Start()
+    {
+        var map = Map.Instance;
+        if (map == null || !SemiFunc.RunIsLevel()) return;
+        bool floorOk = Measure(map.FloorObject1x1, out var floorTile), wallOk = Measure(map.Wall1x1Object, out var wallTile);
+        if (!_logged)
+        {
+            _logged = true;
+            Plugin.Log.LogInfo($"[Fable] Map tiles: floor {(floorOk ? floorTile.size.ToString("F2") + " at " + floorTile.center.ToString("F2") : "not measurable")}, " +
+                $"wall {(wallOk ? wallTile.size.ToString("F2") + " at " + wallTile.center.ToString("F2") : "not measurable")}.");
+        }
+        var holder = new GameObject("Map Tiles").transform;
+        holder.SetParent(transform, false);
+        if (floorOk && floors != null)
+            foreach (var box in floors)
+            {
+                // Level floors only: a ramp or a tilted slab has no flat tile.
+                if (box == null || !box.gameObject.activeInHierarchy || Vector3.Angle(box.up, Vector3.up) > 5f) continue;
+                var size = box.lossyScale;
+                var scale = new Vector3(size.x / floorTile.size.x, 1f, size.z / floorTile.size.z);
+                var top = box.position + Vector3.up * (size.y * .5f);
+                var marker = Marker(holder, "Floor " + box.parent.name, box.rotation, scale, top, floorTile.center);
+                marker.AddComponent<DirtFinderMapFloor>().Type = DirtFinderMapFloor.FloorType.Floor_1x1;
+            }
+        if (wallOk && walls != null)
+            foreach (var box in walls)
+            {
+                if (box == null || !box.gameObject.activeInHierarchy) continue;
+                var size = box.lossyScale;
+                bool boxAlongX = size.x >= size.z, tileAlongX = wallTile.size.x >= wallTile.size.z;
+                float length = Mathf.Max(size.x, size.z), tileLength = Mathf.Max(wallTile.size.x, wallTile.size.z);
+                var scale = tileAlongX ? new Vector3(length / tileLength, 1f, 1f) : new Vector3(1f, 1f, length / tileLength);
+                var rotation = box.rotation * Quaternion.Euler(0f, boxAlongX == tileAlongX ? 0f : 90f, 0f);
+                var foot = box.position - Vector3.up * (size.y * .5f);
+                var marker = Marker(holder, "Wall " + box.parent.name, rotation, scale, foot, wallTile.center);
+                marker.AddComponent<DirtFinderMapWall>().Type = DirtFinderMapWall.WallType.Wall_1x1;
+            }
+    }
+
+    // The map copies the marker's position, rotation and scale onto its tile. Put the marker where the tile's
+    // pivot must be for the tile's centre (horizontally) to land on the box's centre.
+    private static GameObject Marker(Transform holder, string name, Quaternion rotation, Vector3 scale, Vector3 centre, Vector3 tileCentre)
+    {
+        var marker = new GameObject(name);
+        marker.transform.SetParent(holder, true);
+        marker.transform.rotation = rotation;
+        marker.transform.localScale = scale;
+        var offset = Vector3.Scale(new Vector3(tileCentre.x, 0f, tileCentre.z), scale);
+        marker.transform.position = centre - rotation * offset;
+        return marker;
+    }
+
+    /// <summary>The box around everything a map tile prefab draws, in the prefab root's own space.</summary>
+    private static bool Measure(GameObject prefab, out Bounds bounds)
+    {
+        bounds = default;
+        if (prefab == null) return false;
+        bool any = false;
+        var toRoot = prefab.transform.worldToLocalMatrix;
+        foreach (var filter in prefab.GetComponentsInChildren<MeshFilter>(true))
+        {
+            if (filter.sharedMesh == null) continue;
+            var matrix = toRoot * filter.transform.localToWorldMatrix;
+            var mesh = filter.sharedMesh.bounds;
+            for (int i = 0; i < 8; i++)
+            {
+                var corner = mesh.center + Vector3.Scale(mesh.extents, new Vector3((i & 1) == 0 ? -1f : 1f, (i & 2) == 0 ? -1f : 1f, (i & 4) == 0 ? -1f : 1f));
+                var point = matrix.MultiplyPoint3x4(corner);
+                if (any) bounds.Encapsulate(point); else { bounds = new Bounds(point, Vector3.zero); any = true; }
+            }
+        }
+        return any && bounds.size.x > .01f && bounds.size.z > .01f;
     }
 }

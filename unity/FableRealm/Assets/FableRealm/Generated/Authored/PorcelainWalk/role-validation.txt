@@ -1,1 +1,1 @@
-ROLE PASS: PorcelainWalk as Passage; exits north,south; 16 loot volumes; 0 extraction; 0 spawns.
+ROLE PASS: PorcelainWalk as Passage; exits north,south; 23 loot volumes; 0 extraction; 0 spawns.

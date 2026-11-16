@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace IncreaseHardMod.Valuables;
 
-[Flags] internal enum LootMap { None=0,Sunstone=1,Swiftbroom=2,McJannek=4,Manor=8,Museum=16 }
+[Flags] internal enum LootMap { None=0,Sunstone=1,Swiftbroom=2,McJannek=4,Manor=8,Museum=16,Fable=32 }
 internal enum LootFragility { Normal,Fragile,VeryFragile,Sturdy,Reinforced }
 internal readonly struct LootDurability
 {
@@ -64,6 +64,7 @@ internal static class CollectionCatalog
             case "Level - Arctic":return LootMap.McJannek;
             case "Level - Manor":return LootMap.Manor;
             case "Level - Museum":return LootMap.Museum;
+            case "Level - Fable Realm":return LootMap.Fable; // the mod's own level (FableRealm.FableLevel.LevelName)
             default:return LootMap.None;
         }
     }

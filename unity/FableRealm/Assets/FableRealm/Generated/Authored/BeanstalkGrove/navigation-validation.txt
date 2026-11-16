@@ -1,1 +1,1 @@
-NAVMESH PASS: BeanstalkGrove; 11 points; 10 complete paths; 210 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.
+NAVMESH PASS: BeanstalkGrove; 11 points; 10 complete paths; 233 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

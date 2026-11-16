@@ -1,1 +1,1 @@
-ROLE PASS: ThornGate as Passage; exits north,south; 13 loot volumes; 0 extraction; 0 spawns.
+ROLE PASS: ThornGate as Passage; exits north,south; 25 loot volumes; 0 extraction; 0 spawns.

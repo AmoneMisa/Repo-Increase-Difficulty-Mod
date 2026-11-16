@@ -238,7 +238,8 @@ def _mobile(r, name, x, z, rng):
     r.tube(f'{name}-bar', [(x-.6, top-.8, z), (x+.6, top-.8, z)], .02, 'Brass'); r.tube(f'{name}-cord', [(x, top, z), (x, top-.8, z)], .012, 'Brass')
     for i, lx in enumerate((-.55, 0, .55)):
         drop = rng.uniform(.4, .9)
-        r.tube(f'{name}-string-{i}', [(x+lx, top-.8, z), (x+lx, top-.8-drop, z)], .01, 'Brass')
+        # Pale and thick enough to be seen in the dark: the stars hang on something.
+        r.tube(f'{name}-string-{i}', [(x+lx, top-.8, z), (x+lx, top-.8-drop, z)], .018, 'Wax')
         r.box(f'{name}-star-{i}', (x+lx, top-.9-drop, z), (.16, .16, .04), 'Star', False, (0, 0, 45))
 
 

@@ -37,8 +37,10 @@ def candle(r, name, x, y, z, height=.22):
 
 
 def fireflies(r, name, points, light_every=5):
+    # A small round glow: a cube read as a white square hanging in the air.
+    ball = [(.03*math.sin(math.pi*k/4), .03-.03*math.cos(math.pi*k/4)) for k in range(5)]
     for i, (x, y, z) in enumerate(points):
-        r.box(f'{name}-{i}', (x, y, z), (.07, .07, .07), 'Firefly', collider=False)
+        r.lathe(f'{name}-{i}', (x, y-.03, z), ball, 'Firefly', 6)
         if i % light_every == 0: r.light(f'{name}-glow-{i}', (x, y, z), 'Firefly', .9, 4)
 
 
@@ -48,8 +50,10 @@ def cup(r, name, x, z, s=1.0, y=0.0, mat='Porcelain', trim='Gold', handle=0.0, s
     r.lathe(f'{name}-saucer', (x, y, z), [(0, .02), (1.75*s, .02), (1.95*s, .14*s), (1.75*s, .2*s), (0, .2*s)], mat, 28)
     r.ring(f'{name}-band', (x, y+1.8*s, z), 1.56*s, .035*s+.01, trim)
     c, sn = math.cos(math.radians(handle)), math.sin(math.radians(handle))
-    r.tube(f'{name}-handle', [(x+c*(1.45+.95*math.sin(i*math.pi/12))*s, y+(1.15+.75*math.cos(i*math.pi/12))*s,
-                               z+sn*(1.45+.95*math.sin(i*math.pi/12))*s) for i in range(13)], .13*s, trim)
+    # The arc alone stopped short of the cup wall where the cup narrows; both ends now run into the wall.
+    arc = [(1.45+.95*math.sin(i*math.pi/12), 1.15+.75*math.cos(i*math.pi/12)) for i in range(13)]
+    arc = [(1.3, 1.9)] + arc + [(1.0, .4)]
+    r.tube(f'{name}-handle', [(x+c*a*s, y+b*s, z+sn*a*s) for a, b in arc], .13*s, trim)
     if solid: r.blocker(f'{name}-block', (x, y+1.05*s, z), (2.8*s, 2.1*s, 2.8*s))
 
 

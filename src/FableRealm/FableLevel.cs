@@ -109,6 +109,20 @@ internal static class FableLevel
         }
     }
 
+    // Why the moon tower does or does not wake on a Fable Realm extraction point: one log line per activation.
+    [HarmonyPatch(typeof(ExtractionPoint), "HalloweenActivationSet")]
+    private static class MoonTowerReport
+    {
+        [HarmonyPostfix]
+        private static void Postfix(ExtractionPoint __instance, bool _active)
+        {
+            if (!IsCurrent || !_active) return;
+            var tower = __instance.GetComponent<ExtractionHalloweenTower>();
+            Plugin.Log.LogInfo($"[Fable] Extraction point activated: moon tower {(tower == null ? "missing" : tower.enabled ? "running" : "present but off")}, " +
+                $"seasonal event {(SemiFunc.GameEventIsHalloween() ? "on" : "off")}.");
+        }
+    }
+
     private static void Build(RunManager run)
     {
         var file = ReadContract();
@@ -154,7 +168,14 @@ internal static class FableLevel
         level.BlockObject = new PrefabRef();
         level.ModulesMega1 = new List<PrefabRef>(); level.ModulesMega2 = new List<PrefabRef>(); level.ModulesMega3 = new List<PrefabRef>();
         level.ModulesSpecial = new List<PrefabRef>();
-        level.ValuablePresets = new List<LevelValuables>(donorLevel.ValuablePresets);
+        // The donor's vanilla loot fills the level; the mod's Manor-only collection stays on Manor. Fable Realm's
+        // own pool is listed three times: the game pools every list it is given, so this triples the odds of a
+        // fairy-tale piece against the long vanilla lists.
+        level.ValuablePresets = new List<LevelValuables>();
+        foreach (var preset in donorLevel.ValuablePresets)
+            if (preset != null && !preset.name.StartsWith(Valuables.CollectionSpawnPools.PoolPrefix, StringComparison.Ordinal)) level.ValuablePresets.Add(preset);
+        var own = Valuables.CollectionSpawnPools.Ensure(Valuables.LootMap.Fable);
+        for (int i = 0; i < 3; i++) level.ValuablePresets.Add(own);
         level.MusicPreset = donorLevel.MusicPreset;
         level.ConstantMusicPreset = donorLevel.ConstantMusicPreset;
         level.AmbiencePresets = new List<LevelAmbience>(donorLevel.AmbiencePresets ?? new List<LevelAmbience>());
@@ -231,10 +252,13 @@ internal static class FableLevel
         {
             var room = reference?.Prefab;
             if (room == null) continue;
-            if (donor.Extraction == null)
+            // Any extraction point will do, but one that carries the seasonal moon tower is preferred, so the
+            // event works on Fable Realm whenever the game runs it.
+            if (donor.Extraction == null || donor.Extraction.GetComponent<ExtractionHalloweenTower>() == null)
             {
                 var point = room.GetComponentInChildren<ExtractionPoint>(true);
-                if (point != null) donor.Extraction = point.gameObject;
+                if (point != null && (donor.Extraction == null || point.GetComponent<ExtractionHalloweenTower>() != null))
+                    donor.Extraction = point.gameObject;
             }
             if (donor.Volume == null)
                 foreach (var volume in room.GetComponentsInChildren<RoomVolume>(true))
@@ -249,13 +273,28 @@ internal static class FableLevel
             donor.Truck = truck.gameObject;
             donor.TruckPosition = truck.localPosition;
             donor.TruckRotation = truck.localRotation;
+            // The wall piece the truck backs into: a frame with a sill under the truck's raised floor.
+            foreach (var piece in room.GetComponentsInChildren<Transform>(true))
+            {
+                if (!piece.name.StartsWith("Truck Hole", StringComparison.Ordinal)) continue;
+                donor.Hole = piece.gameObject;
+                donor.HolePosition = room.transform.InverseTransformPoint(piece.position);
+                donor.HoleRotation = Quaternion.Inverse(room.transform.rotation) * piece.rotation;
+                donor.HoleScale = piece.lossyScale;
+                break;
+            }
         }
-        if (donor.Extraction == null)
+        if (donor.Extraction == null || donor.Extraction.GetComponent<ExtractionHalloweenTower>() == null)
             foreach (var reference in level.ModulesExtraction1)
             {
                 var point = reference?.Prefab != null ? reference.Prefab.GetComponentInChildren<ExtractionPoint>(true) : null;
-                if (point != null) { donor.Extraction = point.gameObject; break; }
+                if (point == null || (donor.Extraction != null && point.GetComponent<ExtractionHalloweenTower>() == null)) continue;
+                donor.Extraction = point.gameObject;
+                if (point.GetComponent<ExtractionHalloweenTower>() != null) break;
             }
+        Plugin.Log.LogInfo("[Fable] Donor extraction point: " + (donor.Extraction == null ? "none" : donor.Extraction.name +
+            (donor.Extraction.GetComponent<ExtractionHalloweenTower>() != null ? " (with the moon tower)" : " (no moon tower on it)")) +
+            ", truck hole: " + (donor.Hole != null ? donor.Hole.name : "none") + ".");
         return donor;
     }
 

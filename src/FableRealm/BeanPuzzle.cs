@@ -15,8 +15,8 @@ namespace IncreaseHardMod.FableRealm;
 
 /// <summary>
 /// The bean puzzle of the Fable Realm special room, built like the map rituals (<see cref="MapRitual"/>).
-/// The host decides everything: it hides five coloured beans in other rooms, watches the five plates, lowers the
-/// giant bean when every plate holds the bean of its colour and spawns the Golden Egg once. Everyone else only
+/// The host decides everything: it hides five coloured beans in other rooms, watches the five plates, grows the
+/// beanstalk when every plate holds the bean of its colour and spawns the Golden Egg on its crown once. Everyone else only
 /// shows what the host reports; the report is repeated every few seconds, which is also how a late joiner catches up.
 /// </summary>
 internal sealed class BeanPuzzle : MonoBehaviour
@@ -195,7 +195,7 @@ internal sealed class BeanPuzzle : MonoBehaviour
             if (_state.Observe(_resting, Now()))
             {
                 Broadcast();
-                if (_state.Solved) Plugin.Log.LogInfo("[Fable] All five beans match: the giant bean comes down.");
+                if (_state.Solved) Plugin.Log.LogInfo("[Fable] All five beans match: the beanstalk grows.");
             }
             if (!_state.Solved && now >= _nextRecovery)
             {
@@ -255,7 +255,7 @@ internal sealed class BeanPuzzle : MonoBehaviour
         return changed;
     }
 
-    // Called once the bean has landed. The ledger on the host's disk makes the egg a once-per-level reward even
+    // Called once the beanstalk has finished growing; the egg appears on its crown (the golden-egg-spawn marker). The ledger on the host's disk makes the egg a once-per-level reward even
     // across a scene reload or a reloaded save; BeanPuzzleState makes it once per puzzle.
     private void Reward()
     {
@@ -270,7 +270,7 @@ internal sealed class BeanPuzzle : MonoBehaviour
         }
         var prefab = InteractiveValuables.RitualPrefab(BeanPuzzleRules.EggKey);
         var body = prefab?.Prefab != null ? prefab.Prefab.GetComponent<PhysGrabObject>() : null;
-        var position = MapRitual.OfferingPosition(_grove.eggSpawn.position, Quaternion.identity, body, .35f);
+        var position = MapRitual.OfferingPosition(_grove.eggSpawn.position, Quaternion.identity, body, .1f);
         var egg = prefab != null ? REPOLib.Modules.Valuables.SpawnValuable(prefab, position, Quaternion.identity) : null;
         if (egg == null)
         {
@@ -360,7 +360,7 @@ internal sealed class BeanPuzzle : MonoBehaviour
     private void UpdateView(bool playing)
     {
         _grove.SetMatched(_state.Matched);
-        _grove.SetDrop(_state.Solved ? BeanPuzzleRules.Drop(Now() - _state.SolvedAt) : 0f);
+        _grove.SetGrowth(_state.Solved ? BeanPuzzleRules.Drop(Now() - _state.SolvedAt) : 0f);
         var player = PlayerAvatar.instance;
         if (!playing || player == null || player.deadSet || player.isDisabled)
         {
@@ -374,15 +374,15 @@ internal sealed class BeanPuzzle : MonoBehaviour
             if (!_announcedSolved)
             {
                 _announcedSolved = true;
-                HudNotify.Toast(ru ? "Великаний боб спускается" : "The giant bean is coming down", HudStyle.Info, 4f, HudKey + ".solved");
+                HudNotify.Toast(ru ? "Бобовый стебель растёт" : "The beanstalk is growing", HudStyle.Info, 4f, HudKey + ".solved");
             }
             if (!_announcedReward && _state.Reward != BeanReward.Pending)
             {
                 _announcedReward = true;
                 if (_state.Reward == BeanReward.Given)
-                    HudNotify.Toast(ru ? "Великаний боб оставил Золотое яйцо" : "The giant bean left a Golden Egg", HudStyle.Good, 5f, HudKey + ".reward");
+                    HudNotify.Toast(ru ? "Золотое яйцо ждёт на вершине стебля" : "A Golden Egg waits at the top of the beanstalk", HudStyle.Good, 5f, HudKey + ".reward");
                 else
-                    HudNotify.Toast(ru ? "Боб пуст: это яйцо уже забрали" : "The bean is empty: this egg was already taken", HudStyle.Caution, 5f, HudKey + ".reward");
+                    HudNotify.Toast(ru ? "Вершина пуста: это яйцо уже забрали" : "The top is empty: this egg was already taken", HudStyle.Caution, 5f, HudKey + ".reward");
             }
             return;
         }
@@ -404,7 +404,7 @@ internal sealed class BeanPuzzle : MonoBehaviour
     {
         _shownMask = _state.Matched;
         _shownRussian = ru;
-        _panel.Title = ru ? "ВЕЛИКАНИЙ БОБ" : "THE GIANT BEAN";
+        _panel.Title = ru ? "БОБОВЫЙ СТЕБЕЛЬ" : "THE BEANSTALK";
         var rows = new List<HudListRow>
         {
             new(ru ? "Пять бобов ждут в других комнатах." : "Five beans wait in other rooms.", null, HudStyle.Info),

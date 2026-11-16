@@ -1,1 +1,1 @@
-ROLE PASS: StoryArchive as DeadEnd; exits south; 16 loot volumes; 0 extraction; 0 spawns.
+ROLE PASS: StoryArchive as DeadEnd; exits south; 29 loot volumes; 0 extraction; 0 spawns.

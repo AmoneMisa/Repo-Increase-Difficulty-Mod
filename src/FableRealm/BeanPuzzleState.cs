@@ -8,11 +8,14 @@ internal static class BeanPuzzleRules
 {
     internal const int Count = 5, AllMask = (1 << Count) - 1;
     internal const int EggValue = 250000;
-    /// <summary>The giant bean hangs this far above its landing spot (see beanstalk_grove in rooms_extra.py).</summary>
+    /// <summary>
+    /// The beanstalk waits this far under the floor and rises by as much once the puzzle is solved
+    /// (see beanstalk_grove in rooms_extra.py; its tallest piece is 4.9 m, so the whole stalk is hidden).
+    /// </summary>
     internal const float LowerDistance = 5.2f;
     internal const float LowerSeconds = 4.5f;
     internal const string Special = "bean-puzzle";
-    internal const string SocketPrefix = "bean-socket-", GiantPrefix = "giant-bean-";
+    internal const string SocketPrefix = "bean-socket-", GiantPrefix = "beanstalk-";
     internal const string Landing = "giant-bean-landing", EggSpawn = "golden-egg-spawn";
     internal const string BeanKeyPrefix = "fable_bean_", EggKey = "fable_golden_egg";
     /// <summary>Plate order of the recipe; the index is the colour's bit in every mask.</summary>
@@ -26,13 +29,13 @@ internal static class BeanPuzzleRules
         return Array.IndexOf(Colours, beanKey.Substring(BeanKeyPrefix.Length));
     }
 
-    /// <summary>How far the giant bean has come down, metres, <paramref name="elapsed"/> seconds after the puzzle was solved.</summary>
+    /// <summary>How far the beanstalk has risen out of the floor, metres, <paramref name="elapsed"/> seconds after the puzzle was solved.</summary>
     internal static float Drop(double elapsed)
     {
         if (!(elapsed > 0d)) return 0f;
         if (elapsed >= LowerSeconds) return LowerDistance;
         float t = (float)(elapsed / LowerSeconds);
-        return LowerDistance * t * t * (3f - 2f * t); // eases out of the tendrils and onto the dais
+        return LowerDistance * t * t * (3f - 2f * t); // eases out of the ground and settles at full height
     }
 }
 

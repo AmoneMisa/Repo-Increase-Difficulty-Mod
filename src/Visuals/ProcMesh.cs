@@ -127,6 +127,105 @@ internal sealed class ProcMesh
             Tri(m.MultiplyPoint3x4(local[0]), m.MultiplyPoint3x4(local[k]), m.MultiplyPoint3x4(local[k + 1]));
     }
 
+    /// <summary>One flat convex face of a solid, wound to look away from <paramref name="inside"/> (any point within the solid).</summary>
+    internal ProcMesh Hull(Vector3 inside, params Vector3[] face)
+    {
+        if (face.Length < 3) return this;
+        bool flip = Vector3.Dot(Vector3.Cross(face[1] - face[0], face[2] - face[0]), face[0] - inside) < 0f;
+        for (int k = 1; k + 1 < face.Length; k++)
+            if (flip) Tri(face[0], face[k + 1], face[k]); else Tri(face[0], face[k], face[k + 1]);
+        return this;
+    }
+
+    /// <summary>Like <see cref="Lathe"/>, but only from <paramref name="fromDegrees"/> to <paramref name="toDegrees"/>
+    /// around Y (0 degrees is +X, 90 is +Z), in <paramref name="sides"/> steps: a ring with a gap, a chipped rim.</summary>
+    internal ProcMesh LatheArc(Matrix4x4 m, (float radius, float y)[] profile, int sides, float fromDegrees, float toDegrees)
+    {
+        sides = Mathf.Max(1, sides);
+        Vector3 Ring(int i, (float radius, float y) p)
+        {
+            float a = Mathf.Lerp(fromDegrees, toDegrees, i / (float)sides) * Mathf.Deg2Rad;
+            return m.MultiplyPoint3x4(new Vector3(Mathf.Cos(a) * p.radius, p.y, Mathf.Sin(a) * p.radius));
+        }
+        for (int k = 0; k + 1 < profile.Length; k++)
+            for (int i = 0; i < sides; i++)
+            {
+                var b0 = Ring(i, profile[k]); var b1 = Ring(i + 1, profile[k]);
+                var t0 = Ring(i, profile[k + 1]); var t1 = Ring(i + 1, profile[k + 1]);
+                if (profile[k].radius <= 0f) Tri(b0, t0, t1);
+                else if (profile[k + 1].radius <= 0f) Tri(b0, t0, b1);
+                else Quad(b0, t0, t1, b1);
+            }
+        return this;
+    }
+
+    /// <summary>A round tube swept along <paramref name="points"/> (handles, spouts, stems, rims), its radius given per
+    /// point (the last value repeats). <paramref name="closed"/> joins the last point back to the first: a ring.
+    /// The cross-section is carried along the path, so the tube does not twist where it turns.
+    /// <paramref name="capped"/> closes the two ends of an open tube with a flat disc.</summary>
+    internal ProcMesh Tube(Matrix4x4 m, Vector3[] points, float[] radii, int sides = 10, bool closed = false, bool capped = false)
+    {
+        int n = points.Length;
+        if (n < 2 || radii == null || radii.Length == 0) return this;
+        sides = Mathf.Max(3, sides);
+        var rings = new Vector3[n, sides];
+        var frame = Vector3.zero;
+        for (int i = 0; i < n; i++)
+        {
+            var prev = closed ? points[(i - 1 + n) % n] : points[Mathf.Max(0, i - 1)];
+            var next = closed ? points[(i + 1) % n] : points[Mathf.Min(n - 1, i + 1)];
+            var tangent = (next - prev).normalized;
+            if (tangent == Vector3.zero) tangent = Vector3.up;
+            frame -= tangent * Vector3.Dot(frame, tangent);
+            if (i == 0 || frame.sqrMagnitude < 1e-6f) frame = Vector3.Cross(tangent, Mathf.Abs(tangent.y) > .9f ? Vector3.right : Vector3.up);
+            frame.Normalize();
+            var side = Vector3.Cross(tangent, frame);
+            float r = radii[Mathf.Min(i, radii.Length - 1)];
+            for (int j = 0; j < sides; j++)
+            {
+                float a = j * Mathf.PI * 2f / sides;
+                rings[i, j] = m.MultiplyPoint3x4(points[i] + r * (frame * Mathf.Cos(a) + side * Mathf.Sin(a)));
+            }
+        }
+        for (int i = 0; i < (closed ? n : n - 1); i++)
+            for (int j = 0; j < sides; j++)
+            {
+                int k = (i + 1) % n, l = (j + 1) % sides;
+                Quad(rings[i, j], rings[i, l], rings[k, l], rings[k, j]);
+            }
+        if (capped && !closed)
+            for (int j = 0; j < sides; j++)
+            {
+                int l = (j + 1) % sides;
+                Tri(m.MultiplyPoint3x4(points[0]), rings[0, l], rings[0, j]);
+                Tri(m.MultiplyPoint3x4(points[n - 1]), rings[n - 1, j], rings[n - 1, l]);
+            }
+        return this;
+    }
+
+    /// <summary>Like <see cref="Build(string)"/>, but vertices at the same place are shared, so curved shapes
+    /// (porcelain, glass, fruit) shade smoothly instead of showing every facet.</summary>
+    internal Mesh BuildSmooth(string name)
+    {
+        var index = new Dictionary<Vector3Int, int>();
+        var vertices = new List<Vector3>();
+        var triangles = new List<int>(_t.Count);
+        foreach (int t in _t)
+        {
+            var v = _v[t];
+            var key = new Vector3Int(Mathf.RoundToInt(v.x * 10000f), Mathf.RoundToInt(v.y * 10000f), Mathf.RoundToInt(v.z * 10000f));
+            if (!index.TryGetValue(key, out int i)) { i = vertices.Count; index.Add(key, i); vertices.Add(v); }
+            triangles.Add(i);
+        }
+        var mesh = new Mesh { name = name };
+        if (vertices.Count > 65000) mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+        mesh.SetVertices(vertices);
+        mesh.SetTriangles(triangles, 0);
+        mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
+        return mesh;
+    }
+
     /// <summary>Like <see cref="Build(string)"/>, with box-projected UVs so a tiling texture wraps every face:
     /// each triangle takes the two coordinates across its dominant normal, times <paramref name="uvScale"/> (tiles per metre).</summary>
     internal Mesh Build(string name, float uvScale)

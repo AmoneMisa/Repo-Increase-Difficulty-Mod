@@ -35,6 +35,12 @@ internal static class InteractiveValuables
             foreach (var entry in CollectionCatalog.Entries)
                 if (ambient || RitualLoot.RequiredFromCollection(entry.Key)) Make(donor, entry, ambient);
             foreach (var entry in RitualLoot.RitualOnly) Make(donor, entry);
+            // Fable Realm's own loot: only on that level, and only when the level and the collection are both on.
+            if (ambient && ModConfig.FableRealmEnabled.Value)
+            {
+                CollectionSpawnPools.Ensure(LootMap.Fable);
+                foreach (var entry in FableLoot.Entries) Make(donor, entry, true);
+            }
             }
             catch (Exception e) { Plugin.Log.LogError("[Valuables] Interactive valuable initialization stopped: " + e); }
         }
@@ -186,6 +192,8 @@ internal static class InteractiveValuables
                     }
                     BoxCollider(go,"Collection collision "+binding.group,binding.node.localPosition+bounds.center,Vector3.Max(bounds.size,new Vector3(.006f,.006f,.006f)));
                 }
+                if(key==FableLoot.Basket)go.AddComponent<PieBasket>();
+                if(key==FableLoot.Ribbon)go.AddComponent<RibbonCharm>();
                 if(key=="robot_vacuum"||key=="skeleton")go.AddComponent<FloorPropMotion>();
                 if(key=="centrifuge")go.AddComponent<CollectionPhysics>();
                 if(key=="skeleton")go.AddComponent<SkeletonSway>(); // bones hang in a joint chain and sway; nothing can come loose
