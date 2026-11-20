@@ -24,6 +24,45 @@ def _cover(r, name, pos):
 
 
 # ---- hiding spots ---------------------------------------------------------------------------------
+# Freestanding furniture with a gap behind it (between its back and the wall): crouch there out of a monster's sight.
+# The cover spot sits 1.0 m behind the piece's front line; `reach` 1.6 leaves the wall 0.6 m further back.
+def tall_bookcase(mat='OakDark'):
+    def build(r, name, x, z, opening, rng):
+        p, yaw = _frame(x, z, opening)
+        r.shelf(name, *p(0, 0, 0), OPPOSITE[opening], width=1.4, height=2.6, mat=mat, rows=4)
+        r.box(f'{name}-back', p(0, 1.3, .38), (1.4, 2.6, .06), mat, rot=yaw)
+        _cover(r, name, p(0, 0, 1.0))
+    return build, .8, 1.6
+
+
+def dresser(body='OakDark', knob='Brass'):
+    def build(r, name, x, z, opening, rng):
+        p, yaw = _frame(x, z, opening)
+        r.box(f'{name}-body', p(0, .95, 0), (1.2, 1.9, .7), body, rot=yaw)
+        for i, y in enumerate((.45, .95, 1.45)):
+            r.box(f'{name}-drawer-{i}', p(0, y, -.36), (1.05, .4, .03), body, False, yaw)
+            for s in (-1, 1): r.box(f'{name}-knob-{i}-{s}', p(s*.3, y, -.39), (.08, .08, .05), knob, False, yaw)
+        r.box(f'{name}-top', p(0, 1.93, 0), (1.3, .06, .76), body, False, yaw)
+        _cover(r, name, p(0, 0, 1.0))
+    return build, .75, 1.6
+
+
+def table_and_chairs(board='Oak', leg='OakDark', seat='OakLight'):
+    def build(r, name, x, z, opening, rng):
+        p, yaw = _frame(x, z, opening)
+        r.box(f'{name}-top', p(0, .88, 0), (1.4, .1, .9), board, rot=yaw)
+        for i, (lx, lz) in enumerate(((-.6, -.35), (.6, -.35), (-.6, .35), (.6, .35))):
+            r.box(f'{name}-leg-{i}', p(lx, .42, lz), (.1, .84, .1), leg, rot=yaw)
+        # Two high-backed chairs on the room side; the gap behind the table is the hiding place.
+        for i, lx in enumerate((-.35, .35)):
+            r.box(f'{name}-seat-{i}', p(lx, .47, -.8), (.48, .08, .46), seat, rot=yaw)
+            r.box(f'{name}-chair-back-{i}', p(lx, .95, -1.01), (.48, 1.0, .06), seat, rot=yaw)
+            for j, (sx, sz) in enumerate(((-.2, -.6), (.2, -.6), (-.2, -1.0), (.2, -1.0))):
+                r.box(f'{name}-chair-leg-{i}-{j}', p(lx+sx, .22, sz), (.05, .44, .05), leg, False, yaw)
+        _cover(r, name, p(0, 0, 1.0))
+    return build, .95, 1.6
+
+
 def draped_table(cloth='Cloth', board='Oak'):
     def build(r, name, x, z, opening, rng):
         r.cloth_hide(name, x, z, opening, cloth=cloth, board=board, width=2.2, depth=2.0, nav=False)
@@ -257,6 +296,15 @@ DRESSING = {
     'castle': ([curtain(), armchair(), draped_table('Velvet', 'OakDark')],
                [(_urn, .45), (_candelabra, .3), (_books, .4), (_rubble, .8), (_urn, .45), (_candelabra, .3)],
                [_banner, _painting, _sconce], [_hanging('Iron', glow='Candle'), _hanging('Iron')]),
+}
+
+
+# More places to hide in every biome: bookcases, dressers, tables and chairs (placed after the biome's own pieces).
+FURNITURE = {
+    'forest': [tall_bookcase('Bark'), table_and_chairs('Oak', 'Bark', 'OakLight'), dresser('Bark', 'Brass')],
+    'village': [tall_bookcase('Chocolate'), table_and_chairs('OakLight', 'Chocolate', 'IcingPink'), dresser('Chocolate', 'Icing')],
+    'giant': [tall_bookcase('OakLight'), table_and_chairs('OakLight', 'OakDark', 'Oak'), dresser('OakLight', 'Copper')],
+    'castle': [tall_bookcase('OakDark'), table_and_chairs('OakDark', 'OakDark', 'Velvet'), dresser('OakDark', 'Gold')],
 }
 
 

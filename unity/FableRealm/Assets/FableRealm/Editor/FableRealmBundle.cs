@@ -33,6 +33,8 @@ namespace FableRealm.Editor
                 assets.Add(prefab); names.Add(id);
             }
             int shared=ShareTextures(assets.ToArray());
+            int sharedMeshes=ShareMeshes(assets.ToArray());
+            Debug.Log("FABLE BUNDLE: "+sharedMeshes+" duplicate mesh references shared.");
             string output=Path.GetFullPath(Path.Combine(Application.dataPath,"..","Build"));
             Directory.CreateDirectory(output);
             var build=new AssetBundleBuild { assetBundleName=BundleName,assetNames=assets.ToArray(),addressableNames=names.ToArray() };
@@ -95,6 +97,44 @@ namespace FableRealm.Editor
                 material.mainTexture=first; EditorUtility.SetDirty(material); shared++;
             }
             if(shared>0) AssetDatabase.SaveAssets();
+            return shared;
+        }
+
+        // Every room writes its own mesh assets, although many are the same shape: a room's second layout repeats its
+        // shell and hero pieces, and the kit's lanterns, plates and trims recur across rooms. Point every renderer and
+        // collider at one asset per distinct mesh, so the bundle stores each shape once.
+        static int ShareMeshes(string[] prefabs)
+        {
+            var canonical=new Dictionary<Hash128,Mesh>(); int shared=0;
+            Mesh Canonical(Mesh mesh)
+            {
+                if(mesh==null || !mesh.isReadable || !AssetDatabase.Contains(mesh)) return mesh;
+                var hash=new Hash128();
+                hash.Append(mesh.vertexCount); hash.Append(mesh.subMeshCount);
+                hash.Append(mesh.vertices); hash.Append(mesh.normals); hash.Append(mesh.uv); hash.Append(mesh.colors32);
+                for(int i=0;i<mesh.subMeshCount;i++) hash.Append(mesh.GetIndices(i));
+                if(canonical.TryGetValue(hash,out var first)) return first;
+                canonical.Add(hash,mesh); return mesh;
+            }
+            foreach(string path in prefabs)
+            {
+                var root=PrefabUtility.LoadPrefabContents(path); bool changed=false;
+                try
+                {
+                    foreach(var filter in root.GetComponentsInChildren<MeshFilter>(true))
+                    {
+                        var mesh=Canonical(filter.sharedMesh);
+                        if(mesh!=filter.sharedMesh) { filter.sharedMesh=mesh; changed=true; shared++; }
+                    }
+                    foreach(var collider in root.GetComponentsInChildren<MeshCollider>(true))
+                    {
+                        var mesh=Canonical(collider.sharedMesh);
+                        if(mesh!=collider.sharedMesh) { collider.sharedMesh=mesh; changed=true; shared++; }
+                    }
+                    if(changed) PrefabUtility.SaveAsPrefabAsset(root,path);
+                }
+                finally { PrefabUtility.UnloadPrefabContents(root); }
+            }
             return shared;
         }
     }

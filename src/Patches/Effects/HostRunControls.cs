@@ -440,9 +440,10 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
             catch (System.Exception error) { Plugin.Log.LogWarning("[Esc] Host buttons failed: " + error.Message); }
         }
 
-        // Quit is the bottom button of the Esc menu. New buttons go where Quit was, Quit moves below them,
-        // and the whole button group shifts up by the same amount, so the menu keeps its bottom edge and
-        // nothing is drawn below the panel or over the voice sliders.
+        // Our buttons are created at once (hidden), and the column is arranged a moment later, once the page has
+        // finished opening and other mods (REPOConfig's Mods) have added theirs. Layout reads positions only then:
+        // during the opening animation the page can be scaled almost to zero, and converting positions through that
+        // scale used to produce huge coordinates and an endless row search (the game froze with "Not responding").
         private static void Build(MenuPageEsc __instance)
         {
             bool runLevel = false, inRun = false;
@@ -468,146 +469,123 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
             if (hostButtons && runLevel) actions.Add((ru ? "ПЕРЕЗАПУСК УРОВНЯ" : "RESTART LEVEL", RestartLevel, true));
             if (hostButtons) actions.Add((ru ? "ВЕРНУТЬСЯ В ЛОББИ" : "RETURN TO LOBBY", ReturnToLobby, true));
 
-            float step = Step(quit);
-            var parent = quit.transform.parent;
-            bool laidOut = parent != null && parent.GetComponent<LayoutGroup>() != null;
-            var top = quit.transform.localPosition;
-            int added = 0;
-            // Prefer free rows between Quit and the button above it (the vanilla menu leaves a gap there; other
-            // mods such as REPOConfig put their own button in it at a fixed spot): nothing has to move.
-            var free = laidOut ? null : FreeRows(__instance, quit, step, actions.Count);
-            // Not enough room: lift the buttons above Quit one row at a time (Quit stays put), which opens rows
-            // just below them, until everything fits. Buttons are moved one by one, never through the menu's group:
-            // the page's opening animation resets the group's position, which used to undo the lift.
-            int lifted = 0;
-            List<MenuButton> above = null;
-            if (free == null && !laidOut)
-            {
-                above = ButtonsAbove(__instance, quit, step);
-                while (free == null && lifted < actions.Count && above.Count > 0)
-                {
-                    lifted++;
-                    foreach (var button in above) Move(button, button.transform.localPosition + new Vector3(0f, step, 0f));
-                    // Rows opened by the lift are right under the lifted buttons: fill from the top down there.
-                    free = FreeRows(__instance, quit, step, actions.Count, topDown: true);
-                }
-                if (free == null && lifted > 0)
-                {
-                    foreach (var button in above) Move(button, button.transform.localPosition - new Vector3(0f, step * lifted, 0f));
-                    lifted = 0; // undo; the plain layout below takes over
-                }
-            }
-            if (free != null)
-            {
-                for (int i = 0; i < actions.Count; i++)
-                {
-                    // Bottom row for the last action, so the list reads top-down in order.
-                    var (text, action, confirm) = actions[actions.Count - 1 - i];
-                    var clone = Add(quit, text, action, confirm);
-                    if (clone == null) continue;
-                    Move(clone.GetComponent<MenuButton>(), new Vector3(top.x, free[i], top.z));
-                    added++;
-                }
-                __instance.StartCoroutine(Report(__instance, added, false, step));
-                return;
-            }
+            var ours = new List<MenuButton>();
             foreach (var (text, action, confirm) in actions)
             {
                 var clone = Add(quit, text, action, confirm);
-                if (clone == null) continue;
-                if (laidOut) clone.transform.SetSiblingIndex(quit.transform.GetSiblingIndex());
-                else Move(clone.GetComponent<MenuButton>(), top - new Vector3(0f, step * added, 0f));
-                added++;
+                if (clone != null) ours.Add(clone.GetComponent<MenuButton>());
             }
-            if (added > 0 && !laidOut)
-            {
-                Move(quit, top - new Vector3(0f, step * added, 0f));
-                // Keep the bottom edge: everything above moves up by the rows we added (button by button, see Move).
-                foreach (var button in above ?? ButtonsAbove(__instance, quit, step))
-                    Move(button, button.transform.localPosition + new Vector3(0f, step * added, 0f));
-            }
-            // One look at the finished menu a moment later (after other mods' builders and the page's own
-            // animation): where every button ended up and whether ours still show their text.
-            __instance.StartCoroutine(Report(__instance, added, laidOut, step));
+            if (ours.Count > 0) __instance.StartCoroutine(Arrange(__instance, quit, ours));
         }
 
-        // Places a menu button and makes it stay there: MenuButton snaps back to a remembered position whenever its
-        // text is resized (copies inherit Quit's), so that position is updated too.
-        private static void Move(MenuButton button, Vector3 local)
+        private const float SettleSeconds = .2f, RetrySeconds = 1.5f;
+        private const float MinFontScale = .72f;
+
+        private static System.Collections.IEnumerator Arrange(MenuPageEsc page, MenuButton quit, List<MenuButton> ours)
         {
-            if (button == null) return;
-            button.transform.localPosition = local;
-            button.originalButtonPosition = local;
+            float until = Time.unscaledTime + SettleSeconds;
+            while (Time.unscaledTime < until) yield return null;
+            // The page can still be opening (scaled to almost nothing) or busy with other mods' buttons: try again for
+            // a moment before giving up on the layout.
+            string result = null; bool arranged = false;
+            float giveUp = Time.unscaledTime + RetrySeconds;
+            while (true)
+            {
+                if (page == null || quit == null) yield break;
+                try { arranged = Layout(page, quit, ours, out result); }
+                catch (System.Exception error) { result = "failed: " + error.Message; }
+                if (arranged || Time.unscaledTime >= giveUp) break;
+                float next = Time.unscaledTime + SettleSeconds;
+                while (Time.unscaledTime < next) yield return null;
+            }
+            foreach (var button in ours)
+            {
+                if (button == null) continue;
+                // Unplaced copies would sit on Quit and take its clicks: without a layout they are not shown at all.
+                if (!arranged) { button.gameObject.SetActive(false); continue; }
+                if (button.GetComponent<EscButtonLabel>() is { } label) label.Ready = true;
+            }
+            if (!arranged) result += " Mod buttons hidden for this menu.";
+            if (_reported) yield break;
+            _reported = true; // once per game session is enough to diagnose the layout
+            Plugin.Log.LogInfo("[Esc] Mod buttons " + result);
         }
 
-        // The game's own Esc buttons are named "Menu Button - ..."; other mods' buttons keep their fixed place.
+        // One column, top to bottom: the game's buttons, ours, other mods' buttons (REPOConfig's Mods), Quit. The top
+        // row and Quit keep their places and every row gets the same spacing; when the rows do not fit at the game's
+        // own spacing, all labels in the column shrink together instead of the menu growing into its title.
+        private static bool Layout(MenuPageEsc page, MenuButton quit, List<MenuButton> ours, out string result)
+        {
+            result = null;
+            var parent = quit.transform.parent;
+            if (parent == null) { result = "skipped: Quit has no parent."; return false; }
+            var scale = parent.lossyScale;
+            if (!(Mathf.Abs(scale.x) > 1e-4f && Mathf.Abs(scale.y) > 1e-4f)) { result = $"skipped: menu scale {scale}."; return false; }
+            float step = Step(quit);
+            var quitLocal = quit.transform.localPosition;
+
+            var native = new List<(MenuButton button, float y)>();
+            var others = new List<(MenuButton button, float y)>();
+            foreach (var button in page.GetComponentsInChildren<MenuButton>(false))
+            {
+                if (button == null || button == quit || ours.Contains(button)) continue;
+                var local = parent.InverseTransformPoint(button.transform.position);
+                if (!Finite(local) || Mathf.Abs(local.x - quitLocal.x) > step * 3f) continue; // another column (sliders, side panels)
+                if (local.y <= quitLocal.y + step * .5f || local.y > quitLocal.y + step * 40f) continue;
+                (IsNative(button) ? native : others).Add((button, local.y));
+            }
+            native.Sort((a, b) => b.y.CompareTo(a.y));
+            others.Sort((a, b) => b.y.CompareTo(a.y));
+
+            var order = new List<MenuButton>();
+            foreach (var (button, _) in native) order.Add(button);
+            order.AddRange(ours);
+            foreach (var (button, _) in others) order.Add(button);
+            order.Add(quit);
+
+            float top = native.Count > 0 ? native[0].y : quitLocal.y + step * (order.Count - 1);
+            float spacing = order.Count > 1 ? Mathf.Min(step, (top - quitLocal.y) / (order.Count - 1)) : step;
+            if (!(spacing > 1f)) { result = $"skipped: no room (top {top:0.#}, quit {quitLocal.y:0.#})."; return false; }
+            float fontScale = Mathf.Clamp(spacing / step, MinFontScale, 1f);
+
+            for (int i = 0; i < order.Count; i++)
+            {
+                var button = order[i];
+                var current = parent.InverseTransformPoint(button.transform.position);
+                Place(button, parent, new Vector3(current.x, top - spacing * i, current.z), fontScale);
+            }
+            result = $"arranged: {order.Count} rows, spacing {spacing:0.#} of {step:0.#}, font x{fontScale:0.##} " +
+                   $"({native.Count} game, {ours.Count} ours, {others.Count} other mods).";
+            return true;
+        }
+
+        // Places a button at a point in Quit's parent and makes it stay there: MenuButton snaps back to a remembered
+        // position, and resets its font size, whenever its text is resized, so both remembered values are updated.
+        private static void Place(MenuButton button, Transform parent, Vector3 parentLocal, float fontScale)
+        {
+            var marker = button.GetComponent<EscFontScaled>() ?? button.gameObject.AddComponent<EscFontScaled>();
+            if (button.buttonText != null)
+            {
+                if (marker.BaseSize <= 0f) marker.BaseSize = button.originalFontSize > 0f ? button.originalFontSize : button.buttonText.fontSize;
+                button.originalFontSize = marker.BaseSize * fontScale;
+                button.buttonText.fontSize = button.originalFontSize;
+            }
+            var world = parent.TransformPoint(parentLocal);
+            var own = button.transform.parent != null ? button.transform.parent.InverseTransformPoint(world) : world;
+            button.originalButtonPosition = own;
+            try { button.ResizeToText(); } catch { }
+            button.transform.localPosition = own;
+            button.originalButtonPosition = own;
+        }
+
+        private static bool Finite(Vector3 v) =>
+            !float.IsNaN(v.x) && !float.IsInfinity(v.x) && !float.IsNaN(v.y) && !float.IsInfinity(v.y);
+
+        // The game's own Esc buttons are named "Menu Button - ..."; other mods' buttons go just above Quit.
         private static bool IsNative(MenuButton button) =>
             button.GetComponent<EscButtonLabel>() == null && button.name.StartsWith("Menu Button", System.StringComparison.Ordinal);
 
-        // The game's buttons stacked above Quit in its own column and parent, which a lift moves up.
-        private static List<MenuButton> ButtonsAbove(MenuPageEsc page, MenuButton quit, float step)
-        {
-            var result = new List<MenuButton>();
-            var parent = quit.transform.parent;
-            if (parent == null) return result;
-            foreach (var button in page.GetComponentsInChildren<MenuButton>(true))
-                if (button != quit && button.transform.parent == parent && IsNative(button) &&
-                    Mathf.Abs(button.transform.localPosition.x - quit.transform.localPosition.x) <= step * 3f &&
-                    button.transform.localPosition.y > quit.transform.localPosition.y + step * .5f)
-                    result.Add(button);
-            return result;
-        }
-
-        // Free rows (local y in Quit's parent, bottom-up) between Quit and the nearest button above it in the same
-        // column, at the menu's own row spacing; null when there are fewer than needed.
-        private static List<float> FreeRows(MenuPageEsc page, MenuButton quit, float step, int needed, bool topDown = false)
-        {
-            var parent = quit.transform.parent;
-            if (parent == null || step <= 1f) return null;
-            float quitY = quit.transform.localPosition.y, column = quit.transform.localPosition.x;
-            var taken = new List<float>();
-            float ceiling = float.PositiveInfinity;
-            foreach (var button in page.GetComponentsInChildren<MenuButton>(false))
-            {
-                if (button == quit || button.GetComponent<EscButtonLabel>() != null) continue;
-                var local = parent.InverseTransformPoint(button.transform.position);
-                if (Mathf.Abs(local.x - column) > step * 3f) continue; // another column (sliders, side panels)
-                taken.Add(local.y);
-                // Only the game's own buttons bound the space; other mods' buttons (REPOConfig's Mods) are just taken rows.
-                if (button.transform.parent == parent && IsNative(button) && local.y > quitY + step * .5f) ceiling = Mathf.Min(ceiling, local.y);
-            }
-            if (float.IsPositiveInfinity(ceiling)) return null;
-            var rows = new List<float>();
-            for (float y = quitY + step; y < ceiling - step * .5f; y += step)
-            {
-                bool busy = false;
-                foreach (float t in taken) if (Mathf.Abs(t - y) < step * .5f) { busy = true; break; }
-                if (!busy) rows.Add(y);
-            }
-            if (rows.Count < needed) return null;
-            // Bottom-up by default (next to Quit); top-down after a lift (directly under the lifted buttons).
-            // Either way the result is listed bottom-up, as the caller fills it.
-            if (topDown) { rows.Reverse(); rows = rows.GetRange(0, needed); rows.Reverse(); }
-            else rows = rows.GetRange(0, needed);
-            return rows;
-        }
-
         private static bool _reported;
-
-        private static System.Collections.IEnumerator Report(MenuPageEsc page, int added, bool laidOut, float step)
-        {
-            yield return new WaitForSecondsRealtime(.5f);
-            if (_reported || page == null) yield break;
-            _reported = true; // once per game session is enough to diagnose the layout
-            var rows = new List<string>();
-            foreach (var button in page.GetComponentsInChildren<MenuButton>(true))
-            {
-                var label = button.buttonText;
-                rows.Add($"{button.name} '{(label != null ? label.text : "?")}' pos={button.transform.position} " +
-                         $"active={button.gameObject.activeInHierarchy} text={(label != null && label.isActiveAndEnabled)} alpha={(label != null ? label.alpha : 0f):0.##}");
-            }
-            Plugin.Log.LogInfo($"[Esc] Host buttons added={added} layoutGroup={laidOut} step={step:0.#}: " + string.Join(" | ", rows));
-        }
 
         // Vertical spacing between the native buttons (fallback: 32 px, the game's own moons offset).
         private static float Step(MenuButton quit)
@@ -619,7 +597,7 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
                 float gap = Mathf.Abs(other.transform.localPosition.y - quit.transform.localPosition.y);
                 if (gap > 4f && gap < best) best = gap;
             }
-            return best < float.MaxValue ? best : 32f;
+            return best < float.MaxValue && best < 500f ? best : 32f;
         }
 
         private static void OpenSkillTree()
@@ -635,7 +613,7 @@ internal sealed class HostRunControls : MonoBehaviour, IOnEventCallback
             // The copied label would keep Quit's localized text: drop the localizer and write ours now
             // (MenuButton.Awake already ran during Instantiate, before buttonTextString could be set).
             foreach (var component in clone.GetComponentsInChildren<MonoBehaviour>(true))
-                if (component != null && component.GetType().Name.IndexOf("Localize", System.StringComparison.Ordinal) >= 0)
+                if (component is UnityEngine.Localization.Components.LocalizedMonoBehaviour or LocalizeChangedUI)
                     Object.DestroyImmediate(component);
             var menuButton = clone.GetComponent<MenuButton>();
             if (menuButton == null) { Plugin.Log.LogWarning("[Esc] Quit button has no MenuButton; host buttons skipped."); Object.Destroy(clone); return null; }
@@ -669,6 +647,8 @@ internal sealed class EscButtonLabel : MonoBehaviour
 {
     public string Text;
     public float ArmedUntil = -1f;
+    /// <summary>False until the column is arranged: the label stays hidden instead of flashing over Quit.</summary>
+    public bool Ready;
     private MenuButton _button;
 
     private void LateUpdate()
@@ -676,6 +656,7 @@ internal sealed class EscButtonLabel : MonoBehaviour
         if (_button == null) _button = GetComponent<MenuButton>();
         var label = _button != null ? _button.buttonText : null;
         if (label == null || string.IsNullOrEmpty(Text)) return;
+        if (!Ready) { if (label.enabled) label.enabled = false; return; }
         string wanted = Time.unscaledTime < ArmedUntil ? (Localization.GameLanguage.Russian ? "НАЖМИТЕ ЕЩЁ РАЗ: " : "CLICK AGAIN: ") + Text : Text;
         if (!label.enabled) label.enabled = true;
         if (label.text == wanted) return;
@@ -684,6 +665,9 @@ internal sealed class EscButtonLabel : MonoBehaviour
         try { _button.ResizeToText(); } catch { }
     }
 }
+
+/// <summary>Remembers an Esc button's own font size before the column was scaled down.</summary>
+internal sealed class EscFontScaled : MonoBehaviour { public float BaseSize; }
 
 /// <summary>Marks an Esc page that already has the host buttons.</summary>
 internal sealed class EscButtonsAdded : MonoBehaviour { }

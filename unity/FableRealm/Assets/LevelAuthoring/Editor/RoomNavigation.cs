@@ -109,7 +109,7 @@ namespace LevelAuthoring.Editor
             }
         }
 
-        static List<NavMeshBuildSource> Collect(Transform root,RoomDefinition definition)
+        public static List<NavMeshBuildSource> Collect(Transform root,RoomDefinition definition)
         {
             var sources=new List<NavMeshBuildSource>();
             foreach(var e in definition.elements)

@@ -77,25 +77,45 @@ def candy_cane(r, name, x, z, h=3.2, hook=1):
     r.blocker(f'{name}-block', (x, h/2, z), (.28, h, .28))
 
 
+# Doorway of a house you can walk into: wide enough for a player and a small cart, too narrow for most monsters.
+HOUSE_DOOR_W, HOUSE_DOOR_H, HOUSE_WALL = 1.1, 2.1, .2
+
+
 def cottage(r, name, x, z, facing, w=3.0, d=3.0, h=2.9, wall='Biscuit', roof='Roof', trim='Icing', light=True, y=0.0):
-    """Gingerbread house block; `facing` is the side its door and windows look toward."""
+    """Gingerbread house you can enter; `facing` is the side its door and windows look toward. Hollow: four walls
+    with a doorway, a solid ceiling, loot inside and a crouching spot by the back wall. The doorway carries a `door`
+    anchor (centre of the opening at floor level, +Z out of the house), where the game adapter hangs a hinged door."""
+    from library_recipe import v
     from room_kit import SIDES
     k = SIDES[facing]; a = k*math.pi/2; yaw = k*90
     def p(lx, ly, lz): return (x+lx*math.cos(a)+lz*math.sin(a), y+ly, z-lx*math.sin(a)+lz*math.cos(a))
-    r.box(f'{name}-body', p(0, h/2, 0), (w, h, d), wall, rot=(0, yaw, 0))
+    t, dw, dh = HOUSE_WALL, HOUSE_DOOR_W, min(HOUSE_DOOR_H, h-.35)
+    r.box(f'{name}-back', p(0, h/2, -d/2+t/2), (w, h, t), wall, rot=(0, yaw, 0))
+    for s in (-1, 1):
+        r.box(f'{name}-side-{s}', p(s*(w/2-t/2), h/2, 0), (t, h, d-2*t), wall, rot=(0, yaw, 0))
+        piece = (w-dw)/2
+        r.box(f'{name}-front-{s}', p(s*(dw/2+piece/2), h/2, d/2-t/2), (piece, h, t), wall, rot=(0, yaw, 0))
+    r.box(f'{name}-lintel', p(0, (dh+h)/2, d/2-t/2), (dw, h-dh, t), wall, rot=(0, yaw, 0))
+    r.box(f'{name}-ceiling', p(0, h-.08, 0), (w, .16, d), wall, rot=(0, yaw, 0))
     slope = 38; run = w/2+.25; rise = run*math.tan(math.radians(slope))
     for s in (-1, 1):
         r.box(f'{name}-roof-{s}', p(s*run/2, h+rise/2, 0), (run/math.cos(math.radians(slope))+.1, .16, d+.5), roof, False, (0, yaw, -s*slope))
     r.box(f'{name}-gable', p(0, h+rise*.3, 0), (w*.55, rise*.6, d-.05), wall, False, (0, yaw, 0))
     r.tube(f'{name}-ridge', [p(0, h+rise+.05, -d/2-.25), p(0, h+rise+.05, d/2+.25)], .09, trim)
-    r.box(f'{name}-door', p(0, 1.05, d/2+.03), (.9, 2.1, .06), 'Chocolate', False, (0, yaw, 0))
+    r.box(f'{name}-door-frame', p(0, dh+.04, d/2+.02), (dw+.16, .08, .08), trim, False, (0, yaw, 0))
     for i, s in enumerate((-1, 1)):
-        r.box(f'{name}-window-{i}', p(s*w*.32, 1.65, d/2+.03), (.55, .7, .06), 'WarmGlass', False, (0, yaw, 0))
-        r.box(f'{name}-sill-{i}', p(s*w*.32, 1.25, d/2+.07), (.75, .08, .14), trim, False, (0, yaw, 0))
+        r.box(f'{name}-window-{i}', p(s*w*.34, 1.65, d/2+.03), (.42, .6, .06), 'WarmGlass', False, (0, yaw, 0))
+        r.box(f'{name}-sill-{i}', p(s*w*.34, 1.3, d/2+.07), (.6, .08, .14), trim, False, (0, yaw, 0))
     for i in range(int(w/.42)):
         lx = -w/2+.2+i*.42
         r.tube(f'{name}-drip-{i}', [p(lx, h+.02, d/2+.06), p(lx, h-.22-.1*math.sin(i*1.7), d/2+.06)], .07, trim)
-    if light: r.light(f'{name}-light', p(0, 1.8, d/2+.7), 'WarmGlass', 1.5, 5)
+    r.anchors.append(dict(id=f'{name}-door', kind='house-door', position=v(*p(0, 0, d/2-t/2)), rotation=v(0, yaw, 0),
+                          size=v(dw, dh, .06)))
+    # Inside: a valuable on the floor by the back wall, a smaller one in a corner, and a place to crouch.
+    r.loot('Medium', *p(0, 0, -d/2+t+.58))
+    r.loot('Small', *p(-(w/2-t-.35), 0, -d/2+t+.35))
+    r.anchors.append(dict(id=f'{name}-inside', kind='hide', tag='cover', position=v(*p(w/2-t-.45, 1, -.1))))
+    r.light(f'{name}-inside-light', p(0, h-.5, 0), 'WarmGlass', .8, 3.5)
 
 
 def checker(r, name, x0, x1, z0, z1, n, a, b, y=.006):
@@ -133,23 +153,31 @@ def crate(r, name, x, z, s=.9, mat='OakLight', trim='OakDark', y=0.0, yaw=0):
     r.box(f'{name}-band', (x, y+s/2, z), (s+.03, .08, s+.03), trim, False, (0, yaw, 0))
 
 
+# Stairs and galleries take a C.A.R.T. with room to steer: the game's medium cart is about 1.5 m across and the
+# wide one 15 % more, so 2.8 m leaves a hand's width either side even for the wide cart turning onto the landing.
+STAIR_WIDTH = 2.8
+# Room-side edge of a wall stair and its gallery (the inner wall face is at 7.2).
+GALLERY_EDGE = round(7.2 - STAIR_WIDTH, 2)
+
+
 def wall_stair(r, prefix, sx, sz, z_end, mat, rail_mat='OakDark', y=2.7, rail_gaps=()):
     """Stair flight along the x = sx wall, starting near the z = sz corner, with a gallery deck
     continuing to z_end. Returns node names (approach, foot, mid, top)."""
     toward = 'north' if sz < 0 else 'south'
-    r.stairs(f'{prefix}-stair', sx*6.3, sz*4.2, toward, 1.8, y, 4.4, mat)
+    centre, edge = 7.2 - STAIR_WIDTH/2, GALLERY_EDGE
+    r.stairs(f'{prefix}-stair', sx*centre, sz*4.2, toward, STAIR_WIDTH, y, 4.4, mat)
     lo, hi = sorted((sz*2.0, z_end))
-    r.deck(f'{prefix}-deck', min(sx*5.4, sx*7.2), max(sx*5.4, sx*7.2), lo, hi, y, mat)
+    r.deck(f'{prefix}-deck', min(sx*edge, sx*7.2), max(sx*edge, sx*7.2), lo, hi, y, mat)
     cuts = sorted(rail_gaps)
     edges = [lo] + [c for gap in cuts for c in gap] + [hi]
     for i in range(0, len(edges), 2):
-        if edges[i+1]-edges[i] > .3: r.rail(f'{prefix}-rail-{i//2}', sx*5.4, edges[i], sx*5.4, edges[i+1], y, rail_mat)
-    r.tube(f'{prefix}-handrail', [(sx*5.45, 1.0, sz*6.4), (sx*5.45, y+1.0, sz*2.0)], .05, 'Brass')
+        if edges[i+1]-edges[i] > .3: r.rail(f'{prefix}-rail-{i//2}', sx*edge, edges[i], sx*edge, edges[i+1], y, rail_mat)
+    r.tube(f'{prefix}-handrail', [(sx*(edge+.05), 1.0, sz*6.4), (sx*(edge+.05), y+1.0, sz*2.0)], .05, 'Brass')
     for i in range(3):
         z = sz*(5.6-i*1.5); h = y*(6.4-abs(z))/4.4
-        r.tube(f'{prefix}-baluster-{i}', [(sx*5.45, h, z), (sx*5.45, h+1.0, z)], .04, rail_mat)
+        r.tube(f'{prefix}-baluster-{i}', [(sx*(edge+.05), h, z), (sx*(edge+.05), h+1.0, z)], .04, rail_mat)
     # The mid point sits 5 cm above the slope so a standing capsule clears the incline.
-    r.nav(f'{prefix}-approach', sx*4.6, 0, sz*6.6); r.nav(f'{prefix}-foot', sx*6.3, 0, sz*6.6)
-    r.nav(f'{prefix}-mid', sx*6.3, y/2+.05, sz*4.2); r.nav(f'{prefix}-top', sx*6.3, y, sz*1.8)
+    r.nav(f'{prefix}-approach', sx*(edge-.8), 0, sz*6.6); r.nav(f'{prefix}-foot', sx*centre, 0, sz*6.6)
+    r.nav(f'{prefix}-mid', sx*centre, y/2+.05, sz*4.2); r.nav(f'{prefix}-top', sx*centre, y, sz*1.8)
     r.link(f'{prefix}-approach', f'{prefix}-foot', f'{prefix}-mid', f'{prefix}-top')
     return f'{prefix}-approach', f'{prefix}-top'

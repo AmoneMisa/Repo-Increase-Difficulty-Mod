@@ -1,8 +1,8 @@
 {
     "room": "GiantPantry",
     "status": "PASS",
-    "sources": 48,
-    "triangles": 167,
+    "sources": 60,
+    "triangles": 171,
     "profile": {
         "radius": 0.3499999940395355,
         "height": 1.7999999523162842,

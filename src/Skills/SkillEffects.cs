@@ -285,6 +285,8 @@ internal static class SkillEffects
             if (beam.HasEmission) beam.Lamp.SetColor("_EmissionColor", beam.LampEmission * tint);
         }
         var halo = flashlight.halo;
+        // Allowed lookup by name (AGENTS.md): the halo is Unity's internal Halo component, which is not public, so its
+        // "color" property cannot be reached through typeof/nameof. A missing property just leaves the halo as it is.
         var property = halo != null ? halo.GetType().GetProperty("color") : null;
         if (property != null && property.PropertyType == typeof(Color) && property.CanWrite)
             try { property.SetValue(halo, colour > 0 ? tint : beam.Colour); } catch { }

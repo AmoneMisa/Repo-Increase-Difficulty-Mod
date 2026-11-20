@@ -1,1 +1,1 @@
-NAVMESH PASS: ForgottenToy; 12 points; 11 complete paths; 184 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.
+NAVMESH PASS: ForgottenToy; 12 points; 11 complete paths; 162 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

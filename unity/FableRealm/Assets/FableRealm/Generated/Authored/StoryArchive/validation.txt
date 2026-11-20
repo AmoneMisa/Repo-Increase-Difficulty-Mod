@@ -1,1 +1,1 @@
-PASS: StoryArchive; 48 anchors; 12 navigation edges; 0 closable exits. Clearance probe: radius 0.3 m, height 1.75 m. This is authoring QA, not game AI or cart validation.
+PASS: StoryArchive; 47 anchors; 12 navigation edges; 0 closable exits. Clearance probe: radius 0.3 m, height 1.75 m. This is authoring QA, not game AI or cart validation.

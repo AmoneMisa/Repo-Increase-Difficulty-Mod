@@ -15,17 +15,28 @@ namespace UnityEngine
 }
 namespace Steamworks
 {
-    public record struct SteamId(ulong Value) { public bool IsValid => Value != 0; }
+    public record struct SteamId(ulong Value)
+    {
+        public bool IsValid => Value != 0;
+        public static implicit operator ulong(SteamId id) => id.Value;
+        public static implicit operator SteamId(ulong value) => new(value);
+    }
+    public struct Friend
+    {
+        public SteamId Id;
+        public Friend(ulong id) { Id = new(id); }
+    }
     public static class SteamClient { public static bool IsValid = true; public static SteamId SteamId = new(123); }
 }
 public class Lobby
 {
     public Steamworks.SteamId Id = new(456);
-    public Steamworks.SteamId Owner = Steamworks.SteamClient.SteamId;
+    public Steamworks.Friend Owner = new(Steamworks.SteamClient.SteamId.Value);
+    public List<Steamworks.Friend> Members = new() { new(Steamworks.SteamClient.SteamId.Value) };
     public bool Joinable;
     public int Refreshes;
     public Dictionary<string, string> Data = new();
-    public bool IsOwnedBy(Steamworks.SteamId id) => Owner == id;
+    public bool IsOwnedBy(Steamworks.SteamId id) => Owner.Id == id;
     public string GetData(string key) => Data.GetValueOrDefault(key, "");
     public bool SetJoinable(bool value) { Joinable = value; return true; }
     public bool Refresh() { Refreshes++; return true; }
@@ -45,13 +56,16 @@ public class SteamLobbyManager
         Publishes++;
     }
 }
+namespace Photon.Realtime { public class Player { } }
 namespace Photon.Pun
 {
+    public class PhotonView { public Photon.Realtime.Player Owner; }
     public class Room { public bool IsOpen, IsVisible; public string Name = "actual-photon-room"; }
     public static class PhotonNetwork
     {
         public static bool InRoom = true, IsMasterClient = true;
         public static Room CurrentRoom;
+        public static Photon.Realtime.Player MasterClient;
         public static string CloudRegion = "eu";
         public static int OpenCalls;
         public static void SetRoomOpen(bool open) { CurrentRoom.IsOpen = open; OpenCalls++; }
@@ -73,13 +87,21 @@ public static class SemiFunc
     public static bool RunIsLevel() => Level;
     public static bool RunIsShop() => Shop;
     public static bool RunIsLobby() => Truck;
+    public static List<PlayerAvatar> Players = new();
+    public static List<PlayerAvatar> PlayerGetList() => Players;
 }
+public class PlayerAvatar { public Photon.Pun.PhotonView photonView; public string steamID; }
 public class NetworkConnect { public void CreateLobby() { } }
 namespace IncreaseHardMod
 {
     public class Entry { public bool Value = true; }
     public static class ModConfig { public static Entry LateJoinEnabled = new(); }
-    public class Logger { public void LogInfo(string value) { } }
+    public class Logger
+    {
+        public List<string> Warnings = new();
+        public void LogInfo(string value) { }
+        public void LogWarning(string value) => Warnings.Add(value);
+    }
     public static class Plugin { public static Logger Log = new(); }
 }
 namespace IncreaseHardMod.Patches.Effects

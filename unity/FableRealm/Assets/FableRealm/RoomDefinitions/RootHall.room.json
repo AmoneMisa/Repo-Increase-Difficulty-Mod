@@ -70,56 +70,6 @@
       "scale": 1.0
     },
     {
-      "id": "BookWine",
-      "color": "#743f4d",
-      "grain": 0.22,
-      "smoothness": 0.12,
-      "metallic": 0,
-      "emission": 0,
-      "pattern": "weave",
-      "scale": 0.8
-    },
-    {
-      "id": "BookTeal",
-      "color": "#366364",
-      "grain": 0.22,
-      "smoothness": 0.12,
-      "metallic": 0,
-      "emission": 0,
-      "pattern": "weave",
-      "scale": 0.8
-    },
-    {
-      "id": "BookOchre",
-      "color": "#bd8a49",
-      "grain": 0.22,
-      "smoothness": 0.12,
-      "metallic": 0,
-      "emission": 0,
-      "pattern": "weave",
-      "scale": 0.8
-    },
-    {
-      "id": "BookInk",
-      "color": "#394351",
-      "grain": 0.22,
-      "smoothness": 0.12,
-      "metallic": 0,
-      "emission": 0,
-      "pattern": "weave",
-      "scale": 0.8
-    },
-    {
-      "id": "BookCream",
-      "color": "#c5b398",
-      "grain": 0.1,
-      "smoothness": 0.1,
-      "metallic": 0,
-      "emission": 0,
-      "pattern": "plain",
-      "scale": 0.8
-    },
-    {
       "id": "WarmGlass",
       "color": "#ffb45e",
       "grain": 0,
@@ -136,16 +86,6 @@
       "smoothness": 0.3,
       "metallic": 0,
       "emission": 1.0,
-      "pattern": "plain",
-      "scale": 2
-    },
-    {
-      "id": "MossGlow",
-      "color": "#7db98f",
-      "grain": 0,
-      "smoothness": 0.2,
-      "metallic": 0,
-      "emission": 0.4,
       "pattern": "plain",
       "scale": 2
     },
@@ -190,13 +130,43 @@
       "scale": 1.6
     },
     {
-      "id": "Hedge",
-      "color": "#2f4f3c",
-      "grain": 0.3,
-      "smoothness": 0.05,
+      "id": "CapPlum",
+      "color": "#8a4f86",
+      "grain": 0.26,
+      "smoothness": 0.28,
       "metallic": 0,
       "emission": 0,
-      "pattern": "leaves",
+      "pattern": "mottle",
+      "scale": 1.4
+    },
+    {
+      "id": "CapRose",
+      "color": "#c0667f",
+      "grain": 0.26,
+      "smoothness": 0.28,
+      "metallic": 0,
+      "emission": 0,
+      "pattern": "mottle",
+      "scale": 1.4
+    },
+    {
+      "id": "CapGlow",
+      "color": "#8be5cf",
+      "grain": 0,
+      "smoothness": 0.3,
+      "metallic": 0,
+      "emission": 0.9,
+      "pattern": "plain",
+      "scale": 2
+    },
+    {
+      "id": "Stem",
+      "color": "#d9cdb4",
+      "grain": 0.32,
+      "smoothness": 0.1,
+      "metallic": 0,
+      "emission": 0,
+      "pattern": "bark",
       "scale": 1.4
     },
     {
@@ -210,6 +180,46 @@
       "scale": 1.5
     },
     {
+      "id": "Mint",
+      "color": "#8fd0b4",
+      "grain": 0.1,
+      "smoothness": 0.5,
+      "metallic": 0,
+      "emission": 0,
+      "pattern": "plain",
+      "scale": 1.5
+    },
+    {
+      "id": "Marzipan",
+      "color": "#e9cf8c",
+      "grain": 0.28,
+      "smoothness": 0.12,
+      "metallic": 0,
+      "emission": 0,
+      "pattern": "pores",
+      "scale": 1.2
+    },
+    {
+      "id": "Star",
+      "color": "#fff3c4",
+      "grain": 0,
+      "smoothness": 0.2,
+      "metallic": 0,
+      "emission": 2.5,
+      "pattern": "plain",
+      "scale": 2
+    },
+    {
+      "id": "PorcelainBlue",
+      "color": "#4f6fa8",
+      "grain": 0.16,
+      "smoothness": 0.72,
+      "metallic": 0,
+      "emission": 0,
+      "pattern": "cracks",
+      "scale": 2.6
+    },
+    {
       "id": "Gold",
       "color": "#d2a550",
       "grain": 0.1,
@@ -218,6 +228,16 @@
       "emission": 0,
       "pattern": "plain",
       "scale": 1.0
+    },
+    {
+      "id": "Cloth",
+      "color": "#b5493f",
+      "grain": 0.22,
+      "smoothness": 0.03,
+      "metallic": 0,
+      "emission": 0,
+      "pattern": "weave",
+      "scale": 1.2
     },
     {
       "id": "MarbleDark",
@@ -230,16 +250,6 @@
       "scale": 3.0
     },
     {
-      "id": "Velvet",
-      "color": "#5c2238",
-      "grain": 0.22,
-      "smoothness": 0.05,
-      "metallic": 0,
-      "emission": 0,
-      "pattern": "weave",
-      "scale": 1.0
-    },
-    {
       "id": "Mirror",
       "color": "#b8c6d4",
       "grain": 0,
@@ -250,24 +260,24 @@
       "scale": 2
     },
     {
-      "id": "Straw",
-      "color": "#d8c170",
-      "grain": 0.25,
-      "smoothness": 0.04,
+      "id": "LampGlass",
+      "color": "#96501c",
+      "grain": 0,
+      "smoothness": 0.5,
       "metallic": 0,
-      "emission": 0,
-      "pattern": "weave",
-      "scale": 0.6
+      "emission": 1.7,
+      "pattern": "plain",
+      "scale": 2
     },
     {
-      "id": "Hair",
-      "color": "#e2b84a",
-      "grain": 0.22,
-      "smoothness": 0.3,
+      "id": "Wax",
+      "color": "#e8dcc0",
+      "grain": 0.1,
+      "smoothness": 0.25,
       "metallic": 0,
       "emission": 0,
-      "pattern": "weave",
-      "scale": 0.5
+      "pattern": "plain",
+      "scale": 1.0
     },
     {
       "id": "BeanRed",
@@ -300,14 +310,34 @@
       "scale": 2
     },
     {
-      "id": "Pane",
-      "color": "#4f7f8a",
-      "grain": 0,
-      "smoothness": 0.85,
+      "id": "PitShade",
+      "color": "#1b1815",
+      "grain": 0.3,
+      "smoothness": 0.02,
       "metallic": 0,
-      "emission": 0.12,
+      "emission": 0,
+      "pattern": "mottle",
+      "scale": 2.5
+    },
+    {
+      "id": "Void",
+      "color": "#030303",
+      "grain": 0.1,
+      "smoothness": 0,
+      "metallic": 0,
+      "emission": 0,
       "pattern": "plain",
-      "scale": 2
+      "scale": 6.0
+    },
+    {
+      "id": "Thorn",
+      "color": "#3a3b2c",
+      "grain": 0.32,
+      "smoothness": 0.05,
+      "metallic": 0,
+      "emission": 0,
+      "pattern": "bark",
+      "scale": 1.2
     }
   ],
   "elements": [
@@ -404,7 +434,7 @@
       "kind": "box",
       "position": {
         "x": 0,
-        "y": -3.2,
+        "y": -12.2,
         "z": 0
       },
       "size": {
@@ -412,7 +442,7 @@
         "y": 0.4,
         "z": 3
       },
-      "material": "Stone",
+      "material": "Void",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -978,32 +1008,6 @@
       "navigation": "Obstacle"
     },
     {
-      "id": "door-arch-0",
-      "kind": "arch",
-      "position": {
-        "x": 0.0,
-        "y": 0,
-        "z": 7.05
-      },
-      "size": {
-        "x": 4.2,
-        "y": 4.1,
-        "z": 0.4
-      },
-      "material": "OakDark",
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "collider": true,
-      "radius": 0.23,
-      "navigation": "Obstacle",
-      "palette": [
-        "Bark"
-      ]
-    },
-    {
       "id": "wall-1--1",
       "kind": "box",
       "position": {
@@ -1068,32 +1072,6 @@
       },
       "collider": true,
       "navigation": "Obstacle"
-    },
-    {
-      "id": "door-arch-1",
-      "kind": "arch",
-      "position": {
-        "x": 7.05,
-        "y": 0,
-        "z": 4.31687996699442e-16
-      },
-      "size": {
-        "x": 4.2,
-        "y": 4.1,
-        "z": 0.4
-      },
-      "material": "OakDark",
-      "rotation": {
-        "x": 0,
-        "y": 90,
-        "z": 0
-      },
-      "collider": true,
-      "radius": 0.23,
-      "navigation": "Obstacle",
-      "palette": [
-        "Bark"
-      ]
     },
     {
       "id": "wall-2--1",
@@ -1162,32 +1140,6 @@
       "navigation": "Obstacle"
     },
     {
-      "id": "door-arch-2",
-      "kind": "arch",
-      "position": {
-        "x": 8.63375993398884e-16,
-        "y": 0,
-        "z": -7.05
-      },
-      "size": {
-        "x": 4.2,
-        "y": 4.1,
-        "z": 0.4
-      },
-      "material": "OakDark",
-      "rotation": {
-        "x": 0,
-        "y": 180,
-        "z": 0
-      },
-      "collider": true,
-      "radius": 0.23,
-      "navigation": "Obstacle",
-      "palette": [
-        "Bark"
-      ]
-    },
-    {
       "id": "wall-3--1",
       "kind": "box",
       "position": {
@@ -1252,32 +1204,6 @@
       },
       "collider": true,
       "navigation": "Obstacle"
-    },
-    {
-      "id": "door-arch-3",
-      "kind": "arch",
-      "position": {
-        "x": -7.05,
-        "y": 0,
-        "z": -1.2950639900983258e-15
-      },
-      "size": {
-        "x": 4.2,
-        "y": 4.1,
-        "z": 0.4
-      },
-      "material": "OakDark",
-      "rotation": {
-        "x": 0,
-        "y": 270,
-        "z": 0
-      },
-      "collider": true,
-      "radius": 0.23,
-      "navigation": "Obstacle",
-      "palette": [
-        "Bark"
-      ]
     },
     {
       "id": "ceiling-side--1",
@@ -2230,10 +2156,10 @@
       "position": {
         "x": -3.25,
         "y": 0,
-        "z": 5.2
+        "z": 5.55
       },
       "size": {
-        "x": 2.6,
+        "x": 3.3,
         "y": 3,
         "z": 6.5
       },
@@ -2253,12 +2179,12 @@
       "position": {
         "x": 3.25,
         "y": 2.88,
-        "z": 5.2
+        "z": 5.55
       },
       "size": {
         "x": 6.5,
         "y": 0.24,
-        "z": 2.6
+        "z": 3.3
       },
       "material": "Oak",
       "rotation": {
@@ -2315,6 +2241,29 @@
       "navigation": "Obstacle"
     },
     {
+      "id": "landing-door",
+      "kind": "rail",
+      "position": {
+        "x": 1.15,
+        "y": 3,
+        "z": 7.05
+      },
+      "size": {
+        "x": 2.3,
+        "y": 0.9,
+        "z": 0.15
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "count": 5,
+      "navigation": "Obstacle"
+    },
+    {
       "id": "east-balcony-inner",
       "kind": "rail",
       "position": {
@@ -2364,9 +2313,9 @@
       "id": "landing-support-0",
       "kind": "box",
       "position": {
-        "x": 1.4,
+        "x": 2.75,
         "y": 1.38,
-        "z": 5.7
+        "z": 6.9
       },
       "size": {
         "x": 0.3,
@@ -2388,7 +2337,7 @@
       "position": {
         "x": 5.9,
         "y": 1.38,
-        "z": 5.7
+        "z": 6.9
       },
       "size": {
         "x": 0.3,
@@ -2445,7 +2394,7 @@
       "position": {
         "x": 3.6,
         "y": 1.25,
-        "z": -3.7
+        "z": -3.4
       },
       "size": {
         "x": 2.8,
@@ -2467,12 +2416,12 @@
       "position": {
         "x": 4.9,
         "y": 1.25,
-        "z": -4.6
+        "z": -4.3
       },
       "size": {
         "x": 0.2,
         "y": 2.5,
-        "z": 2
+        "z": 1.8
       },
       "material": "Bark",
       "rotation": {
@@ -2489,12 +2438,12 @@
       "position": {
         "x": 2.3,
         "y": 1.25,
-        "z": -4.6
+        "z": -4.3
       },
       "size": {
         "x": 0.2,
         "y": 2.5,
-        "z": 2
+        "z": 1.8
       },
       "material": "Bark",
       "rotation": {
@@ -2511,12 +2460,12 @@
       "position": {
         "x": 3.6,
         "y": 2.6,
-        "z": -4.6
+        "z": -4.3
       },
       "size": {
         "x": 2.8,
         "y": 0.2,
-        "z": 2
+        "z": 1.8
       },
       "material": "Moss",
       "rotation": {
@@ -2533,7 +2482,7 @@
       "position": {
         "x": 3.6,
         "y": 0,
-        "z": -5.55
+        "z": -5.25
       },
       "size": {
         "x": 2.5,
@@ -2551,31 +2500,634 @@
       "navigation": "Obstacle"
     },
     {
+      "id": "glow-0-post",
+      "kind": "lathe",
+      "position": {
+        "x": -4.4,
+        "y": 0,
+        "z": -3.6
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.2,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.2,
+          "y": 0.06,
+          "z": 0
+        },
+        {
+          "x": 0.1,
+          "y": 0.16,
+          "z": 0
+        },
+        {
+          "x": 0.07,
+          "y": 0.5,
+          "z": 0
+        },
+        {
+          "x": 0.05,
+          "y": 1.4300000000000002,
+          "z": 0
+        },
+        {
+          "x": 0.07,
+          "y": 1.482,
+          "z": 0
+        },
+        {
+          "x": 0.045,
+          "y": 1.56,
+          "z": 0
+        },
+        {
+          "x": 0.04,
+          "y": 2.85,
+          "z": 0
+        }
+      ],
+      "count": 8
+    },
+    {
+      "id": "glow-0-arm",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -4.4,
+          "y": 2.8000000000000003,
+          "z": -3.6
+        },
+        {
+          "x": -4.2,
+          "y": 2.94,
+          "z": -3.6
+        },
+        {
+          "x": -4.0200000000000005,
+          "y": 2.9,
+          "z": -3.6
+        }
+      ],
+      "radius": 0.025
+    },
+    {
+      "id": "glow-0-hook",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -4.0200000000000005,
+          "y": 2.9,
+          "z": -3.6
+        },
+        {
+          "x": -4.0200000000000005,
+          "y": 2.62,
+          "z": -3.6
+        }
+      ],
+      "radius": 0.012
+    },
+    {
+      "id": "glow-0-base",
+      "kind": "lathe",
+      "position": {
+        "x": -4.0200000000000005,
+        "y": 1.88,
+        "z": -3.6
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.13,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.14,
+          "y": 0.04,
+          "z": 0
+        },
+        {
+          "x": 0.1,
+          "y": 0.07,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-0-glass",
+      "kind": "lathe",
+      "position": {
+        "x": -4.0200000000000005,
+        "y": 1.95,
+        "z": -3.6
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "LampGlass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.085,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.125,
+          "y": 0.38,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-0-bar-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -3.9528248557872785,
+          "y": 1.94,
+          "z": -3.532824855787278
+        },
+        {
+          "x": -3.9245405845398165,
+          "y": 2.34,
+          "z": -3.504540584539816
+        }
+      ],
+      "radius": 0.02
+    },
+    {
+      "id": "glow-0-bar-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -4.087175144212723,
+          "y": 1.94,
+          "z": -3.532824855787278
+        },
+        {
+          "x": -4.115459415460184,
+          "y": 2.34,
+          "z": -3.504540584539816
+        }
+      ],
+      "radius": 0.02
+    },
+    {
+      "id": "glow-0-bar-2",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -4.087175144212723,
+          "y": 1.94,
+          "z": -3.667175144212722
+        },
+        {
+          "x": -4.115459415460184,
+          "y": 2.34,
+          "z": -3.695459415460184
+        }
+      ],
+      "radius": 0.02
+    },
+    {
+      "id": "glow-0-bar-3",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -3.9528248557872785,
+          "y": 1.94,
+          "z": -3.667175144212722
+        },
+        {
+          "x": -3.9245405845398165,
+          "y": 2.34,
+          "z": -3.695459415460184
+        }
+      ],
+      "radius": 0.02
+    },
+    {
+      "id": "glow-0-band",
+      "kind": "lathe",
+      "position": {
+        "x": -4.0200000000000005,
+        "y": 2.12,
+        "z": -3.6
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.112,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.118,
+          "y": 0.03,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-0-cap",
+      "kind": "lathe",
+      "position": {
+        "x": -4.0200000000000005,
+        "y": 2.33,
+        "z": -3.6
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.24,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.2,
+          "y": 0.04,
+          "z": 0
+        },
+        {
+          "x": 0.07,
+          "y": 0.17,
+          "z": 0
+        },
+        {
+          "x": 0.035,
+          "y": 0.24,
+          "z": 0
+        },
+        {
+          "x": 0,
+          "y": 0.27,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-0-ring",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -3.9750000000000005,
+          "y": 2.6399999999999997,
+          "z": -3.6
+        },
+        {
+          "x": -3.988180194846606,
+          "y": 2.6399999999999997,
+          "z": -3.5681801948466054
+        },
+        {
+          "x": -4.0200000000000005,
+          "y": 2.6399999999999997,
+          "z": -3.555
+        },
+        {
+          "x": -4.051819805153395,
+          "y": 2.6399999999999997,
+          "z": -3.5681801948466054
+        },
+        {
+          "x": -4.065,
+          "y": 2.6399999999999997,
+          "z": -3.6
+        },
+        {
+          "x": -4.051819805153395,
+          "y": 2.6399999999999997,
+          "z": -3.6318198051533948
+        },
+        {
+          "x": -4.0200000000000005,
+          "y": 2.6399999999999997,
+          "z": -3.645
+        },
+        {
+          "x": -3.988180194846606,
+          "y": 2.6399999999999997,
+          "z": -3.6318198051533948
+        },
+        {
+          "x": -3.9750000000000005,
+          "y": 2.6399999999999997,
+          "z": -3.6
+        }
+      ],
+      "radius": 0.014
+    },
+    {
       "id": "glow-0-light",
       "kind": "light",
       "position": {
-        "x": -3.5,
-        "y": 1.3,
-        "z": -3.2
+        "x": -4.0200000000000005,
+        "y": 2.15,
+        "z": -3.6
       },
       "size": {
         "x": 1,
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "WarmGlass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
-      "intensity": 2,
+      "navigation": "Ignore",
+      "intensity": 1.8,
       "range": 7,
-      "navigation": "Ignore"
+      "shadows": false
     },
     {
-      "id": "glow-0-crystal-0",
+      "id": "glow-0-block",
+      "kind": "blocker",
+      "position": {
+        "x": -4.4,
+        "y": 1.3,
+        "z": -3.6
+      },
+      "size": {
+        "x": 0.24,
+        "y": 2.6,
+        "z": 0.24
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "glow-1-post",
+      "kind": "lathe",
+      "position": {
+        "x": 3.2,
+        "y": 0,
+        "z": 1.95
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.2,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.2,
+          "y": 0.06,
+          "z": 0
+        },
+        {
+          "x": 0.1,
+          "y": 0.16,
+          "z": 0
+        },
+        {
+          "x": 0.07,
+          "y": 0.5,
+          "z": 0
+        },
+        {
+          "x": 0.05,
+          "y": 1.4300000000000002,
+          "z": 0
+        },
+        {
+          "x": 0.07,
+          "y": 1.482,
+          "z": 0
+        },
+        {
+          "x": 0.045,
+          "y": 1.56,
+          "z": 0
+        },
+        {
+          "x": 0.04,
+          "y": 2.85,
+          "z": 0
+        }
+      ],
+      "count": 8
+    },
+    {
+      "id": "glow-1-arm",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -2587,30 +3139,35 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": -3.25,
-          "y": 1.0,
-          "z": -3.2
+          "x": 3.2,
+          "y": 2.8000000000000003,
+          "z": 1.95
         },
         {
-          "x": -3.38,
-          "y": 1.5,
-          "z": -3.2
+          "x": 3.4000000000000004,
+          "y": 2.94,
+          "z": 1.95
+        },
+        {
+          "x": 3.58,
+          "y": 2.9,
+          "z": 1.95
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.025
     },
     {
-      "id": "glow-0-crystal-1",
+      "id": "glow-1-hook",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -2622,30 +3179,110 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": -3.4227457514062634,
-          "y": 1.0,
-          "z": -2.9622358709262118
+          "x": 3.58,
+          "y": 2.9,
+          "z": 1.95
         },
         {
-          "x": -3.4629179606750062,
-          "y": 1.57,
-          "z": -3.085873218044582
+          "x": 3.58,
+          "y": 2.62,
+          "z": 1.95
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.012
     },
     {
-      "id": "glow-0-crystal-2",
+      "id": "glow-1-base",
+      "kind": "lathe",
+      "position": {
+        "x": 3.58,
+        "y": 1.88,
+        "z": 1.95
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.13,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.14,
+          "y": 0.04,
+          "z": 0
+        },
+        {
+          "x": 0.1,
+          "y": 0.07,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-1-glass",
+      "kind": "lathe",
+      "position": {
+        "x": 3.58,
+        "y": 1.95,
+        "z": 1.95
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "LampGlass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.085,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.125,
+          "y": 0.38,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-1-bar-0",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -2657,30 +3294,30 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": -3.7022542485937366,
-          "y": 1.0,
-          "z": -3.053053686926882
+          "x": 3.647175144212722,
+          "y": 1.94,
+          "z": 2.017175144212722
         },
         {
-          "x": -3.597082039324994,
-          "y": 1.6400000000000001,
-          "z": -3.1294657697249035
+          "x": 3.675459415460184,
+          "y": 2.34,
+          "z": 2.0454594154601837
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.02
     },
     {
-      "id": "glow-0-crystal-3",
+      "id": "glow-1-bar-1",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -2692,30 +3329,30 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": -3.7022542485937366,
-          "y": 1.0,
-          "z": -3.3469463130731185
+          "x": 3.512824855787278,
+          "y": 1.94,
+          "z": 2.017175144212722
         },
         {
-          "x": -3.597082039324994,
-          "y": 1.71,
-          "z": -3.270534230275097
+          "x": 3.484540584539816,
+          "y": 2.34,
+          "z": 2.0454594154601837
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.02
     },
     {
-      "id": "glow-0-crystal-4",
+      "id": "glow-1-bar-2",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -2727,54 +3364,347 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": -3.4227457514062634,
-          "y": 1.0,
-          "z": -3.4377641290737886
+          "x": 3.512824855787278,
+          "y": 1.94,
+          "z": 1.882824855787278
         },
         {
-          "x": -3.4629179606750062,
-          "y": 1.78,
-          "z": -3.3141267819554185
+          "x": 3.484540584539816,
+          "y": 2.34,
+          "z": 1.854540584539816
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.02
+    },
+    {
+      "id": "glow-1-bar-3",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 3.647175144212722,
+          "y": 1.94,
+          "z": 1.882824855787278
+        },
+        {
+          "x": 3.675459415460184,
+          "y": 2.34,
+          "z": 1.854540584539816
+        }
+      ],
+      "radius": 0.02
+    },
+    {
+      "id": "glow-1-band",
+      "kind": "lathe",
+      "position": {
+        "x": 3.58,
+        "y": 2.12,
+        "z": 1.95
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.112,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.118,
+          "y": 0.03,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-1-cap",
+      "kind": "lathe",
+      "position": {
+        "x": 3.58,
+        "y": 2.33,
+        "z": 1.95
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.24,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.2,
+          "y": 0.04,
+          "z": 0
+        },
+        {
+          "x": 0.07,
+          "y": 0.17,
+          "z": 0
+        },
+        {
+          "x": 0.035,
+          "y": 0.24,
+          "z": 0
+        },
+        {
+          "x": 0,
+          "y": 0.27,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-1-ring",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 3.625,
+          "y": 2.6399999999999997,
+          "z": 1.95
+        },
+        {
+          "x": 3.6118198051533947,
+          "y": 2.6399999999999997,
+          "z": 1.9818198051533946
+        },
+        {
+          "x": 3.58,
+          "y": 2.6399999999999997,
+          "z": 1.9949999999999999
+        },
+        {
+          "x": 3.5481801948466054,
+          "y": 2.6399999999999997,
+          "z": 1.9818198051533946
+        },
+        {
+          "x": 3.535,
+          "y": 2.6399999999999997,
+          "z": 1.95
+        },
+        {
+          "x": 3.5481801948466054,
+          "y": 2.6399999999999997,
+          "z": 1.9181801948466053
+        },
+        {
+          "x": 3.58,
+          "y": 2.6399999999999997,
+          "z": 1.905
+        },
+        {
+          "x": 3.6118198051533947,
+          "y": 2.6399999999999997,
+          "z": 1.9181801948466053
+        },
+        {
+          "x": 3.625,
+          "y": 2.6399999999999997,
+          "z": 1.95
+        }
+      ],
+      "radius": 0.014
     },
     {
       "id": "glow-1-light",
       "kind": "light",
       "position": {
-        "x": 3.5,
-        "y": 1.3,
-        "z": 2.8
+        "x": 3.58,
+        "y": 2.15,
+        "z": 1.95
       },
       "size": {
         "x": 1,
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "WarmGlass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
-      "intensity": 2,
+      "navigation": "Ignore",
+      "intensity": 1.8,
       "range": 7,
-      "navigation": "Ignore"
+      "shadows": false
     },
     {
-      "id": "glow-1-crystal-0",
+      "id": "glow-1-block",
+      "kind": "blocker",
+      "position": {
+        "x": 3.2,
+        "y": 1.3,
+        "z": 1.95
+      },
+      "size": {
+        "x": 0.24,
+        "y": 2.6,
+        "z": 0.24
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "glow-2-base",
+      "kind": "lathe",
+      "position": {
+        "x": -6.85,
+        "y": 2.03,
+        "z": 3.3
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.13,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.14,
+          "y": 0.04,
+          "z": 0
+        },
+        {
+          "x": 0.1,
+          "y": 0.07,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-2-glass",
+      "kind": "lathe",
+      "position": {
+        "x": -6.85,
+        "y": 2.0999999999999996,
+        "z": 3.3
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "LampGlass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.085,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.125,
+          "y": 0.38,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-2-bar-0",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -2786,30 +3716,30 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": 3.75,
-          "y": 1.0,
-          "z": 2.8
+          "x": -6.782824855787277,
+          "y": 2.09,
+          "z": 3.367175144212722
         },
         {
-          "x": 3.62,
-          "y": 1.5,
-          "z": 2.8
+          "x": -6.754540584539816,
+          "y": 2.4899999999999998,
+          "z": 3.395459415460184
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.02
     },
     {
-      "id": "glow-1-crystal-1",
+      "id": "glow-2-bar-1",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -2821,30 +3751,30 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": 3.5772542485937366,
-          "y": 1.0,
-          "z": 3.0377641290737882
+          "x": -6.917175144212722,
+          "y": 2.09,
+          "z": 3.367175144212722
         },
         {
-          "x": 3.5370820393249938,
-          "y": 1.57,
-          "z": 2.914126781955418
+          "x": -6.945459415460183,
+          "y": 2.4899999999999998,
+          "z": 3.395459415460184
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.02
     },
     {
-      "id": "glow-1-crystal-2",
+      "id": "glow-2-bar-2",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -2856,30 +3786,30 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": 3.2977457514062634,
-          "y": 1.0,
-          "z": 2.946946313073118
+          "x": -6.917175144212722,
+          "y": 2.09,
+          "z": 3.232824855787278
         },
         {
-          "x": 3.402917960675006,
-          "y": 1.6400000000000001,
-          "z": 2.8705342302750965
+          "x": -6.945459415460183,
+          "y": 2.4899999999999998,
+          "z": 3.204540584539816
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.02
     },
     {
-      "id": "glow-1-crystal-3",
+      "id": "glow-2-bar-3",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -2891,30 +3821,115 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": 3.2977457514062634,
-          "y": 1.0,
-          "z": 2.6530536869268815
+          "x": -6.782824855787277,
+          "y": 2.09,
+          "z": 3.232824855787278
         },
         {
-          "x": 3.402917960675006,
-          "y": 1.71,
-          "z": 2.729465769724903
+          "x": -6.754540584539816,
+          "y": 2.4899999999999998,
+          "z": 3.204540584539816
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.02
     },
     {
-      "id": "glow-1-crystal-4",
+      "id": "glow-2-band",
+      "kind": "lathe",
+      "position": {
+        "x": -6.85,
+        "y": 2.27,
+        "z": 3.3
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.112,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.118,
+          "y": 0.03,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-2-cap",
+      "kind": "lathe",
+      "position": {
+        "x": -6.85,
+        "y": 2.48,
+        "z": 3.3
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.24,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.2,
+          "y": 0.04,
+          "z": 0
+        },
+        {
+          "x": 0.07,
+          "y": 0.17,
+          "z": 0
+        },
+        {
+          "x": 0.035,
+          "y": 0.24,
+          "z": 0
+        },
+        {
+          "x": 0,
+          "y": 0.27,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-2-ring",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -2926,54 +3941,90 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": 3.5772542485937366,
-          "y": 1.0,
-          "z": 2.5622358709262114
+          "x": -6.805,
+          "y": 2.79,
+          "z": 3.3
         },
         {
-          "x": 3.5370820393249938,
-          "y": 1.78,
-          "z": 2.6858732180445815
+          "x": -6.818180194846605,
+          "y": 2.79,
+          "z": 3.3318198051533945
+        },
+        {
+          "x": -6.85,
+          "y": 2.79,
+          "z": 3.3449999999999998
+        },
+        {
+          "x": -6.881819805153394,
+          "y": 2.79,
+          "z": 3.3318198051533945
+        },
+        {
+          "x": -6.895,
+          "y": 2.79,
+          "z": 3.3
+        },
+        {
+          "x": -6.881819805153394,
+          "y": 2.79,
+          "z": 3.268180194846605
+        },
+        {
+          "x": -6.85,
+          "y": 2.79,
+          "z": 3.255
+        },
+        {
+          "x": -6.818180194846605,
+          "y": 2.79,
+          "z": 3.268180194846605
+        },
+        {
+          "x": -6.805,
+          "y": 2.79,
+          "z": 3.3
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.014
     },
     {
       "id": "glow-2-light",
       "kind": "light",
       "position": {
-        "x": -5.9,
-        "y": 2,
-        "z": 1.6
+        "x": -6.85,
+        "y": 2.3,
+        "z": 3.3
       },
       "size": {
         "x": 1,
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "WarmGlass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
-      "intensity": 2,
+      "navigation": "Ignore",
+      "intensity": 1.8,
       "range": 7,
-      "navigation": "Ignore"
+      "shadows": false
     },
     {
-      "id": "glow-2-crystal-0",
+      "id": "glow-2-arm",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -2985,30 +4036,35 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": -5.65,
-          "y": 1.7,
-          "z": 1.6
+          "x": -7.2,
+          "y": 2.98,
+          "z": 3.3
         },
         {
-          "x": -5.78,
-          "y": 2.2,
-          "z": 1.6
+          "x": -7.025,
+          "y": 3.1199999999999997,
+          "z": 3.3
+        },
+        {
+          "x": -6.85,
+          "y": 3.0599999999999996,
+          "z": 3.3
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.03
     },
     {
-      "id": "glow-2-crystal-1",
+      "id": "glow-2-hook",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -3020,30 +4076,132 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": -5.822745751406264,
-          "y": 1.7,
-          "z": 1.8377641290737885
+          "x": -6.85,
+          "y": 3.0599999999999996,
+          "z": 3.3
         },
         {
-          "x": -5.862917960675007,
-          "y": 2.27,
-          "z": 1.7141267819554185
+          "x": -6.85,
+          "y": 2.83,
+          "z": 3.3
         }
       ],
-      "radius": 0.09,
+      "radius": 0.012
+    },
+    {
+      "id": "glow-2-plate",
+      "kind": "box",
+      "position": {
+        "x": -7.2,
+        "y": 2.98,
+        "z": 3.3
+      },
+      "size": {
+        "x": 0.05,
+        "y": 0.3,
+        "z": 0.22
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
       "navigation": "Ignore"
     },
     {
-      "id": "glow-2-crystal-2",
+      "id": "glow-3-base",
+      "kind": "lathe",
+      "position": {
+        "x": 6.85,
+        "y": 2.03,
+        "z": -3.3
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.13,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.14,
+          "y": 0.04,
+          "z": 0
+        },
+        {
+          "x": 0.1,
+          "y": 0.07,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-3-glass",
+      "kind": "lathe",
+      "position": {
+        "x": 6.85,
+        "y": 2.0999999999999996,
+        "z": -3.3
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "LampGlass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.085,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.125,
+          "y": 0.38,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-3-bar-0",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -3055,30 +4213,30 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": -6.102254248593737,
-          "y": 1.7,
-          "z": 1.7469463130731184
+          "x": 6.917175144212722,
+          "y": 2.09,
+          "z": -3.232824855787278
         },
         {
-          "x": -5.997082039324994,
-          "y": 2.3400000000000003,
-          "z": 1.670534230275097
+          "x": 6.945459415460183,
+          "y": 2.4899999999999998,
+          "z": -3.204540584539816
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.02
     },
     {
-      "id": "glow-2-crystal-3",
+      "id": "glow-3-bar-1",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -3090,30 +4248,30 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": -6.102254248593737,
-          "y": 1.7,
-          "z": 1.4530536869268817
+          "x": 6.782824855787277,
+          "y": 2.09,
+          "z": -3.232824855787278
         },
         {
-          "x": -5.997082039324994,
-          "y": 2.41,
-          "z": 1.5294657697249034
+          "x": 6.754540584539816,
+          "y": 2.4899999999999998,
+          "z": -3.204540584539816
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.02
     },
     {
-      "id": "glow-2-crystal-4",
+      "id": "glow-3-bar-2",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -3125,54 +4283,245 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": -5.822745751406264,
-          "y": 1.7,
-          "z": 1.3622358709262117
+          "x": 6.782824855787277,
+          "y": 2.09,
+          "z": -3.367175144212722
         },
         {
-          "x": -5.862917960675007,
-          "y": 2.4800000000000004,
-          "z": 1.4858732180445817
+          "x": 6.754540584539816,
+          "y": 2.4899999999999998,
+          "z": -3.395459415460184
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.02
+    },
+    {
+      "id": "glow-3-bar-3",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 6.917175144212722,
+          "y": 2.09,
+          "z": -3.367175144212722
+        },
+        {
+          "x": 6.945459415460183,
+          "y": 2.4899999999999998,
+          "z": -3.395459415460184
+        }
+      ],
+      "radius": 0.02
+    },
+    {
+      "id": "glow-3-band",
+      "kind": "lathe",
+      "position": {
+        "x": 6.85,
+        "y": 2.27,
+        "z": -3.3
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.112,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.118,
+          "y": 0.03,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-3-cap",
+      "kind": "lathe",
+      "position": {
+        "x": 6.85,
+        "y": 2.48,
+        "z": -3.3
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.24,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.2,
+          "y": 0.04,
+          "z": 0
+        },
+        {
+          "x": 0.07,
+          "y": 0.17,
+          "z": 0
+        },
+        {
+          "x": 0.035,
+          "y": 0.24,
+          "z": 0
+        },
+        {
+          "x": 0,
+          "y": 0.27,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-3-ring",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 6.895,
+          "y": 2.79,
+          "z": -3.3
+        },
+        {
+          "x": 6.881819805153394,
+          "y": 2.79,
+          "z": -3.268180194846605
+        },
+        {
+          "x": 6.85,
+          "y": 2.79,
+          "z": -3.255
+        },
+        {
+          "x": 6.818180194846605,
+          "y": 2.79,
+          "z": -3.268180194846605
+        },
+        {
+          "x": 6.805,
+          "y": 2.79,
+          "z": -3.3
+        },
+        {
+          "x": 6.818180194846605,
+          "y": 2.79,
+          "z": -3.3318198051533945
+        },
+        {
+          "x": 6.85,
+          "y": 2.79,
+          "z": -3.3449999999999998
+        },
+        {
+          "x": 6.881819805153394,
+          "y": 2.79,
+          "z": -3.3318198051533945
+        },
+        {
+          "x": 6.895,
+          "y": 2.79,
+          "z": -3.3
+        }
+      ],
+      "radius": 0.014
     },
     {
       "id": "glow-3-light",
       "kind": "light",
       "position": {
-        "x": 5.9,
-        "y": 2,
-        "z": -1.6
+        "x": 6.85,
+        "y": 2.3,
+        "z": -3.3
       },
       "size": {
         "x": 1,
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "WarmGlass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
-      "intensity": 2,
+      "navigation": "Ignore",
+      "intensity": 1.8,
       "range": 7,
-      "navigation": "Ignore"
+      "shadows": false
     },
     {
-      "id": "glow-3-crystal-0",
+      "id": "glow-3-arm",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -3184,30 +4533,35 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": 6.15,
-          "y": 1.7,
-          "z": -1.6
+          "x": 7.2,
+          "y": 2.98,
+          "z": -3.3
         },
         {
-          "x": 6.0200000000000005,
-          "y": 2.2,
-          "z": -1.6
+          "x": 7.025,
+          "y": 3.1199999999999997,
+          "z": -3.3
+        },
+        {
+          "x": 6.85,
+          "y": 3.0599999999999996,
+          "z": -3.3
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.03
     },
     {
-      "id": "glow-3-crystal-1",
+      "id": "glow-3-hook",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -3219,30 +4573,132 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": 5.977254248593737,
-          "y": 1.7,
-          "z": -1.3622358709262117
+          "x": 6.85,
+          "y": 3.0599999999999996,
+          "z": -3.3
         },
         {
-          "x": 5.937082039324994,
-          "y": 2.27,
-          "z": -1.4858732180445817
+          "x": 6.85,
+          "y": 2.83,
+          "z": -3.3
         }
       ],
-      "radius": 0.09,
+      "radius": 0.012
+    },
+    {
+      "id": "glow-3-plate",
+      "kind": "box",
+      "position": {
+        "x": 7.2,
+        "y": 2.98,
+        "z": -3.3
+      },
+      "size": {
+        "x": 0.05,
+        "y": 0.3,
+        "z": 0.22
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
       "navigation": "Ignore"
     },
     {
-      "id": "glow-3-crystal-2",
+      "id": "glow-4-base",
+      "kind": "lathe",
+      "position": {
+        "x": 4.8,
+        "y": 4.93,
+        "z": 6.85
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.13,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.14,
+          "y": 0.04,
+          "z": 0
+        },
+        {
+          "x": 0.1,
+          "y": 0.07,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-4-glass",
+      "kind": "lathe",
+      "position": {
+        "x": 4.8,
+        "y": 5.0,
+        "z": 6.85
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "LampGlass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.085,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.125,
+          "y": 0.38,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-4-bar-0",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -3254,30 +4710,30 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": 5.697745751406264,
-          "y": 1.7,
-          "z": -1.4530536869268817
+          "x": 4.867175144212722,
+          "y": 4.99,
+          "z": 6.917175144212722
         },
         {
-          "x": 5.802917960675007,
-          "y": 2.3400000000000003,
-          "z": -1.5294657697249032
+          "x": 4.895459415460183,
+          "y": 5.390000000000001,
+          "z": 6.945459415460183
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.02
     },
     {
-      "id": "glow-3-crystal-3",
+      "id": "glow-4-bar-1",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -3289,30 +4745,30 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": 5.697745751406264,
-          "y": 1.7,
-          "z": -1.7469463130731184
+          "x": 4.732824855787277,
+          "y": 4.99,
+          "z": 6.917175144212722
         },
         {
-          "x": 5.802917960675007,
-          "y": 2.41,
-          "z": -1.6705342302750967
+          "x": 4.704540584539816,
+          "y": 5.390000000000001,
+          "z": 6.945459415460183
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.02
     },
     {
-      "id": "glow-3-crystal-4",
+      "id": "glow-4-bar-2",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -3324,54 +4780,245 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": 5.977254248593737,
-          "y": 1.7,
-          "z": -1.8377641290737885
+          "x": 4.732824855787277,
+          "y": 4.99,
+          "z": 6.782824855787277
         },
         {
-          "x": 5.937082039324994,
-          "y": 2.4800000000000004,
-          "z": -1.7141267819554185
+          "x": 4.704540584539816,
+          "y": 5.390000000000001,
+          "z": 6.754540584539816
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.02
+    },
+    {
+      "id": "glow-4-bar-3",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 4.867175144212722,
+          "y": 4.99,
+          "z": 6.782824855787277
+        },
+        {
+          "x": 4.895459415460183,
+          "y": 5.390000000000001,
+          "z": 6.754540584539816
+        }
+      ],
+      "radius": 0.02
+    },
+    {
+      "id": "glow-4-band",
+      "kind": "lathe",
+      "position": {
+        "x": 4.8,
+        "y": 5.17,
+        "z": 6.85
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.112,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.118,
+          "y": 0.03,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-4-cap",
+      "kind": "lathe",
+      "position": {
+        "x": 4.8,
+        "y": 5.38,
+        "z": 6.85
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.24,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.2,
+          "y": 0.04,
+          "z": 0
+        },
+        {
+          "x": 0.07,
+          "y": 0.17,
+          "z": 0
+        },
+        {
+          "x": 0.035,
+          "y": 0.24,
+          "z": 0
+        },
+        {
+          "x": 0,
+          "y": 0.27,
+          "z": 0
+        }
+      ],
+      "count": 4
+    },
+    {
+      "id": "glow-4-ring",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 4.845,
+          "y": 5.69,
+          "z": 6.85
+        },
+        {
+          "x": 4.831819805153394,
+          "y": 5.69,
+          "z": 6.881819805153394
+        },
+        {
+          "x": 4.8,
+          "y": 5.69,
+          "z": 6.895
+        },
+        {
+          "x": 4.768180194846606,
+          "y": 5.69,
+          "z": 6.881819805153394
+        },
+        {
+          "x": 4.755,
+          "y": 5.69,
+          "z": 6.85
+        },
+        {
+          "x": 4.768180194846606,
+          "y": 5.69,
+          "z": 6.818180194846605
+        },
+        {
+          "x": 4.8,
+          "y": 5.69,
+          "z": 6.805
+        },
+        {
+          "x": 4.831819805153394,
+          "y": 5.69,
+          "z": 6.818180194846605
+        },
+        {
+          "x": 4.845,
+          "y": 5.69,
+          "z": 6.85
+        }
+      ],
+      "radius": 0.014
     },
     {
       "id": "glow-4-light",
       "kind": "light",
       "position": {
         "x": 4.8,
-        "y": 4.2,
-        "z": 5.7
+        "y": 5.2,
+        "z": 6.85
       },
       "size": {
         "x": 1,
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "WarmGlass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
-      "intensity": 2,
+      "navigation": "Ignore",
+      "intensity": 1.8,
       "range": 7,
-      "navigation": "Ignore"
+      "shadows": false
     },
     {
-      "id": "glow-4-crystal-0",
+      "id": "glow-4-arm",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -3383,30 +5030,35 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": 5.05,
-          "y": 3.9000000000000004,
-          "z": 5.7
+          "x": 4.8,
+          "y": 5.88,
+          "z": 7.2
         },
         {
-          "x": 4.92,
-          "y": 4.4,
-          "z": 5.7
+          "x": 4.8,
+          "y": 6.0200000000000005,
+          "z": 7.025
+        },
+        {
+          "x": 4.8,
+          "y": 5.96,
+          "z": 6.85
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.03
     },
     {
-      "id": "glow-4-crystal-1",
+      "id": "glow-4-hook",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -3418,155 +5070,48 @@
         "y": 1,
         "z": 1
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
+      "navigation": "Ignore",
       "points": [
         {
-          "x": 4.8772542485937365,
-          "y": 3.9000000000000004,
-          "z": 5.937764129073789
+          "x": 4.8,
+          "y": 5.96,
+          "z": 6.85
         },
         {
-          "x": 4.837082039324994,
-          "y": 4.470000000000001,
-          "z": 5.8141267819554185
+          "x": 4.8,
+          "y": 5.73,
+          "z": 6.85
         }
       ],
-      "radius": 0.09,
-      "navigation": "Ignore"
+      "radius": 0.012
     },
     {
-      "id": "glow-4-crystal-2",
-      "kind": "tube",
+      "id": "glow-4-plate",
+      "kind": "box",
       "position": {
-        "x": 0,
-        "y": 0,
-        "z": 0
+        "x": 4.8,
+        "y": 5.88,
+        "z": 7.2
       },
       "size": {
-        "x": 1,
-        "y": 1,
-        "z": 1
+        "x": 0.22,
+        "y": 0.3,
+        "z": 0.05
       },
-      "material": "MossGlow",
+      "material": "Brass",
       "rotation": {
         "x": 0,
         "y": 0,
         "z": 0
       },
       "collider": false,
-      "points": [
-        {
-          "x": 4.597745751406263,
-          "y": 3.9000000000000004,
-          "z": 5.8469463130731185
-        },
-        {
-          "x": 4.7029179606750064,
-          "y": 4.54,
-          "z": 5.770534230275097
-        }
-      ],
-      "radius": 0.09,
-      "navigation": "Ignore"
-    },
-    {
-      "id": "glow-4-crystal-3",
-      "kind": "tube",
-      "position": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "size": {
-        "x": 1,
-        "y": 1,
-        "z": 1
-      },
-      "material": "MossGlow",
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "collider": false,
-      "points": [
-        {
-          "x": 4.597745751406263,
-          "y": 3.9000000000000004,
-          "z": 5.553053686926882
-        },
-        {
-          "x": 4.7029179606750064,
-          "y": 4.61,
-          "z": 5.629465769724903
-        }
-      ],
-      "radius": 0.09,
-      "navigation": "Ignore"
-    },
-    {
-      "id": "glow-4-crystal-4",
-      "kind": "tube",
-      "position": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "size": {
-        "x": 1,
-        "y": 1,
-        "z": 1
-      },
-      "material": "MossGlow",
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "collider": false,
-      "points": [
-        {
-          "x": 4.8772542485937365,
-          "y": 3.9000000000000004,
-          "z": 5.462235870926212
-        },
-        {
-          "x": 4.837082039324994,
-          "y": 4.680000000000001,
-          "z": 5.585873218044582
-        }
-      ],
-      "radius": 0.09,
-      "navigation": "Ignore"
-    },
-    {
-      "id": "crevice-light",
-      "kind": "light",
-      "position": {
-        "x": 0,
-        "y": -1.7,
-        "z": 0
-      },
-      "size": {
-        "x": 1,
-        "y": 1,
-        "z": 1
-      },
-      "material": "MossGlow",
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "collider": false,
-      "intensity": 2,
-      "range": 6,
       "navigation": "Ignore"
     },
     {
@@ -4534,215 +6079,17 @@
       "navigation": "Ignore"
     },
     {
-      "id": "screen-0-leaf-0",
+      "id": "climb-2-ledge-0",
       "kind": "box",
       "position": {
-        "x": 6.220000000000001,
-        "y": 1.0,
-        "z": -6.05
+        "x": 6.350000000000001,
+        "y": 1.5,
+        "z": -6.6499999999999995
       },
       "size": {
-        "x": 0.72,
-        "y": 2.0,
-        "z": 0.06
-      },
-      "material": "Hedge",
-      "rotation": {
-        "x": 0,
-        "y": 212,
-        "z": 0
-      },
-      "collider": true,
-      "navigation": "Obstacle"
-    },
-    {
-      "id": "screen-0-top-0",
-      "kind": "box",
-      "position": {
-        "x": 6.220000000000001,
-        "y": 2.03,
-        "z": -6.05
-      },
-      "size": {
-        "x": 0.76,
-        "y": 0.06,
-        "z": 0.09
-      },
-      "material": "Bark",
-      "rotation": {
-        "x": 0,
-        "y": 212,
-        "z": 0
-      },
-      "collider": false,
-      "navigation": "Ignore"
-    },
-    {
-      "id": "screen-0-foot-0",
-      "kind": "box",
-      "position": {
-        "x": 6.220000000000001,
-        "y": 0.03,
-        "z": -6.05
-      },
-      "size": {
-        "x": 0.76,
-        "y": 0.06,
-        "z": 0.09
-      },
-      "material": "Bark",
-      "rotation": {
-        "x": 0,
-        "y": 212,
-        "z": 0
-      },
-      "collider": false,
-      "navigation": "Ignore"
-    },
-    {
-      "id": "screen-0-leaf-1",
-      "kind": "box",
-      "position": {
-        "x": 5.6000000000000005,
-        "y": 1.0,
-        "z": -5.85
-      },
-      "size": {
-        "x": 0.72,
-        "y": 2.0,
-        "z": 0.06
-      },
-      "material": "Hedge",
-      "rotation": {
-        "x": 0,
-        "y": 180,
-        "z": 0
-      },
-      "collider": true,
-      "navigation": "Obstacle"
-    },
-    {
-      "id": "screen-0-top-1",
-      "kind": "box",
-      "position": {
-        "x": 5.6000000000000005,
-        "y": 2.03,
-        "z": -5.85
-      },
-      "size": {
-        "x": 0.76,
-        "y": 0.06,
-        "z": 0.09
-      },
-      "material": "Bark",
-      "rotation": {
-        "x": 0,
-        "y": 180,
-        "z": 0
-      },
-      "collider": false,
-      "navigation": "Ignore"
-    },
-    {
-      "id": "screen-0-foot-1",
-      "kind": "box",
-      "position": {
-        "x": 5.6000000000000005,
-        "y": 0.03,
-        "z": -5.85
-      },
-      "size": {
-        "x": 0.76,
-        "y": 0.06,
-        "z": 0.09
-      },
-      "material": "Bark",
-      "rotation": {
-        "x": 0,
-        "y": 180,
-        "z": 0
-      },
-      "collider": false,
-      "navigation": "Ignore"
-    },
-    {
-      "id": "screen-0-leaf-2",
-      "kind": "box",
-      "position": {
-        "x": 4.98,
-        "y": 1.0,
-        "z": -6.05
-      },
-      "size": {
-        "x": 0.72,
-        "y": 2.0,
-        "z": 0.06
-      },
-      "material": "Hedge",
-      "rotation": {
-        "x": 0,
-        "y": 148,
-        "z": 0
-      },
-      "collider": true,
-      "navigation": "Obstacle"
-    },
-    {
-      "id": "screen-0-top-2",
-      "kind": "box",
-      "position": {
-        "x": 4.98,
-        "y": 2.03,
-        "z": -6.05
-      },
-      "size": {
-        "x": 0.76,
-        "y": 0.06,
-        "z": 0.09
-      },
-      "material": "Bark",
-      "rotation": {
-        "x": 0,
-        "y": 148,
-        "z": 0
-      },
-      "collider": false,
-      "navigation": "Ignore"
-    },
-    {
-      "id": "screen-0-foot-2",
-      "kind": "box",
-      "position": {
-        "x": 4.98,
-        "y": 0.03,
-        "z": -6.05
-      },
-      "size": {
-        "x": 0.76,
-        "y": 0.06,
-        "z": 0.09
-      },
-      "material": "Bark",
-      "rotation": {
-        "x": 0,
-        "y": 148,
-        "z": 0
-      },
-      "collider": false,
-      "navigation": "Ignore"
-    },
-    {
-      "id": "shelf-0-board",
-      "kind": "box",
-      "position": {
-        "x": -4.199999999999999,
-        "y": 2.35,
-        "z": -6.900000000000001
-      },
-      "size": {
-        "x": 1.3,
-        "y": 0.1,
-        "z": 0.5
+        "x": 1.7,
+        "y": 0.2,
+        "z": 1.1
       },
       "material": "Bark",
       "rotation": {
@@ -4754,29 +6101,7 @@
       "navigation": "Obstacle"
     },
     {
-      "id": "shelf-0-lip",
-      "kind": "box",
-      "position": {
-        "x": -4.199999999999999,
-        "y": 2.43,
-        "z": -6.670000000000001
-      },
-      "size": {
-        "x": 1.3,
-        "y": 0.06,
-        "z": 0.04
-      },
-      "material": "OakDark",
-      "rotation": {
-        "x": 0,
-        "y": 180,
-        "z": 0
-      },
-      "collider": false,
-      "navigation": "Ignore"
-    },
-    {
-      "id": "shelf-0-bracket-0",
+      "id": "climb-2-bracket-0-0",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -4798,20 +6123,20 @@
       "navigation": "Ignore",
       "points": [
         {
-          "x": -3.6999999999999993,
-          "y": 2.3,
-          "z": -6.700000000000001
+          "x": 7.050000000000001,
+          "y": 1.4000000000000001,
+          "z": -6.1499999999999995
         },
         {
-          "x": -3.6999999999999993,
-          "y": 1.9,
-          "z": -7.1400000000000015
+          "x": 7.050000000000001,
+          "y": 0.8500000000000001,
+          "z": -7.169999999999999
         }
       ],
-      "radius": 0.035
+      "radius": 0.05
     },
     {
-      "id": "shelf-0-bracket-1",
+      "id": "climb-2-bracket-0-1",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -4833,17 +6158,153 @@
       "navigation": "Ignore",
       "points": [
         {
-          "x": -4.699999999999999,
-          "y": 2.3,
-          "z": -6.700000000000001
+          "x": 5.650000000000001,
+          "y": 1.4000000000000001,
+          "z": -6.1499999999999995
         },
         {
-          "x": -4.699999999999999,
-          "y": 1.9,
-          "z": -7.1400000000000015
+          "x": 5.650000000000001,
+          "y": 0.8500000000000001,
+          "z": -7.169999999999999
         }
       ],
-      "radius": 0.035
+      "radius": 0.05
+    },
+    {
+      "id": "climb-2-lip-0",
+      "kind": "box",
+      "position": {
+        "x": 6.350000000000001,
+        "y": 1.6400000000000001,
+        "z": -6.119999999999999
+      },
+      "size": {
+        "x": 1.7,
+        "y": 0.08,
+        "z": 0.06
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "climb-2-ledge-1",
+      "kind": "box",
+      "position": {
+        "x": 4.450000000000001,
+        "y": 2.9,
+        "z": -6.6499999999999995
+      },
+      "size": {
+        "x": 1.7,
+        "y": 0.2,
+        "z": 1.1
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "climb-2-bracket-1-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 5.150000000000001,
+          "y": 2.8,
+          "z": -6.1499999999999995
+        },
+        {
+          "x": 5.150000000000001,
+          "y": 2.25,
+          "z": -7.169999999999999
+        }
+      ],
+      "radius": 0.05
+    },
+    {
+      "id": "climb-2-bracket-1-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 3.7500000000000013,
+          "y": 2.8,
+          "z": -6.1499999999999995
+        },
+        {
+          "x": 3.7500000000000013,
+          "y": 2.25,
+          "z": -7.169999999999999
+        }
+      ],
+      "radius": 0.05
+    },
+    {
+      "id": "climb-2-lip-1",
+      "kind": "box",
+      "position": {
+        "x": 4.450000000000001,
+        "y": 3.04,
+        "z": -6.119999999999999
+      },
+      "size": {
+        "x": 1.7,
+        "y": 0.08,
+        "z": 0.06
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore"
     },
     {
       "id": "dress-0-plinth",
@@ -5150,129 +6611,475 @@
       "count": 10
     },
     {
-      "id": "dress-2-stool",
-      "kind": "box",
+      "id": "dress-2-0-stem",
+      "kind": "lathe",
       "position": {
-        "x": 1.0766685279902628,
-        "y": 0.25,
-        "z": -4.3007051227702995
+        "x": 1.5193998452723827,
+        "y": 0.0,
+        "z": 4.34713954056457
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Stem",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.07975497596605274,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.053169983977368496,
+          "y": 0.3719540728841021,
+          "z": 0
+        },
+        {
+          "x": 0.0432006119816119,
+          "y": 0.6695173311913838,
+          "z": 0
+        }
+      ],
+      "count": 12
+    },
+    {
+      "id": "dress-2-0-cap",
+      "kind": "lathe",
+      "position": {
+        "x": 1.5193998452723827,
+        "y": 0.0,
+        "z": 4.34713954056457
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "CapPlum",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.04652373598019744,
+          "y": 0.6397610053606556,
+          "z": 0
+        },
+        {
+          "x": 0.28246553987977013,
+          "y": 0.7040306577851778,
+          "z": 0
+        },
+        {
+          "x": 0.3323123998585531,
+          "y": 0.7439081457682042,
+          "z": 0
+        },
+        {
+          "x": 0.2990811598726978,
+          "y": 0.8103706257399148,
+          "z": 0
+        },
+        {
+          "x": 0.18277181992220423,
+          "y": 0.8834793537087965,
+          "z": 0
+        },
+        {
+          "x": 0,
+          "y": 0.9100643456974807,
+          "z": 0
+        }
+      ],
+      "count": 18
+    },
+    {
+      "id": "dress-2-0-gills",
+      "kind": "lathe",
+      "position": {
+        "x": 1.5193998452723827,
+        "y": 0.0,
+        "z": 4.34713954056457
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "CapGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.05981623197453956,
+          "y": 0.7106769057823489,
+          "z": 0
+        },
+        {
+          "x": 0.27249616788401354,
+          "y": 0.7007075337865922,
+          "z": 0
+        }
+      ],
+      "count": 18
+    },
+    {
+      "id": "dress-2-1-stem",
+      "kind": "lathe",
+      "position": {
+        "x": 1.7010596415623538,
+        "y": 0.0,
+        "z": 4.291890127331385
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Stem",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.05602753955359656,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.03735169303573104,
+          "y": 0.26407103702426193,
+          "z": 0
+        },
+        {
+          "x": 0.03034825059153147,
+          "y": 0.4753278666436715,
+          "z": 0
+        }
+      ],
+      "count": 12
+    },
+    {
+      "id": "dress-2-1-cap",
+      "kind": "lathe",
+      "position": {
+        "x": 1.7010596415623538,
+        "y": 0.0,
+        "z": 4.291890127331385
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "CapRose",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.03268273140626466,
+          "y": 0.45420218368173054,
+          "z": 0
+        },
+        {
+          "x": 0.19843086925232115,
+          "y": 0.5001283042717256,
+          "z": 0
+        },
+        {
+          "x": 0.233448081473319,
+          "y": 0.5281420740485239,
+          "z": 0
+        },
+        {
+          "x": 0.2101032733259871,
+          "y": 0.5748316903431877,
+          "z": 0
+        },
+        {
+          "x": 0.12839644481032547,
+          "y": 0.6261902682673178,
+          "z": 0
+        },
+        {
+          "x": 0,
+          "y": 0.6448661147851834,
+          "z": 0
+        }
+      ],
+      "count": 18
+    },
+    {
+      "id": "dress-2-1-gills",
+      "kind": "lathe",
+      "position": {
+        "x": 1.7010596415623538,
+        "y": 0.0,
+        "z": 4.291890127331385
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "CapGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.042020654665197416,
+          "y": 0.504797265901192,
+          "z": 0
+        },
+        {
+          "x": 0.19142742680812155,
+          "y": 0.4977938234569924,
+          "z": 0
+        }
+      ],
+      "count": 18
+    },
+    {
+      "id": "dress-2-2-stem",
+      "kind": "lathe",
+      "position": {
+        "x": 1.5792240711126293,
+        "y": 0.0,
+        "z": 4.384694689936546
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Stem",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.07486869766809096,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.049912465112060635,
+          "y": 0.30628009676512524,
+          "z": 0
+        },
+        {
+          "x": 0.040553877903549265,
+          "y": 0.5513041741772254,
+          "z": 0
+        }
+      ],
+      "count": 12
+    },
+    {
+      "id": "dress-2-2-cap",
+      "kind": "lathe",
+      "position": {
+        "x": 1.5792240711126293,
+        "y": 0.0,
+        "z": 4.384694689936546
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "CapRose",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.04367340697305306,
+          "y": 0.5268017664360154,
+          "z": 0
+        },
+        {
+          "x": 0.2651599709078221,
+          "y": 0.575125844696205,
+          "z": 0
+        },
+        {
+          "x": 0.31195290695037897,
+          "y": 0.6125601935302505,
+          "z": 0
+        },
+        {
+          "x": 0.28075761625534107,
+          "y": 0.6749507749203263,
+          "z": 0
+        },
+        {
+          "x": 0.17157409882270844,
+          "y": 0.7435804144494096,
+          "z": 0
+        },
+        {
+          "x": 0,
+          "y": 0.76853664700544,
+          "z": 0
+        }
+      ],
+      "count": 18
+    },
+    {
+      "id": "dress-2-2-gills",
+      "kind": "lathe",
+      "position": {
+        "x": 1.5792240711126293,
+        "y": 0.0,
+        "z": 4.384694689936546
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "CapGlow",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.05615152325106821,
+          "y": 0.5813649028352126,
+          "z": 0
+        },
+        {
+          "x": 0.25580138369931077,
+          "y": 0.5720063156267012,
+          "z": 0
+        }
+      ],
+      "count": 18
+    },
+    {
+      "id": "dress-2-block",
+      "kind": "blocker",
+      "position": {
+        "x": 1.493910993175298,
+        "y": 0.35,
+        "z": 4.449092388050726
       },
       "size": {
         "x": 0.5,
-        "y": 0.5,
+        "y": 0.7,
         "z": 0.5
+      },
+      "material": "Bark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "hang-0-peg",
+      "kind": "box",
+      "position": {
+        "x": -5.089027332077212,
+        "y": 2.9,
+        "z": -7.1000000000000005
+      },
+      "size": {
+        "x": 0.06,
+        "y": 0.06,
+        "z": 0.2
       },
       "material": "OakDark",
       "rotation": {
         "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "collider": true,
-      "navigation": "Obstacle"
-    },
-    {
-      "id": "dress-2-cushion",
-      "kind": "box",
-      "position": {
-        "x": 1.0766685279902628,
-        "y": 0.56,
-        "z": -4.3007051227702995
-      },
-      "size": {
-        "x": 0.56,
-        "y": 0.12,
-        "z": 0.56
-      },
-      "material": "Velvet",
-      "rotation": {
-        "x": 0,
-        "y": 4.255044546819651,
+        "y": 180,
         "z": 0
       },
       "collider": false,
       "navigation": "Ignore"
     },
     {
-      "id": "dress-2-sole",
+      "id": "hang-0-cloak",
       "kind": "box",
       "position": {
-        "x": 1.0766685279902628,
-        "y": 0.65,
-        "z": -4.3007051227702995
+        "x": -5.089027332077212,
+        "y": 2.15,
+        "z": -7.0600000000000005
       },
       "size": {
-        "x": 0.12,
-        "y": 0.03,
-        "z": 0.34
+        "x": 0.7,
+        "y": 1.5,
+        "z": 0.1
       },
-      "material": "Pane",
+      "material": "Cloth",
       "rotation": {
-        "x": -8,
-        "y": 4.255044546819651,
-        "z": 0
+        "x": 0,
+        "y": 180,
+        "z": 3
       },
       "collider": false,
       "navigation": "Ignore"
     },
     {
-      "id": "dress-2-heel",
-      "kind": "box",
-      "position": {
-        "x": 1.0766685279902628,
-        "y": 0.7,
-        "z": -4.3007051227702995
-      },
-      "size": {
-        "x": 0.1,
-        "y": 0.12,
-        "z": 0.08
-      },
-      "material": "Pane",
-      "rotation": {
-        "x": 0,
-        "y": 4.255044546819651,
-        "z": 0
-      },
-      "collider": false,
-      "navigation": "Ignore"
-    },
-    {
-      "id": "dress-3-plinth",
-      "kind": "box",
-      "position": {
-        "x": -1.2055864758516321,
-        "y": 0.4,
-        "z": 4.3321933149507
-      },
-      "size": {
-        "x": 0.42,
-        "y": 0.8,
-        "z": 0.42
-      },
-      "material": "MarbleDark",
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "collider": true,
-      "navigation": "Obstacle"
-    },
-    {
-      "id": "dress-3-bean-0",
+      "id": "hang-0-hood",
       "kind": "lathe",
       "position": {
-        "x": -1.3255864758516323,
-        "y": 0.8,
-        "z": 4.3321933149507
+        "x": -5.089027332077212,
+        "y": 2.78,
+        "z": -7.000000000000001
       },
       "size": {
         "x": 1,
         "y": 1,
         "z": 1
       },
-      "material": "BeanRed",
+      "material": "Cloth",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -5282,57 +7089,42 @@
       "navigation": "Ignore",
       "points": [
         {
-          "x": 0.0,
-          "y": 0.0,
+          "x": 0.26,
+          "y": 0,
           "z": 0
         },
         {
-          "x": 0.027499999999999997,
-          "y": 0.011052904187783812,
+          "x": 0.3,
+          "y": 0.18,
           "z": 0
         },
         {
-          "x": 0.047631397208144126,
-          "y": 0.04124999999999999,
+          "x": 0.18,
+          "y": 0.36,
           "z": 0
         },
         {
-          "x": 0.055,
-          "y": 0.0825,
-          "z": 0
-        },
-        {
-          "x": 0.047631397208144126,
-          "y": 0.12374999999999999,
-          "z": 0
-        },
-        {
-          "x": 0.027499999999999997,
-          "y": 0.1539470958122162,
-          "z": 0
-        },
-        {
-          "x": 6.735557395310442e-18,
-          "y": 0.165,
+          "x": 0,
+          "y": 0.4,
           "z": 0
         }
       ],
       "count": 8
     },
     {
-      "id": "dress-3-bean-1",
+      "id": "hang-1-0",
       "kind": "lathe",
       "position": {
-        "x": -1.2055864758516321,
-        "y": 0.8,
-        "z": 4.3921933149507
+        "x": -3.0694368967015597,
+        "y": 5.2156676010039345,
+        "z": -7.14
       },
       "size": {
         "x": 1,
         "y": 1,
         "z": 1
       },
-      "material": "BeanYellow",
+      "material": "CapRose",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -5342,57 +7134,42 @@
       "navigation": "Ignore",
       "points": [
         {
-          "x": 0.0,
-          "y": 0.0,
+          "x": 0,
+          "y": 0,
           "z": 0
         },
         {
-          "x": 0.027499999999999997,
-          "y": 0.011052904187783812,
+          "x": 0.3,
+          "y": -0.03,
           "z": 0
         },
         {
-          "x": 0.047631397208144126,
-          "y": 0.04124999999999999,
+          "x": 0.34,
+          "y": -0.09,
           "z": 0
         },
         {
-          "x": 0.055,
-          "y": 0.0825,
-          "z": 0
-        },
-        {
-          "x": 0.047631397208144126,
-          "y": 0.12374999999999999,
-          "z": 0
-        },
-        {
-          "x": 0.027499999999999997,
-          "y": 0.1539470958122162,
-          "z": 0
-        },
-        {
-          "x": 6.735557395310442e-18,
-          "y": 0.165,
+          "x": 0,
+          "y": -0.12,
           "z": 0
         }
       ],
-      "count": 8
+      "count": 10
     },
     {
-      "id": "dress-3-bean-2",
+      "id": "hang-1-1",
       "kind": "lathe",
       "position": {
-        "x": -1.0855864758516323,
-        "y": 0.8,
-        "z": 4.3321933149507
+        "x": -3.3694368967015595,
+        "y": 4.865667601003935,
+        "z": -7.14
       },
       "size": {
         "x": 1,
         "y": 1,
         "z": 1
       },
-      "material": "BeanBlue",
+      "material": "CapPlum",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -5402,45 +7179,75 @@
       "navigation": "Ignore",
       "points": [
         {
-          "x": 0.0,
-          "y": 0.0,
+          "x": 0,
+          "y": 0,
           "z": 0
         },
         {
-          "x": 0.027499999999999997,
-          "y": 0.011052904187783812,
+          "x": 0.3,
+          "y": -0.03,
           "z": 0
         },
         {
-          "x": 0.047631397208144126,
-          "y": 0.04124999999999999,
+          "x": 0.34,
+          "y": -0.09,
           "z": 0
         },
         {
-          "x": 0.055,
-          "y": 0.0825,
-          "z": 0
-        },
-        {
-          "x": 0.047631397208144126,
-          "y": 0.12374999999999999,
-          "z": 0
-        },
-        {
-          "x": 0.027499999999999997,
-          "y": 0.1539470958122162,
-          "z": 0
-        },
-        {
-          "x": 6.735557395310442e-18,
-          "y": 0.165,
+          "x": 0,
+          "y": -0.12,
           "z": 0
         }
       ],
-      "count": 8
+      "count": 10
     },
     {
-      "id": "hang-0-vine",
+      "id": "hang-1-2",
+      "kind": "lathe",
+      "position": {
+        "x": -3.66943689670156,
+        "y": 4.515667601003934,
+        "z": -7.140000000000001
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "CapRose",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.3,
+          "y": -0.03,
+          "z": 0
+        },
+        {
+          "x": 0.34,
+          "y": -0.09,
+          "z": 0
+        },
+        {
+          "x": 0,
+          "y": -0.12,
+          "z": 0
+        }
+      ],
+      "count": 10
+    },
+    {
+      "id": "hang-2-band-0",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -5452,7 +7259,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Leaf",
+      "material": "Candy",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -5462,118 +7269,65 @@
       "navigation": "Ignore",
       "points": [
         {
-          "x": 3.6307253480887147,
-          "y": 4.578569801045926,
-          "z": -7.119999999999999
+          "x": 2.8853323813932006,
+          "y": 4.2771337043757995,
+          "z": -7.13
         },
         {
-          "x": 3.491057320141158,
-          "y": 3.378569801045926,
-          "z": -7.05
+          "x": 2.9391702134685316,
+          "y": 4.617052398188242,
+          "z": -7.13
         },
         {
-          "x": 3.957730161431693,
-          "y": 2.1785698010459265,
-          "z": -7.099999999999999
+          "x": 3.0954136875807583,
+          "y": 4.92369748189752,
+          "z": -7.13
         },
         {
-          "x": 3.802885979608762,
-          "y": 0.9785698010459263,
-          "z": -7.019999999999999
+          "x": 3.3387686038714803,
+          "y": 5.1670523981882415,
+          "z": -7.13
+        },
+        {
+          "x": 3.6454136875807586,
+          "y": 5.323295872300468,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 3.9853323813932007,
+          "y": 5.377133704375799,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 4.325251075205643,
+          "y": 5.323295872300468,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 4.631896158914921,
+          "y": 5.1670523981882415,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 4.875251075205643,
+          "y": 4.92369748189752,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 5.03149454931787,
+          "y": 4.617052398188242,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 5.085332381393201,
+          "y": 4.2771337043757995,
+          "z": -7.129999999999999
         }
       ],
-      "radius": 0.045
+      "radius": 0.05
     },
     {
-      "id": "hang-0-leaf-0",
-      "kind": "box",
-      "position": {
-        "x": 3.6134713905959224,
-        "y": 4.078569801045926,
-        "z": -7.0
-      },
-      "size": {
-        "x": 0.3,
-        "y": 0.02,
-        "z": 0.18
-      },
-      "material": "Leaf",
-      "rotation": {
-        "x": 26.180616047227815,
-        "y": 169.5228437784836,
-        "z": 25
-      },
-      "collider": false,
-      "navigation": "Ignore"
-    },
-    {
-      "id": "hang-0-leaf-1",
-      "kind": "box",
-      "position": {
-        "x": 3.9773450275952107,
-        "y": 3.3285698010459264,
-        "z": -6.999999999999999
-      },
-      "size": {
-        "x": 0.3,
-        "y": 0.02,
-        "z": 0.18
-      },
-      "material": "Leaf",
-      "rotation": {
-        "x": 28.399934681139754,
-        "y": 214.65876828155206,
-        "z": 25
-      },
-      "collider": false,
-      "navigation": "Ignore"
-    },
-    {
-      "id": "hang-0-leaf-2",
-      "kind": "box",
-      "position": {
-        "x": 3.569227064103853,
-        "y": 2.5785698010459264,
-        "z": -7.0
-      },
-      "size": {
-        "x": 0.3,
-        "y": 0.02,
-        "z": 0.18
-      },
-      "material": "Leaf",
-      "rotation": {
-        "x": 22.688344559285802,
-        "y": 140.7146898242405,
-        "z": 25
-      },
-      "collider": false,
-      "navigation": "Ignore"
-    },
-    {
-      "id": "hang-0-leaf-3",
-      "kind": "box",
-      "position": {
-        "x": 3.658498233952492,
-        "y": 1.8285698010459264,
-        "z": -6.999999999999999
-      },
-      "size": {
-        "x": 0.3,
-        "y": 0.02,
-        "z": 0.18
-      },
-      "material": "Leaf",
-      "rotation": {
-        "x": -15.189186210412089,
-        "y": 163.93516243393347,
-        "z": 25
-      },
-      "collider": false,
-      "navigation": "Ignore"
-    },
-    {
-      "id": "hang-1-vine",
+      "id": "hang-2-band-1",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -5585,7 +7339,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Hedge",
+      "material": "Marzipan",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -5595,123 +7349,230 @@
       "navigation": "Ignore",
       "points": [
         {
-          "x": 5.629671074983563,
-          "y": 7.59610479466018,
-          "z": -7.119999999999999
+          "x": 3.0153323813932005,
+          "y": 4.2771337043757995,
+          "z": -7.13
         },
         {
-          "x": 5.626042003299811,
-          "y": 6.39610479466018,
-          "z": -7.049999999999999
+          "x": 3.0628075605869016,
+          "y": 4.576880188919499,
+          "z": -7.13
         },
         {
-          "x": 5.251890439139481,
-          "y": 5.1961047946601795,
-          "z": -7.099999999999999
+          "x": 3.2005858968495016,
+          "y": 4.847285399099499,
+          "z": -7.13
         },
         {
-          "x": 5.542731721924017,
-          "y": 3.9961047946601798,
-          "z": -7.019999999999999
+          "x": 3.4151806866695016,
+          "y": 5.061880188919499,
+          "z": -7.13
+        },
+        {
+          "x": 3.6855858968495014,
+          "y": 5.199658525182098,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 3.9853323813932007,
+          "y": 5.247133704375799,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 4.2850788659368995,
+          "y": 5.199658525182099,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 4.555484076116899,
+          "y": 5.061880188919499,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 4.7700788659369,
+          "y": 4.847285399099499,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 4.9078572021995,
+          "y": 4.576880188919499,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 4.955332381393201,
+          "y": 4.2771337043757995,
+          "z": -7.129999999999999
         }
       ],
-      "radius": 0.045
+      "radius": 0.05
     },
     {
-      "id": "hang-1-leaf-0",
-      "kind": "box",
+      "id": "hang-2-band-2",
+      "kind": "tube",
       "position": {
-        "x": 5.776760949118843,
-        "y": 7.09610479466018,
-        "z": -6.999999999999999
+        "x": 0,
+        "y": 0,
+        "z": 0
       },
       "size": {
-        "x": 0.3,
-        "y": 0.02,
-        "z": 0.18
+        "x": 1,
+        "y": 1,
+        "z": 1
       },
-      "material": "Hedge",
+      "material": "Mint",
       "rotation": {
-        "x": -29.684214305131494,
-        "y": 142.31074666103558,
-        "z": 25
+        "x": 0,
+        "y": 0,
+        "z": 0
       },
       "collider": false,
-      "navigation": "Ignore"
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 3.1453323813932004,
+          "y": 4.2771337043757995,
+          "z": -7.13
+        },
+        {
+          "x": 3.1864449077052717,
+          "y": 4.536707979650755,
+          "z": -7.13
+        },
+        {
+          "x": 3.305758106118245,
+          "y": 4.770873316301477,
+          "z": -7.13
+        },
+        {
+          "x": 3.4915927694675233,
+          "y": 4.956707979650756,
+          "z": -7.13
+        },
+        {
+          "x": 3.7257581061182448,
+          "y": 5.076021178063728,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 3.9853323813932007,
+          "y": 5.117133704375799,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 4.244906656668157,
+          "y": 5.076021178063729,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 4.479071993318878,
+          "y": 4.956707979650756,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 4.6649066566681565,
+          "y": 4.770873316301477,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 4.78421985508113,
+          "y": 4.536707979650755,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 4.825332381393201,
+          "y": 4.2771337043757995,
+          "z": -7.129999999999999
+        }
+      ],
+      "radius": 0.05
     },
     {
-      "id": "hang-1-leaf-1",
-      "kind": "box",
+      "id": "hang-2-band-3",
+      "kind": "tube",
       "position": {
-        "x": 5.891399336885629,
-        "y": 6.34610479466018,
-        "z": -6.999999999999999
+        "x": 0,
+        "y": 0,
+        "z": 0
       },
       "size": {
-        "x": 0.3,
-        "y": 0.02,
-        "z": 0.18
+        "x": 1,
+        "y": 1,
+        "z": 1
       },
-      "material": "Hedge",
+      "material": "PorcelainBlue",
       "rotation": {
-        "x": -0.11072850392640987,
-        "y": 168.76265994624484,
-        "z": 25
+        "x": 0,
+        "y": 0,
+        "z": 0
       },
       "collider": false,
-      "navigation": "Ignore"
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 3.2753323813932007,
+          "y": 4.2771337043757995,
+          "z": -7.13
+        },
+        {
+          "x": 3.3100822548236417,
+          "y": 4.496535770382012,
+          "z": -7.13
+        },
+        {
+          "x": 3.410930315386988,
+          "y": 4.694461233503455,
+          "z": -7.13
+        },
+        {
+          "x": 3.5680048522655445,
+          "y": 4.851535770382013,
+          "z": -7.13
+        },
+        {
+          "x": 3.765930315386988,
+          "y": 4.952383830945359,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 3.9853323813932007,
+          "y": 4.9871337043757995,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 4.204734447399414,
+          "y": 4.952383830945359,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 4.402659910520857,
+          "y": 4.851535770382013,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 4.559734447399413,
+          "y": 4.694461233503455,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 4.66058250796276,
+          "y": 4.496535770382012,
+          "z": -7.129999999999999
+        },
+        {
+          "x": 4.695332381393201,
+          "y": 4.2771337043757995,
+          "z": -7.129999999999999
+        }
+      ],
+      "radius": 0.05
     },
     {
-      "id": "hang-1-leaf-2",
-      "kind": "box",
-      "position": {
-        "x": 5.760789853527229,
-        "y": 5.59610479466018,
-        "z": -6.999999999999999
-      },
-      "size": {
-        "x": 0.3,
-        "y": 0.02,
-        "z": 0.18
-      },
-      "material": "Hedge",
-      "rotation": {
-        "x": -10.303479738780531,
-        "y": 180.5438505670958,
-        "z": 25
-      },
-      "collider": false,
-      "navigation": "Ignore"
-    },
-    {
-      "id": "hang-1-leaf-3",
-      "kind": "box",
-      "position": {
-        "x": 5.526679006357899,
-        "y": 4.84610479466018,
-        "z": -6.999999999999999
-      },
-      "size": {
-        "x": 0.3,
-        "y": 0.02,
-        "z": 0.18
-      },
-      "material": "Hedge",
-      "rotation": {
-        "x": -28.36931180890186,
-        "y": 149.2217555407679,
-        "z": 25
-      },
-      "collider": false,
-      "navigation": "Ignore"
-    },
-    {
-      "id": "hang-2-glass",
+      "id": "hang-3-glass",
       "kind": "disc",
       "position": {
-        "x": -5.0830512236799965,
-        "y": 5.680615511551306,
-        "z": -7.140000000000001
+        "x": 5.979762204477986,
+        "y": 5.032211208225352,
+        "z": -7.139999999999999
       },
       "size": {
         "x": 0.9,
@@ -5728,7 +7589,7 @@
       "navigation": "Ignore"
     },
     {
-      "id": "hang-2-frame",
+      "id": "hang-3-frame",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -5750,120 +7611,120 @@
       "navigation": "Ignore",
       "points": [
         {
-          "x": -5.553051223679996,
-          "y": 5.680615511551306,
-          "z": -7.120000000000001
+          "x": 5.509762204477986,
+          "y": 5.032211208225352,
+          "z": -7.119999999999999
         },
         {
-          "x": -5.530047786338718,
-          "y": 5.88765689778252,
-          "z": -7.120000000000001
+          "x": 5.532765641819264,
+          "y": 5.239252594456566,
+          "z": -7.119999999999999
         },
         {
-          "x": -5.463289211036222,
-          "y": 6.074431630587263,
-          "z": -7.120000000000001
+          "x": 5.59952421712176,
+          "y": 5.426027327261309,
+          "z": -7.119999999999999
         },
         {
-          "x": -5.359310292257459,
-          "y": 6.222656897782521,
-          "z": -7.120000000000001
+          "x": 5.703503135900523,
+          "y": 5.574252594456567,
+          "z": -7.119999999999999
         },
         {
-          "x": -5.228289211036222,
-          "y": 6.317823377469058,
-          "z": -7.120000000000001
+          "x": 5.834524217121761,
+          "y": 5.6694190741431045,
+          "z": -7.119999999999999
         },
         {
-          "x": -5.0830512236799965,
-          "y": 6.350615511551306,
-          "z": -7.120000000000001
+          "x": 5.979762204477986,
+          "y": 5.702211208225352,
+          "z": -7.119999999999999
         },
         {
-          "x": -4.9378132363237714,
-          "y": 6.317823377469058,
-          "z": -7.120000000000001
+          "x": 6.125000191834211,
+          "y": 5.6694190741431045,
+          "z": -7.119999999999999
         },
         {
-          "x": -4.806792155102534,
-          "y": 6.222656897782521,
-          "z": -7.120000000000001
+          "x": 6.256021273055448,
+          "y": 5.574252594456567,
+          "z": -7.119999999999999
         },
         {
-          "x": -4.702813236323771,
-          "y": 6.074431630587263,
-          "z": -7.120000000000001
+          "x": 6.360000191834211,
+          "y": 5.426027327261309,
+          "z": -7.119999999999999
         },
         {
-          "x": -4.636054661021275,
-          "y": 5.887656897782521,
-          "z": -7.120000000000001
+          "x": 6.4267587671367075,
+          "y": 5.239252594456567,
+          "z": -7.119999999999999
         },
         {
-          "x": -4.613051223679997,
-          "y": 5.680615511551306,
-          "z": -7.120000000000001
+          "x": 6.449762204477985,
+          "y": 5.032211208225352,
+          "z": -7.119999999999999
         },
         {
-          "x": -4.636054661021274,
-          "y": 5.473574125320091,
-          "z": -7.120000000000001
+          "x": 6.426758767136708,
+          "y": 4.8251698219941375,
+          "z": -7.119999999999999
         },
         {
-          "x": -4.702813236323771,
-          "y": 5.2867993925153485,
-          "z": -7.120000000000001
+          "x": 6.360000191834211,
+          "y": 4.638395089189395,
+          "z": -7.119999999999999
         },
         {
-          "x": -4.806792155102534,
-          "y": 5.1385741253200905,
-          "z": -7.120000000000001
+          "x": 6.256021273055448,
+          "y": 4.490169821994137,
+          "z": -7.119999999999999
         },
         {
-          "x": -4.9378132363237714,
-          "y": 5.043407645633553,
-          "z": -7.120000000000001
+          "x": 6.125000191834211,
+          "y": 4.395003342307599,
+          "z": -7.119999999999999
         },
         {
-          "x": -5.0830512236799965,
-          "y": 5.010615511551306,
-          "z": -7.120000000000001
+          "x": 5.979762204477986,
+          "y": 4.362211208225352,
+          "z": -7.119999999999999
         },
         {
-          "x": -5.228289211036222,
-          "y": 5.043407645633553,
-          "z": -7.120000000000001
+          "x": 5.834524217121761,
+          "y": 4.395003342307599,
+          "z": -7.119999999999999
         },
         {
-          "x": -5.359310292257459,
-          "y": 5.1385741253200905,
-          "z": -7.120000000000001
+          "x": 5.703503135900523,
+          "y": 4.490169821994137,
+          "z": -7.119999999999999
         },
         {
-          "x": -5.463289211036222,
-          "y": 5.2867993925153485,
-          "z": -7.120000000000001
+          "x": 5.59952421712176,
+          "y": 4.638395089189395,
+          "z": -7.119999999999999
         },
         {
-          "x": -5.530047786338718,
-          "y": 5.4735741253200905,
-          "z": -7.120000000000001
+          "x": 5.532765641819264,
+          "y": 4.825169821994137,
+          "z": -7.119999999999999
         },
         {
-          "x": -5.553051223679996,
-          "y": 5.680615511551306,
-          "z": -7.120000000000001
+          "x": 5.509762204477986,
+          "y": 5.032211208225352,
+          "z": -7.119999999999999
         }
       ],
       "radius": 0.05
     },
     {
-      "id": "hang-2-crown",
+      "id": "hang-3-crown",
       "kind": "box",
       "position": {
-        "x": -5.0830512236799965,
-        "y": 6.460615511551306,
-        "z": -7.1000000000000005
+        "x": 5.979762204477986,
+        "y": 5.812211208225352,
+        "z": -7.099999999999999
       },
       "size": {
         "x": 0.3,
@@ -5880,7 +7741,7 @@
       "navigation": "Ignore"
     },
     {
-      "id": "drop-3-strand",
+      "id": "drop-1-strand",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -5902,25 +7763,25 @@
       "navigation": "Ignore",
       "points": [
         {
-          "x": -0.04154792424692477,
+          "x": -0.3105697942954109,
           "y": 8.0,
-          "z": -5.053428926656206
+          "z": -4.878785730878957
         },
         {
-          "x": -0.025599519483611888,
-          "y": 6.6795806723465905,
-          "z": -4.932447646236206
+          "x": -0.4013590034277633,
+          "y": 7.139859711835136,
+          "z": -4.937570043692755
         },
         {
-          "x": 0.1378999210932187,
-          "y": 5.359161344693181,
-          "z": -4.774198970575047
+          "x": -0.459210411064844,
+          "y": 6.279719423670273,
+          "z": -4.918122733691617
         }
       ],
       "radius": 0.03
     },
     {
-      "id": "drop-6-braid",
+      "id": "drop-5-strand",
       "kind": "tube",
       "position": {
         "x": 0,
@@ -5932,7 +7793,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Hair",
+      "material": "Leaf",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -5942,82 +7803,22 @@
       "navigation": "Ignore",
       "points": [
         {
-          "x": -0.4042235383040307,
+          "x": -0.4697750817282422,
           "y": 8.0,
-          "z": -3.697036126071719
+          "z": -5.046146635068071
         },
         {
-          "x": -0.31905653041216336,
-          "y": 7.571519540052577,
-          "z": -3.8161321870894342
+          "x": -0.5932758138311538,
+          "y": 7.207367776087858,
+          "z": -4.954477903533243
         },
         {
-          "x": -0.4592907484888754,
-          "y": 7.1430390801051535,
-          "z": -3.8582232201440165
-        },
-        {
-          "x": -0.45378523713781815,
-          "y": 6.714558620157731,
-          "z": -3.7119119754361947
-        },
-        {
-          "x": -0.3171107678211969,
-          "y": 6.286078160210307,
-          "z": -3.764422740239316
-        },
-        {
-          "x": -0.41098713914559354,
-          "y": 5.857597700262884,
-          "z": -3.876781620129393
-        },
-        {
-          "x": -0.4869631056138516,
-          "y": 5.4291172403154615,
-          "z": -3.751621948100409
-        },
-        {
-          "x": -0.3439622597063366,
-          "y": 5.000636780368038,
-          "z": -3.7201887005283885
-        },
-        {
-          "x": -0.3604476563071887,
-          "y": 4.572156320420614,
-          "z": -3.865672454542716
-        },
-        {
-          "x": -0.4927893887613785,
-          "y": 4.143675860473191,
-          "z": -3.8030389424727997
-        },
-        {
-          "x": -0.39073458943436495,
-          "y": 3.7151954005257677,
-          "z": -3.6980527104349186
-        },
-        {
-          "x": -0.3243793607217191,
-          "y": 3.286714940578345,
-          "z": -3.8285681294691507
-        },
-        {
-          "x": -0.4693380663480125,
-          "y": 2.858234480630922,
-          "z": -3.8491658149298607
-        },
-        {
-          "x": -0.4419660207506215,
-          "y": 2.4297540206834984,
-          "z": -3.705332362273661
-        },
-        {
-          "x": -0.3147055086550253,
-          "y": 2.0012735607360757,
-          "z": -3.7777343860323613
+          "x": -0.35435982602973326,
+          "y": 6.414735552175715,
+          "z": -5.2065654009265865
         }
       ],
-      "radius": 0.09
+      "radius": 0.03
     },
     {
       "id": "drop-6-strand",
@@ -6032,7 +7833,7 @@
         "y": 1,
         "z": 1
       },
-      "material": "Straw",
+      "material": "Leaf",
       "rotation": {
         "x": 0,
         "y": 0,
@@ -6042,104 +7843,1423 @@
       "navigation": "Ignore",
       "points": [
         {
-          "x": -0.3542235383040307,
+          "x": -0.260364444667319,
           "y": 8.0,
-          "z": -3.747036126071719
+          "z": 3.3414686169750674
         },
         {
-          "x": -0.2690565304121634,
-          "y": 7.571519540052577,
-          "z": -3.866132187089434
+          "x": -0.4204796148514754,
+          "y": 7.2243084934403585,
+          "z": 3.464564533357367
         },
         {
-          "x": -0.4092907484888754,
-          "y": 7.1430390801051535,
-          "z": -3.9082232201440164
+          "x": -0.513295647626947,
+          "y": 6.448616986880718,
+          "z": 3.1138628086098707
+        }
+      ],
+      "radius": 0.03
+    },
+    {
+      "id": "drop-7-bar",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -1.7376468042515518,
+          "y": 7.2,
+          "z": -2.926103653316792
         },
         {
-          "x": -0.40378523713781816,
-          "y": 6.714558620157731,
-          "z": -3.7619119754361945
+          "x": -0.5376468042515518,
+          "y": 7.2,
+          "z": -2.926103653316792
+        }
+      ],
+      "radius": 0.02
+    },
+    {
+      "id": "drop-7-cord",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Brass",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -1.1376468042515517,
+          "y": 8.0,
+          "z": -2.926103653316792
         },
         {
-          "x": -0.2671107678211969,
-          "y": 6.286078160210307,
-          "z": -3.8144227402393156
+          "x": -1.1376468042515517,
+          "y": 7.2,
+          "z": -2.926103653316792
+        }
+      ],
+      "radius": 0.012
+    },
+    {
+      "id": "drop-7-string-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Wax",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -1.6876468042515518,
+          "y": 7.2,
+          "z": -2.926103653316792
         },
         {
-          "x": -0.36098713914559355,
-          "y": 5.857597700262884,
-          "z": -3.926781620129393
+          "x": -1.6876468042515518,
+          "y": 6.470815602071379,
+          "z": -2.926103653316792
+        }
+      ],
+      "radius": 0.018
+    },
+    {
+      "id": "drop-7-drift-star-0",
+      "kind": "box",
+      "position": {
+        "x": -1.6876468042515518,
+        "y": 6.37081560207138,
+        "z": -2.926103653316792
+      },
+      "size": {
+        "x": 0.16,
+        "y": 0.16,
+        "z": 0.04
+      },
+      "material": "Star",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 45
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "drop-7-string-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Wax",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -1.1376468042515517,
+          "y": 7.2,
+          "z": -2.926103653316792
         },
         {
-          "x": -0.4369631056138516,
-          "y": 5.4291172403154615,
-          "z": -3.8016219481004088
+          "x": -1.1376468042515517,
+          "y": 6.3536294730511385,
+          "z": -2.926103653316792
+        }
+      ],
+      "radius": 0.018
+    },
+    {
+      "id": "drop-7-drift-star-1",
+      "kind": "box",
+      "position": {
+        "x": -1.1376468042515517,
+        "y": 6.253629473051138,
+        "z": -2.926103653316792
+      },
+      "size": {
+        "x": 0.16,
+        "y": 0.16,
+        "z": 0.04
+      },
+      "material": "Star",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 45
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "drop-7-string-2",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Wax",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -0.5876468042515517,
+          "y": 7.2,
+          "z": -2.926103653316792
         },
         {
-          "x": -0.2939622597063366,
-          "y": 5.000636780368038,
-          "z": -3.7701887005283883
+          "x": -0.5876468042515517,
+          "y": 6.597471096168262,
+          "z": -2.926103653316792
+        }
+      ],
+      "radius": 0.018
+    },
+    {
+      "id": "drop-7-drift-star-2",
+      "kind": "box",
+      "position": {
+        "x": -0.5876468042515517,
+        "y": 6.497471096168262,
+        "z": -2.926103653316792
+      },
+      "size": {
+        "x": 0.16,
+        "y": 0.16,
+        "z": 0.04
+      },
+      "material": "Star",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 45
+      },
+      "collider": false,
+      "navigation": "Ignore"
+    },
+    {
+      "id": "crevice-wall-0-deep-0",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": -4.25,
+        "z": -1.6
+      },
+      "size": {
+        "x": 9,
+        "y": 2.5,
+        "z": 0.2
+      },
+      "material": "PitShade",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "crevice-wall-0-deep-1",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": -8.95,
+        "z": -1.6
+      },
+      "size": {
+        "x": 9,
+        "y": 6.9,
+        "z": 0.2
+      },
+      "material": "Void",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "crevice-wall-0-root-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Thorn",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -3.533486893414622,
+          "y": -0.3,
+          "z": -1.3900000000000001
         },
         {
-          "x": -0.31044765630718874,
-          "y": 4.572156320420614,
-          "z": -3.9156724545427157
+          "x": -3.5528109651780424,
+          "y": -0.7461928365298034,
+          "z": -1.383356780311349
         },
         {
-          "x": -0.4427893887613785,
-          "y": 4.143675860473191,
-          "z": -3.8530389424727995
+          "x": -3.505288501920074,
+          "y": -1.192385673059607,
+          "z": -1.3666483532878952
         },
         {
-          "x": -0.34073458943436497,
-          "y": 3.7151954005257677,
-          "z": -3.7480527104349184
+          "x": -3.5258509490578303,
+          "y": -1.6385785095894105,
+          "z": -1.350543888608366
         },
         {
-          "x": -0.2743793607217191,
-          "y": 3.286714940578345,
-          "z": -3.8785681294691505
+          "x": -3.564160449958361,
+          "y": -2.0847713461192137,
+          "z": -1.3849018299418654
         },
         {
-          "x": -0.4193380663480125,
-          "y": 2.858234480630922,
-          "z": -3.8991658149298605
+          "x": -3.6099484420656385,
+          "y": -2.5309641826490172,
+          "z": -1.2991863985625627
         },
         {
-          "x": -0.39196602075062154,
-          "y": 2.4297540206834984,
-          "z": -3.755332362273661
+          "x": -3.4959075907824912,
+          "y": -2.977157019178821,
+          "z": -1.331972878366832
+        }
+      ],
+      "radius": 0.054
+    },
+    {
+      "id": "crevice-wall-0-root-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Thorn",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -1.325258508380922,
+          "y": -0.3,
+          "z": -1.3900000000000001
         },
         {
-          "x": -0.2647055086550253,
-          "y": 2.0012735607360757,
-          "z": -3.827734386032361
+          "x": -1.3410185937338452,
+          "y": -0.9662235390756511,
+          "z": -1.3830101914411357
+        },
+        {
+          "x": -1.2924751481702434,
+          "y": -1.632447078151302,
+          "z": -1.36544776289232
+        },
+        {
+          "x": -1.3562700204566955,
+          "y": -2.298670617226953,
+          "z": -1.355389054057919
+        },
+        {
+          "x": -1.3191556505260953,
+          "y": -2.964894156302604,
+          "z": -1.3284900774852317
+        },
+        {
+          "x": -1.3431176190080862,
+          "y": -3.6311176953782556,
+          "z": -1.3896927028547341
+        },
+        {
+          "x": -1.3214984748936225,
+          "y": -4.297341234453906,
+          "z": -1.2702094706368796
+        }
+      ],
+      "radius": 0.048
+    },
+    {
+      "id": "crevice-wall-0-root-2",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Thorn",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -0.11462410008773816,
+          "y": -0.3,
+          "z": -1.3900000000000001
+        },
+        {
+          "x": -0.11735986695832089,
+          "y": -0.9551761821119373,
+          "z": -1.3763978834619075
+        },
+        {
+          "x": -0.09208765376993716,
+          "y": -1.6103523642238748,
+          "z": -1.3689436068934024
+        },
+        {
+          "x": -0.1153050751330526,
+          "y": -2.2655285463358124,
+          "z": -1.345263083601749
+        },
+        {
+          "x": -0.07770360809810459,
+          "y": -2.9207047284477494,
+          "z": -1.3684013796421333
+        },
+        {
+          "x": -0.11898388669988749,
+          "y": -3.575880910559687,
+          "z": -1.3493103498160997
+        },
+        {
+          "x": -0.05572128432198617,
+          "y": -4.231057092671625,
+          "z": -1.3545249974561404
+        }
+      ],
+      "radius": 0.059
+    },
+    {
+      "id": "crevice-wall-0-root-3",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Thorn",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 2.1735375639536203,
+          "y": -0.3,
+          "z": -1.3900000000000001
+        },
+        {
+          "x": 2.1811012310088396,
+          "y": -0.7738322225981871,
+          "z": -1.3885207849462184
+        },
+        {
+          "x": 2.162866993093201,
+          "y": -1.247664445196374,
+          "z": -1.373239090240979
+        },
+        {
+          "x": 2.1594637223496855,
+          "y": -1.7214966677945613,
+          "z": -1.3692283133277225
+        },
+        {
+          "x": 2.1327589368058026,
+          "y": -2.1953288903927484,
+          "z": -1.3497815272285096
+        },
+        {
+          "x": 2.1717166557163092,
+          "y": -2.6691611129909356,
+          "z": -1.3097004856590944
+        },
+        {
+          "x": 2.1043392745101897,
+          "y": -3.1429933355891224,
+          "z": -1.3726589408854608
         }
       ],
       "radius": 0.06
     },
     {
-      "id": "drop-6-bow",
-      "kind": "box",
+      "id": "crevice-wall-0-root-4",
+      "kind": "tube",
       "position": {
-        "x": -0.4042235383040307,
-        "y": 2.0512735607360755,
-        "z": -3.787036126071719
+        "x": 0,
+        "y": 0,
+        "z": 0
       },
       "size": {
-        "x": 0.34,
-        "y": 0.12,
-        "z": 0.1
+        "x": 1,
+        "y": 1,
+        "z": 1
       },
-      "material": "Candy",
+      "material": "Thorn",
       "rotation": {
         "x": 0,
-        "y": 85.08909079739037,
+        "y": 0,
         "z": 0
       },
       "collider": false,
-      "navigation": "Ignore"
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 3.276465999566203,
+          "y": -0.3,
+          "z": -1.3900000000000001
+        },
+        {
+          "x": 3.2755256126998753,
+          "y": -1.0514871738591982,
+          "z": -1.382810850008248
+        },
+        {
+          "x": 3.316090301472123,
+          "y": -1.8029743477183964,
+          "z": -1.376854063837624
+        },
+        {
+          "x": 3.309691529668849,
+          "y": -2.5544615215775943,
+          "z": -1.3774868469508774
+        },
+        {
+          "x": 3.33875103929253,
+          "y": -3.3059486954367925,
+          "z": -1.3888434484301486
+        },
+        {
+          "x": 3.2407719888653843,
+          "y": -4.057435869295991,
+          "z": -1.3730978925191304
+        },
+        {
+          "x": 3.303046585944518,
+          "y": -4.808923043155189,
+          "z": -1.2946560262752436
+        }
+      ],
+      "radius": 0.035
+    },
+    {
+      "id": "crevice-wall-1-deep-0",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": -4.25,
+        "z": 1.6
+      },
+      "size": {
+        "x": 9,
+        "y": 2.5,
+        "z": 0.2
+      },
+      "material": "PitShade",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "crevice-wall-1-deep-1",
+      "kind": "box",
+      "position": {
+        "x": 0,
+        "y": -8.95,
+        "z": 1.6
+      },
+      "size": {
+        "x": 9,
+        "y": 6.9,
+        "z": 0.2
+      },
+      "material": "Void",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "crevice-wall-1-root-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Thorn",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -4.108146563888955,
+          "y": -0.3,
+          "z": 1.3900000000000001
+        },
+        {
+          "x": -4.103033310727155,
+          "y": -1.098860243052825,
+          "z": 1.382113025940887
+        },
+        {
+          "x": -4.143173132700857,
+          "y": -1.89772048610565,
+          "z": 1.368044438811306
+        },
+        {
+          "x": -4.077679065097177,
+          "y": -2.696580729158475,
+          "z": 1.3525831323911361
+        },
+        {
+          "x": -4.067617035653042,
+          "y": -3.4954409722113,
+          "z": 1.3729192092150897
+        },
+        {
+          "x": -4.098154547111901,
+          "y": -4.294301215264126,
+          "z": 1.3282716391124865
+        },
+        {
+          "x": -4.067211125193606,
+          "y": -5.09316145831695,
+          "z": 1.2983748766457057
+        }
+      ],
+      "radius": 0.053
+    },
+    {
+      "id": "crevice-wall-1-root-1",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Thorn",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -1.9487415540166912,
+          "y": -0.3,
+          "z": 1.3900000000000001
+        },
+        {
+          "x": -1.9561048775617411,
+          "y": -1.1280653250124033,
+          "z": 1.3724928206824571
+        },
+        {
+          "x": -1.953804417888179,
+          "y": -1.9561306500248066,
+          "z": 1.3792339827933924
+        },
+        {
+          "x": -1.9394916444808978,
+          "y": -2.7841959750372096,
+          "z": 1.371046924662633
+        },
+        {
+          "x": -2.005423358686028,
+          "y": -3.612261300049613,
+          "z": 1.3809020707378479
+        },
+        {
+          "x": -1.8743231437535646,
+          "y": -4.440326625062016,
+          "z": 1.3186059397512584
+        },
+        {
+          "x": -1.9459234689368037,
+          "y": -5.268391950074419,
+          "z": 1.3557051023414044
+        }
+      ],
+      "radius": 0.049
+    },
+    {
+      "id": "crevice-wall-1-root-2",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Thorn",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 0.3411544120186534,
+          "y": -0.3,
+          "z": 1.3900000000000001
+        },
+        {
+          "x": 0.3495817997691133,
+          "y": -1.0886012254145514,
+          "z": 1.3794440476557326
+        },
+        {
+          "x": 0.33343836662302534,
+          "y": -1.877202450829103,
+          "z": 1.3563670522306162
+        },
+        {
+          "x": 0.29837452005864074,
+          "y": -2.6658036762436543,
+          "z": 1.3728312188705645
+        },
+        {
+          "x": 0.37120761431418753,
+          "y": -3.4544049016582057,
+          "z": 1.3147235331933598
+        },
+        {
+          "x": 0.3011144758032813,
+          "y": -4.243006127072758,
+          "z": 1.3853671730438941
+        },
+        {
+          "x": 0.43055796239645927,
+          "y": -5.031607352487309,
+          "z": 1.3548719556424138
+        }
+      ],
+      "radius": 0.054
+    },
+    {
+      "id": "crevice-wall-1-root-3",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Thorn",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 2.051285075597743,
+          "y": -0.3,
+          "z": 1.3900000000000001
+        },
+        {
+          "x": 2.063718243382196,
+          "y": -0.9701107870567871,
+          "z": 1.388936634140905
+        },
+        {
+          "x": 2.05066193820877,
+          "y": -1.6402215741135742,
+          "z": 1.3655060652400175
+        },
+        {
+          "x": 2.031314614334817,
+          "y": -2.310332361170361,
+          "z": 1.3381654405823948
+        },
+        {
+          "x": 2.0844215844661726,
+          "y": -2.980443148227148,
+          "z": 1.32684297328044
+        },
+        {
+          "x": 2.1379810075542593,
+          "y": -3.650553935283935,
+          "z": 1.3328392932247048
+        },
+        {
+          "x": 2.073763072283005,
+          "y": -4.320664722340722,
+          "z": 1.3705429933474256
+        }
+      ],
+      "radius": 0.037
+    },
+    {
+      "id": "crevice-wall-1-root-4",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Thorn",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 3.780007576254441,
+          "y": -0.3,
+          "z": 1.3900000000000001
+        },
+        {
+          "x": 3.7982360811045393,
+          "y": -0.9256674807593332,
+          "z": 1.374050609082108
+        },
+        {
+          "x": 3.7521347934407356,
+          "y": -1.5513349615186667,
+          "z": 1.3838689601466347
+        },
+        {
+          "x": 3.7991132427994425,
+          "y": -2.177002442278,
+          "z": 1.3529520532433494
+        },
+        {
+          "x": 3.786948618647195,
+          "y": -2.802669923037333,
+          "z": 1.3479682313408896
+        },
+        {
+          "x": 3.84944874419071,
+          "y": -3.4283374037966667,
+          "z": 1.333163669420636
+        },
+        {
+          "x": 3.855090594320562,
+          "y": -4.054004884556,
+          "z": 1.3717329799824751
+        }
+      ],
+      "radius": 0.056
+    },
+    {
+      "id": "crevice-end-0-deep-0",
+      "kind": "box",
+      "position": {
+        "x": -4.6,
+        "y": -4.25,
+        "z": 0
+      },
+      "size": {
+        "x": 0.2,
+        "y": 2.5,
+        "z": 3
+      },
+      "material": "PitShade",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "crevice-end-0-deep-1",
+      "kind": "box",
+      "position": {
+        "x": -4.6,
+        "y": -8.95,
+        "z": 0
+      },
+      "size": {
+        "x": 0.2,
+        "y": 6.9,
+        "z": 3
+      },
+      "material": "Void",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "crevice-end-0-root-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Thorn",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": -4.39,
+          "y": -0.3,
+          "z": 0.014873718897449706
+        },
+        {
+          "x": -4.383520969380177,
+          "y": -1.1447026115363839,
+          "z": -0.0035060756291567033
+        },
+        {
+          "x": -4.386749490783345,
+          "y": -1.9894052230727677,
+          "z": -0.008023218859917192
+        },
+        {
+          "x": -4.351381450664903,
+          "y": -2.8341078346091515,
+          "z": -0.00929471586849858
+        },
+        {
+          "x": -4.362915802342961,
+          "y": -3.678810446145535,
+          "z": -0.06016085079284618
+        },
+        {
+          "x": -4.336653519137066,
+          "y": -4.523513057681919,
+          "z": 0.06576716714697811
+        },
+        {
+          "x": -4.388386977602496,
+          "y": -5.368215669218303,
+          "z": 0.08714536977509124
+        }
+      ],
+      "radius": 0.045
+    },
+    {
+      "id": "crevice-end-1-deep-0",
+      "kind": "box",
+      "position": {
+        "x": 4.6,
+        "y": -4.25,
+        "z": 0
+      },
+      "size": {
+        "x": 0.2,
+        "y": 2.5,
+        "z": 3
+      },
+      "material": "PitShade",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "crevice-end-1-deep-1",
+      "kind": "box",
+      "position": {
+        "x": 4.6,
+        "y": -8.95,
+        "z": 0
+      },
+      "size": {
+        "x": 0.2,
+        "y": 6.9,
+        "z": 3
+      },
+      "material": "Void",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "crevice-end-1-root-0",
+      "kind": "tube",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "material": "Thorn",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": false,
+      "navigation": "Ignore",
+      "points": [
+        {
+          "x": 4.39,
+          "y": -0.3,
+          "z": 0.28358076601900084
+        },
+        {
+          "x": 4.373690120854424,
+          "y": -0.9512262557999038,
+          "z": 0.28615373443697845
+        },
+        {
+          "x": 4.385693456574707,
+          "y": -1.6024525115998076,
+          "z": 0.2517449557049755
+        },
+        {
+          "x": 4.3404101620194355,
+          "y": -2.253678767399711,
+          "z": 0.2766440269314289
+        },
+        {
+          "x": 4.356155925919997,
+          "y": -2.904905023199615,
+          "z": 0.2140035132784252
+        },
+        {
+          "x": 4.358524210828102,
+          "y": -3.5561312789995188,
+          "z": 0.2050619561251278
+        },
+        {
+          "x": 4.3691257745032,
+          "y": -4.2073575347994225,
+          "z": 0.2687100794093187
+        }
+      ],
+      "radius": 0.039
+    },
+    {
+      "id": "doorframe-door-north-post-0",
+      "kind": "box",
+      "position": {
+        "x": -2.1,
+        "y": 1.75,
+        "z": 7.33
+      },
+      "size": {
+        "x": 0.3,
+        "y": 3.5,
+        "z": 0.34
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "doorframe-door-north-post-1",
+      "kind": "box",
+      "position": {
+        "x": 2.1,
+        "y": 1.75,
+        "z": 7.33
+      },
+      "size": {
+        "x": 0.3,
+        "y": 3.5,
+        "z": 0.34
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "doorframe-door-north-header",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 3.65,
+        "z": 7.33
+      },
+      "size": {
+        "x": 4.5,
+        "y": 0.3,
+        "z": 0.34
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "doorframe-door-east-post-0",
+      "kind": "box",
+      "position": {
+        "x": 7.33,
+        "y": 1.75,
+        "z": 2.1
+      },
+      "size": {
+        "x": 0.3,
+        "y": 3.5,
+        "z": 0.34
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "doorframe-door-east-post-1",
+      "kind": "box",
+      "position": {
+        "x": 7.33,
+        "y": 1.75,
+        "z": -2.1
+      },
+      "size": {
+        "x": 0.3,
+        "y": 3.5,
+        "z": 0.34
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "doorframe-door-east-header",
+      "kind": "box",
+      "position": {
+        "x": 7.33,
+        "y": 3.65,
+        "z": 0.0
+      },
+      "size": {
+        "x": 4.5,
+        "y": 0.3,
+        "z": 0.34
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "doorframe-door-south-post-0",
+      "kind": "box",
+      "position": {
+        "x": 2.1,
+        "y": 1.75,
+        "z": -7.33
+      },
+      "size": {
+        "x": 0.3,
+        "y": 3.5,
+        "z": 0.34
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "doorframe-door-south-post-1",
+      "kind": "box",
+      "position": {
+        "x": -2.1,
+        "y": 1.75,
+        "z": -7.33
+      },
+      "size": {
+        "x": 0.3,
+        "y": 3.5,
+        "z": 0.34
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "doorframe-door-south-header",
+      "kind": "box",
+      "position": {
+        "x": 0.0,
+        "y": 3.65,
+        "z": -7.33
+      },
+      "size": {
+        "x": 4.5,
+        "y": 0.3,
+        "z": 0.34
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 180,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "doorframe-door-west-post-0",
+      "kind": "box",
+      "position": {
+        "x": -7.33,
+        "y": 1.75,
+        "z": -2.1
+      },
+      "size": {
+        "x": 0.3,
+        "y": 3.5,
+        "z": 0.34
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 270,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "doorframe-door-west-post-1",
+      "kind": "box",
+      "position": {
+        "x": -7.33,
+        "y": 1.75,
+        "z": 2.1
+      },
+      "size": {
+        "x": 0.3,
+        "y": 3.5,
+        "z": 0.34
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 270,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
+    },
+    {
+      "id": "doorframe-door-west-header",
+      "kind": "box",
+      "position": {
+        "x": -7.33,
+        "y": 3.65,
+        "z": 0.0
+      },
+      "size": {
+        "x": 4.5,
+        "y": 0.3,
+        "z": 0.34
+      },
+      "material": "OakDark",
+      "rotation": {
+        "x": 0,
+        "y": 270,
+        "z": 0
+      },
+      "collider": true,
+      "navigation": "Obstacle"
     }
   ],
   "anchors": [
@@ -6171,20 +9291,7 @@
         "z": -6.2
       },
       "connectsTo": [
-        "south",
-        "hide-inside"
-      ]
-    },
-    {
-      "id": "hide-inside",
-      "kind": "nav",
-      "position": {
-        "x": 3.6,
-        "y": 0,
-        "z": -4.6
-      },
-      "connectsTo": [
-        "hide-entry"
+        "south"
       ]
     },
     {
@@ -6515,7 +9622,7 @@
       },
       "size": {
         "x": 9,
-        "y": 3,
+        "y": 12.0,
         "z": 3
       }
     },
@@ -6525,7 +9632,7 @@
       "position": {
         "x": 3.6,
         "y": 1,
-        "z": -4.6
+        "z": -4.3
       }
     },
     {
@@ -6743,23 +9850,13 @@
       }
     },
     {
-      "id": "screen-0",
-      "kind": "hide",
-      "tag": "cover",
-      "position": {
-        "x": 5.6000000000000005,
-        "y": 1,
-        "z": -6.6
-      }
-    },
-    {
       "id": "loot-high-14",
       "kind": "loot",
       "tag": "Small",
       "position": {
-        "x": -3.919999999999999,
-        "y": 2.4,
-        "z": -6.920000000000001
+        "x": 6.350000000000001,
+        "y": 1.6,
+        "z": -6.699999999999999
       },
       "rotation": {
         "x": 0,
@@ -6777,9 +9874,9 @@
       "kind": "loot",
       "tag": "Tiny",
       "position": {
-        "x": -4.56,
-        "y": 2.4,
-        "z": -6.920000000000001
+        "x": 6.900000000000001,
+        "y": 1.6,
+        "z": -6.749999999999999
       },
       "rotation": {
         "x": 0,
@@ -6793,11 +9890,51 @@
       }
     },
     {
+      "id": "loot-high-16",
+      "kind": "loot",
+      "tag": "Medium",
+      "position": {
+        "x": 4.450000000000001,
+        "y": 3.0,
+        "z": -6.6499999999999995
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.9,
+        "y": 0.9,
+        "z": 0.9
+      }
+    },
+    {
       "id": "loot-fill-00",
+      "kind": "loot",
+      "tag": "VeryTall",
+      "position": {
+        "x": 1.0,
+        "y": 0,
+        "z": -4.25
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 1.2,
+        "y": 2.9,
+        "z": 1.2
+      }
+    },
+    {
+      "id": "loot-fill-01",
       "kind": "loot",
       "tag": "Wide",
       "position": {
-        "x": 1.25,
+        "x": -1.75,
         "y": 0,
         "z": 4.25
       },
@@ -6813,13 +9950,13 @@
       }
     },
     {
-      "id": "loot-fill-01",
+      "id": "loot-fill-02",
       "kind": "loot",
       "tag": "Tall",
       "position": {
-        "x": 1.0,
+        "x": 1.75,
         "y": 0,
-        "z": -1.0
+        "z": 5.25
       },
       "rotation": {
         "x": 0,
@@ -6833,47 +9970,7 @@
       }
     },
     {
-      "id": "loot-fill-02",
-      "kind": "loot",
-      "tag": "Medium",
-      "position": {
-        "x": 5.0,
-        "y": 0,
-        "z": -1.75
-      },
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "size": {
-        "x": 0.9,
-        "y": 0.9,
-        "z": 0.9
-      }
-    },
-    {
       "id": "loot-fill-03",
-      "kind": "loot",
-      "tag": "Medium",
-      "position": {
-        "x": -1.0,
-        "y": 0,
-        "z": -2.0
-      },
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "size": {
-        "x": 0.9,
-        "y": 0.9,
-        "z": 0.9
-      }
-    },
-    {
-      "id": "loot-fill-04",
       "kind": "loot",
       "tag": "Small",
       "position": {
@@ -6893,13 +9990,33 @@
       }
     },
     {
+      "id": "loot-fill-04",
+      "kind": "loot",
+      "tag": "Small",
+      "position": {
+        "x": 4.75,
+        "y": 0,
+        "z": -6.5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 0.5
+      }
+    },
+    {
       "id": "loot-fill-05",
       "kind": "loot",
       "tag": "Small",
       "position": {
-        "x": -4.75,
+        "x": -5.25,
         "y": 0,
-        "z": 0.0
+        "z": -1.75
       },
       "rotation": {
         "x": 0,
@@ -6917,9 +10034,9 @@
       "kind": "loot",
       "tag": "Small",
       "position": {
-        "x": -1.25,
+        "x": 0.75,
         "y": 0,
-        "z": -0.5
+        "z": 4.75
       },
       "rotation": {
         "x": 0,
@@ -6934,26 +10051,6 @@
     },
     {
       "id": "loot-fill-07",
-      "kind": "loot",
-      "tag": "Small",
-      "position": {
-        "x": -5.0,
-        "y": 0,
-        "z": -1.75
-      },
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "size": {
-        "x": 0.5,
-        "y": 0.5,
-        "z": 0.5
-      }
-    },
-    {
-      "id": "loot-fill-08",
       "kind": "loot",
       "tag": "Tiny",
       "position": {
@@ -6973,7 +10070,7 @@
       }
     },
     {
-      "id": "loot-fill-09",
+      "id": "loot-fill-08",
       "kind": "loot",
       "tag": "Tiny",
       "position": {
@@ -6993,7 +10090,7 @@
       }
     },
     {
-      "id": "loot-fill-10",
+      "id": "loot-fill-09",
       "kind": "loot",
       "tag": "Tiny",
       "position": {
@@ -7013,7 +10110,7 @@
       }
     },
     {
-      "id": "loot-fill-11",
+      "id": "loot-fill-10",
       "kind": "loot",
       "tag": "Tiny",
       "position": {
@@ -7033,7 +10130,7 @@
       }
     },
     {
-      "id": "loot-fill-12",
+      "id": "loot-fill-11",
       "kind": "loot",
       "tag": "Tiny",
       "position": {
@@ -7053,7 +10150,7 @@
       }
     },
     {
-      "id": "loot-fill-13",
+      "id": "loot-fill-12",
       "kind": "loot",
       "tag": "Tiny",
       "position": {
@@ -7073,27 +10170,7 @@
       }
     },
     {
-      "id": "loot-fill-14",
-      "kind": "loot",
-      "tag": "Tiny",
-      "position": {
-        "x": 1.75,
-        "y": 0,
-        "z": -3.75
-      },
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "size": {
-        "x": 0.3,
-        "y": 0.3,
-        "z": 0.3
-      }
-    },
-    {
-      "id": "loot-fill-15",
+      "id": "loot-fill-13",
       "kind": "loot",
       "tag": "Tiny",
       "position": {
@@ -7113,7 +10190,7 @@
       }
     },
     {
-      "id": "loot-fill-16",
+      "id": "loot-fill-14",
       "kind": "loot",
       "tag": "Tiny",
       "position": {
@@ -7133,13 +10210,33 @@
       }
     },
     {
-      "id": "loot-fill-17",
+      "id": "loot-fill-15",
       "kind": "loot",
       "tag": "Tiny",
       "position": {
         "x": 0.75,
         "y": 0,
         "z": -2.25
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "size": {
+        "x": 0.3,
+        "y": 0.3,
+        "z": 0.3
+      }
+    },
+    {
+      "id": "loot-fill-16",
+      "kind": "loot",
+      "tag": "Tiny",
+      "position": {
+        "x": -4.75,
+        "y": 0,
+        "z": 2.0
       },
       "rotation": {
         "x": 0,
@@ -7179,6 +10276,48 @@
         "x": -1,
         "y": 1,
         "z": 0
+      },
+      "fieldOfView": 78
+    },
+    {
+      "id": "stair-foot",
+      "position": {
+        "x": -5.2,
+        "y": 1.65,
+        "z": 1.2
+      },
+      "target": {
+        "x": -3,
+        "y": 1.6,
+        "z": 5.2
+      },
+      "fieldOfView": 78
+    },
+    {
+      "id": "landing",
+      "position": {
+        "x": 3.0,
+        "y": 4.55,
+        "z": 4.6
+      },
+      "target": {
+        "x": -3.5,
+        "y": 1.2,
+        "z": 5.6
+      },
+      "fieldOfView": 78
+    },
+    {
+      "id": "door",
+      "position": {
+        "x": 2.5,
+        "y": 1.65,
+        "z": 4.0
+      },
+      "target": {
+        "x": 0,
+        "y": 1.9,
+        "z": 7.3
       },
       "fieldOfView": 78
     }

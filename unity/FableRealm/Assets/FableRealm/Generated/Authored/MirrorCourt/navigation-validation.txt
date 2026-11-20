@@ -1,1 +1,1 @@
-NAVMESH PASS: MirrorCourt; 18 points; 20 complete paths; 219 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.
+NAVMESH PASS: MirrorCourt; 18 points; 20 complete paths; 211 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

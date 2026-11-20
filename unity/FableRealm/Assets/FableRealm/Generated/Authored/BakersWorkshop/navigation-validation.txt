@@ -1,1 +1,1 @@
-NAVMESH PASS: BakersWorkshop; 16 points; 22 complete paths; 172 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.
+NAVMESH PASS: BakersWorkshop; 16 points; 22 complete paths; 114 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

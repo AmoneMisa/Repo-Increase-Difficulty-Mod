@@ -240,7 +240,7 @@ def _mobile(r, name, x, z, rng):
         drop = rng.uniform(.4, .9)
         # Pale and thick enough to be seen in the dark: the stars hang on something.
         r.tube(f'{name}-string-{i}', [(x+lx, top-.8, z), (x+lx, top-.8-drop, z)], .018, 'Wax')
-        r.box(f'{name}-star-{i}', (x+lx, top-.9-drop, z), (.16, .16, .04), 'Star', False, (0, 0, 45))
+        r.box(f'{name}-drift-star-{i}', (x+lx, top-.9-drop, z), (.16, .16, .04), 'Star', False, (0, 0, 45))
 
 
 # ---- landmarks: the same places, told as a tale ----------------------------------------------------

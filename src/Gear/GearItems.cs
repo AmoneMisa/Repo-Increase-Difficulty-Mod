@@ -458,7 +458,8 @@ internal static class GearItems
         health.healAmount = 0;
         go.AddComponent<ModConsumable>().kind = kind;
         string key = kind switch { ConsumableKind.Antidote => "antidote", ConsumableKind.Adrenaline => "adrenaline", _ => "repairkit" };
-        ItemArt.Weapon(go, key); // Blender model; the use animation plays from UsedRPC on every client
+        // Blender model, as big as the small health pack it is built on; the use animation plays from UsedRPC on every client.
+        ItemArt.Weapon(go, key, fitDonor: true);
         try { health.soundUse = ItemAudio.Cue(kind == ConsumableKind.RepairKit ? "repair_use" : key + "_use", .5f); }
         catch (Exception e) { Plugin.Log.LogWarning($"[Audio] Keeping the health pack sound for {asset}: {e.Message}"); }
         Register(attributes, asset);

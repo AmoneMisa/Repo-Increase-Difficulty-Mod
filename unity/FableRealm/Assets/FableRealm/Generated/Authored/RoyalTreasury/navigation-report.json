@@ -1,8 +1,8 @@
 {
     "room": "RoyalTreasury",
     "status": "PASS",
-    "sources": 61,
-    "triangles": 201,
+    "sources": 75,
+    "triangles": 191,
     "profile": {
         "radius": 0.3499999940395355,
         "height": 1.7999999523162842,

@@ -1,1 +1,1 @@
-PASS: FairyRing; 36 anchors; 9 navigation edges; 0 closable exits. Clearance probe: radius 0.3 m, height 1.75 m. This is authoring QA, not game AI or cart validation.
+PASS: FairyRing; 37 anchors; 9 navigation edges; 0 closable exits. Clearance probe: radius 0.3 m, height 1.75 m. This is authoring QA, not game AI or cart validation.

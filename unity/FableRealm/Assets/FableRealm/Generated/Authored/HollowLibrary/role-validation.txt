@@ -1,1 +1,1 @@
-ROLE PASS: HollowLibrary as DeadEnd; exits south; 27 loot volumes; 0 extraction; 0 spawns.
+ROLE PASS: HollowLibrary as DeadEnd; exits south; 29 loot volumes; 0 extraction; 0 spawns.

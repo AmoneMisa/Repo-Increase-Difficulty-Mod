@@ -14,6 +14,9 @@ from library_recipe import v
 
 SIDES = {'north': 0, 'east': 1, 'south': 2, 'west': 3}
 OPPOSITE = {'north': 'south', 'south': 'north', 'east': 'west', 'west': 'east'}
+# Every monster in the game walks on the NavMesh agent "Enemy": 0.6 m radius, 2 m height, 0.4 m climb (REPO_Data
+# project settings). Props keep this far from level points and the links between them, plus a little slack.
+MONSTER_CLEARANCE = .75
 ROLE_DOORS = {'Start': ('north',), 'Normal': ('north', 'east', 'south', 'west'), 'Passage': ('north', 'south'),
               'DeadEnd': ('south',), 'Extraction': ('south',)}
 LOOT = {'Tiny': (.3, .3, .3), 'Small': (.5, .5, .5), 'Medium': (.9, .9, .9), 'Big': (1.4, 1.4, 1.4),
@@ -46,8 +49,14 @@ PALETTE = {
     'BeanRed': ('#e0453a', 0, .4, 0, .9), 'BeanYellow': ('#f0cf4a', 0, .4, 0, .9), 'BeanBlue': ('#4a8fe0', 0, .4, 0, .9),
     'BeanGreen': ('#4fc46a', 0, .4, 0, .9), 'BeanViolet': ('#a45ae0', 0, .4, 0, .9), 'GiantBean': ('#b9d24a', 0, .5, 0, .55),
     'Pane': ('#4f7f8a', 0, .85, 0, .12),
+    'PitShade': ('#1b1815', .3, .02, 0, 0), 'Void': ('#030303', 0, 0, 0, 0),
     'Vista': ('#ffffff', 0, .6, 0, .9),
     'SkyView': ('#ffffff', 0, .6, 0, .9),
+    # Open-air rooms: pale stone and meadow under a painted daytime sky, lit by a sun lamp.
+    'WhiteStone': ('#ece8df', .14, .2, 0, 0), 'PaleMeadow': ('#c9d9b0', .2, .05, 0, 0),
+    'Sun': ('#fff3dc', 0, .2, 0, 1.0), 'DaySky': ('#ffffff', 0, .2, 0, 1.0),
+    # The cloud bank at the top of the beanstalk: soft white, a little self-lit so it reads against the sky and fog.
+    'Cloud': ('#f1f4f9', .1, .05, 0, .35),
 }
 
 # id: (pattern, metres per tile, smoothness). Rough materials stay matte; only glazed, polished or metal ones shine.
@@ -65,7 +74,8 @@ SURFACE = {
     'BookCream': ('plain', .8, .1), 'Brass': ('plain', 1.0, .5), 'Copper': ('plain', 1.0, .5), 'Gold': ('plain', 1.0, .6),
     'Iron': ('plain', 1.0, .35), 'Mirror': ('plain', 2.0, .95), 'ToyRed': ('plain', 1.5, .45), 'ToyBlue': ('plain', 1.5, .45),
     'ToyYellow': ('plain', 1.5, .45), 'ToyGreen': ('plain', 1.5, .45), 'Pumpkin': ('mottle', 1.0, .25), 'Straw': ('weave', .6, .04),
-    'Hair': ('weave', .5, .3), 'Wax': ('plain', 1.0, .25),
+    'Hair': ('weave', .5, .3), 'Wax': ('plain', 1.0, .25), 'WhiteStone': ('blocks', 2.4, .12), 'PaleMeadow': ('mottle', 3.0, .03),
+    'PitShade': ('mottle', 2.5, .02), 'Void': ('plain', 6.0, 0), 'Cloud': ('mottle', 4.0, .02),
 }
 # Minimum tile contrast per pattern; flat-coloured surfaces are what reads as plastic.
 DETAIL = {'planks': .26, 'blocks': .26, 'bark': .32, 'pores': .28, 'mottle': .26, 'leaves': .3, 'cracks': .16, 'weave': .22, 'plain': .1}
@@ -76,7 +86,7 @@ def surface(name, colour, grain, smoothness, metallic, emission):
     if emission > 0:
         # 'Vista' is the painted view behind a window; other glowing materials stay flat.
         return dict(id=name, color=colour, grain=0, smoothness=smoothness, metallic=metallic, emission=emission,
-                    pattern={'Vista': 'vista', 'SkyView': 'sky'}.get(name, 'plain'), scale=2)
+                    pattern={'Vista': 'vista', 'SkyView': 'sky', 'DaySky': 'day'}.get(name, 'plain'), scale=2)
     pattern, scale, rough = SURFACE.get(name, ('plain', 2.0, smoothness))
     return dict(id=name, color=colour, grain=max(grain, DETAIL[pattern]), smoothness=rough, metallic=metallic, emission=0, pattern=pattern, scale=scale)
 
@@ -95,11 +105,6 @@ def _add(a, b): return (a[0]+b[0], a[1]+b[1], a[2]+b[2])
 def _sub(a, b): return (a[0]-b[0], a[1]-b[1], a[2]-b[2])
 
 # Doorways that get a gate. Dead ends and extraction rooms are entered through one, like vanilla side rooms.
-GATES = {'Clockmaker': ('south',), 'MarzipanVault': ('south',), 'ForgottenToy': ('south',), 'GardenStore': ('south',),
-         'StoryArchive': ('south',), 'RoyalTreasury': ('south',), 'SugarGate': ('north',), 'GingerbreadSquare': ('east',),
-         'RoseMaze': ('west',), 'MirrorCourt': ('north',), 'LostPicnic': ('east',), 'SleepingObservatory': ('west',),
-         'BeanstalkGrove': ('south',), 'FairyRing': ('south',), 'TeaTray': ('south',), 'CrownChapel': ('south',)}
-
 
 class _Obb:
     def __init__(self, name, centre, half, rot):
@@ -247,7 +252,6 @@ class Room:
                 for half in (-1, 1): self.box(f'wall-{side}-{half}', p(half*4.8, h/2, 7.35), (5.1, h, .3), wall, rot=yaw)
                 self.box(f'lintel-{side}', p(0, (3.8+h)/2, 7.35), (4.5, h-3.8, .3), wall, rot=yaw)
                 self._add(f'door-arch-{side}', 'arch', p(0, 0, 7.1), (4.2, 3.95, .4), trim, yaw, False, nav='Obstacle', radius=.2, palette=[wall])
-                if side in GATES.get(self.key, ()): self._gate(side, k, p)
                 self.anchors.append(dict(id=f'door-{side}', kind='portal', position=v(*p(0, 0, 7.5)), rotation=v(*yaw), size=v(4.2, 3.8, .4)))
                 self.nav(side, *p(0, 0, 6.5), tag='connect', yaw=k*90)
                 if self.role == 'Normal':
@@ -276,24 +280,6 @@ class Room:
         if ceiling: self.box('ceiling', (0, h+.15, 0), (15, .3, 15), self.ceiling)
         self.anchors.append(dict(id='room', kind='volume', position=v(0, h/2, 0), size=v(14.8, h, 14.8)))
 
-    def _gate(self, side, k, p):
-        """Double gate standing ajar. Visual only; each leaf carries a `door` anchor (hinge, closed direction,
-        leaf size) so the game adapter can replace it with a real hinged door."""
-        rng = random.Random(self.seed*3+k); width, height = 2.0, 2.4
-        wood, band = self.gate
-        for i, s in enumerate((-1, 1)):
-            angle = math.radians(rng.uniform(58, 82)); hinge = (s*2.05, 7.12)
-            dx, dz = -s*math.cos(angle), -math.sin(angle)
-            yaw = k*90 + (180-math.degrees(angle) if s > 0 else math.degrees(angle))
-            def leaf(along, y, out=0.0): return p(hinge[0]+dx*along-dz*out, y, hinge[1]+dz*along+dx*out)
-            self.box(f'gate-{side}-{i}', leaf(width/2, height/2), (width, height, .1), wood, False, (0, yaw, 0))
-            for j, y in enumerate((.45, 1.25, 2.05)): self.box(f'gate-{side}-{i}-band-{j}', leaf(width/2, y), (width*.98, .12, .15), band, False, (0, yaw, 0))
-            self.box(f'gate-{side}-{i}-stile', leaf(width-.06, height/2+.12), (.14, height+.24, .16), band, False, (0, yaw, 0))
-            self.tube(f'gate-{side}-{i}-post', [p(hinge[0], 0, hinge[1]), p(hinge[0], height+.3, hinge[1])], .07, band)
-            self.ring(f'gate-{side}-{i}-pull', leaf(width-.35, 1.2, .1), .1, .02, 'Brass', segments=10)
-            self.anchors.append(dict(id=f'gate-{side}-{i}', kind='door', position=v(*p(hinge[0], 0, hinge[1])),
-                                     rotation=v(0, k*90+(180 if s > 0 else 0), 0), size=v(width, height, .1)))
-
     def _dress(self):
         """Biome dressing placed around the finished room. Every solid piece is placed transactionally:
         it stays only if the whole room still passes the pre-check, so dressing never changes gameplay.
@@ -311,7 +297,7 @@ class Room:
         for a in self.anchors:
             x, y, z = (a['position'][c] for c in 'xyz')
             if a['kind'] == 'loot' and y < .6: keep.append((x, z, max(a['size']['x'], a['size']['z'])*.55+.1))
-            if a['kind'] == 'hide': keep.append((x, z, 1.7))
+            if a['kind'] == 'hide': keep.append((x, z, 1.4))
             if a['kind'] == 'surface': keep.append((x, z, 1.0))  # puzzle sockets and landing spots stay bare
             if a['kind'] == 'extraction': keep.append((x, z, 2.5))
             if a['kind'] == 'truck': keep.append((x, z, 3.8))
@@ -324,6 +310,8 @@ class Room:
             for side in self.doors:
                 a = SIDES[side]*math.pi/2; lx, lz = x*math.cos(a)-z*math.sin(a), x*math.sin(a)+z*math.cos(a)
                 if abs(lx) < 2.4+radius*.7 and lz > 5.0-radius: return False
+            # Routes stay wide enough for the game's monster agent (0.6 m radius), not only for a player.
+            route = max(route, MONSTER_CLEARANCE)
             if any(math.hypot(x-n[0], z-n[2]) < radius+route for n in low): return False
             if any(segment(x, z, a, b) < radius+route for a, b in edges): return False
             if any(math.hypot(x-kx, z-kz) < radius+kr for kx, kz, kr in keep): return False
@@ -338,11 +326,26 @@ class Room:
             if any(math.hypot(x-sx, z-sz) < 2.2 for sx, sz in shelves): return False
             return True
         known = set(precheck(self._recipe(), self.role))  # empty for kit rooms; adapted older rooms carry lint notes
+        def box_of(b):
+            """World-axis box (lo, hi) around a collider."""
+            ext = [sum(abs(b.r[i][j])*b.h[j] for j in range(3)) for i in range(3)]
+            return [b.c[i]-ext[i] for i in range(3)], [b.c[i]+ext[i] for i in range(3)]
+        def under_deck(first):
+            """Whether a new solid piece reaches up into, or just under, a raised floor (a gallery or loft deck).
+            The navmesh bake then cuts the deck's walkable surface around it and monsters lose the gallery."""
+            decks = [box_of(b) for b in colliders(dict(id=self.key, elements=self.elements[:first]))[0]
+                     if not shell(b) and box_of(b)[0][1] > 1.0 and box_of(b)[1][0]-box_of(b)[0][0] > .8 and box_of(b)[1][2]-box_of(b)[0][2] > .8]
+            for piece in colliders(dict(id=self.key, elements=self.elements[first:]))[0]:
+                lo, hi = box_of(piece)
+                for dlo, dhi in decks:
+                    if lo[1] < dlo[1] and hi[1] > dlo[1]-.35 and lo[0] < dhi[0]+.2 and hi[0] > dlo[0]-.2 and lo[2] < dhi[2]+.2 and hi[2] > dlo[2]-.2:
+                        return True
+            return False
         def attempt(build):
             """Build a piece; undo it if the room no longer validates."""
             mark = (len(self.elements), len(self.anchors), set(self.ids))
             build()
-            if set(precheck(self._recipe(), self.role)) <= known: return True
+            if not under_deck(mark[0]) and set(precheck(self._recipe(), self.role)) <= known: return True
             del self.elements[mark[0]:]; del self.anchors[mark[1]:]; self.ids = mark[2]
             return False
 
@@ -357,6 +360,8 @@ class Room:
         # The nook goes in before the high places take the last free floor; shelves hang above everything else.
         plan += [('nook', 0, nook, True, lambda: count('loot', 'loot-tight') < 2)] + climbs[2:]
         plan += [('cover', n+2, h, True) for n, h in enumerate(hides[2:])]
+        # Furniture to hide behind (bookcase, dresser, table and chairs): wherever a wall is still free.
+        plan += [('cover', n+len(hides), h, True) for n, h in enumerate(fable_dressing.FURNITURE[self.dressing])]
         plan += [('screen', 0, screen, True, lambda: count('hide', '') < 2),
                  ('shelf', 0, shelf, False, lambda: count('loot', 'loot-high') < 2),
                  ('shelf', 1, shelf, False, lambda: count('loot', 'loot-high') < 2)]
@@ -381,7 +386,7 @@ class Room:
                     else: keep.append((x, z, radius+.3))
                     base = solids(); break
                 failed += 1
-                if failed >= 40: break  # each failed attempt costs a full room pre-check
+                if failed >= (120 if label == 'cover' else 40): break  # each failed attempt costs a full room pre-check
         placed = 0
         for tries in range(700):
             if placed >= 18: break
@@ -392,6 +397,15 @@ class Room:
             else: x, z = rng.uniform(-6.2, 6.2), rng.uniform(-6.2, 6.2)
             if abs(x) > 6.9-radius or abs(z) > 6.9-radius or not free(x, z, radius, .75): continue
             if attempt(lambda: prop(self, f'dress-{placed}', x, z, rng)): keep.append((x, z, radius+.25)); placed += 1
+        # Spots for the game's own pushable props (chairs, buckets and the like, copied from vanilla rooms by the
+        # adapter): bare floor clear of routes and loot, nothing built here. Up to four per room.
+        props = 0
+        for tries in range(400):
+            if props >= 4: break
+            x, z = rng.uniform(-6.2, 6.2), rng.uniform(-6.2, 6.2)
+            if not free(x, z, .55, .75): continue
+            self.anchors.append(dict(id=f'prop-{props}', kind='prop', position=v(x, 0, z), rotation=v(0, rng.uniform(0, 360), 0)))
+            keep.append((x, z, .8)); props += 1
         # Rooms full of routes get a second pass of small props closer to the paths, each one pre-checked.
         small = [(prop, radius) for prop, radius in floor if radius <= .5]
         for tries in range(500):

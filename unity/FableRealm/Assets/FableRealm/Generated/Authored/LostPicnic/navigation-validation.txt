@@ -1,1 +1,1 @@
-NAVMESH PASS: LostPicnic; 10 points; 13 complete paths; 152 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.
+NAVMESH PASS: LostPicnic; 10 points; 13 complete paths; 131 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

@@ -9,11 +9,14 @@ internal static class BeanPuzzleRules
     internal const int Count = 5, AllMask = (1 << Count) - 1;
     internal const int EggValue = 250000;
     /// <summary>
-    /// The beanstalk waits this far under the floor and rises by as much once the puzzle is solved
-    /// (see beanstalk_grove in rooms_extra.py; its tallest piece is 4.9 m, so the whole stalk is hidden).
+    /// The beanstalk waits this far under the floor and rises by as much once the puzzle is solved. It must equal
+    /// BEANSTALK_SINK in tools/fable_realm/rooms_extra.py: the stalk climbs to the cloud bank at 28 m (as tall as
+    /// Swiftbroom Academy's Great Tree) and its highest piece ends 29.65 m up, so the whole stalk is hidden until then.
+    /// The cloud bank and the castle gate where the egg appears do not move.
     /// </summary>
-    internal const float LowerDistance = 5.2f;
-    internal const float LowerSeconds = 4.5f;
+    internal const float LowerDistance = 29.8f;
+    /// <summary>Growing time: about 2.5 m a second, fast enough to watch from the dais, slow enough to read as growth.</summary>
+    internal const float LowerSeconds = 12f;
     internal const string Special = "bean-puzzle";
     internal const string SocketPrefix = "bean-socket-", GiantPrefix = "beanstalk-";
     internal const string Landing = "giant-bean-landing", EggSpawn = "golden-egg-spawn";

@@ -219,14 +219,19 @@ internal static class FableLoot
         void WitchCauldron()
         {
             var iron = new ProcMesh(); var brew = new ProcMesh(); var bubbles = new ProcMesh(); var wood = new ProcMesh();
-            iron.Lathe(ProcMesh.TRS(Vector3.zero, Vector3.zero, Vector3.one), new[] { (0f, .14f), (.26f, .14f), (.43f, .28f), (.5f, .5f), (.47f, .7f), (.41f, .8f), (.47f, .86f), (.43f, .88f), (.37f, .8f) }, 14);
+            // Round, not faceted: 32 sides. The profile climbs the outside, rolls over the lip and runs down the inside
+            // to the brew's edge, so the inner wall faces into the pot and meets the brew without a gap.
+            const int Round = 32;
+            iron.Lathe(ProcMesh.TRS(Vector3.zero, Vector3.zero, Vector3.one), new[] { (0f, .14f), (.26f, .14f), (.43f, .28f), (.5f, .5f), (.47f, .7f), (.41f, .8f), (.47f, .86f), (.43f, .88f), (.37f, .8f), (.39f, .76f) }, Round);
             for (int i = 0; i < 3; i++)
             {
                 float a = i * Mathf.PI * 2f / 3f + .5f;
                 Tilt(iron, .3f * Mathf.Cos(a), .1f, .3f * Mathf.Sin(a), .09f, .22f, .09f, 0f);
             }
             foreach (float x in new[] { -.5f, .5f }) Box(iron, x, .72f, 0f, .08f, .12f, .16f);
-            brew.Lathe(ProcMesh.TRS(Vector3.zero, Vector3.zero, Vector3.one), new[] { (0f, .76f), (.39f, .76f) }, 14);
+            // From the rim to the centre: a lathe surface faces up when its profile runs inward (outward faces down,
+            // which made the brew invisible from above and the pot look see-through).
+            brew.Lathe(ProcMesh.TRS(Vector3.zero, Vector3.zero, Vector3.one), new[] { (.39f, .76f), (0f, .76f) }, Round);
             Ball(bubbles, .12f, .77f, .1f, .07f); Ball(bubbles, -.16f, .77f, -.05f, .05f); Ball(bubbles, .02f, .77f, -.2f, .04f); Ball(bubbles, -.08f, .78f, .2f, .035f);
             wood.Lathe(ProcMesh.TRS(new(.2f, .7f, -.12f), new(0f, 0f, -28f), Vector3.one), new[] { (.02f, 0f), (.018f, .5f), (0f, .52f) }, 6);
             Part("iron", iron, Iron, metallic: .6f, roughness: .6f); Part("brew", brew, new Color(.2f, .85f, .2f), emission: .8f);

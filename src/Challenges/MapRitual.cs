@@ -126,7 +126,9 @@ internal sealed class MapRitual : MonoBehaviour
     {
         _map = MapHere();
         if (_map is LootMap.None or LootMap.Swiftbroom) return;
-        if (InteractiveValuables.RitualPrefab(RitualRewardRules.For(_map, 0)) == null) return;
+        // Maps without a ritual reward (Fable Realm has the bean puzzle instead) get no altar.
+        var reward = RitualRewardRules.For(_map, 0);
+        if (reward == null || InteractiveValuables.RitualPrefab(reward) == null) return;
         if (_map == LootMap.Manor)
             for (int i = 0; i < RitualRewardRules.Variants; i++)
                 if (InteractiveValuables.RitualPrefab(RitualRewardRules.Coffin(i)) == null) return;

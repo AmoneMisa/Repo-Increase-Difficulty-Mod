@@ -1,1 +1,1 @@
-NAVMESH PASS: PorcelainWalk; 12 points; 13 complete paths; 137 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.
+NAVMESH PASS: PorcelainWalk; 12 points; 13 complete paths; 102 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

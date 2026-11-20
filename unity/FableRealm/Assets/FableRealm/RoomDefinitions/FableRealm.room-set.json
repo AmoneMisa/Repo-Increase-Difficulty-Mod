@@ -164,6 +164,116 @@
       "recipe": "Assets/FableRealm/RoomDefinitions/TrophyHall.room.json",
       "role": "Normal",
       "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/RootHall-B.room.json",
+      "role": "Normal",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/MushroomChoir-B.room.json",
+      "role": "Normal",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/FireflyBrook-B.room.json",
+      "role": "Passage",
+      "difficulty": 1
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/LostPicnic-B.room.json",
+      "role": "Normal",
+      "difficulty": 1
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/HollowLibrary-B.room.json",
+      "role": "DeadEnd",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/SugarGate-B.room.json",
+      "role": "Passage",
+      "difficulty": 1
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/GingerbreadSquare-B.room.json",
+      "role": "Normal",
+      "difficulty": 1
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/BakersWorkshop-B.room.json",
+      "role": "Normal",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/CandyMarket-B.room.json",
+      "role": "Normal",
+      "difficulty": 1
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/Clockmaker-B.room.json",
+      "role": "DeadEnd",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/BeanstalkCourt-B.room.json",
+      "role": "Normal",
+      "difficulty": 3
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/GiantTea-B.room.json",
+      "role": "Normal",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/PorcelainWalk-B.room.json",
+      "role": "Passage",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/RoseMaze-B.room.json",
+      "role": "Normal",
+      "difficulty": 2
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/ForgottenToy-B.room.json",
+      "role": "DeadEnd",
+      "difficulty": 1
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/ThornGate-B.room.json",
+      "role": "Passage",
+      "difficulty": 3
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/MirrorCourt-B.room.json",
+      "role": "Normal",
+      "difficulty": 3
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/SilentBallroom-B.room.json",
+      "role": "Normal",
+      "difficulty": 3
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/SleepingObservatory-B.room.json",
+      "role": "Normal",
+      "difficulty": 3
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/StoryArchive-B.room.json",
+      "role": "DeadEnd",
+      "difficulty": 3
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/GiantPantry-B.room.json",
+      "role": "Normal",
+      "difficulty": 1
+    },
+    {
+      "recipe": "Assets/FableRealm/RoomDefinitions/TrophyHall-B.room.json",
+      "role": "Normal",
+      "difficulty": 2
     }
   ]
 }

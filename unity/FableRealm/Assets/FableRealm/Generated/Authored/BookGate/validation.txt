@@ -1,1 +1,1 @@
-PASS: BookGate; 34 anchors; 6 navigation edges; 0 closable exits. Clearance probe: radius 0.3 m, height 1.75 m. This is authoring QA, not game AI or cart validation.
+PASS: BookGate; 36 anchors; 6 navigation edges; 0 closable exits. Clearance probe: radius 0.3 m, height 1.75 m. This is authoring QA, not game AI or cart validation.

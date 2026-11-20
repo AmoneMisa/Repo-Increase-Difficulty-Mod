@@ -13,6 +13,7 @@ sockets, and within a short clear walk of a level point. The room's own pre-chec
 import math
 import random
 
+from pit_depth import footprints
 from room_kit import LOOT, colliders, precheck, _Obb, _mat
 
 TARGET = {
@@ -127,6 +128,7 @@ def fill(recipe, role):
             if ok: return True
         return False
 
+    pits = footprints(recipe)
     grid = [(-6.75+.25*i, -6.75+.25*j) for i in range(55) for j in range(55)]
     added, new = {}, []
     for kind in ORDER:
@@ -141,6 +143,8 @@ def fill(recipe, role):
             # A long volume is judged by its mean half-size: as a full circle it would fit almost nowhere.
             r = (hx+hz)/2; route = .3 if r < .3 else .4
             if abs(x)+hx > 6.95 or abs(z)+hz > 6.95: continue
+            # Nothing on a bridge or plank over a pit: one bump and it falls in for good.
+            if any(x0-hx-.3 < x < x1+hx+.3 and z0-hz-.3 < z < z1+hz+.3 for x0, x1, z0, z1 in pits): continue
             if any(math.hypot(x-kx, z-kz) < r+kr for kx, kz, kr in keep): continue
             if any(math.hypot(x-tx, z-tz) < r+tr+.25 for tx, tz, tr in taken): continue
             if any(math.hypot(x-n[0], z-n[2]) < r+route for n in low): continue

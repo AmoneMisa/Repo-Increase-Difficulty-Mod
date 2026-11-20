@@ -1,1 +1,1 @@
-PASS: SilentBallroom; 62 anchors; 18 navigation edges; 4 closable exits. Clearance probe: radius 0.3 m, height 1.75 m. This is authoring QA, not game AI or cart validation.
+PASS: SilentBallroom; 64 anchors; 19 navigation edges; 4 closable exits. Clearance probe: radius 0.3 m, height 1.75 m. This is authoring QA, not game AI or cart validation.

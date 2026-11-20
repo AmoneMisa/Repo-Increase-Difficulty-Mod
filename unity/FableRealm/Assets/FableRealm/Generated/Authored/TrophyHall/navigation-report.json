@@ -1,8 +1,8 @@
 {
     "room": "TrophyHall",
     "status": "PASS",
-    "sources": 52,
-    "triangles": 222,
+    "sources": 70,
+    "triangles": 196,
     "profile": {
         "radius": 0.3499999940395355,
         "height": 1.7999999523162842,

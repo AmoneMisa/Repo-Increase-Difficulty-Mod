@@ -7,6 +7,8 @@ namespace IncreaseHardMod.Valuables;
 /// <summary>Original low-poly models for the ritual offerings and reward.</summary>
 internal static class RitualLoot
 {
+    /// <summary>The Golden Egg is drawn at hen's-egg proportions and scaled to the Museum egg's height (1.43 m).</summary>
+    internal const float GoldenEggScale = 2.8f;
     internal const int SkeletonCount = RitualRewardRules.Variants;
     internal const string Cube = "ritual_cube";
     internal static readonly string[] PcParts = { "ritual_monitor", "ritual_tower", "graphics_card", "ram_pair", "rgb_keyboard", "rgb_mouse" };
@@ -73,11 +75,14 @@ internal static class RitualLoot
         }
         if (key == FableRealm.BeanPuzzleRules.EggKey)
         {
-            // Half a metre of gold: wider at the bottom, like a hen's egg, with a chased band.
-            body.Lathe(ProcMesh.TRS(Vector3.zero, Vector3.zero, Vector3.one),
-                new[] { (0f, 0f), (.1f, .012f), (.185f, .08f), (.215f, .2f), (.19f, .33f), (.13f, .44f), (.06f, .5f), (0f, .52f) }, 16);
-            detail.Lathe(ProcMesh.TRS(Vector3.zero, Vector3.zero, Vector3.one),
-                new[] { (.2f, .19f), (.222f, .2f), (.222f, .23f), (.2f, .24f) }, 16);
+            // A giant's egg of gold, wider at the bottom like a hen's egg, with a chased band. At least as big as the
+            // Museum's egg (1.08 x 1.43 m in the game's data): the hen's-egg profile below is drawn 0.43 x 0.52 m and
+            // planted at 2.8 times that, 1.20 x 1.46 m.
+            var size = ProcMesh.TRS(Vector3.zero, Vector3.zero, Vector3.one * GoldenEggScale);
+            body.Lathe(size,
+                new[] { (0f, 0f), (.1f, .012f), (.185f, .08f), (.215f, .2f), (.19f, .33f), (.13f, .44f), (.06f, .5f), (0f, .52f) }, 32);
+            detail.Lathe(size,
+                new[] { (.2f, .19f), (.222f, .2f), (.222f, .23f), (.2f, .24f) }, 32);
             Part("gold", body, new Color(1f, .78f, .22f), .55f);
             Part("band", detail, new Color(1f, .93f, .6f), 1.6f);
             return Model();

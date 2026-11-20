@@ -123,7 +123,8 @@ int[] AllMatched() => Plates((Red, Bit(Red)), (Yellow, Bit(Yellow)), (Blue, Bit(
 // ---- lowering
 {
     Check(BeanPuzzleRules.Drop(-1) == 0 && BeanPuzzleRules.Drop(0) == 0 && BeanPuzzleRules.Drop(double.NaN) == 0, "The beanstalk stays in the ground before the puzzle is solved");
-    Check(Math.Abs(BeanPuzzleRules.Drop(BeanPuzzleRules.LowerSeconds) - 5.2f) < 1e-4 && Math.Abs(BeanPuzzleRules.Drop(9999) - 5.2f) < 1e-4, "The beanstalk rises exactly 5.2 m");
+    Check(Math.Abs(BeanPuzzleRules.Drop(BeanPuzzleRules.LowerSeconds) - BeanPuzzleRules.LowerDistance) < 1e-4 && Math.Abs(BeanPuzzleRules.Drop(9999) - BeanPuzzleRules.LowerDistance) < 1e-4,
+        "The beanstalk rises exactly its sink depth");
     float last = 0; bool rising = true;
     for (double t = 0; t <= BeanPuzzleRules.LowerSeconds; t += .1) { float d = BeanPuzzleRules.Drop(t); rising &= d >= last; last = d; }
     Check(rising, "The beanstalk never sinks back while it grows");
@@ -135,7 +136,7 @@ int[] AllMatched() => Plates((Red, Bit(Red)), (Yellow, Bit(Yellow)), (Blue, Bit(
 {
     string path = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "FableRealm", "fable_rooms.json");
     var file = JsonSerializer.Deserialize<FableRoomFile>(File.ReadAllText(path), new JsonSerializerOptions { IncludeFields = true });
-    Check(file?.rooms != null && file.rooms.Length == 32, "The contract lists the 32 rooms");
+    Check(file?.rooms != null && file.rooms.Length == 54, "The contract lists the 32 rooms and 22 second layouts");
     var plan = FableLevelPlan.From(file.rooms, out string error);
     Check(plan != null && error == null, "The contract makes a complete level: " + error);
     Check(plan.Special.Count == 1 && plan.Special[0].id == "BeanstalkGrove" && plan.Special[0].special == BeanPuzzleRules.Special, "The bean puzzle room is the one special room");
@@ -147,7 +148,21 @@ int[] AllMatched() => Plates((Red, Bit(Red)), (Yellow, Bit(Yellow)), (Blue, Bit(
     Check(FableLevelPlan.PuzzleAnchorsComplete(plan.Special[0], out string missing), "The grove has its five sockets, landing and egg markers: " + missing);
     int count = plan.Start.Count + plan.Special.Count;
     foreach (var tiers in new[] { plan.Normal, plan.Passage, plan.DeadEnd, plan.Extraction }) foreach (var tier in tiers) count += tier.Count;
-    Check(count == 32 && plan.Start.Count == 3 && plan.Normal[0].Count > 0, "Every room lands in exactly one list");
+    Check(count == 54 && plan.Start.Count == 3 && plan.Normal[0].Count > 0, "Every room lands in exactly one list");
+    // Second layouts: one for every normal, passage and dead-end room except the special one, in the same role and tier.
+    int layouts = 0;
+    foreach (var room in file.rooms)
+    {
+        string baseId = FableLayouts.BaseId(room.id);
+        if (baseId == room.id) continue;
+        layouts++;
+        var original = Array.Find(file.rooms, r => r.id == baseId);
+        Check(original != null && original.role == room.role && original.difficulty == room.difficulty && string.IsNullOrEmpty(room.special),
+            room.id + " is a second layout of " + baseId + " in the same role and tier");
+    }
+    Check(layouts == 22 && !Array.Exists(file.rooms, r => r.id == "BeanstalkGrove" + FableLayouts.Suffix), "22 second layouts, none of the special room");
+    Check(FableLayouts.BaseId("RootHall-B") == "RootHall" && FableLayouts.BaseId("RootHall") == "RootHall" && FableLayouts.BaseId("-B") == "-B" &&
+        FableLayouts.BaseId(null) == null, "A second layout is looked up under its base room");
     // Pits: every pit has a death zone, wholly below the room floor, so the rim and bridges are safe.
     foreach (var room in file.rooms)
     {
@@ -163,7 +178,13 @@ int[] AllMatched() => Plates((Red, Bit(Red)), (Yellow, Bit(Yellow)), (Blue, Bit(
     }
     // Beanstalk: the egg appears on the crown, above the last leaf and below the height the stalk rises by.
     var crown = FableLevelPlan.Anchor(plan.Special[0], BeanPuzzleRules.EggSpawn);
-    Check(crown != null && crown.p[1] > 4f && crown.p[1] < BeanPuzzleRules.LowerDistance, "The Golden Egg appears on the crown of the beanstalk");
+    // Height: as tall as Swiftbroom Academy's Great Tree (about 30 m to its crown). The egg waits up there, in the castle
+    // gate on the cloud bank, which does not move; every beanstalk piece rises out of the floor and is hidden beneath it.
+    Check(crown != null && crown.p[1] >= 25f && crown.p[1] <= 32f, "The Golden Egg appears at the top, as high as the Swiftbroom tree");
+    float highest = float.MinValue;
+    foreach (var anchor in plan.Special[0].anchors) if (anchor.kind == "volume" && anchor.id == "room") highest = anchor.p[1] + anchor.s[1] / 2;
+    Check(highest > crown.p[1] + 3f, "The room volume reaches above the castle, so the egg is still in the room");
+    Check(BeanPuzzleRules.LowerDistance > crown.p[1] && BeanPuzzleRules.LowerSeconds >= 8f, "The whole beanstalk sinks out of sight and grows visibly");
     // The two open rooms carry the large valuables.
     foreach (string id in new[] { "GiantPantry", "TrophyHall" })
     {
@@ -186,6 +207,48 @@ int[] AllMatched() => Plates((Red, Bit(Red)), (Yellow, Bit(Yellow)), (Blue, Bit(
     Check(FableLevelPlan.From(new[] { Room("n", "Normal"), Room("p", "Passage"), Room("d", "DeadEnd"), Room("e", "Extraction") }, out error) == null, "A level without a start room is rejected");
     Check(FableLevelPlan.From(new[] { Room("s", "Start"), Room("x", "Cellar") }, out error) == null, "An unknown role is rejected");
     Check(!FableLevelPlan.PuzzleAnchorsComplete(Room("g", "DeadEnd", BeanPuzzleRules.Special), out missing) && missing == "bean-socket-red", "A grove without markers is reported");
+}
+
+// ---- exits: grid sides, plugs and which room hangs the door
+{
+    Check(FableExitRules.ExtraLoot(40) == 20 && FableExitRules.ExtraLoot(7) == 4 && FableExitRules.ExtraLoot(0) == 0,
+          "Fable Realm adds half the game's valuable count again");
+    Check(!FableExitRules.SpawnsLoot("Extraction") && FableExitRules.SpawnsLoot("Normal") && FableExitRules.SpawnsLoot("DeadEnd") &&
+          FableExitRules.SpawnsLoot("Passage"), "No loot spawns in extraction rooms");
+    Check(FableExitRules.BothWays(0f, 100f) == (-100f, 100f) && FableExitRules.BothWays(-90f, 0f) == (-90f, 90f) &&
+          FableExitRules.BothWays(-30f, 110f) == (-110f, 110f), "Gates swing both ways as far as the donor door opens");
+    Check(FableExitRules.LocalSide(0f, 7.5f) == FableExitRules.Top && FableExitRules.LocalSide(7.5f, 0f) == FableExitRules.Right &&
+          FableExitRules.LocalSide(0f, -7.5f) == FableExitRules.Bottom && FableExitRules.LocalSide(-7.5f, -0f) == FableExitRules.Left, "Exits face the grid side they stand on");
+    Check(FableExitRules.WorldSide(FableExitRules.Top, 90f) == FableExitRules.Right && FableExitRules.WorldSide(FableExitRules.Top, 180f) == FableExitRules.Bottom &&
+          FableExitRules.WorldSide(FableExitRules.Top, -90f) == FableExitRules.Left, "A turned room turns its exits with it");
+    Check(FableExitRules.WorldSide(FableExitRules.Left, 270.00002f) == FableExitRules.Bottom && FableExitRules.WorldSide(FableExitRules.Right, 89.99998f) == FableExitRules.Bottom &&
+          FableExitRules.WorldSide(FableExitRules.Top, 359.99997f) == FableExitRules.Top, "A yaw read back a hair off a quarter turn still finds the right side");
+    Check(FableExitRules.Connected(true, FableExitRules.Right, false, true, false, false) && !FableExitRules.Connected(true, FableExitRules.Left, true, true, true, false),
+        "A normal room opens exactly the sides the generator joined");
+    Check(FableExitRules.Connected(false, FableExitRules.Left, false, false, false, false), "Passages, dead ends and start rooms keep their exits open");
+    int doors = 0;
+    for (int side = 0; side < 4; side++) if (FableExitRules.HangsDoor(side)) doors++;
+    Check(doors == 2 && FableExitRules.HangsDoor(FableExitRules.Top) != FableExitRules.HangsDoor(FableExitRules.Bottom) &&
+          FableExitRules.HangsDoor(FableExitRules.Right) != FableExitRules.HangsDoor(FableExitRules.Left), "Each shared edge gets one door: from the room below or to the left");
+}
+
+// ---- handheld map: tiles in map units
+{
+    bool Near(float a, float b) => Math.Abs(a - b) < 1e-4f;
+    // Measured in game: the 1x1 floor tile is 0.5 x 0.5 map units with its pivot on a corner; Map.Scale is 0.1.
+    Check(Near(FableMapMath.TileScale(5f, .1f, .5f), 1f), "A 5 m floor gets the vanilla unit marker");
+    Check(Near(FableMapMath.TileScale(15f, .1f, .5f), 3f) && Near(FableMapMath.TileScale(15f, .1f, .5f) * .5f, 15f * .1f), "A 15 m room is drawn 1.5 map units wide, as its position spacing");
+    Check(Near(FableMapMath.PivotOffset(15f, .25f, .5f), 7.5f) && Near(FableMapMath.PivotOffset(4f, 0f, .4f), 0f), "A corner-pivot tile is placed half the box before its centre");
+    Check(FableMapMath.IsWall("wall-north-1") && FableMapMath.IsWall("front-wall-1") && !FableMapMath.IsWall("pit-0-wall-x0") && !FableMapMath.IsWall("lintel-north"),
+        "Shell walls are drawn, pit linings and lintels are not");
+    Check(FableMapMath.IsWallBox(8f, 4f) && !FableMapMath.IsWallBox(2.6f, -1.7f) && !FableMapMath.IsWallBox(.4f, .2f), "Only full-height walls on the floor become map walls");
+}
+
+// ---- monster paths: stray unreachable level points are removed, a wholesale failure is not
+{
+    Check(FableMonsterPathRules.ShouldPrune(300, 3) && FableMonsterPathRules.ShouldPrune(300, 75), "A few unreachable level points are removed");
+    Check(!FableMonsterPathRules.ShouldPrune(300, 76) && !FableMonsterPathRules.ShouldPrune(300, 300), "A level where most points fail keeps them: the check itself is wrong then");
+    Check(!FableMonsterPathRules.ShouldPrune(300, 0) && !FableMonsterPathRules.ShouldPrune(0, 0), "Nothing to remove when every point is fine");
 }
 
 Console.WriteLine("FABLE_TESTS_PASS: " + checks);

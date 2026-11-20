@@ -1,1 +1,1 @@
-ROLE PASS: CoachYard as Start; exits north; 12 loot volumes; 1 extraction; 8 spawns.
+ROLE PASS: CoachYard as Start; exits north; 14 loot volumes; 1 extraction; 8 spawns.

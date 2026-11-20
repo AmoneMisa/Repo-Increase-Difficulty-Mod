@@ -53,11 +53,12 @@ def library():
     box('pit-bottom',(0,-3.36,1.5),(5,.32,4),'Stone')
     for x in (-2.6,2.6): box('pit-side-'+str(x).replace('.','_'),(x,-1.76,1.5),(.2,2.88,4),'Bark')
     for i,z in enumerate((-.6,3.6)): box(f'pit-end-{i}',(0,-1.76,z),(5,2.88,.2),'Bark')
-    # A narrow optional bridge; a wide level route remains around the east side.
-    box('bridge',(0,-.1,1.5),(5.3,.2,1.8),'OakDark')
-    for i in range(16): box(f'bridge-board-{i}',(-2.5+i/3,.015,1.5),(.3,.03,1.8),'OakLight',False)
-    rail('bridge-north',0,0,2.45,5.2)
-    rail('bridge-south',0,0,.55,5.2)
+    # An optional bridge, 2.6 m between its rails: wide enough for the game's monster agent (0.6 m radius);
+    # a wide level route also remains around the east side.
+    box('bridge',(0,-.1,1.5),(5.3,.2,2.6),'OakDark')
+    for i in range(16): box(f'bridge-board-{i}',(-2.5+i/3,.015,1.5),(.3,.03,2.6),'OakLight',False)
+    rail('bridge-north',0,0,2.85,5.2)
+    rail('bridge-south',0,0,.15,5.2)
     rail('pit-front',0,0,-.6,5.1)
     rail('pit-back',0,0,3.6,5.1)
     for side in (-1,1):

@@ -16,7 +16,7 @@ namespace IncreaseHardMod.FableRealm;
 /// <summary>
 /// The bean puzzle of the Fable Realm special room, built like the map rituals (<see cref="MapRitual"/>).
 /// The host decides everything: it hides five coloured beans in other rooms, watches the five plates, grows the
-/// beanstalk when every plate holds the bean of its colour and spawns the Golden Egg on its crown once. Everyone else only
+/// beanstalk when every plate holds the bean of its colour and spawns the Golden Egg once, in the gate of the cloud castle at its top. Everyone else only
 /// shows what the host reports; the report is repeated every few seconds, which is also how a late joiner catches up.
 /// </summary>
 internal sealed class BeanPuzzle : MonoBehaviour
@@ -380,7 +380,7 @@ internal sealed class BeanPuzzle : MonoBehaviour
             {
                 _announcedReward = true;
                 if (_state.Reward == BeanReward.Given)
-                    HudNotify.Toast(ru ? "Золотое яйцо ждёт на вершине стебля" : "A Golden Egg waits at the top of the beanstalk", HudStyle.Good, 5f, HudKey + ".reward");
+                    HudNotify.Toast(ru ? "Золотое яйцо ждёт в замке на облаках" : "A Golden Egg waits in the castle in the clouds", HudStyle.Good, 5f, HudKey + ".reward");
                 else
                     HudNotify.Toast(ru ? "Вершина пуста: это яйцо уже забрали" : "The top is empty: this egg was already taken", HudStyle.Caution, 5f, HudKey + ".reward");
             }

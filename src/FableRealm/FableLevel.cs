@@ -137,12 +137,21 @@ internal static class FableLevel
         var donorLevel = DonorLevel(run);
         if (donorLevel == null) { Plugin.Log.LogError("[Fable] No vanilla level to borrow the truck and extraction point from."); return; }
         var donor = Donor(donorLevel);
+        donor.Door = FableDoorDonor.Find(run);
+        Plugin.Log.LogInfo("[Fable] Doorway doors: " + (donor.Door == null ? "no hinged room door found in the game's levels; doorways stay open."
+            : donor.Door.Source + $", leaf {donor.Door.Bounds.size:F2}, fitted to {FableDoorDonor.LeafWidth:F2} x {FableDoorDonor.LeafHeight:F2} m."));
         bool ownStart = donor.Truck != null && !ModConfig.FableRealmVanillaStartRoom.Value;
         if (donor.Extraction == null) { Plugin.Log.LogError("[Fable] No extraction point found in " + donorLevel.name + "."); return; }
 
         _holder = new GameObject("IHM_FableRealmPrefabs");
         _holder.SetActive(false); // templates must never run Awake themselves
         Object.DontDestroyOnLoad(_holder);
+        donor.Grass = FableGrass.Find(run, _holder.transform);
+        donor.Props = FableProps.Find(run, _holder.transform);
+        Plugin.Log.LogInfo($"[Fable] Loose props: {donor.Props.Templates.Count} kind(s)" +
+            (donor.Props.Templates.Count > 0 ? ": " + string.Join(", ", donor.Props.Names) : "; the prop spots stay bare."));
+        Plugin.Log.LogInfo("[Fable] Grass: " + (donor.Grass == null ? "no vanilla grass patch found; the rooms keep their own blades."
+            : donor.Grass.Source + $", patch {donor.Grass.Bounds.size:F2} m."));
 
         var templates = new Dictionary<string, GameObject>(StringComparer.Ordinal);
         foreach (var room in file.rooms)

@@ -14,11 +14,19 @@ def root_hall():
         add(name,'tube',mat=mat,collider=collider,points=[v(*p) for p in points],radius=radius)
     def rail(name,pos,length,yaw=0):
         add(name,'rail',pos,(length,.9,.15),'OakDark',(0,yaw,0),count=max(2,int(length/.45)))
-    def lamp(name,x,y,z):
-        add(name+'-light','light',(x,y,z),mat='MossGlow',collider=False,intensity=2,range=7)
-        for i in range(5):
-            a=i*math.tau/5
-            tube(name+f'-crystal-{i}',[(x+.25*math.cos(a),y-.3,z+.25*math.sin(a)),(x+.12*math.cos(a),y+.2+i*.07,z+.12*math.sin(a))],.09,'MossGlow')
+    # Lanterns: the shared caged lantern, on a floor post or on a bracket from the wall. (Glowing tubes
+    # floating in mid-air used to stand in for them and read as stray green sheets in game.)
+    from room_kit import Room
+    from fable_props import lantern_post
+    kit=Room('RootHall','','DeadEnd',0,'Moss','Bark','OakDark')
+    def post_lamp(name,x,z,h=2.6):
+        lantern_post(kit,name,x,z,h,'WarmGlass','Brass',1.8,7)
+    def wall_lamp(name,x,y,z,wx,wz):
+        """Lantern hanging from an arm fixed to the wall point (wx, wz)."""
+        kit.lamp(name,x,y,z,'WarmGlass','Brass',1.8,7)
+        kit.tube(name+'-arm',[(wx,y+.68,wz),((wx+x)/2,y+.82,(wz+z)/2),(x,y+.76,z)],.03,'Brass')
+        kit.tube(name+'-hook',[(x,y+.76,z),(x,y+.53,z)],.012,'Brass')
+        kit.box(name+'-plate',(wx,y+.68,wz),(.22 if wx==x else .05,.3,.05 if wx==x else .22),'Brass',False)
     # A real transverse crevice. Both perimeter bypasses remain wide enough for foot navigation.
     for i,(x0,x1,z0,z1) in enumerate(((-7.5,-4.5,-7.5,7.5),(4.5,7.5,-7.5,7.5),(-4.5,4.5,-7.5,-1.5),(-4.5,4.5,1.5,7.5))):
         box(f'floor-{i}',((x0+x1)/2,-.2,(z0+z1)/2),(x1-x0,.4,z1-z0),'Moss',True)
@@ -55,33 +63,43 @@ def root_hall():
             tube(f'trunk-twist-{sx}-{sz}',[(sx*6.4,0,sz*4.7),(sx*5.5,1.9,sz*4.6),(sx*6.1,4.2,sz*4.5),(sx*4.8,6.5,sz*3.9)],.16)
             tube(f'root-to-floor-{sx}-{sz}',[(sx*6,1,sz*4.8),(sx*5.3,.3,sz*4.8),(sx*4.2,.08,sz*5.7)],.2)
     # Upper route: stairs run along the rear wall, clear of east/west ground portals.
-    add('root-stair','stairs',(-3.25,0,5.2),(2.6,3,6.5),'Oak',(0,90,0),count=22)
-    box('upper-landing',(3.25,2.88,5.2),(6.5,.24,2.6),'Oak',True)
+    # Stair and landing run from the room side right up to the rear wall's face (z 3.9 to 7.2): a 0.7 m slot
+    # behind them used to show through to the floor and into the north doorway.
+    add('root-stair','stairs',(-3.25,0,5.55),(3.3,3,6.5),'Oak',(0,90,0),count=22)
+    box('upper-landing',(3.25,2.88,5.55),(6.5,.24,3.3),'Oak',True)
     box('upper-east',(5.2,2.88,2.7),(2.6,.24,2.4),'Oak',True)
     rail('landing-front',(1.95,3,3.85),3.9)
+    rail('landing-door',(1.15,3,7.05),2.3)  # the landing passes in front of the north doorway's top
     rail('east-balcony-inner',(3.85,3,2.7),2.4,90)
     rail('east-balcony-end',(5.2,3,1.5),2.6)
-    for i,x in enumerate((1.4,5.9)):
-        box(f'landing-support-{i}',(x,1.38,5.7),(.3,2.76,.3),'OakDark')
+    # Supports against the rear wall, outside the north doorway (x -2.25 to 2.25).
+    for i,x in enumerate((2.75,5.9)):
+        box(f'landing-support-{i}',(x,1.38,6.9),(.3,2.76,.3),'OakDark')
     tube('stair-handhold',[(-6.5,1,3.85),(0,4,3.85)],.06,'Brass')
-    # Ground refuge facing south, built into an oversized root buttress.
-    box('refuge-back',(3.6,1.25,-3.7),(2.8,2.5,.2),'Bark')
-    box('refuge-east',(4.9,1.25,-4.6),(.2,2.5,2),'Bark')
-    box('refuge-west',(2.3,1.25,-4.6),(.2,2.5,2),'Bark')
-    box('refuge-roof',(3.6,2.6,-4.6),(2.8,.2,2),'Moss')
-    add('refuge-arch','arch',(3.6,0,-5.55),(2.5,2.5,.2),'OakDark',radius=.12)
-    for i,(x,y,z) in enumerate(((-3.5,1.3,-3.2),(3.5,1.3,2.8),(-5.9,2,1.6),(5.9,2,-1.6),(4.8,4.2,5.7))): lamp(f'glow-{i}',x,y,z)
+    # Ground refuge facing south, built into an oversized root buttress, 1.8 m deep. It leaves 1.8 m to the south
+    # wall for the game's monster agent (0.6 m radius) and clears the east-south -> front route behind it.
+    # A player refuge: no level point inside, so monsters are never sent into it.
+    box('refuge-back',(3.6,1.25,-3.4),(2.8,2.5,.2),'Bark')
+    box('refuge-east',(4.9,1.25,-4.3),(.2,2.5,1.8),'Bark')
+    box('refuge-west',(2.3,1.25,-4.3),(.2,2.5,1.8),'Bark')
+    box('refuge-roof',(3.6,2.6,-4.3),(2.8,.2,1.8),'Moss')
+    add('refuge-arch','arch',(3.6,0,-5.25),(2.5,2.5,.2),'OakDark',radius=.12)
+    # Posts stand clear of the level-point routes; wall lamps hang on solid wall, away from the doorways.
+    post_lamp('glow-0',-4.4,-3.6); post_lamp('glow-1',3.2,1.95)
+    wall_lamp('glow-2',-6.85,2.3,3.3,-7.2,3.3); wall_lamp('glow-3',6.85,2.3,-3.3,7.2,-3.3)
+    wall_lamp('glow-4',4.8,5.2,6.85,4.8,7.2)  # above head height over the landing
+    elements.extend(kit.elements)
     add('crevice-light','light',(0,-1.7,0),mat='MossGlow',collider=False,intensity=2,range=6)
     for i in range(15):
         x=math.sin(i*2.4)*3.9;z=math.cos(i*3.2)*.9
         tube(f'fallen-root-{i}',[(x,-3,z),(x+.25,-2.7,z+.2),(x+.4,-2.95,z+.4)],.15,'OakDark')
-    nodes={'south':(0,0,-6.5),'hide-entry':(3.6,0,-6.2),'hide-inside':(3.6,0,-4.6),'front':(0,0,-3),'bridge-south':(0,0,-1.8),'bridge':(0,0,0),
+    nodes={'south':(0,0,-6.5),'hide-entry':(3.6,0,-6.2),'front':(0,0,-3),'bridge-south':(0,0,-1.8),'bridge':(0,0,0),
            'bridge-north':(0,0,1.8),'back':(0,0,3),'north':(0,0,6.5),
            'east':(6.5,0,0),'east-south':(5.8,0,-2.6),'east-north':(5.8,0,2.7),
            'west':(-6.5,0,0),'west-south':(-5.8,0,-2.7),'west-north':(-5.8,0,2.7),
            'stair-foot':(-6.5,0,5.2),'stair-mid':(-3.25,1.5,5.2),'stair-top':(0,3,5.2),
            'landing':(5.2,3,5.2),'balcony':(5.2,3,2.7)}
-    edges=[('south','hide-entry'),('hide-entry','hide-inside'),('south','front'),('front','bridge-south'),('bridge-south','bridge'),('bridge','bridge-north'),
+    edges=[('south','hide-entry'),('south','front'),('front','bridge-south'),('bridge-south','bridge'),('bridge','bridge-north'),
            ('bridge-north','back'),('back','north'),('front','east-south'),('east-south','east'),('east','east-north'),
            ('east-north','back'),('front','west-south'),('west-south','west'),('west','west-north'),('west-north','back'),
            ('west-north','stair-foot'),('stair-foot','stair-mid'),('stair-mid','stair-top'),('stair-top','landing'),('landing','balcony')]
@@ -89,13 +107,16 @@ def root_hall():
     for name,p,angle in [('door-north',(0,0,7.5),0),('door-east',(7.5,0,0),90),('door-south',(0,0,-7.5),180),('door-west',(-7.5,0,0),270)]:
         anchors.append(dict(id=name,kind='portal',position=v(*p),rotation=v(0,angle,0),size=v(4.2,3.8,.4)))
     anchors += [dict(id='crevice',kind='pit',position=v(3,0,0),size=v(9,3,3)),
-                dict(id='refuge',kind='hide',position=v(3.6,1,-4.6)),
+                dict(id='refuge',kind='hide',position=v(3.6,1,-4.3)),
                 dict(id='room',kind='volume',position=v(0,2.5,0),size=v(14.8,11,14.8))]
     materials=library()['materials']+[dict(id='Moss',color='#53634a',grain=.18,smoothness=.1)]
     return navigation_ready(dict(schemaVersion=1,id='RootHall',title='Зал переплетённых корней',seed=91,bounds=v(15,12,15),
         materials=materials,elements=elements,anchors=anchors,views=[
             dict(id='entrance',position=v(0,1.65,-6.5),target=v(0,2.8,2.5),fieldOfView=72),
-            dict(id='balcony',position=v(5.2,4.65,3),target=v(-1,1,0),fieldOfView=78)]))
+            dict(id='balcony',position=v(5.2,4.65,3),target=v(-1,1,0),fieldOfView=78),
+            dict(id='stair-foot',position=v(-5.2,1.65,1.2),target=v(-3,1.6,5.2),fieldOfView=78),
+            dict(id='landing',position=v(3.0,4.55,4.6),target=v(-3.5,1.2,5.6),fieldOfView=78),
+            dict(id='door',position=v(2.5,1.65,4.0),target=v(0,1.9,7.3),fieldOfView=78)]))
 
 
 if __name__=='__main__':

@@ -1,8 +1,8 @@
 {
     "room": "CandyMarket",
     "status": "PASS",
-    "sources": 64,
-    "triangles": 184,
+    "sources": 79,
+    "triangles": 182,
     "profile": {
         "radius": 0.3499999940395355,
         "height": 1.7999999523162842,

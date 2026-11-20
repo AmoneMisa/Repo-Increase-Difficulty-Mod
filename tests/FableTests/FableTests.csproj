@@ -9,5 +9,7 @@
     <!-- Production sources, linked directly: the puzzle state machine and the room contract have no engine types. -->
     <Compile Include="../../src/FableRealm/BeanPuzzleState.cs" Link="Production/BeanPuzzleState.cs" />
     <Compile Include="../../src/FableRealm/FableContract.cs" Link="Production/FableContract.cs" />
+    <Compile Include="../../src/FableRealm/FableExitRules.cs" Link="Production/FableExitRules.cs" />
+    <Compile Include="../../src/FableRealm/FableMapMath.cs" Link="Production/FableMapMath.cs" />
   </ItemGroup>
 </Project>

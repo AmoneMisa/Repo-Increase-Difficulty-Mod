@@ -227,9 +227,10 @@ def compose(name, hue, sat, val, picto):
     print('wrote', textures / name)
 
 
-compose('Upgrade_Team_Haggling.png', 285, 0.75, 0.80, haggling)          # plum
-compose('Upgrade_Team_Crystal-Stock.png', 215, 0.85, 0.82, crystal_stock)  # cobalt
-compose('Upgrade_Team_Spare-Gun.png', 75, 0.70, 0.72, spare_gun)          # olive
-compose('Upgrade_Team_Spare-Melee.png', 355, 0.90, 0.75, spare_melee)     # crimson
-compose('Upgrade_Team_Spare-Drone.png', 165, 0.75, 0.70, spare_drone)     # teal-mint
-compose('Upgrade_Team_Upgrade-Shelf.png', 320, 0.70, 0.80, upgrade_shelf) # rose
+# Bright print like the vanilla packaging (the earlier values read muddy on the shop shelf).
+compose('Upgrade_Team_Haggling.png', 285, 0.80, 0.90, haggling)          # plum
+compose('Upgrade_Team_Crystal-Stock.png', 215, 0.88, 0.92, crystal_stock)  # cobalt
+compose('Upgrade_Team_Spare-Gun.png', 28, 0.85, 0.92, spare_gun)          # amber (vanilla Health is green)
+compose('Upgrade_Team_Spare-Melee.png', 355, 0.92, 0.88, spare_melee)     # crimson
+compose('Upgrade_Team_Spare-Drone.png', 170, 0.80, 0.82, spare_drone)     # teal-mint
+compose('Upgrade_Team_Upgrade-Shelf.png', 320, 0.75, 0.92, upgrade_shelf) # rose

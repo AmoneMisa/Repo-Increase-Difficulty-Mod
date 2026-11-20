@@ -51,6 +51,8 @@
     <EmbeddedResource Include="src\Audio\*.wav" />
     <!-- Fable Realm: the recipe contract is embedded; the room bundle ships as a file beside the DLL. -->
     <EmbeddedResource Include="src\FableRealm\fable_rooms.json" />
+    <!-- Loading-screen layers, drawn by tools/fable_realm/build_loading_art.py. -->
+    <EmbeddedResource Include="src\FableRealm\Loading\*.png" LogicalName="DeepRunOverhaul.FableRealm.%(Filename)%(Extension)" />
     <None Include="src\FableRealm\fablerealm.bundle" Condition="Exists('src\FableRealm\fablerealm.bundle')" Link="fablerealm.bundle" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

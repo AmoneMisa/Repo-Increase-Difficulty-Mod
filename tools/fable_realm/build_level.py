@@ -17,6 +17,8 @@ import rooms_forest_village  # noqa: E402
 import rooms_giant_castle  # noqa: E402
 import rooms_extra  # noqa: E402
 import loot_fill  # noqa: E402
+import pit_depth  # noqa: E402
+import room_finish  # noqa: E402
 
 CATALOG = ROOT.parent / 'room-catalog.json'
 # Vanilla keeps three difficulty pools per module type; harder pools get pits and upper routes.
@@ -28,6 +30,34 @@ DIFFICULTY = {'BookGate': 1, 'RootHall': 2, 'MushroomChoir': 2, 'FireflyBrook': 
 
 
 SPECIAL = {'BeanstalkGrove': 'bean-puzzle'}
+
+# Second layouts: every normal, passage and dead-end room is built once more with another seed. The room's own shape,
+# hero pieces and routes stay; its seeded parts (cover furniture, high places, loose-prop spots, wall and ceiling
+# dressing, clutter, wall ribs and the extra loot volumes) come out differently. The generator treats the copy as a
+# room of its own, so a level draws from twice as many rooms of these kinds. Start, extraction and special rooms
+# keep one layout (the special room must stay unique). FableLayouts.BaseId in the mod strips the suffix.
+LAYOUT_SUFFIX = '-B'
+LAYOUT_SEED = 500
+LAYOUT_ROLES = ('Normal', 'Passage', 'DeadEnd')
+
+
+def base_key(key): return key[:-len(LAYOUT_SUFFIX)] if key.endswith(LAYOUT_SUFFIX) else key
+
+
+def second_layout(build):
+    """Runs a room builder with every Room it makes renamed and re-seeded."""
+    original = Room.__init__
+    def init(self, key, title, role, seed, *args, **kw):
+        original(self, base_key(key) + LAYOUT_SUFFIX, title, role, seed + LAYOUT_SEED, *args, **kw)
+    Room.__init__ = init
+    try: recipe = build()
+    finally: Room.__init__ = original
+    if not recipe['id'].endswith(LAYOUT_SUFFIX):
+        # The two hand-written rooms name their recipe themselves (their dressing pass already used the new seed);
+        # the seed also moves the extra loot volumes (loot_fill).
+        recipe['id'] += LAYOUT_SUFFIX
+        recipe['seed'] = recipe.get('seed', 0) + LAYOUT_SEED
+    return recipe
 
 
 def _loot(recipe, items):
@@ -135,24 +165,31 @@ def legacy_root_hall():
 
 def main():
     ROOT.mkdir(parents=True, exist_ok=True)
-    recipes = {r['id']: r for r in [legacy_library(), legacy_root_hall()]}
-    for module in (rooms_forest_village, rooms_giant_castle, rooms_extra):
-        for build in module.ROOMS:
-            recipe = build(); recipes[recipe['id']] = recipe
+    builders = [legacy_library, legacy_root_hall] + [b for module in (rooms_forest_village, rooms_giant_castle, rooms_extra) for b in module.ROOMS]
+    recipes, built_by = {}, {}
+    for build in builders:
+        recipe = build(); recipes[recipe['id']] = recipe; built_by[recipe['id']] = build
     catalog = json.loads(CATALOG.read_text(encoding='utf-8'))
+    catalog['rooms'] = [room for room in catalog['rooms'] if not room['key'].endswith(LAYOUT_SUFFIX)]
     known = {room['key'] for room in catalog['rooms']}
     for number, key, title, biome, role, hero in rooms_extra.CATALOG:
         # Extra start and extraction rooms join the catalog after the original 24.
         if key not in known:
             catalog['rooms'].append(dict(id=number, key=key, title=title, biome=biome, role=role, hero=hero, width=15, depth=15,
                                          doorClearance=3.2, pitDepth=0, upperRoute=False, shelterType='alcove'))
+    for room in list(catalog['rooms']):
+        if room['role'] not in LAYOUT_ROLES or room['key'] in SPECIAL: continue
+        recipe = second_layout(built_by[room['key']]); recipes[recipe['id']] = recipe
+        catalog['rooms'].append(dict(room, id=str(len(catalog['rooms'])+1), key=recipe['id'], title=room['title']+' (II)'))
     entries = []
     for room in catalog['rooms']:
         recipe = recipes.pop(room['key'])
         loot_fill.fill(recipe, room['role'])  # vanilla-like numbers of valuable volumes for every size
+        pit_depth.deepen(recipe)              # pits drop out of sight instead of ending in a lit floor
+        room_finish.finish(recipe)            # square door frames for the hinge doors; some rooms under the sky
         path = ROOT / (room['key'] + '.room.json')
         path.write_text(json.dumps(recipe, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-        entries.append(dict(recipe='Assets/FableRealm/RoomDefinitions/' + path.name, role=room['role'], difficulty=DIFFICULTY[room['key']]))
+        entries.append(dict(recipe='Assets/FableRealm/RoomDefinitions/' + path.name, role=room['role'], difficulty=DIFFICULTY[base_key(room['key'])]))
         if room['key'] in SPECIAL: entries[-1]['special'] = SPECIAL[room['key']]  # at most one per level; the game side runs its puzzle
         room['status'] = 'authored-recipe-gameplay-anchors'
         room['layoutSource'] = 'RoomDefinitions/' + path.name

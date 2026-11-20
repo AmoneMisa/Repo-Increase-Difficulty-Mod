@@ -1,1 +1,1 @@
-ROLE PASS: RoyalTreasury as Extraction; exits south; 19 loot volumes; 1 extraction; 0 spawns.
+ROLE PASS: RoyalTreasury as Extraction; exits south; 16 loot volumes; 1 extraction; 0 spawns.

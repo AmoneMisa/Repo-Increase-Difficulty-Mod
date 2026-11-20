@@ -1,1 +1,1 @@
-NAVMESH PASS: RoseMaze; 18 points; 19 complete paths; 148 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.
+NAVMESH PASS: RoseMaze; 18 points; 19 complete paths; 140 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

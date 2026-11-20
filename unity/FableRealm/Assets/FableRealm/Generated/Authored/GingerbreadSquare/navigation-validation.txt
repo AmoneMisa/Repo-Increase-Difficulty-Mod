@@ -1,1 +1,1 @@
-NAVMESH PASS: GingerbreadSquare; 14 points; 15 complete paths; 161 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.
+NAVMESH PASS: GingerbreadSquare; 14 points; 15 complete paths; 140 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

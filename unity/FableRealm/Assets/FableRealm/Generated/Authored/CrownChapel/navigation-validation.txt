@@ -1,1 +1,1 @@
-NAVMESH PASS: CrownChapel; 7 points; 6 complete paths; 178 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.
+NAVMESH PASS: CrownChapel; 7 points; 6 complete paths; 177 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

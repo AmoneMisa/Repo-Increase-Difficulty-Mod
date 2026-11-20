@@ -2,7 +2,7 @@
 import math
 
 from room_kit import Room
-from fable_props import (mushroom, tree, lantern_post, fireflies, cup, candy_cane, cottage, checker, bunting, crate, wall_stair)
+from fable_props import (mushroom, tree, lantern_post, fireflies, cup, candy_cane, cottage, checker, bunting, crate, wall_stair, GALLERY_EDGE)
 
 
 def _views(r, start_north=False):
@@ -81,7 +81,8 @@ def mushroom_choir():
     r.link('south', 's-in', 'bridge-mid', 'n-in', 'north'); r.link('east', 'e-in'); r.link('west', 'w-in')
     r.link('s-in', 'se', 'e-in', 'ne', 'n-in', 'nw', 'w-in', 'sw', 's-in'); r.link(out, 'nw')
     r.loot('Small', 5.5, 1.5, -5.5); r.loot('Medium', 5.7, 0, -3.0); r.loot('Big', -6.1, 0, 3.0); r.loot('Tall', 3.0, 0, 6.5)
-    r.loot('Tiny', -5.9, 0, 6.2); r.loot('Small', -2.9, 0, -6.6); r.loot('Medium', 2.9, 0, -6.4); r.loot('Small', 6.6, 0, 2.9)
+    # The Small by the north wall leaves the east wall free: the only stretch where the dressing fits a second cover piece.
+    r.loot('Tiny', -5.9, 0, 6.2); r.loot('Small', -2.9, 0, -6.6); r.loot('Medium', 2.9, 0, -6.4); r.loot('Small', 4.4, 0, 6.6)
     r.loot('Tiny', 6.7, 0, -2.6)
     _views(r)
     return r.finish()
@@ -199,8 +200,8 @@ def gingerbread_square():
 def bakers_workshop():
     r = _village('BakersWorkshop', 'Мастерская пекаря', 'Normal', 109)
     approach, top = wall_stair(r, 'loft', -1, -1, 7.2, 'Oak', rail_gaps=((5.4, 7.2),))
-    r.deck('loft-arm', -5.4, -2.5, 5.4, 7.2, 2.7, 'Oak')
-    r.rail('loft-arm-rail', -5.4, 5.4, -2.5, 5.4, 2.7); r.rail('loft-arm-end', -2.5, 5.4, -2.5, 7.2, 2.7)
+    r.deck('loft-arm', -GALLERY_EDGE, -2.5, 5.4, 7.2, 2.7, 'Oak')
+    r.rail('loft-arm-rail', -GALLERY_EDGE, 5.4, -2.5, 5.4, 2.7); r.rail('loft-arm-end', -2.5, 5.4, -2.5, 7.2, 2.7)
     for i, z in enumerate((-1.2, 2.2, 5.2)): r.box(f'loft-bracket-{i}', (-5.7, 2.3, z), (.9, .14, .14), 'OakDark', False, (0, 0, 28))
     r.box('oven', (5.9, 1.6, 5.3), (2.6, 3.2, 2.2), 'BiscuitDark'); r.box('oven-chimney', (6.3, 5.5, 5.6), (1.0, 4.6, 1.0), 'BiscuitDark', collider=False)
     r.box('oven-mouth', (4.58, 1.2, 5.3), (.06, 1.0, 1.3), 'Candle', collider=False); r.light('oven-fire', (4.2, 1.3, 5.3), 'Candle', 2.4, 7)
@@ -257,8 +258,8 @@ def candy_market():
 def clockmaker():
     r = _village('Clockmaker', 'Дом часовщика', 'DeadEnd', 111)
     approach, top = wall_stair(r, 'gallery', 1, -1, 4.4, 'Oak', rail_gaps=((2.6, 4.4),))
-    r.deck('gallery-north', -7.2, 5.4, 2.6, 4.4, 2.7, 'Oak', [(-3.6, 2.75), (0, 2.75), (3.6, 2.75)], 'OakDark')
-    r.rail('gallery-north-rail', -7.2, 2.6, 5.4, 2.6, 2.7)
+    r.deck('gallery-north', -7.2, GALLERY_EDGE, 2.6, 4.4, 2.7, 'Oak', [(-3.6, 2.75), (0, 2.75), (3.6, 2.75)], 'OakDark')
+    r.rail('gallery-north-rail', -7.2, 2.6, GALLERY_EDGE, 2.6, 2.7)
     # The mechanism lives behind a glazed partition.
     r.box('glass', (0, 4.0, 4.55), (14.4, 8.0, .1), 'Pane')
     for i in range(7): r.box(f'glass-mullion-{i}', (-6.6+i*2.2, 4.0, 4.48), (.12, 8.0, .08), 'Brass', collider=False)

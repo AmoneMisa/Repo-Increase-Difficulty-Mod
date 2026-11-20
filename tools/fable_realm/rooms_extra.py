@@ -21,6 +21,79 @@ CATALOG = [
 ]
 
 
+# The beanstalk's cloud bank: walkable top at CLOUD_Y, on the west side of the grove (the stalk stands at x 0).
+# The castle gate faces the stalk; the Golden Egg appears in its passage. BeanPuzzleRules.LowerDistance in the mod
+# must equal BEANSTALK_SINK: everything named 'beanstalk-' is hidden that far under the floor before it grows.
+CLOUD_Y = 28.0
+BEANSTALK_SINK = 29.8
+CASTLE_X = -4.6      # front face of the gate wall
+SKY_TOP = CLOUD_Y+9  # room_finish raises the grove's painted sky above the castle
+
+
+def _puff(r, name, x, y, z, radius, squash=.55):
+    """One cloud puff: a flattened ball resting at height y."""
+    steps = 7
+    profile = [(radius*math.sin(math.pi*i/steps), radius*squash*(1-math.cos(math.pi*i/steps))) for i in range(steps+1)]
+    r.lathe(name, (x, y-radius*squash, z), profile, 'Cloud', 14)
+
+
+def cloud_castle(r, cx, cz):
+    back, front = -7.2, -2.35
+    length, half = front-back, 3.5
+    # The bank itself: one solid slab under rolling puffs. Its front edge is open where the bridge leaf arrives.
+    r.box('cloud-deck', ((back+front)/2, CLOUD_Y-.2, cz), (length, .4, 2*half), 'Cloud')
+    for i, (x, z, rad) in enumerate(((-3.0, cz-3.0, 1.0), (-4.6, cz-3.2, 1.2), (-6.4, cz-3.0, 1.1), (-6.9, cz+.2, 1.0),
+                                     (-6.3, cz+3.1, 1.2), (-4.4, cz+3.3, 1.1), (-2.7, cz+2.8, .9), (-2.5, cz-2.2, .8),
+                                     (-2.5, cz+2.0, .8))):
+        _puff(r, f'cloud-rim-{i}', x, CLOUD_Y+.35, z, rad, .45)
+    for i, (x, z, rad) in enumerate(((-3.6, cz-1.8, 1.5), (-5.6, cz-2.2, 1.8), (-6.2, cz+1.8, 1.7), (-3.9, cz+2.0, 1.4), (-4.9, cz, 1.9))):
+        _puff(r, f'cloud-under-{i}', x, CLOUD_Y-.4-rad*.5, z, rad, .5)  # below the deck top: nothing to trip on
+    # Low cloud walls on the open sides, so a dropped egg does not roll off: everything but the arrival gap.
+    for i, (x, z, sx, sz) in enumerate((((back+front)/2, cz-half+.2, length, .35), ((back+front)/2, cz+half-.2, length, .35),
+                                        (front+.2, cz-2.3, .35, 2.4), (front+.2, cz+2.3, .35, 2.4))):
+        r.box(f'cloud-wall-{i}', (x, CLOUD_Y+.35, z), (sx, .7, sz), 'Cloud')
+    # Loose clouds around the stalk on the way up and above the bank; none within reach of the climb.
+    for i, (x, y, z, rad) in enumerate(((4.6, 12.5, -4.4, 1.6), (-4.8, 15.0, -4.6, 1.8), (4.4, 18.5, 4.0, 2.0), (-5.2, 21.0, 4.6, 1.7),
+                                        (4.4, 24.0, -3.6, 1.9), (3.6, 27.2, 4.4, 2.2), (5.2, 30.5, -2.4, 2.0), (-1.0, 33.5, -5.2, 2.4),
+                                        (2.8, 34.5, 3.2, 2.1), (-6.0, 35.0, -1.8, 1.8))):
+        _puff(r, f'cloud-drift-{i}', x, y, z, rad, .5)
+        _puff(r, f'cloud-drift-{i}-b', x+rad*.7, y-.2, z+rad*.4, rad*.7, .5)
+    # The castle gate: a curtain wall with an arched entrance, two round towers and a short vaulted passage behind.
+    wall_h, open_w, open_h, thick = 4.6, 2.8, 3.4, .5
+    gx = CASTLE_X-thick/2
+    side = half-.3-open_w/2
+    for i, s in enumerate((-1, 1)):
+        r.box(f'castle-wall-{i}', (gx, CLOUD_Y+wall_h/2, cz+s*(open_w/2+side/2)), (thick, wall_h, side), 'WhiteStone')
+    r.box('castle-lintel', (gx, CLOUD_Y+open_h+(wall_h-open_h)/2, cz), (thick, wall_h-open_h, open_w), 'WhiteStone')
+    r._add('castle-arch', 'arch', (CASTLE_X+.02, CLOUD_Y, cz), (open_w, open_h, .3), 'Marble', (0, 90, 0), False, nav='Ignore',
+           radius=.16, palette=['WhiteStone'])
+    for i in range(7):
+        r.box(f'castle-merlon-{i}', (gx, CLOUD_Y+wall_h+.3, cz-half+.6+i*(2*half-1.2)/6), (thick+.1, .6, .55), 'WhiteStone', False)
+    for i, s in enumerate((-1, 1)):
+        tz = cz+s*(half-.4)
+        r.lathe(f'castle-tower-{i}', (gx, CLOUD_Y, tz), [(1.0, 0), (.95, .3), (.9, 6.2), (1.1, 6.4), (1.1, 6.9), (0, 6.9)], 'WhiteStone', 18)
+        r.lathe(f'castle-tower-roof-{i}', (gx, CLOUD_Y+6.9, tz), [(1.25, 0), (0, 2.6)], 'Roof', 18)
+        r.blocker(f'castle-tower-block-{i}', (gx, CLOUD_Y+3.45, tz), (1.8, 6.9, 1.8))
+        r.box(f'castle-banner-{i}', (gx+1.0, CLOUD_Y+4.2, tz-s*.1), (.04, 1.8, .7), 'Velvet', False)
+        r.tube(f'castle-flag-pole-{i}', [(gx, CLOUD_Y+9.4, tz), (gx, CLOUD_Y+10.6, tz)], .03, 'Gold')
+        r.box(f'castle-flag-{i}', (gx, CLOUD_Y+10.35, tz+.35), (.03, .4, .7), 'Velvet', False)
+    # Passage: side walls, vault and a back wall with the castle door, closed: the egg waits on its threshold.
+    inner = CASTLE_X-thick
+    deep = inner-(back+.15)
+    for i, s in enumerate((-1, 1)):
+        r.box(f'castle-passage-wall-{i}', ((inner+back+.15)/2, CLOUD_Y+open_h/2+.1, cz+s*(open_w/2+.15)), (deep, open_h+.2, .3), 'WhiteStone')
+    r.box('castle-passage-vault', ((inner+back+.15)/2, CLOUD_Y+open_h+.25, cz), (deep, .3, open_w+.6), 'WhiteStone')
+    r.box('castle-passage-back', (back+.3, CLOUD_Y+open_h/2+.1, cz), (.3, open_h+.2, open_w+.6), 'WhiteStone')
+    r.box('castle-door', (back+.47, CLOUD_Y+1.4, cz), (.06, 2.8, 1.8), 'OakDark', False)
+    for i, y in enumerate((.6, 2.2)):
+        r.box(f'castle-door-band-{i}', (back+.51, CLOUD_Y+y, cz), (.03, .12, 1.8), 'Iron', False)
+    r.box('castle-carpet', ((back+.45+front)/2, CLOUD_Y+.01, cz), (front-back-.45, .02, 1.3), 'Velvet', False)
+    # Light: torches at the gate, a lamp in the passage and a high sun over the clouds.
+    for i, s in enumerate((-1, 1)):
+        r.lamp(f'castle-torch-{i}', CASTLE_X+.25, CLOUD_Y+2.6, cz+s*(open_w/2+.45), 'Candle', 'Iron', 1.8, 7)
+    r.light('castle-passage-light', (inner-deep/2, CLOUD_Y+2.6, cz), 'Candle', 1.6, 5)
+    r.light('cloud-sun', (cx, CLOUD_Y+7, cz), 'Sun', 2.4, 22)
+
 def coach_yard():
     r = _village('CoachYard', 'Каретный двор', 'Start', 125)
     r.truck(0, -4.2, 'north'); r.extraction(-4.9, 2.6, 'east', 'Gold')
@@ -136,26 +209,47 @@ def beanstalk_grove():
     """Special puzzle room, one per level. Five coloured beans found elsewhere go on the five matching plates;
     then a beanstalk grows out of the dais and the Golden Egg appears on its crown.
     Markers for the game side (kind 'surface'): bean-socket-<colour>, giant-bean-landing (the dais), golden-egg-spawn.
-    Moving piece: every element whose id starts with 'beanstalk-' rises 5.2 m out of the floor."""
+    Moving piece: every element whose id starts with 'beanstalk-' rises BEANSTALK_SINK out of the floor.
+    The cloud bank and the castle gate on it stand there from the start; the egg appears inside the gate."""
     r = _giant('BeanstalkGrove', 'Роща великаньего боба', 'DeadEnd', 130)
     cx, cz = 0.0, .6
     # Dais the bean lands on.
     r.lathe('dais', (cx, 0, cz), [(0, .03), (1.75, .03), (1.9, 0)], 'Limestone', 28)
     r.ring('dais-rim', (cx, .035, cz), 1.75, .05, 'Gold', segments=40); r.ring('dais-glow', (cx, .04, cz), 1.2, .03, 'GiantBean', segments=32)
     # The beanstalk that grows out of the dais once the five beans lie on their plates. The game keeps every
-    # 'beanstalk-' element sunk 5.2 m under the floor until then and raises it; the recipe shows it fully grown.
-    # Eight leaves wind around the trunk as steps (half a metre each) up to the crown, where the Golden Egg waits.
-    r.tube('beanstalk-trunk', [(cx, 0, cz), (cx+.12, 1.3, cz-.1), (cx-.1, 2.6, cz+.12), (cx+.08, 3.9, cz-.06), (cx, 4.5, cz)], .34, 'Leaf')
-    r.tube('beanstalk-twin', [(cx+.3, 0, cz+.2), (cx-.3, 1.5, cz+.3), (cx+.32, 3.0, cz-.28), (cx-.1, 4.4, cz+.1)], .16, 'Hedge')
-    r.blocker('beanstalk-trunk-block', (cx, 2.25, cz), (.7, 4.5, .7))
-    for i in range(8):
-        a = math.radians(-90+45*i); top = .5+.5*i  # the first leaf faces the door
-        lx, lz = cx+1.3*math.cos(a), cz+1.3*math.sin(a)
-        r.box(f'beanstalk-leaf-{i}', (lx, top-.06, lz), (.8, .12, 1.05), 'Leaf' if i % 2 else 'Hedge', rot=(0, -math.degrees(a), 0))
+    # 'beanstalk-' element sunk BEANSTALK_SINK under the floor until then and raises it; the recipe shows it fully grown.
+    # It is as tall as Swiftbroom Academy's Great Tree (Module - Wizard - DE - 2 - Great Tree: floor to crown about
+    # 30 m): it climbs to a cloud bank at CLOUD_Y. Leaves wind around the trunk as steps, half a metre each, eight to a
+    # turn; every second turn ends on a wide resting leaf. The last leaf and a bridge leaf lead west onto the clouds.
+    rise, top_leaf = .5, CLOUD_Y-.5
+    leaves = int(round((top_leaf-.5)/rise))+1
+    first = 180-45*(leaves-1)  # chosen so the last leaf points west (180 degrees), toward the cloud bank
+    r.tube('beanstalk-trunk', [(cx+(.12 if k % 2 else -.1)*(k % 3 > 0), CLOUD_Y*k/10, cz+(.1 if k % 2 else -.12)*(k % 3 > 0))
+                               for k in range(11)], .4, 'Leaf')
+    r.tube('beanstalk-twin', [(cx+.32*math.cos(k*1.1), CLOUD_Y*k/10, cz+.32*math.sin(k*1.1)) for k in range(11)], .18, 'Hedge')
+    r.blocker('beanstalk-trunk-block', (cx, CLOUD_Y/2, cz), (.7, CLOUD_Y, .7))
+    for i in range(leaves):
+        a = math.radians(first+45*i); top = .5+rise*i
+        rest = i > 0 and i % 16 == 0
+        reach = 1.45 if rest else 1.3
+        lx, lz = cx+reach*math.cos(a), cz+reach*math.sin(a)
+        size = (1.3, .14, 1.6) if rest else (.8, .12, 1.05)
+        r.box(f'beanstalk-leaf-{i}', (lx, top-size[1]/2, lz), size, 'Leaf' if i % 2 else 'Hedge', rot=(0, -math.degrees(a), 0))
         r.tube(f'beanstalk-stem-{i}', [(cx, top-.25, cz), (lx, top-.1, lz)], .06, 'Hedge')
-    r.lathe('beanstalk-crown', (cx, 4.5, cz), [(0, 0), (.55, .02), (.82, .1), (.78, .16), (0, .15)], 'Leaf', 14)
-    r.blocker('beanstalk-crown-block', (cx, 4.57, cz), (1.5, .16, 1.5))
-    r.light('beanstalk-light', (cx, 5.2, cz), 'GiantBean', 2.4, 9)
+    # Bridge leaf between the last step and the edge of the cloud bank.
+    r.box('beanstalk-bridge', (cx-2.15, CLOUD_Y-.25-.06, cz), (1.5, .12, 1.3), 'Leaf')
+    r.tube('beanstalk-bridge-stem', [(cx, CLOUD_Y-.5, cz), (cx-2.15, CLOUD_Y-.32, cz)], .07, 'Hedge')
+    r.lathe('beanstalk-crown', (cx, CLOUD_Y, cz), [(0, 0), (.55, .02), (.82, .1), (.78, .16), (0, .15)], 'Leaf', 14)
+    for k in range(5):
+        a = k*math.tau/5+.4
+        r.tube(f'beanstalk-tendril-{k}', [(cx, CLOUD_Y+.1, cz), (cx+.7*math.cos(a), CLOUD_Y+.9, cz+.7*math.sin(a)),
+                                         (cx+1.1*math.cos(a+.6), CLOUD_Y+1.6, cz+1.1*math.sin(a+.6))], .05, 'Hedge')
+    r.light('beanstalk-light', (cx, CLOUD_Y*.55, cz-1.6), 'GiantBean', 2.4, 14)
+    r.light('beanstalk-light-high', (cx+1.6, CLOUD_Y*.85, cz), 'GiantBean', 2.2, 12)
+    cloud_castle(r, cx, cz)
+    # The room volume reaches the castle, so players and the egg up there are still in this room.
+    room = next(a for a in r.anchors if a['kind'] == 'volume' and a['id'] == 'room')
+    room['position'] = v(0, SKY_TOP/2, 0); room['size'] = v(14.8, SKY_TOP, 14.8)
     sx, sz = 5.3, 5.5
     r.tube('stalk', [(sx, 0, sz), (sx-.5, 2.2, sz+.3), (sx+.3, 4.4, sz-.4), (sx-.4, 6.6, sz+.2), (sx+.1, 8.6, sz-.3), (sx-.6, 10, sz-.6)], .55, 'Leaf')
     r.tube('stalk-twin', [(sx+.5, 0, sz-.5), (sx+.6, 2.4, sz-.2), (sx-.4, 4.8, sz+.3), (sx+.3, 7.2, sz), (sx-.2, 10, sz+.2)], .3, 'Hedge')
@@ -180,7 +274,7 @@ def beanstalk_grove():
         r.tube(f'plate-{colour}-vine', [(mx-.2*c, .03, mz-.2*s), (cx+2.6*c+.2*s, .03, cz+2.6*s-.2*c), (cx+1.85*c, .03, cz+1.85*s)], .03, 'Hedge')
         r.anchors.append(dict(id=f'bean-socket-{colour}', kind='surface', position=v(px, 0, pz), rotation=v(*yaw)))
     r.anchors.append(dict(id='giant-bean-landing', kind='surface', position=v(cx, 0, cz-2.3)))  # bare ground at the foot of the dais
-    r.anchors.append(dict(id='golden-egg-spawn', kind='surface', position=v(cx, 4.66, cz)))  # on the crown
+    r.anchors.append(dict(id='golden-egg-spawn', kind='surface', position=v(CASTLE_X-1.45, CLOUD_Y+.05, cz)))  # inside the castle gate
     out = r.hide('root-hollow', -5.5, -5.3, 'east', 'Bark', 'Moss')
     cup(r, 'grove-cup', 5.4, -5.3, .7, handle=140)
     lantern_post(r, 'lamp-w', -4.3, 6.4, 3.0, 'WarmGlass', 'Copper'); lantern_post(r, 'lamp-e', 6.5, -3.0, 3.0, 'WarmGlass', 'Copper')

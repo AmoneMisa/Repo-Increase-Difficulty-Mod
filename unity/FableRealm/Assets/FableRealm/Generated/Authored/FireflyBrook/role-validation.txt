@@ -1,1 +1,1 @@
-ROLE PASS: FireflyBrook as Passage; exits north,south; 26 loot volumes; 0 extraction; 0 spawns.
+ROLE PASS: FireflyBrook as Passage; exits north,south; 24 loot volumes; 0 extraction; 0 spawns.

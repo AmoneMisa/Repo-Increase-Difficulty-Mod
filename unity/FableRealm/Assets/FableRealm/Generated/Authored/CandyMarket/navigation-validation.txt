@@ -1,1 +1,1 @@
-NAVMESH PASS: CandyMarket; 10 points; 11 complete paths; 184 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.
+NAVMESH PASS: CandyMarket; 10 points; 11 complete paths; 182 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

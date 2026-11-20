@@ -66,7 +66,10 @@ internal static class ItemArt
         }
     }
 
-    internal static void Weapon(GameObject go, string key)
+    /// <param name="fitDonor">Scale the model so it fills the donor item's own body (its largest side and centre),
+    /// instead of the fixed 0.8 used for weapons. For items that keep the donor's collider, such as the consumables
+    /// built on the small health pack: the shelf shows them at the size they are grabbed at.</param>
+    internal static void Weapon(GameObject go, string key, bool fitDonor = false)
     {
         GameObject root = null;
         var createdMeshes = new List<Mesh>();
@@ -96,6 +99,7 @@ internal static class ItemArt
             }
             else root.transform.localScale = Vector3.one * 0.8f;
             BuildParts(root.transform, model, key, template, layer, createdMeshes, createdMaterials);
+            if (fitDonor && gun == null) FitToDonor(go.transform, root.transform, renderers);
             var icon = UpgradeIcons.Load(key + "_inventory.png");
             if (icon == null) throw new InvalidDataException("Missing inventory render");
             var motion = go.AddComponent<ItemArtMotion>();
@@ -120,6 +124,37 @@ internal static class ItemArt
             foreach (var material in createdMaterials) Object.DestroyImmediate(material);
             Plugin.Log.LogWarning($"[Art] Keeping native appearance for {go.name}: {e.Message}");
         }
+    }
+
+    // Bounds of renderers in the item's own space.
+    private static bool LocalBounds(Transform item, IEnumerable<Renderer> renderers, out Bounds bounds)
+    {
+        bounds = default; bool any = false;
+        foreach (var renderer in renderers)
+        {
+            if (renderer == null || renderer.GetComponent<MeshFilter>() is not { sharedMesh: { } mesh }) continue;
+            var matrix = item.worldToLocalMatrix * renderer.transform.localToWorldMatrix;
+            var b = mesh.bounds;
+            for (int i = 0; i < 8; i++)
+            {
+                var point = matrix.MultiplyPoint3x4(b.center + Vector3.Scale(b.extents,
+                    new Vector3((i & 1) == 0 ? -1f : 1f, (i & 2) == 0 ? -1f : 1f, (i & 4) == 0 ? -1f : 1f)));
+                if (any) bounds.Encapsulate(point); else { bounds = new Bounds(point, Vector3.zero); any = true; }
+            }
+        }
+        return any;
+    }
+
+    private static void FitToDonor(Transform item, Transform root, IEnumerable<Renderer> donor)
+    {
+        if (!LocalBounds(item, donor, out var target) || !LocalBounds(item, root.GetComponentsInChildren<MeshRenderer>(true), out var art)) return;
+        float have = Mathf.Max(art.size.x, Mathf.Max(art.size.y, art.size.z));
+        float want = Mathf.Max(target.size.x, Mathf.Max(target.size.y, target.size.z));
+        if (have < 1e-4f || want < 1e-4f) return;
+        float factor = want / have;
+        root.localScale *= factor;
+        // Same centre as the donor body, so it sits in the collider it is grabbed by.
+        root.localPosition += target.center - (root.localPosition + (art.center - root.localPosition) * factor);
     }
 
     /// <summary>Instantiates every exported part under <paramref name="root"/> with private albedo materials.</summary>

@@ -28,6 +28,9 @@ void Reset()
     SemiFunc.Level = true;
     SemiFunc.Shop = SemiFunc.Truck = false;
     Time.realtimeSinceStartup = 0;
+    PhotonNetwork.MasterClient = new();
+    SemiFunc.Players = new();
+    Plugin.Log = new();
 }
 IEnumerator NativeConnect() { yield return "native-password-and-version-checks"; }
 
@@ -122,6 +125,41 @@ foreach (string mode in new[] { "host", "disabled", "local", "public" })
     native = NativeConnect(); pending = LateJoinSession.WaitForLobbyData(native);
     Check(pending.MoveNext() && ReferenceEquals(pending.Current, native), "No metadata delay for " + mode);
 }
+Reset();
+SteamLobbyManager.instance.currentLobby.Owner = new(999);
+LateJoinSession.OpenRoom("owner moved");
+LateJoinSession.OpenRoom("owner moved again");
+Check(Plugin.Log.Warnings.Count == 1 && Plugin.Log.Warnings[0].Contains("owned by 999"),
+    "Host logs a lost Steam lobby owner once per distinct state");
+SteamLobbyManager.instance.currentLobby.Owner = new(0);
+LateJoinSession.OpenRoom("host left lobby");
+Check(Plugin.Log.Warnings.Count == 2 && Plugin.Log.Warnings[1].Contains("no longer in Steam lobby"),
+    "Host logs when it dropped out of its Steam lobby");
+
+// Guest that became Steam owner hands it back to the Photon host.
+Reset();
+PhotonNetwork.IsMasterClient = false;
+var hostPlayer = new Photon.Realtime.Player();
+PhotonNetwork.MasterClient = hostPlayer;
+SemiFunc.Players = new() { new() { photonView = new() { Owner = new() }, steamID = "123" },
+                           new() { photonView = new() { Owner = hostPlayer }, steamID = "777" } };
+SteamLobbyManager.instance.currentLobby.Members = new() { new(123), new(777) };
+LateJoinSession.ReturnLobbyOwnership();
+Check(SteamLobbyManager.instance.currentLobby.Owner.Id == 777, "Guest owner hands the Steam lobby back to the Photon host");
+foreach (string guard in new[] { "host", "not owner", "host not member" })
+{
+    Reset();
+    PhotonNetwork.IsMasterClient = guard == "host";
+    hostPlayer = new(); PhotonNetwork.MasterClient = hostPlayer;
+    SemiFunc.Players = new() { new() { photonView = new() { Owner = hostPlayer }, steamID = "777" } };
+    SteamLobbyManager.instance.currentLobby.Members = guard == "host not member"
+        ? new() { new(123) } : new() { new(123), new(777) };
+    if (guard == "not owner") SteamLobbyManager.instance.currentLobby.Owner = new(555);
+    ulong before = SteamLobbyManager.instance.currentLobby.Owner.Id;
+    LateJoinSession.ReturnLobbyOwnership();
+    Check(SteamLobbyManager.instance.currentLobby.Owner.Id == before, "Lobby ownership untouched: " + guard);
+}
+
 // Max health raised after the host's upgrades arrive (120 -> 180).
 Check(IncreaseHardMod.Patches.Effects.LateJoinRules.ReconciledHealth(120, 120, 180, 180) == 180, "Health clamped by a stale max is restored to the saved 180");
 Check(IncreaseHardMod.Patches.Effects.LateJoinRules.ReconciledHealth(70, 120, 180, 180) == 70, "A wounded joiner is not healed by the correction");

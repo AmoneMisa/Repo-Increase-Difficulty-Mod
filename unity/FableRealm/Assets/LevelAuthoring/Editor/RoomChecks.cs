@@ -9,7 +9,7 @@ namespace LevelAuthoring.Editor
     public static class RoomChecks
     {
         static readonly HashSet<string> Kinds=new HashSet<string> { "box","tube","arch","disc","shelf","stairs","rail","light","blocker","lathe" };
-        static readonly HashSet<string> AnchorKinds=new HashSet<string> { "portal","nav","loot","volume","hide","pit","surface","extraction","truck","spawn","door" };
+        static readonly HashSet<string> AnchorKinds=new HashSet<string> { "portal","nav","loot","volume","hide","pit","surface","extraction","truck","spawn","door","house-door","prop" };
         // Diagnostic footprints for the seven vanilla ValuableVolume types; not extracted game data.
         static readonly Dictionary<string,Vector3> LootSizes=new Dictionary<string,Vector3> {
             { "",new Vector3(.5f,.5f,.5f) },{ "Tiny",new Vector3(.3f,.3f,.3f) },{ "Small",new Vector3(.5f,.5f,.5f) },

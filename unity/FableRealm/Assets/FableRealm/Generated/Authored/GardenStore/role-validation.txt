@@ -1,1 +1,1 @@
-ROLE PASS: GardenStore as Extraction; exits south; 18 loot volumes; 1 extraction; 0 spawns.
+ROLE PASS: GardenStore as Extraction; exits south; 15 loot volumes; 1 extraction; 0 spawns.

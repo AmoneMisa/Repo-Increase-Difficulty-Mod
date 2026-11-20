@@ -1,1 +1,1 @@
-PASS: ForgottenToy; 49 anchors; 11 navigation edges; 0 closable exits. Clearance probe: radius 0.3 m, height 1.75 m. This is authoring QA, not game AI or cart validation.
+PASS: ForgottenToy; 50 anchors; 11 navigation edges; 0 closable exits. Clearance probe: radius 0.3 m, height 1.75 m. This is authoring QA, not game AI or cart validation.

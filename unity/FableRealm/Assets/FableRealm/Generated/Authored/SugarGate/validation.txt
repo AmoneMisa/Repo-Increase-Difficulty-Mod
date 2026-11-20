@@ -1,1 +1,1 @@
-PASS: SugarGate; 46 anchors; 10 navigation edges; 0 closable exits. Clearance probe: radius 0.3 m, height 1.75 m. This is authoring QA, not game AI or cart validation.
+PASS: SugarGate; 45 anchors; 10 navigation edges; 0 closable exits. Clearance probe: radius 0.3 m, height 1.75 m. This is authoring QA, not game AI or cart validation.

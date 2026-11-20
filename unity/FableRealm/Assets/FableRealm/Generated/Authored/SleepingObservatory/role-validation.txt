@@ -1,1 +1,1 @@
-ROLE PASS: SleepingObservatory as Normal; exits east,north,south,west; 33 loot volumes; 0 extraction; 0 spawns.
+ROLE PASS: SleepingObservatory as Normal; exits east,north,south,west; 32 loot volumes; 0 extraction; 0 spawns.

@@ -3,7 +3,7 @@ import math
 
 from library_recipe import v
 from room_kit import Room
-from fable_props import (mushroom, lantern_post, fireflies, cup, rose, column, cottage, checker, chandelier, crate, wall_stair, candle)
+from fable_props import (mushroom, lantern_post, fireflies, cup, rose, column, cottage, checker, chandelier, crate, wall_stair, candle, STAIR_WIDTH, GALLERY_EDGE)
 
 
 def _views(r):
@@ -49,13 +49,13 @@ def beanstalk_court():
                                  (x-.8*math.cos(a), y-1.5, z-.8*math.sin(a))], .14, 'MossGlow')
     r.light('pit-glow', (-1.2, -1.6, 1.2), 'MossGlow', 2.0, 8)
     approach, top = wall_stair(r, 'vine', -1, -1, 7.2, 'OakDark', rail_gaps=((-.9, .9),))
-    r.deck('leaf', -5.4, -2.6, -.9, .9, 2.7, 'Leaf')
-    r.tube('leaf-vein', [(-5.4, 2.72, 0), (-2.6, 2.72, 0)], .04, 'Hedge')
+    r.deck('leaf', -GALLERY_EDGE, -2.6, -.9, .9, 2.7, 'Leaf')
+    r.tube('leaf-vein', [(-GALLERY_EDGE, 2.72, 0), (-2.6, 2.72, 0)], .04, 'Hedge')
     out = r.hide('pod-hollow', 5.4, 5.7, 'south', 'Hedge', 'Leaf')
     lantern_post(r, 'lamp-se', 6.6, -6.6, 3.2, 'WarmGlass', 'Brass', 1.8, 8)
-    for name, x, y, z in (('s-in', 0, 0, -4.2), ('n-in', 0, 0, 4.2), ('e-in', 4.6, 0, 0), ('w-in', -4.4, 0, 0), ('bridge-s', 1.35, 0, -3.4),
+    for name, x, y, z in (('s-in', 0, 0, -4.2), ('n-in', 0, 0, 4.2), ('e-in', 4.6, 0, 0), ('w-in', -3.5, 0, 0), ('bridge-s', 1.35, 0, -3.4),
                           ('bridge-mid', 1.35, 0, 0), ('bridge-n', 1.35, 0, 3.4), ('se', 4.4, 0, -4.2), ('ne', 4.4, 0, 3.4),
-                          ('nw', -4.2, 0, 4.2), ('sw', -4.2, 0, -4.4), ('leaf-root', -6.3, 2.7, 0), ('leaf-tip', -3.7, 2.7, 0),
+                          ('nw', -4.2, 0, 4.2), ('sw', -3.5, 0, -4.4), ('leaf-root', -6.3, 2.7, 0), ('leaf-tip', -3.7, 2.7, 0),
                           ('loft-n', -6.3, 2.7, 6.2)): r.nav(name, x, y, z)
     r.link('south', 's-in', 'bridge-s', 'bridge-mid', 'bridge-n', 'n-in', 'north'); r.link('east', 'e-in'); r.link('west', 'w-in')
     r.link('s-in', 'se', 'e-in', 'ne', 'n-in', 'nw', 'w-in', 'sw', 's-in'); r.link(out, 'ne'); r.link('sw', approach)
@@ -72,10 +72,11 @@ def giant_tea():
     legs = [(-2.9, -1.9), (2.9, -1.9), (-2.9, 2.5), (2.9, 2.5)]
     r.deck('table-top', -3.2, 3.2, -2.2, 2.8, 2.7, 'OakLight', legs, 'OakDark')
     r.box('table-cloth', (0, 2.708, .3), (4.6, .016, 3.2), 'ClothCream', False)
-    r.stairs('book-stair', -4.1, -4.0, 'north', 1.8, 2.7, 4.4, 'BookWine')
-    for i in range(3): r.box(f'book-stack-{i}', (-4.1, .25+i*.5, -2.6+i*.3), (1.9, .5, 1.3), ('BookTeal', 'BookOchre', 'BookInk')[i], False)
-    r.deck('landing', -5.0, -3.2, -1.8, .2, 2.7, 'BookCream')
-    r.rail('landing-west', -5.0, -1.8, -5.0, .2, 2.7, 'Brass'); r.rail('landing-north', -5.0, .2, -3.2, .2, 2.7, 'Brass')
+    stair_x = -3.2 - STAIR_WIDTH/2
+    r.stairs('book-stair', stair_x, -4.0, 'north', STAIR_WIDTH, 2.7, 4.4, 'BookWine')
+    for i in range(3): r.box(f'book-stack-{i}', (stair_x, .25+i*.5, -2.6+i*.3), (STAIR_WIDTH+.1, .5, 1.3), ('BookTeal', 'BookOchre', 'BookInk')[i], False)
+    r.deck('landing', -3.2-STAIR_WIDTH, -3.2, -1.8, .2, 2.7, 'BookCream')
+    r.rail('landing-west', -3.2-STAIR_WIDTH, -1.8, -3.2-STAIR_WIDTH, .2, 2.7, 'Brass'); r.rail('landing-north', -3.2-STAIR_WIDTH, .2, -3.2, .2, 2.7, 'Brass')
     cup(r, 'tea-cup', 1.2, .6, .8, 2.7, handle=30)
     r.lathe('sugar-bowl', (-1.9, 2.7, .9), [(.3, 0), (.45, .3), (.35, .5)], 'PorcelainBlue', 14)
     r.tube('spoon', [(-2.9, 2.76, -1.9), (-1.2, 2.78, -1.7), (-.2, 2.9, -1.9)], .06, 'Brass')
@@ -89,12 +90,12 @@ def giant_tea():
     r.lamp('table-lamp', -1.0, 5.2, .4, 'WarmGlass', 'Brass', 2.2, 9); r.tube('table-lamp-chain', [(-1.0, 10, .4), (-1.0, 5.5, .4)], .02, 'Brass')
     r.light('under-table', (0, 1.6, .3), 'Candle', 1.2, 6)
     fireflies(r, 'firefly', [(4.2, 2.2, -1.2), (-5.6, 3.4, 1.9), (2.4, 4.6, 4.9)], 2)
-    for name, x, y, z in (('centre', 0, 0, .3), ('stair-foot', -4.1, 0, -6.4), ('stair-mid', -4.1, 1.4, -4.0), ('landing', -4.1, 2.7, -1.6),
+    for name, x, y, z in (('centre', 0, 0, .3), ('stair-foot', stair_x, 0, -6.4), ('stair-mid', stair_x, 1.4, -4.0), ('landing', stair_x, 2.7, -1.6),
                           ('table-w', -2.2, 2.7, -.8), ('table-n', -1.6, 2.7, 2.0), ('table-s', 1.0, 2.7, -1.5)): r.nav(name, x, y, z)
     for side in ('north', 'east', 'south', 'west'): r.link(side, 'centre')
     r.link('south', 'stair-foot', 'stair-mid', 'landing', 'table-w', 'table-n'); r.link('table-w', 'table-s'); r.link(out, 'south')
     r.loot('Small', -2.6, 2.7, 2.3); r.loot('Tiny', -.6, 2.7, -1.9); r.loot('Tiny', 2.8, 2.7, -1.7); r.loot('Medium', 5.6, 0, 5.6)
-    r.loot('Medium', 5.9, 0, 2.9); r.loot('Tall', 2.9, 0, 6.5); r.loot('Medium', -2.9, 0, 6.5); r.loot('Big', -6.1, 0, -3.0)
+    r.loot('Medium', 5.9, 0, 2.9); r.loot('Tall', 2.9, 0, 6.5); r.loot('Medium', -2.9, 0, 6.5); r.loot('Big', 6.0, 0, -2.6)
     r.loot('Small', 2.8, .6, -6.8)
     _views(r)
     return r.finish()
@@ -163,8 +164,8 @@ def forgotten_toy():
     r = _giant('ForgottenToy', 'Забытая игрушечная', 'DeadEnd', 117)
     r.box('stage', (4.1, .8, 4.7), (6.2, 1.6, 5.0), 'OakLight', walk=True)
     for i in range(6): r.box(f'stage-stripe-{i}', (1.5+i*1.04, .8, 2.19), (.52, 1.6, .02), 'ToyRed' if i % 2 else 'ToyYellow', False)
-    r.stairs('block-stair', 4.0, .8, 'north', 2.0, 1.6, 2.8, 'ToyYellow')
-    r.rail('stage-rail-a', 1.0, 2.2, 3.0, 2.2, 1.6, 'ToyBlue'); r.rail('stage-rail-b', 5.0, 2.2, 7.2, 2.2, 1.6, 'ToyBlue')
+    r.stairs('block-stair', 4.0, .8, 'north', STAIR_WIDTH, 1.6, 2.8, 'ToyYellow')
+    r.rail('stage-rail-a', 1.0, 2.2, 4.0-STAIR_WIDTH/2, 2.2, 1.6, 'ToyBlue'); r.rail('stage-rail-b', 4.0+STAIR_WIDTH/2, 2.2, 7.2, 2.2, 1.6, 'ToyBlue')
     r.rail('stage-rail-w', 1.0, 2.2, 1.0, 7.2, 1.6, 'ToyBlue')
     cottage(r, 'dollhouse', 4.0, 6.2, 'south', 2.8, 2.0, 2.4, 'IcingPink', 'ToyRed', 'Icing', y=1.6)
     out = r.hide('tent', -5.4, 5.7, 'south', 'ToyRed', 'ToyYellow')
@@ -223,6 +224,22 @@ def garden_store():
     return r.finish()
 
 
+def thorn_vine(r, name, x, z, height, phase):
+    """A bramble rising out of the dark from 6 m down: a smooth, tapering stem that arches over into a hook.
+    No spike cones: small two-sided cones catch the light while the dark stem does not, and read as floating
+    scraps. Decoration only, no collision."""
+    pts = []
+    for j in range(25):
+        t = j/24
+        rise = math.sin(t*math.pi*.62)/math.sin(math.pi*.62)          # climbs, then rolls over
+        y = -6 + (height+6)*rise - (max(0, t-.8)/.2)**2*.7           # the tip hooks down
+        sway = math.sin(phase + t*5.0)*.35*t
+        pts.append((x + sway + .25*math.sin(phase)*t, y, z + math.cos(phase + t*4.0)*.3*t))
+    # Three overlapping pieces so the stem thins toward the tip.
+    for k, (a, b, radius) in enumerate(((0, 12, .07), (11, 19, .05), (18, 25, .03))):
+        r.tube(f'{name}-stem-{k}', pts[a:b], radius, 'Thorn')
+
+
 def thorn_gate():
     r = _castle('ThornGate', 'Терновые ворота', 'Passage', 119, [(-4.5, 4.5, -2.5, 2.5)])
     r.box('bridge', (1.1, -.12, 0), (3.2, .24, 5.2), 'Limestone', walk=True)
@@ -230,13 +247,13 @@ def thorn_gate():
     for i, z in enumerate((-2.6, 2.6)):
         r.rail(f'moat-rail-w{i}', -4.5, z, -.6, z, mat='Iron'); r.rail(f'moat-rail-e{i}', 2.8, z, 4.5, z, mat='Iron')
     for i, x in enumerate((-4.6, 4.6)): r.rail(f'moat-end-{i}', x, -2.5, x, 2.5, mat='Iron')
+    # Gate pillars in coursed stone: marble's crack tile reads as one big dark scar on a narrow pillar.
     for i, x in enumerate((-1.0, 3.2)):
-        r.box(f'gate-pillar-{i}', (x, 2.2, 3.4), (.7, 4.4, .7), 'Marble'); r.box(f'gate-cap-{i}', (x, 4.5, 3.4), (.95, .25, .95), 'Limestone', False)
+        r.box(f'gate-pillar-{i}', (x, 2.2, 3.4), (.7, 4.4, .7), 'Limestone'); r.box(f'gate-cap-{i}', (x, 4.5, 3.4), (.95, .25, .95), 'Marble', False)
     r.tube('gate-arch', [(-1.0+2.1*(1-math.cos(math.pi*i/12)), 4.5+1.5*math.sin(math.pi*i/12), 3.4) for i in range(13)], .22, 'Marble')
-    for i in range(9):
-        a = i*.7
-        r.tube(f'thorn-{i}', [(-4.2+i*1.05, -4, 1.6*math.sin(a)), (-4.0+i*1.05, -1.6, 1.2*math.cos(a)), (-4.4+i*1.05, .4+.5*(i % 3), 1.9*math.sin(a+1)),
-                               (-3.9+i*1.05, 1.2+.4*(i % 2), 2.2*math.sin(a+2))], .09, 'Thorn')
+    # Brambles climbing out of the moat on both sides of the bridge, never through it.
+    for i, (x, z) in enumerate(((-3.8, -1.5), (-3.0, 1.2), (-2.2, -.4), (-1.6, 1.6), (-3.5, .1), (3.6, -1.2), (3.8, 1.3))):
+        thorn_vine(r, f'thorn-{i}', x, z, 1.0 + .45*(i % 3), 1.3*i)
     for i in range(6):
         t = math.pi*(i+.5)/6
         rose(r, f'gate-rose-{i}', 1.1-2.1*math.cos(t), 3.4, .3, .7, 4.45+1.5*math.sin(t))
@@ -259,8 +276,8 @@ def thorn_gate():
 def mirror_court():
     r = _castle('MirrorCourt', 'Зеркальный двор', 'Normal', 120, ground='Marble')
     approach, top = wall_stair(r, 'gallery', 1, 1, -7.2, 'Limestone', 'Iron', rail_gaps=((-7.2, -5.4),))
-    r.deck('gallery-arm', 2.5, 5.4, -7.2, -5.4, 2.7, 'Limestone')
-    r.rail('gallery-arm-rail', 2.5, -5.4, 5.4, -5.4, 2.7, 'Iron'); r.rail('gallery-arm-end', 2.5, -7.2, 2.5, -5.4, 2.7, 'Iron')
+    r.deck('gallery-arm', 2.5, GALLERY_EDGE, -7.2, -5.4, 2.7, 'Limestone')
+    r.rail('gallery-arm-rail', 2.5, -5.4, GALLERY_EDGE, -5.4, 2.7, 'Iron'); r.rail('gallery-arm-end', 2.5, -7.2, 2.5, -5.4, 2.7, 'Iron')
     for i, (x, z) in enumerate(((-2.6, -2.5), (2.8, .5))):
         r.box(f'mirror-{i}', (x, 1.6, z), (.3, 3.2, 3.0), 'Mirror')
         for j, (dy, dz, sy, sz) in enumerate(((1.65, 0, .14, 3.2), (-1.55, 0, .14, 3.2), (0, 1.55, 3.3, .14), (0, -1.55, 3.3, .14))):
@@ -275,7 +292,7 @@ def mirror_court():
     out = r.hide('mirror-niche', -5.4, 5.7, 'south', 'Marble', 'Velvet')
     chandelier(r, 'chandelier', 0, 5.4, 0, 1.5, 6, 9.0)
     r.lamp('gallery-lamp', 6.3, 5.0, -3.0, 'Candle', 'Gold', 1.5, 7); r.light('niche-glow', (-3.4, 2.4, 4.0), 'MoonGlass', 1.2, 6)
-    for name, x, y, z in (('centre', 0, 0, 0), ('ne', 4.4, 0, 3.6), ('se', 4.4, 0, -3.4), ('sw', -4.4, 0, -3.6), ('nw', -4.6, 0, 2.4),
+    for name, x, y, z in (('centre', 0, 0, 0), ('ne', 3.4, 0, 3.6), ('se', 4.4, 0, -3.4), ('sw', -4.4, 0, -3.6), ('nw', -4.6, 0, 2.4),
                           ('g-east', 6.3, 2.7, -3.0), ('g-corner', 6.3, 2.7, -6.3), ('g-south', 3.6, 2.7, -6.3)): r.nav(name, x, y, z)
     r.link('north', 'centre', 'south'); r.link('east', 'ne', 'north'); r.link('east', 'se', 'south')
     r.link('west', 'sw', 'south'); r.link('west', 'nw', 'north'); r.link(out, 'nw'); r.link(approach, 'ne'); r.link(approach, 'north')
@@ -291,7 +308,8 @@ def silent_ballroom():
     west_approach, west_top = wall_stair(r, 'west-gallery', -1, -1, 7.2, 'Parquet', 'Gold')
     east_approach, east_top = wall_stair(r, 'east-gallery', 1, 1, -7.2, 'Parquet', 'Gold')
     # Refuge under the upper half of the west stair.
-    r.box('nook-back', (-6.3, 1.2, -2.12), (1.8, 2.4, .12), 'Velvet'); r.box('nook-front', (-6.3, .6, -3.95), (1.8, 1.2, .12), 'Velvet')
+    nook = -(7.2 - STAIR_WIDTH/2)
+    r.box('nook-back', (nook, 1.2, -2.12), (STAIR_WIDTH, 2.4, .12), 'Velvet'); r.box('nook-front', (nook, .6, -3.95), (STAIR_WIDTH, 1.2, .12), 'Velvet')
     r.anchors.append(dict(id='stair-nook', kind='hide', position=v(-6.3, 1, -3.05), rotation=v(0, 270, 0)))
     checker(r, 'parquet', -5.2, 5.2, -5.2, 5.2, 6, 'ParquetDark', 'Parquet')
     gown = [(.55, 0), (.3, .9), (.18, 1.2), (.23, 1.45), (.12, 1.6), (.17, 1.82), (0, 1.96)]
@@ -305,10 +323,10 @@ def silent_ballroom():
         r.light(f'side-light-{i}', (0, 5.9, z), 'Candle', 1.4, 8)
     for i, (x, z) in enumerate(((-7.1, 4.6), (7.1, -4.6))):
         r.box(f'drape-{i}', (x, 5.2, z), (.12, 4.4, 2.2), 'Velvet', False)
-    for name, x, y, z in (('centre', 0, 0, 0), ('nook-out', -4.4, 0, -3.05), ('east-floor', 4.4, 0, 3.05),
+    for name, x, y, z in (('centre', 0, 0, 0), ('nook-out', -3.6, 0, -3.05), ('west-mid', -3.6, 0, -.4), ('east-floor', 3.4, 0, 3.05),
                           ('west-walk', -6.3, 2.7, 6.3), ('east-walk', 6.3, 2.7, -6.3)): r.nav(name, x, y, z)
     for side in ('north', 'east', 'south', 'west'): r.link(side, 'centre')
-    r.link('centre', 'nook-out', west_approach, 'south'); r.link('east', 'east-floor', east_approach, 'north')
+    r.link('centre', 'west-mid', 'nook-out', west_approach, 'south'); r.link('east', 'east-floor', east_approach, 'north')
     r.link(west_top, 'west-walk'); r.link(east_top, 'east-walk')
     r.loot('Small', -6.6, 2.7, 6.8); r.loot('Tiny', -6.9, 2.7, 3.0); r.loot('Small', 6.6, 2.7, -6.8); r.loot('Tiny', 6.9, 2.7, -3.0)
     r.loot('Big', -6.2, 0, 4.6); r.loot('Medium', 6.3, 0, -4.6); r.loot('Tall', -2.9, 0, 6.5); r.loot('Medium', 2.9, 0, -6.5)
@@ -319,8 +337,8 @@ def silent_ballroom():
 def sleeping_observatory():
     r = _castle('SleepingObservatory', 'Спящая обсерватория', 'Normal', 122, [(1.5, 4.5, -2.5, 1.5)])
     approach, top = wall_stair(r, 'loft', -1, -1, 7.2, 'Oak', 'Brass', rail_gaps=((5.4, 7.2),))
-    r.deck('loft-arm', -5.4, -2.5, 5.4, 7.2, 2.7, 'Oak')
-    r.rail('loft-arm-rail', -5.4, 5.4, -2.5, 5.4, 2.7, 'Brass'); r.rail('loft-arm-end', -2.5, 5.4, -2.5, 7.2, 2.7, 'Brass')
+    r.deck('loft-arm', -GALLERY_EDGE, -2.5, 5.4, 7.2, 2.7, 'Oak')
+    r.rail('loft-arm-rail', -GALLERY_EDGE, 5.4, -2.5, 5.4, 2.7, 'Brass'); r.rail('loft-arm-end', -2.5, 5.4, -2.5, 7.2, 2.7, 'Brass')
     for i, x in enumerate((1.4, 4.6)): r.rail(f'well-rail-x{i}', x, -2.5, x, 1.5, mat='Brass')
     for i, z in enumerate((-2.6, 1.6)): r.rail(f'well-rail-z{i}', 1.5, z, 4.5, z, mat='Brass')
     # Orrery asleep in the star well.
@@ -363,7 +381,7 @@ def story_archive():
     r.lathe('rose-dome', (-1.2, 1.0, 2.2), [(.42, 0), (.42, .9), (.3, 1.25), (0, 1.4)], 'MoonGlass', 16); r.light('rose-light', (-1.2, 2.0, 2.2), 'RoseRed', 1.6, 6)
     for i in range(12):
         a = i*2.4
-        r.box(f'page-{i}', (3.6*math.sin(a), 3.2+1.6*math.sin(i*1.3)**2, 3.0*math.cos(a*1.7)-.6), (.3, .01, .42), 'BookCream', False, (i*23 % 60-30, i*47, i*31 % 50-25))
+        r.box(f'drift-page-{i}', (3.6*math.sin(a), 3.2+1.6*math.sin(i*1.3)**2, 3.0*math.cos(a*1.7)-.6), (.3, .01, .42), 'BookCream', False, (i*23 % 60-30, i*47, i*31 % 50-25))
     r.tube('ladder-a', [(1.9, 0, 5.6), (2.2, 2.65, 5.6)], .035, 'Oak'); r.tube('ladder-b', [(1.9, 0, 4.9), (2.2, 2.65, 4.9)], .035, 'Oak')
     for i in range(6): r.tube(f'ladder-rung-{i}', [(1.93+i*.045, .3+i*.4, 5.6), (1.93+i*.045, .3+i*.4, 4.9)], .025, 'Oak')
     out = r.hide('reading-nook', -5.4, 5.7, 'south', 'OakDark', 'Velvet')

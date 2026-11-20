@@ -72,7 +72,7 @@ namespace LevelAuthoring.Editor
                 string path=output+"/Materials/"+spec.id+".mat";
                 var mat=AssetDatabase.LoadAssetAtPath<Material>(path);
                 if(mat==null) { mat=new Material(shader); AssetDatabase.CreateAsset(mat,path); }
-                if(spec.pattern=="vista" || spec.pattern=="sky")
+                if(spec.pattern=="vista" || spec.pattern=="sky" || spec.pattern=="day")
                 {
                     // A window view is a self-lit picture mapped once over the mesh, not a tiled lit surface.
                     mat.shader=Shader.Find("Unlit/Texture");

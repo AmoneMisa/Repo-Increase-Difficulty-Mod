@@ -1,1 +1,1 @@
-NAVMESH PASS: MushroomChoir; 15 points; 16 complete paths; 125 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.
+NAVMESH PASS: MushroomChoir; 15 points; 16 complete paths; 111 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

@@ -1,1 +1,1 @@
-NAVMESH PASS: SleepingObservatory; 16 points; 17 complete paths; 165 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.
+NAVMESH PASS: SleepingObservatory; 16 points; 17 complete paths; 171 triangles. Authored points unchanged. Profile is for editor QA, not verified game agent settings.

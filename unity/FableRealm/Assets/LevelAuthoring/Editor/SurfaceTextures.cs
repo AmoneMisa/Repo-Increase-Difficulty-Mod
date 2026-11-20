@@ -10,11 +10,12 @@ namespace LevelAuthoring.Editor
     public static class SurfaceTextures
     {
         public const int Size=128;
-        public static readonly string[] Patterns={ "plain","planks","blocks","mottle","pores","cracks","bark","weave","leaves","vista","sky" };
+        public static readonly string[] Patterns={ "plain","planks","blocks","mottle","pores","cracks","bark","weave","leaves","vista","sky","day" };
 
         public static void Fill(Texture2D texture,string pattern,float amount,int seed)
         {
             if(pattern=="vista" || pattern=="sky") { Vista(texture,seed,pattern=="vista"); return; }
+            if(pattern=="day") { DaySky(texture,seed); return; }
             var height=new float[Size*Size]; var tone=new float[Size*Size]; var gloss=new float[Size*Size];
             for(int y=0;y<Size;y++) for(int x=0;x<Size;x++)
             {
@@ -124,6 +125,23 @@ namespace LevelAuthoring.Editor
                 if(tower<.008f && v>.43f && v<.46f) c=new Color(1f,.8f,.45f);
                 float front=.26f+.06f*Mathf.Sin(u*9.4f+1)+.03f*Mathf.Sin(u*25f+4);
                 if(v<front) c=near;
+                c.a=1; pixels[y*Size+x]=c;
+            }
+            texture.SetPixels(pixels); texture.wrapMode=TextureWrapMode.Clamp; texture.filterMode=FilterMode.Bilinear; texture.Apply(true);
+        }
+
+        // Open-air rooms: a pale daytime sky, white at the bottom edge (the horizon over the walls),
+        // soft blue toward the top, with loose white clouds. The tile is mapped once per sky panel.
+        static void DaySky(Texture2D texture,int seed)
+        {
+            var horizon=new Color(.97f,.97f,.95f); var zenith=new Color(.62f,.79f,.95f); var cloud=new Color(1f,1f,1f);
+            var pixels=new Color[Size*Size];
+            for(int y=0;y<Size;y++) for(int x=0;x<Size;x++)
+            {
+                float u=x/(float)Size,v=y/(float)Size;
+                Color c=Color.Lerp(horizon,zenith,Mathf.SmoothStep(0,1,v*1.15f));
+                float n=Fbm(u*4,v*4,4,4,seed);
+                c=Color.Lerp(c,cloud,Mathf.SmoothStep(.52f,.72f,n)*.85f);
                 c.a=1; pixels[y*Size+x]=c;
             }
             texture.SetPixels(pixels); texture.wrapMode=TextureWrapMode.Clamp; texture.filterMode=FilterMode.Bilinear; texture.Apply(true);

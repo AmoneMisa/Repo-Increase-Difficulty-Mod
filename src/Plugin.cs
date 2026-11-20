@@ -114,6 +114,8 @@ public class Plugin : BaseUnityPlugin
         netObject.AddComponent<ItemUnstuckController>();
         // Loot safety net: host-side top-up while an extraction point is open (replaces the game's own).
         netObject.AddComponent<Valuables.LootSafetyNet>();
+        // Fable Realm: half as many valuables again into its spare loot spots, once per level (host).
+        netObject.AddComponent<FableRealm.FableLootBoost>();
         // Challenge shrines: timed side challenges on run levels (host logic, every client draws the props).
         netObject.AddComponent<Challenges.ChallengeManager>();
         netObject.AddComponent<Challenges.MapRitual>();
